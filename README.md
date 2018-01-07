@@ -1,2 +1,2 @@
-# pulse_C
+# junkyard
 Component based framework in c++
