@@ -4,7 +4,6 @@
 #include "iBase.h"
 
 #define I_REPOSITORY	"iRepository"
-#define I_EXTENSION	"iExtension"
 
 // ogject request flags
 #define RQ_NAME		(1<<0)
@@ -26,15 +25,12 @@ public:
 	virtual void   object_release(iBase *)=0;
 	virtual iBase *object_by_name(_cstr_t name, _rf_t)=0;
 	virtual iBase *object_by_interface(_cstr_t iname, _rf_t)=0;
+
+	// extensions
+	//...
 };
 
 extern iRepository *_gpi_repo_;
-
-class iExtension: public iBase {
-public:
-	INTERFACE(iExtension, I_EXTENSION);
-	//...
-};
 
 #endif
 
