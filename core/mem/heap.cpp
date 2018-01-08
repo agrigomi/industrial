@@ -46,6 +46,7 @@ public:
 					m_s2c.p_unlock = s2_unlock;
 					r = true;
 				}
+				break;
 			}
 			case OCTL_UNINIT: {
 				iRepository *repo = (iRepository *)arg;
@@ -63,6 +64,10 @@ public:
 
 	void free(void *ptr, _u32 size) {
 		s2_free(&m_s2c, ptr, size);
+	}
+
+	bool verify(void *ptr, _u32 size) {
+		return (s2_verify(&m_s2c, ptr, size)) ? true : false;
 	}
 };
 

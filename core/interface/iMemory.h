@@ -12,6 +12,7 @@ public:
 	INTERFACE(iHeap, I_HEAP);
 	virtual void *alloc(_u32)=0;
 	virtual void free(void *, _u32)=0;
+	virtual bool verify(void *, _u32)=0;
 };
 
 #define LL_VECTOR	1
