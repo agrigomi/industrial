@@ -1,0 +1,7 @@
+DEFAULT_OUTDIR=bin
+DEPLOY_DIR=$(DEFAULT_OUTDIR)/deploy
+BUILD_TARGET=.fg/build_target.mk
+BUILD_GROUP=.fg/build_group.mk
+BUILD_FILE=.fg/compile.mk
+BUILD_DEPENDENCY=.fg/dependency.mk
+

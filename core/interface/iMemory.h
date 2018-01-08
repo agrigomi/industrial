@@ -1,0 +1,78 @@
+#ifndef __I_MEMORY_H__
+#define __I_MEMORY_H__
+
+#include "iBase.h"
+#include "iSync.h"
+
+#define I_HEAP	"iHeap"
+#define I_LLIST	"iLlist"
+
+class iHeap:public iBase {
+public:
+	INTERFACE(iHeap, I_HEAP);
+	virtual void *alloc(_u32)=0;
+	virtual void free(void *, _u32)=0;
+};
+
+#define LL_VECTOR	1
+#define LL_QUEUE	2
+
+class iLlist:public iBase {
+public:
+	INTERFACE(iLlist, I_LLIST);
+	virtual void init(_u8 mode, _u8 ncol)=0;
+	virtual void uninit(void)=0;
+
+	virtual HMUTEX lock(HMUTEX hlock=0)=0;
+	virtual void unlock(HMUTEX hlock)=0;
+
+	// get record by index
+	virtual void *get(_u32 index, _u32 *p_size, HMUTEX hlock=0)=0;
+
+	// add record at end of list
+	virtual void *add(void *rec, _u32 size, HMUTEX hlock=0)=0;
+
+	// insert record
+	virtual void *ins(_u32 index, void *rec, _u32 size, HMUTEX hlock=0)=0;
+
+	// remove record by index
+	virtual void rem(_u32 index, HMUTEX hlock=0)=0;
+
+	// delete current record
+	virtual void del(HMUTEX hlock=0)=0;
+
+	// delete all records
+	virtual void clr(HMUTEX hlock=0)=0;
+
+	// return number of records
+	virtual _u32 cnt(HMUTEX hlock=0)=0;
+
+	// select column
+	virtual void col(_u8 col, HMUTEX hlock=0)=0;
+
+	// set current record by content
+	virtual bool sel(void *rec, HMUTEX hlock=0)=0;
+
+	// move record to other column
+	virtual bool mov(void *rec, _u8 col, HMUTEX hlock=0)=0;
+
+	// get next record
+	virtual void *next(_u32 *p_size, HMUTEX hlock=0)=0;
+
+	// get current record
+	virtual void *current(_u32 *p_size, HMUTEX hlock=0)=0;
+
+	// get first record
+	virtual void *first(_u32 *p_size, HMUTEX hlock=0)=0;
+
+	// get last record
+	virtual void *last(_u32 *p_size, HMUTEX hlock=0)=0;
+
+	// get prev. record
+	virtual void *prev(_u32 *p_size, HMUTEX hlock=0)=0;
+
+	// queue mode specific (last-->first-->seccond ...)
+	virtual void roll(HMUTEX hlock=0)=0;
+};
+
+#endif
