@@ -2,6 +2,7 @@
 #define __I_REPOSITORY_H__
 
 #include "iBase.h"
+#include "err.h"
 
 #define I_REPOSITORY	"iRepository"
 
@@ -27,7 +28,8 @@ public:
 	virtual iBase *object_by_interface(_cstr_t iname, _rf_t)=0;
 
 	// extensions
-	//...
+	virtual _err_t extension_load(_str_t file, _str_t alias=0)=0;
+	virtual _err_t extension_unload(_str_t alias)=0;
 };
 
 extern iRepository *_gpi_repo_;
