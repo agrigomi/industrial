@@ -12,6 +12,8 @@ public:
 	virtual _str_t alias(void)=0;
 	virtual _err_t load(_str_t file, _str_t alias=0)=0;
 	virtual _err_t unload(void)=0;
+	virtual _str_t file(void)=0;
+	virtual void *address(void)=0;
 	//...
 };
 

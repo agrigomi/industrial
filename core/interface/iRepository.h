@@ -14,7 +14,7 @@
 
 typedef struct {
 	_u8 		flags;     // request flags
-	_cstr_t		cnme;      // class name
+	_cstr_t		cname;     // class name
 	_cstr_t		iname;     // interface name
 	_version_t	version;
 }_object_request_t;

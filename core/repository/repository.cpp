@@ -1,3 +1,4 @@
+#include <string.h>
 #include "iRepository.h"
 #include "iMemory.h"
 #include "private.h"
@@ -7,6 +8,35 @@ private:
 	iHeap  *mpi_heap;
 	iLlist *mpi_cxt_list; // context list
 	iLlist *mpi_ext_list; // extensions list
+
+	iRepoExtension *get_extension(_str_t file, _str_t alias) {
+		iRepoExtension *r = 0;
+		if(mpi_ext_list) {
+			_u32 sz = 0;
+			bool a = (alias)?false:true, f = (file)?false:true;
+			HMUTEX hl = mpi_ext_list->lock();
+			iRepoExtension *px = (iRepoExtension *)mpi_ext_list->first(&sz, hl);
+
+			if(px) {
+				do {
+					if(file)
+						f = (strcmp(file, px->file()) == 0);
+
+					if(alias)
+						a = (strcmp(alias, px->alias()) == 0);
+
+					if(a && f) {
+						r = px;
+						break;
+					}
+				} while((px = (iRepoExtension *)mpi_ext_list->next(&sz, hl)));
+			}
+
+			mpi_ext_list->unlock(hl);
+		}
+		return r;
+	}
+
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 1, 0, 0);
 
@@ -20,30 +50,34 @@ public:
 	}
 
 	iBase *object_by_name(_cstr_t name, _rf_t rf) {
-		iBase *r = 0;
-		//...
-		return r;
-
+		_object_request_t req;
+		req.cname = name;
+		req.flags = RQ_NAME;
+		return object_request(&req, rf);
 	}
 
 	iBase *object_by_interface(_cstr_t name, _rf_t rf) {
-		iBase *r = 0;
-		//...
-		return r;
+		_object_request_t req;
+		req.iname = name;
+		req.flags = RQ_INTERFACE;
+		return object_request(&req, rf);
 	}
 
 	// extensions
-	_err_t extension_load(_str_t file, _str_t name=0) {
+	_err_t extension_load(_str_t file, _str_t alias=0) {
 		_err_t r = ERR_UNKNOWN;
-		//...
-		return r;
-	}
-	_err_t extension_unload(_str_t name) {
-		_err_t r = ERR_UNKNOWN;
-		//...
+		if(!get_extension(file, alias)) {
+			//...
+		} else
+			r = ERR_DUPLICATED;
 		return r;
 	}
 
+	_err_t extension_unload(_str_t alias) {
+		_err_t r = ERR_UNKNOWN;
+		//...
+		return r;
+	}
 
 	bool object_ctl(_u32 cmd, void *arg) {
 		bool r = false;
@@ -54,7 +88,11 @@ public:
 				mpi_cxt_list = mpi_ext_list = 0;
 				mpi_cxt_list = (iLlist*)object_by_interface(I_LLIST, RF_CLONE);
 				mpi_ext_list = (iLlist*)object_by_interface(I_LLIST, RF_CLONE);
-				r = true;
+				if(mpi_cxt_list && mpi_ext_list) {
+					mpi_cxt_list->init(LL_VECTOR, 1);
+					mpi_ext_list->init(LL_VECTOR, 1);
+					r = true;
+				}
 				break;
 			case OCTL_UNINIT:
 				//...
@@ -66,3 +104,5 @@ public:
 };
 
 static cRepository _g_object_;
+// global pointer to repository
+iRepository *_gpi_repo_ = &_g_object_;
