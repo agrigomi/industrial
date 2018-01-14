@@ -8,6 +8,7 @@ typedef int	_err_t;
 #define ERR_MISSING	-2
 #define ERR_BUSY	-3
 #define ERR_DUPLICATED	-4
+#define ERR_LOADEXT	-5
 
 #endif
 
