@@ -33,9 +33,9 @@ public:
 			case OCTL_INIT: {
 				iRepository *p_repo = (iRepository *)arg;
 				if(!mpi_mutex)
-					mpi_mutex = (iMutex*)p_repo->object_by_interface(I_MUTEX, RF_CLONE);
+					mpi_mutex = (iMutex*)p_repo->object_by_iname(I_MUTEX, RF_CLONE);
 				if(!mpi_heap)
-					mpi_heap = (iHeap*)p_repo->object_by_interface(I_HEAP, RF_ORIGINAL);
+					mpi_heap = (iHeap*)p_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
 				if(mpi_mutex && mpi_heap)
 					r = true;
 				break;

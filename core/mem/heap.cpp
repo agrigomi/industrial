@@ -33,7 +33,7 @@ public:
 				mpi_mutex = 0;
 				iRepository *repo = (iRepository *)arg;
 				// clone mutex
-				if((mpi_mutex = (iMutex*)repo->object_by_interface(I_MUTEX, RF_CLONE))) {
+				if((mpi_mutex = (iMutex*)repo->object_by_iname(I_MUTEX, RF_CLONE))) {
 					// init s2 context
 					m_s2c.page_size = PAGE_SIZE;
 					m_s2c.p_udata = this;

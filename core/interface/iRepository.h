@@ -24,8 +24,8 @@ public:
 	INTERFACE(iRepository, I_REPOSITORY);
 	virtual iBase *object_request(_object_request_t *, _rf_t)=0;
 	virtual void   object_release(iBase *)=0;
-	virtual iBase *object_by_name(_cstr_t name, _rf_t)=0;
-	virtual iBase *object_by_interface(_cstr_t iname, _rf_t)=0;
+	virtual iBase *object_by_cname(_cstr_t cname, _rf_t)=0;
+	virtual iBase *object_by_iname(_cstr_t iname, _rf_t)=0;
 
 	// extensions
 	virtual _err_t extension_load(_str_t file, _str_t alias=0)=0;
@@ -33,6 +33,11 @@ public:
 };
 
 extern iRepository *_gpi_repo_;
+
+#define BY_INAME(iname, flags) \
+	_gpi_repo_->object_by_iname(iname, flags)
+#define BY_CNAME(cname, flags) \
+	_gpi_repo_->object_by_cname(cname, flags)
 
 #endif
 

@@ -49,14 +49,14 @@ public:
 	void object_release(iBase *ptr) {
 	}
 
-	iBase *object_by_name(_cstr_t name, _rf_t rf) {
+	iBase *object_by_cname(_cstr_t name, _rf_t rf) {
 		_object_request_t req;
 		req.cname = name;
 		req.flags = RQ_NAME;
 		return object_request(&req, rf);
 	}
 
-	iBase *object_by_interface(_cstr_t name, _rf_t rf) {
+	iBase *object_by_iname(_cstr_t name, _rf_t rf) {
 		_object_request_t req;
 		req.iname = name;
 		req.flags = RQ_INTERFACE;
@@ -84,10 +84,10 @@ public:
 		switch(cmd) {
 			case OCTL_INIT:
 				mpi_heap = 0;
-				mpi_heap = (iHeap*)object_by_interface(I_HEAP, RF_ORIGINAL);
+				mpi_heap = (iHeap*)object_by_iname(I_HEAP, RF_ORIGINAL);
 				mpi_cxt_list = mpi_ext_list = 0;
-				mpi_cxt_list = (iLlist*)object_by_interface(I_LLIST, RF_CLONE);
-				mpi_ext_list = (iLlist*)object_by_interface(I_LLIST, RF_CLONE);
+				mpi_cxt_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE);
+				mpi_ext_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE);
 				if(mpi_cxt_list && mpi_ext_list) {
 					mpi_cxt_list->init(LL_VECTOR, 1);
 					mpi_ext_list->init(LL_VECTOR, 1);
