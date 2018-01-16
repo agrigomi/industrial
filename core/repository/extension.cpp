@@ -68,6 +68,12 @@ public:
 		//...
 		return r;
 	}
+
+	void *vector(void) {
+		void *r = 0;
+		//...
+		return r;
+	}
 };
 
 static cRepoExtension _g_object_;
