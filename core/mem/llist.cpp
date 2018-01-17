@@ -23,7 +23,7 @@ public:
 	CONSTRUCTOR(cLlist) {
 		mpi_mutex = 0;
 		mpi_heap = 0;
-		_register_object_(this);
+		register_object(this);
 	}
 	DESTRUCTOR(cLlist) {}
 

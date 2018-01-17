@@ -6,7 +6,7 @@ iRepository *_gpi_repo_ = 0;
 
 static _base_vector_t _g_base_vector_;
 
-void _LOCAL_ _register_object_(iBase *pi_base) {
+void _LOCAL_ register_object(iBase *pi_base) {
 }
 
 void _EXPORT_ init(iRepository *pi_repo) {

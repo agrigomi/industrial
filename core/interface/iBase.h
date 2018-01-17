@@ -66,13 +66,13 @@ public:
 
 #define BASE(_class_, name, flags, a, i, r) \
 	CONSTRUCTOR(_class_) { \
-		_register_object_(this); \
+		register_object(this); \
 	} \
 	DESTRUCTOR(_class_) {} \
 	INFO(_class_, name, flags, a, i, r) \
 
 
-extern void _register_object_(iBase *);
+extern void register_object(iBase *);
 
 #endif
 

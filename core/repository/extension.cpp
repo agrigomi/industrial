@@ -90,10 +90,8 @@ public:
 
 	_base_vector_t *vector(void) {
 		_base_vector_t *r = 0;
-		if(m_handle) {
-			if(m_get_base_vector)
-				r = m_get_base_vector();
-		}
+		if(m_handle && m_get_base_vector)
+			r = m_get_base_vector();
 		return r;
 	}
 };
