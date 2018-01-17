@@ -108,5 +108,3 @@ public:
 };
 
 static cRepository _g_object_;
-// global pointer to repository
-iRepository *_gpi_repo_ = &_g_object_;
