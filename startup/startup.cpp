@@ -1,13 +1,10 @@
 #include "startup.h"
 #include "iRepository.h"
 
-#define _EXPORT_ __attribute__ ((visibility ("default")))
-#define _LOCAL_ __attribute__ ((visibility ("hidden")))
-
 // global pointer to repository
 iRepository *_gpi_repo_ = 0;
 
-_base_vector_t _g_base_vector_;
+static _base_vector_t _g_base_vector_;
 
 void _LOCAL_ _register_object_(iBase *pi_base) {
 }
