@@ -20,6 +20,12 @@ private:
 	iMutex	*mpi_mutex;
 	_s2_context_t m_s2c;
 
+	iMutex *get_mutex(void) {
+		if(!mpi_mutex)
+			mpi_mutex = (iMutex*)_gpi_repo_->object_by_iname(I_MUTEX, RF_CLONE);
+		return mpi_mutex;
+	}
+
 	friend _s2_hlock_t s2_lock(_s2_hlock_t hlock, void *p_udata);
 	friend void s2_unlock(_s2_hlock_t, void *p_udata);
 
@@ -29,25 +35,20 @@ public:
 	bool object_ctl(_u32 cmd, void *arg) {
 		bool r = false;
 		switch(cmd) {
-			case OCTL_INIT: {
+			case OCTL_INIT:
 				mpi_mutex = 0;
-				iRepository *repo = (iRepository *)arg;
-				// clone mutex
-				if((mpi_mutex = (iMutex*)repo->object_by_iname(I_MUTEX, RF_CLONE))) {
-					// init s2 context
-					m_s2c.page_size = PAGE_SIZE;
-					m_s2c.p_udata = this;
-					m_s2c.p_s2 = 0;
-					m_s2c.p_mem_alloc = page_alloc;
-					m_s2c.p_mem_free = page_free;
-					m_s2c.p_mem_cpy = (_mem_cpy_t *)memcpy;
-					m_s2c.p_mem_set = (_mem_set_t *)memset;
-					m_s2c.p_lock = s2_lock;
-					m_s2c.p_unlock = s2_unlock;
-					r = true;
-				}
+				// init s2 context
+				m_s2c.page_size = PAGE_SIZE;
+				m_s2c.p_udata = this;
+				m_s2c.p_s2 = 0;
+				m_s2c.p_mem_alloc = page_alloc;
+				m_s2c.p_mem_free = page_free;
+				m_s2c.p_mem_cpy = (_mem_cpy_t *)memcpy;
+				m_s2c.p_mem_set = (_mem_set_t *)memset;
+				m_s2c.p_lock = s2_lock;
+				m_s2c.p_unlock = s2_unlock;
+				r = true;
 				break;
-			}
 			case OCTL_UNINIT: {
 				iRepository *repo = (iRepository *)arg;
 				repo->object_release(mpi_mutex);
@@ -84,14 +85,16 @@ void page_free(void *ptr, _u32 npages, void *p_udata) {
 _s2_hlock_t s2_lock(_s2_hlock_t hlock, void *p_udata) {
 	_s2_hlock_t r = 0;
 	cHeap *obj = (cHeap *)p_udata;
-	if(obj->mpi_mutex)
-		r = (_s2_hlock_t)obj->mpi_mutex->lock((HMUTEX)hlock);
+	iMutex *pim = obj->get_mutex();
+	if(pim)
+		r = (_s2_hlock_t)pim->lock((HMUTEX)hlock);
 	return r;
 }
 
 void s2_unlock(_s2_hlock_t hlock, void *p_udata) {
 	cHeap *obj = (cHeap *)p_udata;
-	if(obj->mpi_mutex)
-		obj->mpi_mutex->unlock((HMUTEX)hlock);
+	iMutex *pim = obj->get_mutex();
+	if(pim)
+		pim->unlock((HMUTEX)hlock);
 }
 
