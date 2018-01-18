@@ -17,7 +17,11 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 	_err_t r = ERR_UNKNOWN;
 	_gpi_repo_ = pi_repo;
 #ifdef _CORE_
-	//...
+	_base_vector_t::iterator i = _g_base_vector_.begin();
+	while(i != _g_base_vector_.end()) {
+		//...
+		i++;
+	}
 #endif
 	return r;
 }
