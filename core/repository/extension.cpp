@@ -58,9 +58,11 @@ public:
 		return r;
 	}
 
-	void init(iRepository *pi_repo) {
+	_err_t init(iRepository *pi_repo) {
+		r = ERR_UNKNOWN;
 		if(m_handle && m_init)
-			m_init(pi_repo);
+			r = m_init(pi_repo);
+		return r;
 	}
 
 	_err_t unload(void) {
