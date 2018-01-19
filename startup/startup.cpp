@@ -39,10 +39,44 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 				}
 			}
 		}
-		//...
 		i++;
 	}
+
+	if((_gpi_repo_ = (iRepository*)ei[0].p_entry->pi_base)) {
+		// the repo is here !
+		iHeap *pi_heap = (iHeap*)ei[1].p_entry->pi_base;
+		if(pi_heap) {
+			// the heap is here !
+			if(!pi_heap->object_ctl(OCTL_INIT, _gpi_repo_))
+				goto _init_done_;
+			ei[1].p_entry->state |= ST_INITIALIZED;
+			// init repository object
+			if(!_gpi_repo_->object_ctl(OCTL_INIT, 0))
+				goto _init_done_;
+			ei[0].p_entry->state |= ST_INITIALIZED;
+		}
+	}
 #endif
+	if(_gpi_repo_) {
+		// init everyone else
+		i = _g_base_vector_.begin();
+		while(i != _g_base_vector_.end()) {
+			_base_entry_t *pbe = &(*i);
+			if(pbe->pi_base && !(pbe->state & ST_INITIALIZED)) {
+				_object_info_t oi;
+				pbe->pi_base->object_info(&oi);
+				if(oi.flags & RF_ORIGINAL) {
+					// init here ORIGINAL flagged objects only
+					if(pbe->pi_base->object_ctl(OCTL_INIT, _gpi_repo_))
+						pbe->state |= ST_INITIALIZED;
+				}
+			}
+			i++;
+		}
+		r = ERR_NONE;
+	}
+
+_init_done_:
 	return r;
 }
 
