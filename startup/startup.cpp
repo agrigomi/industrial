@@ -14,7 +14,7 @@ void _LOCAL_ register_object(iBase *pi_base) {
 
 typedef struct {
 	_cstr_t iname;
-	iBase   *pi_base;
+	_base_entry_t  *p_entry;
 }_early_init_t;
 
 _err_t _EXPORT_ init(iRepository *pi_repo) {
@@ -34,7 +34,7 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 			i->pi_base->object_info(&oinfo);
 			for(_u32 j = 0; ei[j].iname; j++) {
 				if(strcmp(oinfo.iname, ei[j].iname) == 0) {
-					ei[j].pi_base = i->pi_base;
+					ei[j].p_entry = &(*i);
 					break;
 				}
 			}
