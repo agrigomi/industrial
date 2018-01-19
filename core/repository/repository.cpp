@@ -67,10 +67,13 @@ public:
 	_err_t extension_load(_str_t file, _str_t alias=0) {
 		_err_t r = ERR_UNKNOWN;
 		if(!get_extension(file, alias)) {
-			iRepoExtension *px = object_by_iname(I_REPO_EXTENSION, RF_CLONE);
-			if(px)
-				r = px->load(file, alias);
-			 else
+			iRepoExtension *px = (iRepoExtension*)object_by_iname(I_REPO_EXTENSION, RF_CLONE);
+			if(px) {
+				if((r = px->load(file, alias))) {
+					if((r = px->init(this)) != ERR_NONE)
+						px->unload();
+				}
+			} else
 				r = ERR_MISSING;
 		} else
 			r = ERR_DUPLICATED;
