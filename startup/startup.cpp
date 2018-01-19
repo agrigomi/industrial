@@ -42,10 +42,10 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 		i++;
 	}
 
-	if((_gpi_repo_ = (iRepository*)ei[0].p_entry->pi_base)) {
+	if(ei[0].p_entry && (_gpi_repo_ = (iRepository*)ei[0].p_entry->pi_base)) {
 		// the repo is here !
-		iHeap *pi_heap = (iHeap*)ei[1].p_entry->pi_base;
-		if(pi_heap) {
+		iHeap *pi_heap=0;
+		if(ei[1].p_entry && (pi_heap = (iHeap*)ei[1].p_entry->pi_base)) {
 			// the heap is here !
 			if(!pi_heap->object_ctl(OCTL_INIT, _gpi_repo_))
 				goto _init_done_;
