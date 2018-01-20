@@ -105,7 +105,6 @@ _compare_done_:
 					}
 				} while((px = (iRepoExtension*)mpi_ext_list->next(&sz, hm)));
 			}
-
 			mpi_ext_list->unlock(hm);
 		}
 
@@ -151,7 +150,24 @@ public:
 	}
 
 	void object_release(iBase *ptr) {
-		//...
+		_object_info_t info;
+
+		ptr->object_info(&info);
+		_object_request_t req = {RQ_NAME|RQ_INTERFACE|RQ_VERSION,
+					info.cname, info.iname};
+		req.version.version = info.version.version;
+
+		_base_entry_t *bentry = find(&req);
+
+		if(bentry) {
+			HMUTEX hm = mpi_cxt_list->lock();
+			if(mpi_cxt_list->sel(ptr, hm))
+				mpi_cxt_list->del(hm);
+			mpi_cxt_list->unlock(hm);
+
+			if(bentry->ref_cnt)
+				bentry->ref_cnt--;
+		}
 	}
 
 	iBase *object_by_cname(_cstr_t name, _rf_t rf) {
