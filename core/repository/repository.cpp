@@ -14,21 +14,21 @@ private:
 			_u32 sz = 0;
 			bool a = (alias)?false:true, f = (file)?false:true;
 			HMUTEX hl = mpi_ext_list->lock();
-			iRepoExtension *px = (iRepoExtension *)mpi_ext_list->first(&sz, hl);
+			iRepoExtension **px = (iRepoExtension **)mpi_ext_list->first(&sz, hl);
 
 			if(px) {
 				do {
 					if(file)
-						f = (strcmp(file, px->file()) == 0);
+						f = (strcmp(file, (*px)->file()) == 0);
 
 					if(alias)
-						a = (strcmp(alias, px->alias()) == 0);
+						a = (strcmp(alias, (*px)->alias()) == 0);
 
 					if(a && f) {
-						r = px;
+						r = *px;
 						break;
 					}
-				} while((px = (iRepoExtension *)mpi_ext_list->next(&sz, hl)));
+				} while((px = (iRepoExtension **)mpi_ext_list->next(&sz, hl)));
 			}
 
 			mpi_ext_list->unlock(hl);
@@ -94,16 +94,16 @@ _compare_done_:
 		if(!(r = find_in_vector(req, vector))) {
 			_u32 sz;
 			HMUTEX hm = mpi_ext_list->lock();
-			iRepoExtension *px = (iRepoExtension *)mpi_ext_list->first(&sz, hm);
+			iRepoExtension **px = (iRepoExtension **)mpi_ext_list->first(&sz, hm);
 
 			if(px) {
 				do {
-					vector = px->vector();
+					vector = (*px)->vector();
 					if(vector) {
 						if((r = find_in_vector(req, vector)))
 							break;
 					}
-				} while((px = (iRepoExtension*)mpi_ext_list->next(&sz, hm)));
+				} while((px = (iRepoExtension**)mpi_ext_list->next(&sz, hm)));
 			}
 			mpi_ext_list->unlock(hm);
 		}
@@ -191,7 +191,8 @@ public:
 			iRepoExtension *px = (iRepoExtension*)object_by_iname(I_REPO_EXTENSION, RF_CLONE);
 			if(px) {
 				if((r = px->load(file, alias))) {
-					iRepoExtension *_px = (iRepoExtension *)mpi_ext_list->add(&px, sizeof(px));
+					iRepoExtension **_px =
+						(iRepoExtension **)mpi_ext_list->add(&px, sizeof(px));
 					if((r = px->init(this)) != ERR_NONE) {
 						// unload
 						HMUTEX hm = mpi_ext_list->lock();
