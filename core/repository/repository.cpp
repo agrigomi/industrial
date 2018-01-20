@@ -191,10 +191,15 @@ public:
 			iRepoExtension *px = (iRepoExtension*)object_by_iname(I_REPO_EXTENSION, RF_CLONE);
 			if(px) {
 				if((r = px->load(file, alias))) {
-					if((r = px->init(this)) == ERR_NONE)
-						mpi_ext_list->add(&px, sizeof(px));
-					else
+					iRepoExtension *_px = (iRepoExtension *)mpi_ext_list->add(&px, sizeof(px));
+					if((r = px->init(this)) != ERR_NONE) {
+						// unload
+						HMUTEX hm = mpi_ext_list->lock();
+						if(mpi_ext_list->sel(_px, hm))
+							mpi_ext_list->del(hm);
+						mpi_ext_list->unlock(hm);
 						px->unload();
+					}
 				}
 			} else
 				r = ERR_MISSING;
