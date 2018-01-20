@@ -5,7 +5,6 @@
 
 class cRepository:public iRepository {
 private:
-	iHeap  *mpi_heap;
 	iLlist *mpi_cxt_list; // context list
 	iLlist *mpi_ext_list; // extensions list
 
@@ -37,16 +36,122 @@ private:
 		return r;
 	}
 
+	bool compare(_object_request_t *req, iBase *p) {
+		bool r = false;
+		_object_info_t inf;
+
+		p->object_info(&inf);
+
+		if(req->flags & RQ_CMP_OR) {
+			bool r1=false,r2=false,r3=false;
+			if(req->flags & RQ_NAME)
+				r1 = (strcmp(req->cname, inf.cname) == 0);
+			else if(req->flags & RQ_INTERFACE)
+				r2 = (strcmp(req->iname, inf.iname) == 0);
+			else if(req->flags & RQ_VERSION)
+				r3 = (req->version.version == inf.version.version);
+			r = (r1 || r2 || r3);
+		} else {
+			if(req->flags & RQ_NAME) {
+				if(strcmp(req->cname, inf.cname) != 0)
+					goto _compare_done_;
+			}
+			if(req->flags & RQ_INTERFACE) {
+				if(strcmp(req->iname, inf.iname) != 0)
+					goto _compare_done_;
+			}
+			if(req->flags & RQ_VERSION) {
+				if(req->version.version != inf.version.version)
+					goto _compare_done_;
+			}
+			r = true;
+		}
+_compare_done_:
+		return r;
+	}
+
+	_base_entry_t *find_in_vector(_object_request_t *req, _base_vector_t *vector) {
+		_base_entry_t *r = 0;
+		_base_vector_t::iterator it = vector->begin();
+
+		while(it != vector->end()) {
+			_base_entry_t *pe = &(*it);
+			if(pe->pi_base && !(pe->state & ST_DISABLED) && (pe->state & ST_INITIALIZED)) {
+				if(compare(req, pe->pi_base)) {
+					r = pe;
+					break;
+				}
+			}
+			it++;
+		}
+		return r;
+	}
+
+	_base_entry_t *find(_object_request_t *req) {
+		_base_entry_t *r = 0;
+		_base_vector_t *vector = get_base_vector(); // local vector
+
+		if(!(r = find_in_vector(req, vector))) {
+			_u32 sz;
+			HMUTEX hm = mpi_ext_list->lock();
+			iRepoExtension *px = (iRepoExtension *)mpi_ext_list->first(&sz, hm);
+
+			if(px) {
+				do {
+					vector = px->vector();
+					if(vector) {
+						if((r = find_in_vector(req, vector)))
+							break;
+					}
+				} while((px = (iRepoExtension*)mpi_ext_list->next(&sz, hm)));
+			}
+
+			mpi_ext_list->unlock(hm);
+		}
+
+		return r;
+	}
+
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 1, 0, 0);
 
 	iBase *object_request(_object_request_t *req, _rf_t rf) {
 		iBase *r = 0;
-		//...
+		_base_entry_t *bentry = find(req);
+
+		if(bentry) {
+			_object_info_t info;
+
+			bentry->pi_base->object_info(&info);
+			if(info.flags & rf) { // validate flags
+				if((info.flags & rf) & RF_CLONE) {
+					// clone object
+					if((r = (iBase *)mpi_cxt_list->add(bentry->pi_base, info.size))) {
+						if(r->object_ctl(OCTL_INIT, this))
+							bentry->ref_cnt++;
+						else { // release
+							HMUTEX hm = mpi_cxt_list->lock();
+							if(mpi_cxt_list->sel(r, hm)) {
+								mpi_cxt_list->del(hm);
+								r = 0;
+							}
+							mpi_cxt_list->unlock(hm);
+						}
+					}
+				} else {
+					if((info.flags & rf) & RF_ORIGINAL) {
+						r = bentry->pi_base;
+						bentry->ref_cnt++;
+					}
+				}
+			}
+		}
+
 		return r;
 	}
 
 	void object_release(iBase *ptr) {
+		//...
 	}
 
 	iBase *object_by_cname(_cstr_t name, _rf_t rf) {
@@ -70,7 +175,9 @@ public:
 			iRepoExtension *px = (iRepoExtension*)object_by_iname(I_REPO_EXTENSION, RF_CLONE);
 			if(px) {
 				if((r = px->load(file, alias))) {
-					if((r = px->init(this)) != ERR_NONE)
+					if((r = px->init(this)) == ERR_NONE)
+						mpi_ext_list->add(&px, sizeof(px));
+					else
 						px->unload();
 				}
 			} else
@@ -90,8 +197,6 @@ public:
 		bool r = false;
 		switch(cmd) {
 			case OCTL_INIT:
-				mpi_heap = 0;
-				mpi_heap = (iHeap*)object_by_iname(I_HEAP, RF_ORIGINAL);
 				mpi_cxt_list = mpi_ext_list = 0;
 				mpi_cxt_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE);
 				mpi_ext_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE);
