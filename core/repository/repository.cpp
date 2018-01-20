@@ -160,10 +160,13 @@ public:
 		_base_entry_t *bentry = find(&req);
 
 		if(bentry) {
-			HMUTEX hm = mpi_cxt_list->lock();
-			if(mpi_cxt_list->sel(ptr, hm))
-				mpi_cxt_list->del(hm);
-			mpi_cxt_list->unlock(hm);
+			if(ptr != bentry->pi_base) {
+				// cloning
+				HMUTEX hm = mpi_cxt_list->lock();
+				if(mpi_cxt_list->sel(ptr, hm))
+					mpi_cxt_list->del(hm);
+				mpi_cxt_list->unlock(hm);
+			}
 
 			if(bentry->ref_cnt)
 				bentry->ref_cnt--;
