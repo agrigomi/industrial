@@ -205,8 +205,11 @@ public:
 							mpi_ext_list->unlock(hm);
 							px->unload();
 						}
-					}
+					} else
+						r = ERR_MEMORY;
 				}
+				if(r != ERR_NONE)
+					object_release(px);
 			} else
 				r = ERR_MISSING;
 		} else
