@@ -143,6 +143,10 @@ public:
 						bentry->ref_cnt++;
 					}
 				}
+				if(info.flags & RF_TASK) {
+					// start task
+					//...
+				}
 			}
 		}
 
