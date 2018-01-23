@@ -4,4 +4,13 @@ BUILD_TARGET=.fg/build_target.mk
 BUILD_GROUP=.fg/build_group.mk
 BUILD_FILE=.fg/compile.mk
 BUILD_DEPENDENCY=.fg/dependency.mk
-
+#--------------------------------------
+COMPILER=gcc
+LINKER=gcc
+PREPROCESSOR=gcc
+COMPILER_OUTFLAG=-o
+OUTSUFFIX=.o
+DEPSUFFIX=.d
+PREPROCESSOR_OUTFLAG=-MT
+LINKER_OUTFLAG=-o
+MAKE_FLAGS=-s --no-print-directory

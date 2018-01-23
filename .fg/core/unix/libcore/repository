@@ -1,2 +1,3 @@
 core/repository/repository.cpp
+core/repository/extension.cpp
 

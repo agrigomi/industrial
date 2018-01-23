@@ -8,7 +8,7 @@
 
 typedef void*	_dl_handle_t;
 typedef _base_vector_t *_get_base_vector_t(void);
-typedef void _init_t(iRepository *);
+typedef _err_t _init_t(iRepository *);
 
 class cRepoExtension: public iRepoExtension {
 private:
@@ -59,7 +59,7 @@ public:
 	}
 
 	_err_t init(iRepository *pi_repo) {
-		r = ERR_UNKNOWN;
+		_err_t r = ERR_UNKNOWN;
 		if(m_handle && m_init)
 			r = m_init(pi_repo);
 		return r;
