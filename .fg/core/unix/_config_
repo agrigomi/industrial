@@ -1,6 +1,6 @@
 OUTDIR=bin
 SRCSUFFIX=.cpp
 INCLUDES=-Icore/include -Icore/interface
-COMPILER_FLAGS=-c -Wall -D_CORE_ $(INCLUDES)
-LINKER_FLAGS=--shared -lstdc++
-PREPROCESSOR_FLAGS=-MM -Wall -D_CORE_ $(INCLUDES)
+COMPILER_FLAGS+=-Wall -D_CORE_ $(INCLUDES)
+LINKER_FLAGS+=--shared -lstdc++
+PREPROCESSOR_FLAGS+=-Wall -D_CORE_ $(INCLUDES)
