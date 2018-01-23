@@ -1,5 +1,5 @@
-include .fg/_defaults_
-include .fg/$(PROJECT)/_defaults_
+include .fg/_config_
+include .fg/$(PROJECT)/_config_
 
 project_config=.fg/$(PROJECT)/$(CONFIG)/_config_
 -include $(project_config)

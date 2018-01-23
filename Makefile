@@ -1,4 +1,4 @@
-include .fg/_defaults_
+include .fg/_config_
 projects=$(shell cat .fg/projects)
 
 
