@@ -19,12 +19,13 @@ typedef union {
 	};
 }_version_t;
 
-// flags
-#define RF_CLONE	(1<<0)
-#define RF_ORIGINAL	(1<<1)
-#define RF_TASK		(1<<2)
-
 typedef _u8 	_rf_t;
+
+// flags
+#define RF_CLONE     1
+#define RF_ORIGINAL  2
+#define RF_TASK      4
+
 
 typedef struct {
 	_cstr_t		iname;   // interface name
@@ -51,10 +52,11 @@ public:
 #define CONSTRUCTOR(_class_) \
 	_class_()
 
-#define INFO(_class_, name, flags, a, i, r) \
+#define INFO(_class_, name, f, a, i, r) \
 	void object_info(_object_info_t *pi) { \
 		pi->iname = interface_name(); \
 		pi->cname = name; \
+		pi->flags = f; \
 		pi->size = sizeof(_class_); \
 		pi->version.major = a; \
 		pi->version.minor = i; \

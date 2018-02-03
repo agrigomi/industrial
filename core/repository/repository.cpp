@@ -7,6 +7,7 @@ class cRepository:public iRepository {
 private:
 	iLlist *mpi_cxt_list; // context list
 	iLlist *mpi_ext_list; // extensions list
+	bool m_b_ready;
 
 	iRepoExtension *get_extension(_str_t file, _str_t alias) {
 		iRepoExtension *r = 0;
@@ -76,7 +77,7 @@ _compare_done_:
 
 		while(it != vector->end()) {
 			_base_entry_t *pe = &(*it);
-			if(pe->pi_base && !(pe->state & ST_DISABLED) && (pe->state & ST_INITIALIZED)) {
+			if(pe->pi_base && !(pe->state & ST_DISABLED)) {
 				if(compare(req, pe->pi_base)) {
 					r = pe;
 					break;
@@ -114,6 +115,10 @@ _compare_done_:
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 1, 0, 0);
 
+	bool is_ready(void) {
+		return m_b_ready;
+	}
+
 	iBase *object_request(_object_request_t *req, _rf_t rf) {
 		iBase *r = 0;
 		_base_entry_t *bentry = find(req);
@@ -124,17 +129,32 @@ public:
 			bentry->pi_base->object_info(&info);
 			if(info.flags & rf) { // validate flags
 				if((info.flags & rf) & RF_CLONE) {
-					// clone object
-					if((r = (iBase *)mpi_cxt_list->add(bentry->pi_base, info.size))) {
-						if(r->object_ctl(OCTL_INIT, this))
-							bentry->ref_cnt++;
-						else { // release
-							HMUTEX hm = mpi_cxt_list->lock();
-							if(mpi_cxt_list->sel(r, hm)) {
-								mpi_cxt_list->del(hm);
+					if(mpi_cxt_list) {
+						// clone object
+						if((r = (iBase *)mpi_cxt_list->add(bentry->pi_base, info.size))) {
+							if(r->object_ctl(OCTL_INIT, this))
+								bentry->ref_cnt++;
+							else { // release
+								HMUTEX hm = mpi_cxt_list->lock();
+								if(mpi_cxt_list->sel(r, hm)) {
+									mpi_cxt_list->del(hm);
+									r = 0;
+								}
+								mpi_cxt_list->unlock(hm);
+							}
+						}
+					} else {
+						// here we needed of heap
+						_object_request_t req = {RQ_INTERFACE, 0, I_HEAP};
+						iHeap *pi_heap = (iHeap*)object_request(&req, RF_ORIGINAL);
+						if(pi_heap) {
+							r = (iBase *)pi_heap->alloc(info.size);
+							memcpy(r, bentry->pi_base, info.size);
+							if(!r->object_ctl(OCTL_INIT, this)) {
+								pi_heap->free(r, info.size);
 								r = 0;
 							}
-							mpi_cxt_list->unlock(hm);
+							object_release(pi_heap);
 						}
 					}
 				} else {
@@ -232,12 +252,13 @@ public:
 		switch(cmd) {
 			case OCTL_INIT:
 				mpi_cxt_list = mpi_ext_list = 0;
-				mpi_cxt_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE);
+				m_b_ready = false;
+				if((mpi_cxt_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE)))
+					mpi_cxt_list->init(LL_VECTOR, 1);
 				mpi_ext_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE);
 				if(mpi_cxt_list && mpi_ext_list) {
-					mpi_cxt_list->init(LL_VECTOR, 1);
 					mpi_ext_list->init(LL_VECTOR, 1);
-					r = true;
+					r = m_b_ready = true;
 				}
 				break;
 			case OCTL_UNINIT:

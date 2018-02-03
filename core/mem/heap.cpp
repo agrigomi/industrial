@@ -19,9 +19,10 @@ class cHeap:public iHeap {
 private:
 	iMutex	*mpi_mutex;
 	_s2_context_t m_s2c;
+	iRepository *mpi_repo;
 
 	iMutex *get_mutex(void) {
-		if(!mpi_mutex)
+		if(!mpi_mutex && mpi_repo->is_ready())
 			mpi_mutex = (iMutex*)_gpi_repo_->object_by_iname(I_MUTEX, RF_CLONE);
 		return mpi_mutex;
 	}
@@ -36,6 +37,7 @@ public:
 		bool r = false;
 		switch(cmd) {
 			case OCTL_INIT:
+				mpi_repo = (iRepository *)arg;
 				mpi_mutex = 0;
 				// init s2 context
 				m_s2c.page_size = PAGE_SIZE;
@@ -47,7 +49,8 @@ public:
 				m_s2c.p_mem_set = (_mem_set_t *)memset;
 				m_s2c.p_lock = s2_lock;
 				m_s2c.p_unlock = s2_unlock;
-				r = true;
+				if(s2_init(&m_s2c))
+					r = true;
 				break;
 			case OCTL_UNINIT: {
 				iRepository *repo = (iRepository *)arg;

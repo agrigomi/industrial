@@ -63,6 +63,7 @@ public:
 		m_cxt.p_lock = ll_lock;
 		m_cxt.p_unlock = ll_unlock;
 		m_cxt.addr_limit = 0xffffffffffffffffLLU;
+		m_cxt.p_udata = this;
 
 		ll_init(&m_cxt, mode, ncol, m_cxt.addr_limit);
 	}
