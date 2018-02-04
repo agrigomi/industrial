@@ -6,6 +6,7 @@
 
 #define I_HEAP	"iHeap"
 #define I_LLIST	"iLlist"
+#define I_RING_BUFFER "iRingBuffer"
 
 class iHeap:public iBase {
 public:
@@ -13,6 +14,16 @@ public:
 	virtual void *alloc(_u32)=0;
 	virtual void free(void *, _u32)=0;
 	virtual bool verify(void *, _u32)=0;
+};
+
+class iRingBuffer: public iBase {
+public:
+	INTERFACE(iRingBuffer, I_RING_BUFFER);
+	virtual void init(_u32 capacity)=0;
+	virtual void destroy(void)=0;
+	virtual void push(void *msg, _u16 sz)=0;
+	virtual void *pull(_u16 *psz)=0;
+	virtual void reset_pull(void)=0;
 };
 
 #define LL_VECTOR	1

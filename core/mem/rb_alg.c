@@ -90,13 +90,13 @@ void rb_push(_rb_context_t *pcxt, void *data, _u16 sz) {
 		_u16 nsz = sz + sizeof(_u16);
 
 		if(pcxt->rb_first <= pcxt->rb_last && (pcxt->rb_last + p_last->size + nsz) <= pcxt->rb_size) {
-			/* |f|_______|s|___|s|_____|l|_____----------------|	*/ 
+			/* |f|_______|s|___|s|_____|l|_____----------------|	*/
 			/*                                 |n|_______------| 	*/
 			;
 			/* |f|_______|s|___|s|_____|s|_____|l|_______------| 	*/
 		}
 		if(pcxt->rb_first < pcxt->rb_last && (pcxt->rb_last + p_last->size + nsz) > pcxt->rb_size) {
-			/* |f|_______|s|___|s|_____|s|_____|l|_______------|	*/ 
+			/* |f|_______|s|___|s|_____|s|_____|l|_______------|	*/
 			/*                                           |n|_______|*/
 			/* |f|_______|s|___|s|_____|s|_____|l|_____________| 	*/
 			p_last->size += pcxt->rb_size - pcxt->rb_last;
@@ -136,7 +136,7 @@ void rb_push(_rb_context_t *pcxt, void *data, _u16 sz) {
 void *rb_pull(_rb_context_t *pcxt, _u16 *psz) {
 	void * r = NULL;
 	_u64 hlock = rb_lock(pcxt, 0);
-	
+
 	if(pcxt->rb_addr) {
 		if(pcxt->rb_pull != INVALID_PULL_POSITION) {
 			_rb_msg_t *pp = pcxt->rb_addr + pcxt->rb_pull;
