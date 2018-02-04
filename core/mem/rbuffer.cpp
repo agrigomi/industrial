@@ -27,21 +27,30 @@ public:
 	BASE(cRingBuffer, "cRingBuffer", RF_CLONE, 1,0,0);
 
 	void init(_u32 capacity) {
+		m_cxt.mem_alloc = rb_mem_alloc;
+		m_cxt.mem_free = rb_mem_free;
+		m_cxt.mem_set = rb_mem_set;
+		m_cxt.mem_cpy = rb_mem_cpy;
+		m_cxt.lock = rb_lock;
+		m_cxt.unlock = rb_unlock;
+
+		rb_init(&m_cxt, capacity, this);
 	}
 
 	void destroy(void) {
+		rb_destroy(&m_cxt);
 	}
 
 	void push(void *msg, _u16 sz) {
+		rb_push(&m_cxt, msg, sz);
 	}
 
 	void *pull(_u16 *psz) {
-		void *r = 0;
-		//...
-		return r;
+		return rb_pull(&m_cxt, psz);
 	}
 
 	void reset_pull(void) {
+		rb_reset_pull(&m_cxt);
 	}
 
 	bool object_ctl(_u32 cmd, void *arg) {
@@ -59,8 +68,13 @@ public:
 					r = true;
 				break;
 			}
-			case OCTL_UNINIT:
+			case OCTL_UNINIT: {
+				iRepository *repo = (iRepository*)arg;
+				rb_destroy(&m_cxt);
+				repo->object_release(mpi_heap);
+				repo->object_release(mpi_mutex);
 				break;
+			}
 		}
 
 		return r;

@@ -23,11 +23,16 @@ typedef struct {
 	void *rb_udata;
 }_rb_context_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 void  rb_init(_rb_context_t *pcxt, _u32 capacity, void *udata);
 void  rb_destroy(_rb_context_t *pcxt);
 void  rb_push(_rb_context_t *pcxt, void *data, _u16 sz);
 void *rb_pull(_rb_context_t *pcxt, _u16 *psz);
 void  rb_reset_pull(_rb_context_t *pcxt);
-
+#ifdef __cplusplus
+}
+#endif
 #endif
 
