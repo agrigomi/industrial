@@ -2,10 +2,18 @@
 #define __I_LOG_H__
 
 #include "iBase.h"
+#include "iSync.h"
 
 #define I_LOG	"iLog"
 
-typedef void _log_listener_t(_u8 lmt, _cstr_t msg);
+/* log message type */
+#define LMT_NONE	0
+#define LMT_TEXT	0
+#define LMT_INFO	1
+#define LMT_WARNING	2
+#define LMT_ERROR	3
+
+typedef void _log_listener_t(_u8 lmt, _str_t msg);
 
 class iLog: public iBase {
 public:

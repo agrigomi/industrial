@@ -9,10 +9,26 @@
 class cLog: public iLog {
 private:
 	iRingBuffer *mpi_rb;
-	iMutex *mpi_mutex;
 	iLlist *mpi_lstr;
 
 	void sync(void) {
+		_str_t msg = 0;
+
+		if(mpi_rb && mpi_lstr && mpi_lstr->cnt()) {
+			_u16 sz = 0;
+
+			while((msg = (_str_t)mpi_rb->pull(&sz))) {
+				HMUTEX hm = mpi_lstr->lock();
+				_u32 sz = 0;
+				_log_listener_t **plstr = (_log_listener_t**)mpi_lstr->first(&sz, hm);
+				if(plstr) {
+					do {
+						_log_listener_t *f = *plstr;
+						f(msg[0], msg+1);
+					}while((plstr = (_log_listener_t**)mpi_lstr->next(&sz, hm)));
+				}
+			}
+		}
 	}
 
 public:
@@ -24,21 +40,20 @@ public:
 		switch(cmd) {
 			case OCTL_INIT: {
 				mpi_rb = 0;
-				mpi_mutex = 0;
 				mpi_lstr = 0;
 				iRepository *pi_repo = (iRepository*)arg;
 				mpi_rb = (iRingBuffer*)pi_repo->object_by_iname(I_RING_BUFFER, RF_CLONE);
-				mpi_mutex = (iMutex*)pi_repo->object_by_iname(I_MUTEX, RF_CLONE);
 				mpi_lstr = (iLlist*)pi_repo->object_by_iname(I_LLIST, RF_CLONE);
-				if(mpi_rb && mpi_mutex && mpi_lstr)
+				if(mpi_rb && mpi_lstr) {
+					mpi_lstr->init(LL_VECTOR, 1);
 					r = true;
+				}
 				break;
 			}
 			case OCTL_UNINIT: {
 				iRepository *pi_repo = (iRepository*)arg;
 				pi_repo->object_release(mpi_rb);
 				pi_repo->object_release(mpi_lstr);
-				pi_repo->object_release(mpi_mutex);
 				r = true;
 				break;
 			}
@@ -52,22 +67,53 @@ public:
 			mpi_rb->init(capacity);
 	}
 
-	HMUTEX lock(HMUTEX hm) {
+	HMUTEX lock(HMUTEX hm=0) {
 		HMUTEX r = 0;
-		if(mpi_mutex)
-			r = mpi_mutex->lock(hm);
+		if(mpi_lstr)
+			r = mpi_lstr->lock(hm);
 		return r;
 	}
 
 	void unlock(HMUTEX hm) {
-		if(mpi_mutex)
-			mpi_mutex->unlock(hm);
+		if(mpi_lstr)
+			mpi_lstr->unlock(hm);
 	}
 
 	void add_listener(_log_listener_t *lstr) {
+		HMUTEX hm = lock();
+		bool add = true;
+		_u32 sz;
+
+		_log_listener_t **plstr = (_log_listener_t **)mpi_lstr->first(&sz, hm);
+		if(plstr) {
+			do {
+				if(*plstr == lstr) {
+					add = false;
+					break;
+				}
+			}while((plstr = (_log_listener_t **)mpi_lstr->next(&sz, hm)));
+		}
+
+		if(add)
+			mpi_lstr->add(&lstr, sizeof(lstr), hm);
+
+		unlock(hm);
 	}
 
 	void remove_listener(_log_listener_t *lstr) {
+		_u32 sz;
+		HMUTEX hm = lock();
+		_log_listener_t **plstr = (_log_listener_t **)mpi_lstr->first(&sz, hm);
+
+		if(plstr) {
+			do {
+				if(lstr == *plstr) {
+					mpi_lstr->del(hm);
+					break;
+				}
+			} while((plstr = (_log_listener_t **)mpi_lstr->next(&sz, hm)));
+		}
+		unlock(hm);
 	}
 
 	void write(_u8 lmt, _cstr_t msg) {
