@@ -20,10 +20,14 @@ private:
 	iMutex	*mpi_mutex;
 	_s2_context_t m_s2c;
 	iRepository *mpi_repo;
+	bool m_disable_lock;
 
 	iMutex *get_mutex(void) {
-		if(!mpi_mutex && mpi_repo->is_ready())
-			mpi_mutex = (iMutex*)_gpi_repo_->object_by_iname(I_MUTEX, RF_CLONE);
+		if(!mpi_mutex && mpi_repo->is_ready()) {
+			m_disable_lock = true;
+			if((mpi_mutex = (iMutex*)_gpi_repo_->object_by_iname(I_MUTEX, RF_CLONE)))
+				m_disable_lock = false;
+		}
 		return mpi_mutex;
 	}
 
@@ -39,6 +43,7 @@ public:
 			case OCTL_INIT:
 				mpi_repo = (iRepository *)arg;
 				mpi_mutex = 0;
+				m_disable_lock = false;
 				// init s2 context
 				m_s2c.page_size = PAGE_SIZE;
 				m_s2c.p_udata = this;
@@ -88,16 +93,20 @@ void page_free(void *ptr, _u32 npages, void *p_udata) {
 _s2_hlock_t s2_lock(_s2_hlock_t hlock, void *p_udata) {
 	_s2_hlock_t r = 0;
 	cHeap *obj = (cHeap *)p_udata;
-	iMutex *pim = obj->get_mutex();
-	if(pim)
-		r = (_s2_hlock_t)pim->lock((HMUTEX)hlock);
+	if(!obj->m_disable_lock) {
+		iMutex *pim = obj->get_mutex();
+		if(pim)
+			r = (_s2_hlock_t)pim->lock((HMUTEX)hlock);
+	}
 	return r;
 }
 
 void s2_unlock(_s2_hlock_t hlock, void *p_udata) {
 	cHeap *obj = (cHeap *)p_udata;
-	iMutex *pim = obj->get_mutex();
-	if(pim)
-		pim->unlock((HMUTEX)hlock);
+	if(!obj->m_disable_lock) {
+		iMutex *pim = obj->get_mutex();
+		if(pim)
+			pim->unlock((HMUTEX)hlock);
+	}
 }
 

@@ -7,7 +7,11 @@ _LOCAL_ iRepository *_gpi_repo_ = 0;
 
 static _base_vector_t _g_base_vector_;
 
+#ifdef _CORE_
+void _EXPORT_ register_object(iBase *pi_base) {
+#else
 void _LOCAL_ register_object(iBase *pi_base) {
+#endif
 	_base_entry_t be = {pi_base, 0, 0};
 	_g_base_vector_.push_back(be);
 }
