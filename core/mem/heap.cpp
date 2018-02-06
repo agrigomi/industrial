@@ -23,7 +23,7 @@ private:
 	bool m_disable_lock;
 
 	iMutex *get_mutex(void) {
-		if(!mpi_mutex && mpi_repo->is_ready()) {
+		if(!mpi_mutex) {
 			m_disable_lock = true;
 			if((mpi_mutex = (iMutex*)_gpi_repo_->object_by_iname(I_MUTEX, RF_CLONE)))
 				m_disable_lock = false;

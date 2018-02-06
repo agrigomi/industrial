@@ -115,10 +115,6 @@ private:
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 1, 0, 0);
 
-	bool is_ready(void) {
-		return m_b_ready;
-	}
-
 	iBase *object_request(_object_request_t *req, _rf_t rf) {
 		iBase *r = 0;
 		_base_entry_t *bentry = find(req);
