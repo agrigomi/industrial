@@ -25,9 +25,13 @@ typedef struct {
 	_base_entry_t  *p_entry;
 }_early_init_t;
 
+#ifdef _CORE_
+_err_t _EXPORT_ init(int argc, char *argv[]) {
+#else
 _err_t _EXPORT_ init(iRepository *pi_repo) {
-	_err_t r = ERR_UNKNOWN;
 	_gpi_repo_ = pi_repo;
+#endif
+	_err_t r = ERR_UNKNOWN;
 #ifdef _CORE_
 	_early_init_t ei[]= {
 		{I_REPOSITORY,	0},

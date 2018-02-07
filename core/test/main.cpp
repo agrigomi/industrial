@@ -8,7 +8,7 @@ void log_listener(_u8 lmt, _str_t msg) {
 }
 
 _err_t main(int argc, char *argv[]) {
-	_err_t r = init(0);
+	_err_t r = init(argc, argv);
 	if(r == ERR_NONE) {
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);

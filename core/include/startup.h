@@ -19,7 +19,11 @@ typedef struct {
 typedef std::vector<_base_entry_t> _base_vector_t;
 
 extern "C" {
+#ifdef _CORE_
+_err_t init(int argc, char *argv[]);
+#else
 _err_t init(iRepository *pi_repo=0);
+#endif
 _base_vector_t *get_base_vector(void);
 iRepository *get_repository(void);
 };
