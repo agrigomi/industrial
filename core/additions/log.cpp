@@ -27,6 +27,7 @@ private:
 						f(msg[0], msg+1);
 					}while((plstr = (_log_listener_t**)mpi_lstr->next(&sz, hm)));
 				}
+				mpi_lstr->unlock(hm);
 			}
 		}
 	}
