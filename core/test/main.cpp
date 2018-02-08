@@ -2,6 +2,7 @@
 #include "startup.h"
 #include "iRepository.h"
 #include "iLog.h"
+#include "iArgs.h"
 
 void log_listener(_u8 lmt, _str_t msg) {
 	printf("%s\n", msg);
@@ -17,7 +18,16 @@ _err_t main(int argc, char *argv[]) {
 			pi_log->add_listener(log_listener);
 			pi_log->write(LMT_INFO, "-- test --");
 		}
-		//...
+		iArgs *pi_args = (iArgs*)pi_repo->object_by_iname(I_ARGS, RF_ORIGINAL);
+		if(pi_args) {
+			_char_t val[100]="";
+			_char_t opt = 0;
+			if(pi_args->check_option('i'))
+				pi_log->write(LMT_INFO, "i passed");
+			if(pi_args->get_option('n', val, sizeof(val)))
+				pi_log->fwrite(LMT_INFO, "n=%s", val);
+			//...
+		}
 	}
 	return r;
 }

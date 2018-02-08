@@ -2,6 +2,7 @@
 #include "startup.h"
 #include "iMemory.h"
 #include "iLog.h"
+#include "iArgs.h"
 
 // global pointer to repository
 _LOCAL_ iRepository *_gpi_repo_ = 0;
@@ -34,9 +35,10 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 	_err_t r = ERR_UNKNOWN;
 #ifdef _CORE_
 	_early_init_t ei[]= {
-		{I_REPOSITORY,	0},
-		{I_HEAP,	0},
-		{I_LOG,		0},
+		{I_REPOSITORY,	0}, //0
+		{I_HEAP,	0}, //1
+		{I_LOG,		0}, //2
+		{I_ARGS,	0}, //3
 		{0,		0}
 	};
 
@@ -73,6 +75,15 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 				// log is here
 				if(pi_log->object_ctl(OCTL_INIT, _gpi_repo_))
 					ei[2].p_entry->state |= ST_INITIALIZED;
+			}
+			// init args
+			iArgs *pi_args = 0;
+			if(ei[3].p_entry && (pi_args = (iArgs*)ei[3].p_entry->pi_base)) {
+				// args is here
+				if(pi_args->object_ctl(OCTL_INIT, _gpi_repo_)) {
+					ei[3].p_entry->state |= ST_INITIALIZED;
+					pi_args->init(argc, argv);
+				}
 			}
 		}
 	}
