@@ -149,19 +149,21 @@ public:
 							if(!r->object_ctl(OCTL_INIT, this)) {
 								pi_heap->free(r, info.size);
 								r = 0;
-							}
+							} else
+								bentry->ref_cnt++;
+
 							object_release(pi_heap);
 						}
+					}
+					if(r && info.flags & RF_TASK) {
+						// start task
+						//...
 					}
 				} else {
 					if((info.flags & rf) & RF_ORIGINAL) {
 						r = bentry->pi_base;
 						bentry->ref_cnt++;
 					}
-				}
-				if(info.flags & RF_TASK) {
-					// start task
-					//...
 				}
 			}
 		}

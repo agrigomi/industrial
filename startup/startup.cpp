@@ -98,8 +98,13 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 				pbe->pi_base->object_info(&oi);
 				if(oi.flags & RF_ORIGINAL) {
 					// init here ORIGINAL flagged objects only
-					if(pbe->pi_base->object_ctl(OCTL_INIT, _gpi_repo_))
+					if(pbe->pi_base->object_ctl(OCTL_INIT, _gpi_repo_)) {
 						pbe->state |= ST_INITIALIZED;
+						if(oi.flags & RF_TASK) {
+							// start task
+							//...
+						}
+					}
 				}
 			}
 			i++;
