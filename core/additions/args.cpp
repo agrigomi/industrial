@@ -139,9 +139,21 @@ public:
 		return r;
 	}
 
-	_str_t value(_str_t opt) {
+	_str_t value(_cstr_t opt) {
 		_str_t r = 0;
-		//...
+
+		if(m_argc > 1 && m_argv) {
+			_u32 idx = 0;
+			for(_u32 i = 1; i < m_argc; i++) {
+				if(check(opt, m_argv[i], OPT_VALUE|OPT_LONG, &idx)) {
+					if(m_argv[i][idx] == '=')
+						r = m_argv[i] + idx+1;
+					else if(i+1 < m_argc && m_argv[i+1][0] != '-')
+						r = m_argv[i+1];
+				}
+			}
+		}
+
 		return r;
 	}
 };

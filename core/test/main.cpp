@@ -22,10 +22,10 @@ _err_t main(int argc, char *argv[]) {
 		if(pi_args) {
 			if(pi_args->check('i'))
 				pi_log->write(LMT_INFO, "i passed");
-			if(pi_args->check("n"))
-				pi_log->write(LMT_INFO, "n passed");
+			if(pi_args->check("name"))
+				pi_log->write(LMT_INFO, "name passed");
 			pi_log->fwrite(LMT_INFO, "u=%s", pi_args->value('u'));
-
+			pi_log->fwrite(LMT_INFO, "name=%s", pi_args->value("name"));
 			//...
 		}
 	}

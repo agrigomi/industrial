@@ -16,7 +16,7 @@ public:
 	virtual bool check(_char_t opt)=0;
 	virtual bool check(_cstr_t opt)=0;
 	virtual _str_t value(_char_t opt)=0;
-	virtual _str_t value(_str_t opt)=0;
+	virtual _str_t value(_cstr_t opt)=0;
 };
 
 #endif
