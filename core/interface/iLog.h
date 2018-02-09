@@ -18,7 +18,6 @@ typedef void _log_listener_t(_u8 lmt, _str_t msg);
 class iLog: public iBase {
 public:
 	INTERFACE(iLog, I_LOG);
-	virtual void init(_u32 capacity)=0;
 	virtual void add_listener(_log_listener_t *)=0;
 	virtual void remove_listener(_log_listener_t *)=0;
 	virtual void write(_u8 lmt, _cstr_t msg)=0;

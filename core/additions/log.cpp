@@ -1,10 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "iRepository.h"
 #include "iMemory.h"
 #include "iLog.h"
 #include "iSync.h"
+#include "iArgs.h"
 
-#define MAX_MSG_BUFFER	1024
+#define MAX_MSG_BUFFER		1024
+#define DEFAULT_RB_CAPACITY 	16384
 
 class cLog: public iLog {
 private:
@@ -32,6 +35,19 @@ private:
 		}
 	}
 
+	void init_rb(iRepository *pi_repo) {
+		iArgs *pi_args = (iArgs*)pi_repo->object_by_iname(I_ARGS, RF_ORIGINAL);
+		_u32 lbc = DEFAULT_RB_CAPACITY;
+
+		if(pi_args) {
+			_str_t log_buffer = pi_args->value("log-buffer");
+			if(log_buffer)
+				lbc = atoi(log_buffer);
+			pi_repo->object_release(pi_args);
+		}
+		mpi_rb->init(lbc);
+	}
+
 public:
 	BASE(cLog, "cLog", RF_CLONE|RF_ORIGINAL, 1,0,0);
 
@@ -47,6 +63,7 @@ public:
 				mpi_lstr = (iLlist*)pi_repo->object_by_iname(I_LLIST, RF_CLONE);
 				if(mpi_rb && mpi_lstr) {
 					mpi_lstr->init(LL_VECTOR, 1);
+					init_rb(pi_repo);
 					r = true;
 				}
 				break;
@@ -61,11 +78,6 @@ public:
 		}
 
 		return r;
-	}
-
-	void init(_u32 capacity) {
-		if(mpi_rb)
-			mpi_rb->init(capacity);
 	}
 
 	HMUTEX lock(HMUTEX hm=0) {

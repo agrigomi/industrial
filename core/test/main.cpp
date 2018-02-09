@@ -14,7 +14,6 @@ _err_t main(int argc, char *argv[]) {
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
 		if(pi_log) {
-			pi_log->init(16384);
 			pi_log->add_listener(log_listener);
 			pi_log->write(LMT_INFO, "-- test --");
 		}
