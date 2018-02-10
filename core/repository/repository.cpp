@@ -125,12 +125,18 @@ public:
 			bentry->pi_base->object_info(&info);
 			if(info.flags & rf) { // validate flags
 				if((info.flags & rf) & RF_CLONE) {
+					_u32 size = info.size+1;
+
 					if(mpi_cxt_list) {
 						// clone object
-						if((r = (iBase *)mpi_cxt_list->add(bentry->pi_base, info.size))) {
-							if(r->object_ctl(OCTL_INIT, this))
+						if((r = (iBase *)mpi_cxt_list->add(bentry->pi_base, size))) {
+							_u8 *state = (_u8 *)r;
+							state += size;
+
+							if(r->object_ctl(OCTL_INIT, this)) {
 								bentry->ref_cnt++;
-							else { // release
+								*state = ST_INITIALIZED;
+							} else { // release
 								HMUTEX hm = mpi_cxt_list->lock();
 								if(mpi_cxt_list->sel(r, hm)) {
 									mpi_cxt_list->del(hm);
@@ -144,14 +150,19 @@ public:
 						_object_request_t req = {RQ_INTERFACE, 0, I_HEAP};
 						iHeap *pi_heap = (iHeap*)object_request(&req, RF_ORIGINAL);
 						if(pi_heap) {
-							r = (iBase *)pi_heap->alloc(info.size);
-							memcpy(r, bentry->pi_base, info.size);
-							if(!r->object_ctl(OCTL_INIT, this)) {
-								pi_heap->free(r, info.size);
-								r = 0;
-							} else
-								bentry->ref_cnt++;
+							r = (iBase *)pi_heap->alloc(size);
+							_u8 *state = (_u8 *)r;
+							state += size;
 
+							memcpy(r, bentry->pi_base, size);
+
+							if(!r->object_ctl(OCTL_INIT, this)) {
+								pi_heap->free(r, size);
+								r = 0;
+							} else {
+								bentry->ref_cnt++;
+								*state = ST_INITIALIZED;
+							}
 							object_release(pi_heap);
 						}
 					}
