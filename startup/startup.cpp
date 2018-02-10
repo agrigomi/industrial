@@ -93,8 +93,10 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 		i = _g_base_vector_.begin();
 		while(i != _g_base_vector_.end()) {
 			_base_entry_t *pbe = &(*i);
+
 			if(pbe->pi_base && !(pbe->state & ST_INITIALIZED)) {
 				_object_info_t oi;
+
 				pbe->pi_base->object_info(&oi);
 				if(oi.flags & RF_ORIGINAL) {
 					// init here ORIGINAL flagged objects only

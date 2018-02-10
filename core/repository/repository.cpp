@@ -99,8 +99,7 @@ private:
 
 			if(px) {
 				do {
-					vector = (*px)->vector();
-					if(vector) {
+					if((vector = (*px)->vector())) {
 						if((r = find_in_vector(req, vector)))
 							break;
 					}
@@ -110,6 +109,52 @@ private:
 		}
 
 		return r;
+	}
+
+	void update_vector(_base_vector_t *vector) {
+		_base_vector_t::iterator it = vector->begin();
+
+		while(it != vector->end()) {
+			_base_entry_t *pe = &(*it);
+
+			if(pe->pi_base && !(pe->state & (ST_DISABLED | ST_INITIALIZED))) {
+				_object_info_t oi;
+
+				pe->pi_base->object_info(&oi);
+				if(oi.flags & RF_ORIGINAL) {
+					if(pe->pi_base->object_ctl(OCTL_INIT, this)) {
+						pe->state |= ST_INITIALIZED;
+						if(oi.flags & RF_TASK) {
+							//start task
+							//...
+						}
+					}
+				}
+			}
+			it++;
+		}
+	}
+
+	void update(void) {
+		_base_vector_t *vector = get_base_vector(); // local vector
+
+		// update main vector
+		update_vector(vector);
+
+		_u32 sz;
+		HMUTEX hm = mpi_ext_list->lock();
+		iRepoExtension **px = (iRepoExtension **)mpi_ext_list->first(&sz, hm);
+
+		if(px) {
+			do {
+				if((vector = (*px)->vector()))
+					update_vector(vector);
+			} while((px = (iRepoExtension**)mpi_ext_list->next(&sz, hm)));
+		}
+		mpi_ext_list->unlock(hm);
+
+		// update dynamic objects
+		//...
 	}
 
 public:
@@ -237,7 +282,8 @@ public:
 								mpi_ext_list->del(hm);
 							mpi_ext_list->unlock(hm);
 							px->unload();
-						}
+						} else // update repository
+							update();
 					} else
 						r = ERR_MEMORY;
 				}
