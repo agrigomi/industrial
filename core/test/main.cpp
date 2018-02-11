@@ -15,17 +15,7 @@ _err_t main(int argc, char *argv[]) {
 		iLog *pi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
 		if(pi_log) {
 			pi_log->add_listener(log_listener);
-			pi_log->write(LMT_INFO, "-- test --");
-		}
-		iArgs *pi_args = (iArgs*)pi_repo->object_by_iname(I_ARGS, RF_ORIGINAL);
-		if(pi_args) {
-			if(pi_args->check('i'))
-				pi_log->write(LMT_INFO, "i passed");
-			if(pi_args->check("name"))
-				pi_log->write(LMT_INFO, "name passed");
-			pi_log->fwrite(LMT_INFO, "u=%s", pi_args->value('u'));
-			pi_log->fwrite(LMT_INFO, "name=%s", pi_args->value("name"));
-			//...
+			pi_repo->object_release(pi_log);
 		}
 	}
 	return r;

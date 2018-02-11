@@ -1,0 +1,2 @@
+COMPILER_FLAGS+=-fPIC -g -Icore/test/interface
+LINKER_FLAGS+=-fpic --shared

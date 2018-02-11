@@ -121,3 +121,4 @@ _init_done_:
 _base_vector_t _EXPORT_ *get_base_vector(void) {
 	return &_g_base_vector_;
 }
+
