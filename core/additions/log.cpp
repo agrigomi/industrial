@@ -35,6 +35,17 @@ private:
 		}
 	}
 
+	void sync(_log_listener_t *lstr) {
+		if(mpi_rb) {
+			_str_t msg = 0;
+			_u16 sz = 0;
+
+			mpi_rb->reset_pull();
+			while((msg = (_str_t)mpi_rb->pull(&sz)))
+				lstr(msg[0], msg+1);
+		}
+	}
+
 	void init_rb(iRepository *pi_repo) {
 		iArgs *pi_args = (iArgs*)pi_repo->object_by_iname(I_ARGS, RF_ORIGINAL);
 		_u32 lbc = DEFAULT_RB_CAPACITY;
@@ -107,8 +118,10 @@ public:
 			}while((plstr = (_log_listener_t **)mpi_lstr->next(&sz, hm)));
 		}
 
-		if(add)
+		if(add) {
 			mpi_lstr->add(&lstr, sizeof(lstr), hm);
+			sync(lstr);
+		}
 
 		unlock(hm);
 	}
