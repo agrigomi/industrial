@@ -9,9 +9,9 @@ private:
 	iLog *mpi_log;
 
 	iLog *get_log(void) {
-		iLog *r = 0;
+		iLog *r = mpi_log;
 
-		if(!mpi_log && mpi_repo)
+		if(!r && mpi_repo)
 			r = (iLog *)mpi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
 		return r;
 	}
@@ -23,6 +23,7 @@ public:
 		bool r = false;
 		switch(cmd) {
 			case OCTL_INIT:
+				mpi_log = 0;
 				mpi_repo = (iRepository *)arg;
 				r = true;
 				break;
