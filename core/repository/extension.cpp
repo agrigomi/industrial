@@ -7,7 +7,7 @@
 #define MAX_ALIAS_LEN	32
 
 typedef void*	_dl_handle_t;
-typedef _base_entry_t *_get_base_array_t(void);
+typedef _base_entry_t *_get_base_array_t(_u32 *count, _u32 *limit);
 typedef _err_t _init_t(iRepository *);
 
 class cRepoExtension: public iRepoExtension {
@@ -90,10 +90,10 @@ public:
 		return r;
 	}
 
-	_base_entry_t *array(void) {
+	_base_entry_t *array(_u32 *count, _u32 *limit) {
 		_base_entry_t *r = 0;
 		if(m_handle && m_get_base_array)
-			r = m_get_base_array();
+			r = m_get_base_array(count, limit);
 		return r;
 	}
 };

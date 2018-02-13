@@ -9,7 +9,6 @@ using namespace std;
 _LOCAL_ iRepository *_gpi_repo_ = 0;
 
 #ifdef _CORE_
-IMPLEMENT_BASE_ARRAY(1024);
 _EXPORT_ iRepository *get_repository(void) {
 	return _gpi_repo_;
 }
@@ -17,24 +16,9 @@ void _EXPORT_ register_object(iBase *pi_base) {
 #else
 void _LOCAL_ register_object(iBase *pi_base) {
 #endif
-	if(_base_array_count_ < _base_array_limit_) {
-		_g_base_array_[_base_array_count_].pi_base = pi_base;
-		_g_base_array_[_base_array_count_].ref_cnt = 0;
-		_g_base_array_[_base_array_count_].state = 0;
-		_base_array_count_++;
-	}
+	_base_entry_t e={pi_base, 0, 0};
+	add_base_entry(&e);
 }
-
-_EXPORT_ _base_entry_t *get_base_array(void) {
-	return _g_base_array_;
-}
-_EXPORT_ _u32 get_base_array_limit(void) {
-	return _base_array_limit_;
-}
-_EXPORT_ _u32 get_base_array_count(void) {
-	return _base_array_count_;
-}
-
 
 typedef struct {
 	_cstr_t iname;
@@ -49,6 +33,8 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 #endif
 	_err_t r = ERR_UNKNOWN;
 	_u32 i = 0;
+	_u32 count, limit;
+	_base_entry_t *array = get_base_array(&count, &limit);
 #ifdef _CORE_
 	_early_init_t ei[]= {
 		{I_REPOSITORY,	0}, //0
@@ -58,13 +44,13 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 		{0,		0}
 	};
 
-	while(i < _base_array_count_) {
+	while(i < count) {
 		_object_info_t oinfo;
-		if(_g_base_array_[i].pi_base) {
-			_g_base_array_[i].pi_base->object_info(&oinfo);
+		if(array[i].pi_base) {
+			array[i].pi_base->object_info(&oinfo);
 			for(_u32 j = 0; ei[j].iname; j++) {
 				if(strcmp(oinfo.iname, ei[j].iname) == 0) {
-					ei[j].p_entry = &_g_base_array_[i];
+					ei[j].p_entry = &array[i];
 					break;
 				}
 			}
@@ -106,8 +92,8 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 	if(_gpi_repo_) {
 		// init everyone else
 		i = 0;
-		while(i < _base_array_count_) {
-			_base_entry_t *pbe = &_g_base_array_[i];
+		while(i < count) {
+			_base_entry_t *pbe = &array[i];
 
 			if(pbe->pi_base && !(pbe->state & ST_INITIALIZED)) {
 				_object_info_t oi;

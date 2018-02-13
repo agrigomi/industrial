@@ -71,11 +71,11 @@ private:
 		return r;
 	}
 
-	_base_entry_t *find_in_array(_object_request_t *req, _base_entry_t *array) {
+	_base_entry_t *find_in_array(_object_request_t *req, _base_entry_t *array, _u32 count) {
 		_base_entry_t *r = 0;
 		_u32 it = 0;;
 
-		while(it < get_base_array_count()) {
+		while(it < count) {
 			_base_entry_t *pe = &array[it];
 			if(pe->pi_base && !(pe->state & ST_DISABLED)) {
 				if(compare(req, pe->pi_base)) {
@@ -90,17 +90,18 @@ private:
 
 	_base_entry_t *find(_object_request_t *req) {
 		_base_entry_t *r = 0;
-		_base_entry_t *array = get_base_array(); // local vector
+		_u32 count, limit;
+		_base_entry_t *array = get_base_array(&count, &limit); // local vector
 
-		if(!(r = find_in_array(req, array))) {
+		if(!(r = find_in_array(req, array, count))) {
 			_u32 sz;
 			HMUTEX hm = mpi_ext_list->lock();
 			iRepoExtension **px = (iRepoExtension **)mpi_ext_list->first(&sz, hm);
 
 			if(px) {
 				do {
-					if((array = (*px)->array())) {
-						if((r = find_in_array(req, array)))
+					if((array = (*px)->array(&count, &limit))) {
+						if((r = find_in_array(req, array, count)))
 							break;
 					}
 				} while((px = (iRepoExtension**)mpi_ext_list->next(&sz, hm)));
@@ -111,10 +112,10 @@ private:
 		return r;
 	}
 
-	void update_array(_base_entry_t *array) {
+	void update_array(_base_entry_t *array, _u32 count) {
 		_u32 it = 0;
 
-		while(it < get_base_array_count()) {
+		while(it < count) {
 			_base_entry_t *pe = &array[it];
 
 			if(pe->pi_base && !(pe->state & (ST_DISABLED | ST_INITIALIZED))) {
@@ -136,10 +137,11 @@ private:
 	}
 
 	void update(void) {
-		_base_entry_t *array = get_base_array(); // local array
+		_u32 count, limit;
+		_base_entry_t *array = get_base_array(&count, &limit); // local array
 
 		// update main vector
-		update_array(array);
+		update_array(array, count);
 
 		_u32 sz;
 		HMUTEX hm = mpi_ext_list->lock();
@@ -147,8 +149,8 @@ private:
 
 		if(px) {
 			do {
-				if((array = (*px)->array()))
-					update_array(array);
+				if((array = (*px)->array(&count, &limit)))
+					update_array(array, count);
 			} while((px = (iRepoExtension**)mpi_ext_list->next(&sz, hm)));
 		}
 		mpi_ext_list->unlock(hm);

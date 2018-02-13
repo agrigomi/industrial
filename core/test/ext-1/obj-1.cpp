@@ -2,6 +2,9 @@
 #include "iRepository.h"
 #include "iLog.h"
 #include "iArgs.h"
+#include "startup.h"
+
+IMPLEMENT_BASE_ARRAY(10);
 
 class cObj_1: public iObj_1 {
 private:
