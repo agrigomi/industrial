@@ -45,7 +45,7 @@ public:
 
 	_err_t load(_str_t file, _str_t alias=0) {
 		_err_t r = ERR_UNKNOWN;
-		if((m_handle = dlopen(file, RTLD_LAZY))) {
+		if((m_handle = dlopen(file, RTLD_NOW | RTLD_DEEPBIND))) {
 			m_init = (_init_t *)dlsym(m_handle, "init");
 			m_get_base_vector = (_get_base_vector_t *)dlsym(m_handle, "get_base_vector");
 			if(m_get_base_vector && m_init ) {

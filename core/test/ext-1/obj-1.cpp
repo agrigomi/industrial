@@ -39,3 +39,5 @@ public:
 	void method_2(void) {
 	}
 };
+
+static cObj_1 _g_object_;
