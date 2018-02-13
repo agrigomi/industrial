@@ -20,7 +20,7 @@ extern "C" {
 #ifdef _CORE_
 _err_t init(int argc, char *argv[]);
 #else
-_err_t init(iRepository *pi_repo=0);
+_err_t init(iRepository *pi_repo);
 #endif
 _base_entry_t *get_base_array(_u32 *count, _u32 *limit);
 void add_base_entry(_base_entry_t *entry);

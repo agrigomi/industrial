@@ -242,10 +242,12 @@ public:
 		if(bentry) {
 			if(ptr != bentry->pi_base) {
 				// cloning
-				HMUTEX hm = mpi_cxt_list->lock();
-				if(mpi_cxt_list->sel(ptr, hm))
-					mpi_cxt_list->del(hm);
-				mpi_cxt_list->unlock(hm);
+				if(ptr->object_ctl(OCTL_UNINIT, this)) {
+					HMUTEX hm = mpi_cxt_list->lock();
+					if(mpi_cxt_list->sel(ptr, hm))
+						mpi_cxt_list->del(hm);
+					mpi_cxt_list->unlock(hm);
+				}
 			}
 
 			if(bentry->ref_cnt)

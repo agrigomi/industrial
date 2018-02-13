@@ -4,7 +4,6 @@
 #include "iLog.h"
 #include "iArgs.h"
 
-using namespace std;
 // global pointer to repository
 _LOCAL_ iRepository *_gpi_repo_ = 0;
 
