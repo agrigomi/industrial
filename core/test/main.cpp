@@ -17,6 +17,8 @@ _err_t main(int argc, char *argv[]) {
 			pi_log->add_listener(log_listener);
 			pi_repo->object_release(pi_log);
 		}
+
+		pi_repo->extension_load((_str_t)"bin/core/unix/ext-1/ext-1.so", (_str_t)"ext-1");
 	}
 	return r;
 }

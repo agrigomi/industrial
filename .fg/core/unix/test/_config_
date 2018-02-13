@@ -1,2 +1,3 @@
-COMPILER_FLAGS+=-g -Icore/test/interface
+COMPILER_FLAGS+=-g -Icore/test/interface -D_CORE_
 LINKER_FLAGS+=-L$(OUTDIR)/$(PROJECT)/$(CONFIG)/libcore -lcore -lstdc++ -ldl -g
+DEPENDENCY_FLAGS+= -D_CORE_

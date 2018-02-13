@@ -33,6 +33,7 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 	_gpi_repo_ = pi_repo;
 #endif
 	_err_t r = ERR_UNKNOWN;
+	_base_vector_t::iterator i = _g_base_vector_.begin();
 #ifdef _CORE_
 	_early_init_t ei[]= {
 		{I_REPOSITORY,	0}, //0
@@ -42,7 +43,6 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 		{0,		0}
 	};
 
-	_base_vector_t::iterator i = _g_base_vector_.begin();
 	while(i != _g_base_vector_.end()) {
 		_object_info_t oinfo;
 		if(i->pi_base) {
@@ -113,8 +113,9 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 		}
 		r = ERR_NONE;
 	}
-
+#ifdef _CORE_
 _init_done_:
+#endif
 	return r;
 }
 

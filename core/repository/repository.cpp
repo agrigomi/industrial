@@ -271,7 +271,7 @@ public:
 		if(!get_extension(file, alias)) {
 			iRepoExtension *px = (iRepoExtension*)object_by_iname(I_REPO_EXTENSION, RF_CLONE);
 			if(px) {
-				if((r = px->load(file, alias))) {
+				if((r = px->load(file, alias)) == ERR_NONE) {
 					iRepoExtension **_px =
 						(iRepoExtension **)mpi_ext_list->add(&px, sizeof(px));
 					if(_px) {
