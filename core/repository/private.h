@@ -15,7 +15,7 @@ public:
 	virtual _err_t unload(void)=0;
 	virtual _str_t file(void)=0;
 	virtual void *address(void)=0;
-	virtual _base_vector_t *vector(void)=0; // return pointer to object vector
+	virtual _base_entry_t *array(void)=0; // return pointer to object vector
 	//...
 };
 

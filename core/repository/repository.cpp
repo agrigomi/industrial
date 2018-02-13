@@ -71,12 +71,12 @@ private:
 		return r;
 	}
 
-	_base_entry_t *find_in_vector(_object_request_t *req, _base_vector_t *vector) {
+	_base_entry_t *find_in_array(_object_request_t *req, _base_entry_t *array) {
 		_base_entry_t *r = 0;
-		_base_vector_t::iterator it = vector->begin();
+		_u32 it = 0;;
 
-		while(it != vector->end()) {
-			_base_entry_t *pe = &(*it);
+		while(it < get_base_array_count()) {
+			_base_entry_t *pe = &array[it];
 			if(pe->pi_base && !(pe->state & ST_DISABLED)) {
 				if(compare(req, pe->pi_base)) {
 					r = pe;
@@ -90,17 +90,17 @@ private:
 
 	_base_entry_t *find(_object_request_t *req) {
 		_base_entry_t *r = 0;
-		_base_vector_t *vector = get_base_vector(); // local vector
+		_base_entry_t *array = get_base_array(); // local vector
 
-		if(!(r = find_in_vector(req, vector))) {
+		if(!(r = find_in_array(req, array))) {
 			_u32 sz;
 			HMUTEX hm = mpi_ext_list->lock();
 			iRepoExtension **px = (iRepoExtension **)mpi_ext_list->first(&sz, hm);
 
 			if(px) {
 				do {
-					if((vector = (*px)->vector())) {
-						if((r = find_in_vector(req, vector)))
+					if((array = (*px)->array())) {
+						if((r = find_in_array(req, array)))
 							break;
 					}
 				} while((px = (iRepoExtension**)mpi_ext_list->next(&sz, hm)));
@@ -111,11 +111,11 @@ private:
 		return r;
 	}
 
-	void update_vector(_base_vector_t *vector) {
-		_base_vector_t::iterator it = vector->begin();
+	void update_array(_base_entry_t *array) {
+		_u32 it = 0;
 
-		while(it != vector->end()) {
-			_base_entry_t *pe = &(*it);
+		while(it < get_base_array_count()) {
+			_base_entry_t *pe = &array[it];
 
 			if(pe->pi_base && !(pe->state & (ST_DISABLED | ST_INITIALIZED))) {
 				_object_info_t oi;
@@ -136,10 +136,10 @@ private:
 	}
 
 	void update(void) {
-		_base_vector_t *vector = get_base_vector(); // local vector
+		_base_entry_t *array = get_base_array(); // local array
 
 		// update main vector
-		update_vector(vector);
+		update_array(array);
 
 		_u32 sz;
 		HMUTEX hm = mpi_ext_list->lock();
@@ -147,8 +147,8 @@ private:
 
 		if(px) {
 			do {
-				if((vector = (*px)->vector()))
-					update_vector(vector);
+				if((array = (*px)->array()))
+					update_array(array);
 			} while((px = (iRepoExtension**)mpi_ext_list->next(&sz, hm)));
 		}
 		mpi_ext_list->unlock(hm);
