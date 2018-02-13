@@ -29,9 +29,9 @@ iRepository *get_repository(void);
 };
 
 #define IMPLEMENT_BASE_ARRAY(limit) \
-	_base_entry_t _g_base_arry_[limit]; \
-	_u32 _base_array_limit_ = limit; \
-	_u32 _base_array_count_ = 0;
+	_LOCAL_ _base_entry_t _g_base_arry_[limit]; \
+	_LOCAL_ _u32 _base_array_limit_ = limit; \
+	_LOCAL_ _u32 _base_array_count_ = 0;
 
 extern _base_entry_t _g_base_array_[];
 extern _u32 _base_array_limit_;

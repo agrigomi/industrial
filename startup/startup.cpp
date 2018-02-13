@@ -8,17 +8,8 @@ using namespace std;
 // global pointer to repository
 _LOCAL_ iRepository *_gpi_repo_ = 0;
 
-_EXPORT_ _base_entry_t *get_base_array(void) {
-	return _g_base_array_;
-}
-_EXPORT_ _u32 get_base_array_limit(void) {
-	return _base_array_limit_;
-}
-_EXPORT_ _u32 get_base_array_count(void) {
-	return _base_array_count_;
-}
-
 #ifdef _CORE_
+IMPLEMENT_BASE_ARRAY(1024);
 _EXPORT_ iRepository *get_repository(void) {
 	return _gpi_repo_;
 }
@@ -33,6 +24,17 @@ void _LOCAL_ register_object(iBase *pi_base) {
 		_base_array_count_++;
 	}
 }
+
+_EXPORT_ _base_entry_t *get_base_array(void) {
+	return _g_base_array_;
+}
+_EXPORT_ _u32 get_base_array_limit(void) {
+	return _base_array_limit_;
+}
+_EXPORT_ _u32 get_base_array_count(void) {
+	return _base_array_count_;
+}
+
 
 typedef struct {
 	_cstr_t iname;

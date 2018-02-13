@@ -7,14 +7,14 @@
 #define MAX_ALIAS_LEN	32
 
 typedef void*	_dl_handle_t;
-typedef _base_vector_t *_get_base_vector_t(void);
+typedef _base_entry_t *_get_base_array_t(void);
 typedef _err_t _init_t(iRepository *);
 
 class cRepoExtension: public iRepoExtension {
 private:
 	_s8 m_alias[MAX_ALIAS_LEN];
 	_dl_handle_t m_handle;
-	_get_base_vector_t *m_get_base_vector;
+	_get_base_array_t *m_get_base_array;
 	_init_t *m_init;
 public:
 	BASE(cRepoExtension, "cRepoExtension", RF_CLONE, 1, 0,0);
@@ -25,7 +25,7 @@ public:
 			case OCTL_INIT: {
 				memset(m_alias, 0, sizeof(m_alias));
 				m_handle = 0;
-				m_get_base_vector = 0;
+				m_get_base_array = 0;
 				m_init = 0;
 				r = true;
 				break;
@@ -47,8 +47,8 @@ public:
 		_err_t r = ERR_UNKNOWN;
 		if((m_handle = dlopen(file, RTLD_NOW | RTLD_DEEPBIND))) {
 			m_init = (_init_t *)dlsym(m_handle, "init");
-			m_get_base_vector = (_get_base_vector_t *)dlsym(m_handle, "get_base_vector");
-			if(m_get_base_vector && m_init ) {
+			m_get_base_array = (_get_base_array_t *)dlsym(m_handle, "get_base_array");
+			if(m_get_base_array && m_init ) {
 				strncpy(m_alias, (alias)?alias:basename(file), sizeof(m_alias));
 				r = ERR_NONE;
 			} else
@@ -90,10 +90,10 @@ public:
 		return r;
 	}
 
-	_base_vector_t *vector(void) {
-		_base_vector_t *r = 0;
-		if(m_handle && m_get_base_vector)
-			r = m_get_base_vector();
+	_base_entry_t *array(void) {
+		_base_entry_t *r = 0;
+		if(m_handle && m_get_base_array)
+			r = m_get_base_array();
 		return r;
 	}
 };

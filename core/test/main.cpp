@@ -4,8 +4,6 @@
 #include "iLog.h"
 #include "iArgs.h"
 
-IMPLAMENT_BASE_ARRAY(256);
-
 void log_listener(_u8 lmt, _str_t msg) {
 	printf("%s\n", msg);
 }
