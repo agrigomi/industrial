@@ -20,12 +20,12 @@ void _LOCAL_ register_object(iBase *pi_base) {
 	add_base_entry(&e);
 }
 
+#ifdef _CORE_
 typedef struct {
 	_cstr_t iname;
 	_base_entry_t  *p_entry;
 }_early_init_t;
 
-#ifdef _CORE_
 _err_t _EXPORT_ init(int argc, char *argv[]) {
 #else
 _err_t _EXPORT_ init(iRepository *pi_repo) {
