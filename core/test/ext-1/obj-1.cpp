@@ -43,4 +43,4 @@ public:
 	}
 };
 
-static cObj_1 _g_object_;
+static cObj_1 _g_object_1_;

@@ -48,7 +48,7 @@ public:
 		if((m_handle = dlopen(file, RTLD_NOW | RTLD_DEEPBIND))) {
 			m_init = (_init_t *)dlsym(m_handle, "init");
 			m_get_base_array = (_get_base_array_t *)dlsym(m_handle, "get_base_array");
-			if(m_get_base_array && m_init ) {
+			if(m_init ) {
 				strncpy(m_alias, (alias)?alias:basename(file), sizeof(m_alias));
 				r = ERR_NONE;
 			} else

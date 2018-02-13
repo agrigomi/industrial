@@ -44,7 +44,7 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 		{0,		0}
 	};
 
-	while(i < count) {
+	while(array && i < count) {
 		_object_info_t oinfo;
 		if(array[i].pi_base) {
 			array[i].pi_base->object_info(&oinfo);
@@ -92,7 +92,7 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 	if(_gpi_repo_) {
 		// init everyone else
 		i = 0;
-		while(i < count) {
+		while(array && i < count) {
 			_base_entry_t *pbe = &array[i];
 
 			if(pbe->pi_base && !(pbe->state & ST_INITIALIZED)) {

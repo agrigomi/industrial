@@ -75,7 +75,7 @@ private:
 		_base_entry_t *r = 0;
 		_u32 it = 0;;
 
-		while(it < count) {
+		while(array && it < count) {
 			_base_entry_t *pe = &array[it];
 			if(pe->pi_base && !(pe->state & ST_DISABLED)) {
 				if(compare(req, pe->pi_base)) {
@@ -115,7 +115,7 @@ private:
 	void update_array(_base_entry_t *array, _u32 count) {
 		_u32 it = 0;
 
-		while(it < count) {
+		while(array && it < count) {
 			_base_entry_t *pe = &array[it];
 
 			if(pe->pi_base && !(pe->state & (ST_DISABLED | ST_INITIALIZED))) {
