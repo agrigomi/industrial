@@ -25,6 +25,14 @@ typedef struct {
 	_base_entry_t  *p_entry;
 }_early_init_t;
 
+_early_init_t ei[]= {
+	{I_REPOSITORY,	0}, //0
+	{I_HEAP,	0}, //1
+	{I_ARGS,	0}, //2
+	{I_LOG,		0}, //3
+	{0,		0}
+};
+
 _err_t _EXPORT_ init(int argc, char *argv[]) {
 #else
 _err_t _EXPORT_ init(iRepository *pi_repo) {
@@ -34,15 +42,8 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 	_u32 i = 0;
 	_u32 count, limit;
 	_base_entry_t *array = get_base_array(&count, &limit);
-#ifdef _CORE_
-	_early_init_t ei[]= {
-		{I_REPOSITORY,	0}, //0
-		{I_HEAP,	0}, //1
-		{I_ARGS,	0}, //2
-		{I_LOG,		0}, //3
-		{0,		0}
-	};
 
+#ifdef _CORE_
 	while(array && i < count) {
 		_object_info_t oinfo;
 		if(array[i].pi_base) {
@@ -64,10 +65,12 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 			// the heap is here !
 			if(!pi_heap->object_ctl(OCTL_INIT, _gpi_repo_))
 				goto _init_done_;
+			ei[1].p_entry->ref_cnt++;
 			ei[1].p_entry->state |= ST_INITIALIZED;
 			// init repository object
 			if(!_gpi_repo_->object_ctl(OCTL_INIT, 0))
 				goto _init_done_;
+			ei[0].p_entry->ref_cnt++;
 			ei[0].p_entry->state |= ST_INITIALIZED;
 			// init args
 			iArgs *pi_args = 0;
@@ -75,6 +78,7 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 				// args is here
 				if(pi_args->object_ctl(OCTL_INIT, _gpi_repo_)) {
 					ei[2].p_entry->state |= ST_INITIALIZED;
+					ei[2].p_entry->ref_cnt++;
 					pi_args->init(argc, argv);
 				}
 			}
@@ -82,8 +86,10 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 			iLog *pi_log = 0;
 			if(ei[3].p_entry && (pi_log = (iLog*)ei[3].p_entry->pi_base)) {
 				// log is here
-				if(pi_log->object_ctl(OCTL_INIT, _gpi_repo_))
+				if(pi_log->object_ctl(OCTL_INIT, _gpi_repo_)) {
 					ei[3].p_entry->state |= ST_INITIALIZED;
+					ei[3].p_entry->ref_cnt++;
+				}
 			}
 		}
 	}
