@@ -242,6 +242,8 @@ public:
 		if(bentry) {
 			if(ptr != bentry->pi_base) {
 				// cloning
+				if(info.flags & RF_TASK)
+					ptr->object_ctl(OCTL_STOP, 0);
 				if(ptr->object_ctl(OCTL_UNINIT, this)) {
 					HMUTEX hm = mpi_cxt_list->lock();
 					if(mpi_cxt_list->sel(ptr, hm))
