@@ -9,6 +9,8 @@ MAKE_INSTALL=.fg/install.mk
 #--------------------------------------
 COMPILER=gcc
 LINKER=gcc
+ARCHIVER=ar
+ARCHIVER_FLAGS=-v -s -r
 PREPROCESSOR=gcc
 COMPILER_OUTFLAG=-o
 OUTSUFFIX=.o
@@ -19,3 +21,4 @@ DEPENDENCY_FLAGS=-MM
 DEPENDENCY_OUTFLAG=-MT
 LINKER_OUTFLAG=-o
 MAKE_FLAGS=-s --no-print-directory
+LINK_TARGET=$(LINKER) $(LINKER_FLAGS) $^ $(LINKER_OUTFLAG) $@

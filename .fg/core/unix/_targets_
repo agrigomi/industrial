@@ -1,5 +1,5 @@
-libstartup-core.so
-libstartup-ext.so
+libstartup-core.a
+libstartup-ext.a
 libcore.so
 test
 ext-1.so

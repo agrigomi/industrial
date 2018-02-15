@@ -22,7 +22,7 @@ target_dir=$(OUTDIR)/$(PROJECT)/$(CONFIG)/$(target_name)
 groups_out = $(addprefix $(target_dir)/, $(addsuffix $(OUTSUFFIX), $(groups)))
 $(target_dir)/$(TARGET): $(groups_out)
 	@echo ' ' linking [$@]
-	$(LINKER) $(LINKER_FLAGS) $^ $(LINKER_OUTFLAG) $@
+	$(LINK_TARGET)
 	$(POSTBUILD)
 
 #read source files from group file
