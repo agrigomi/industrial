@@ -1,3 +1,3 @@
-LIB_PATH=-L$(OUTDIR)/core/$(CONFIG)/libstartup-ext
+LIB_PATH=$(OUTDIR)/core/$(CONFIG)/libstartup-ext
 COMPILER_FLAGS+=-fPIC -g -Icore/test/interface
-LINKER_FLAGS+=-fpic --shared -lstartup-ext $(LIB_PATH)
+LINKER_FLAGS+=-fpic --shared -u init $(LIB_PATH)/libstartup-ext.a
