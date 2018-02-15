@@ -1,0 +1,2 @@
+COMPILER_FLAGS+=-fPIC -g
+LINKER_FLAGS+=-fpic --shared

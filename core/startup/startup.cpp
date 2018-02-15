@@ -4,13 +4,17 @@
 #include "iLog.h"
 #include "iArgs.h"
 
-// global pointer to repository
-_LOCAL_ iRepository *_gpi_repo_ = 0;
-
 #ifdef _CORE_
+_EXPORT_ iRepository *_gpi_repo_ = 0;
 _EXPORT_ iRepository *get_repository(void) {
+#else
+_LOCAL_ iRepository *_gpi_repo_ = 0;
+_LOCAL_ iRepository *get_repository(void) {
+#endif
 	return _gpi_repo_;
 }
+
+#ifdef _CORE_
 void _EXPORT_ register_object(iBase *pi_base) {
 #else
 void _LOCAL_ register_object(iBase *pi_base) {

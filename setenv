@@ -1,0 +1,1 @@
+export LD_LIBRARY_PATH=bin/core/unix/libstartup-core/:bin/core/unix/libstartup-ext:bin/core/unix/libcore/

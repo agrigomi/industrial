@@ -1,3 +1,4 @@
+LIB_PATH=-L$(OUTDIR)/core/$(CONFIG)/libcore -L$(OUTDIR)/core/$(CONFIG)/libstartup-core
 COMPILER_FLAGS+=-g -Icore/test/interface -D_CORE_
-LINKER_FLAGS+=-L$(OUTDIR)/$(PROJECT)/$(CONFIG)/libcore -lcore -lstdc++ -ldl -g
+LINKER_FLAGS+=-lstartup-core -lcore -ldl -g $(LIB_PATH) 
 DEPENDENCY_FLAGS+= -D_CORE_

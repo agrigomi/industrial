@@ -26,8 +26,10 @@ public:
 		bool r = false;
 		switch(cmd) {
 			case OCTL_INIT:
-				mpi_log = 0;
 				mpi_repo = (iRepository *)arg;
+				mpi_log = get_log();
+				if(mpi_log)
+					mpi_log->fwrite(LMT_INFO, "init %s", "cObj_1");
 				r = true;
 				break;
 			case OCTL_UNINIT:

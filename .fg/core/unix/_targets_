@@ -1,3 +1,6 @@
+libstartup-core.so
+libstartup-ext.so
 libcore.so
 test
 ext-1.so
+

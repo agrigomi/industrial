@@ -1,2 +1,2 @@
 core/test/ext-1/obj-1.cpp
-startup/startup.cpp
+core/startup/startup.cpp
