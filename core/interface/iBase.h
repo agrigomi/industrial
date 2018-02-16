@@ -38,7 +38,7 @@ typedef struct {
 // object controll
 #define OCTL_INIT	10 // arg: iRepository*
 #define OCTL_UNINIT	11 // arg: iRepository*
-#define OCTL_START	12
+#define OCTL_START	12 // arg: void*
 #define OCTL_STOP	13
 #define OCTL_RELEASE	14 // arg: iBase*
 

@@ -1,2 +1,3 @@
 core/additions/log.cpp
 core/additions/args.cpp
+core/additions/TaskMaker.cpp

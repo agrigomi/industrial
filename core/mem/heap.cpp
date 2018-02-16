@@ -59,6 +59,7 @@ public:
 				break;
 			case OCTL_UNINIT: {
 				iRepository *repo = (iRepository *)arg;
+				s2_destroy(&m_s2c);
 				repo->object_release(mpi_mutex);
 				r = true;
 				break;

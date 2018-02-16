@@ -42,6 +42,7 @@ public:
 			}
 			case OCTL_UNINIT: {
 				iRepository *p_repo = (iRepository *)arg;
+				ll_clr(&m_cxt, 0);
 				p_repo->object_release(mpi_mutex);
 				p_repo->object_release(mpi_heap);
 				mpi_mutex = 0;
