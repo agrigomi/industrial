@@ -3,6 +3,7 @@
 #include "iMemory.h"
 #include "iLog.h"
 #include "iArgs.h"
+#include "iTaskMaker.h"
 
 #ifdef _CORE_
 _EXPORT_ iRepository *_gpi_repo_ = 0;
@@ -34,6 +35,7 @@ _early_init_t ei[]= {
 	{I_HEAP,	0}, //1
 	{I_ARGS,	0}, //2
 	{I_LOG,		0}, //3
+	{I_TASK_MAKER,	0}, //4
 	{0,		0}
 };
 
@@ -95,12 +97,21 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 					ei[3].p_entry->ref_cnt++;
 				}
 			}
+			iTaskMaker *pi_tmaker = 0;
+			if(ei[4].p_entry && (pi_tmaker = (iTaskMaker*)ei[4].p_entry->pi_base)) {
+				if(pi_tmaker->object_ctl(OCTL_INIT, _gpi_repo_)) {
+					ei[4].p_entry->state |= ST_INITIALIZED;
+					ei[4].p_entry->ref_cnt++;
+				}
+			}
 		}
 	}
 #endif
 	if(_gpi_repo_) {
 		// init everyone else
+		iTaskMaker *pi_tmaker = (iTaskMaker *)_gpi_repo_->object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
 		i = 0;
+
 		while(array && i < count) {
 			_base_entry_t *pbe = &array[i];
 
@@ -114,13 +125,16 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 						pbe->state |= ST_INITIALIZED;
 						if(oi.flags & RF_TASK) {
 							// start task
-							//...
+							if(pi_tmaker)
+								pi_tmaker->start(pbe->pi_base);
 						}
 					}
 				}
 			}
 			i++;
 		}
+
+		_gpi_repo_->object_release(pi_tmaker);
 		r = ERR_NONE;
 	}
 #ifdef _CORE_

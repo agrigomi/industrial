@@ -1,12 +1,14 @@
 #include <string.h>
 #include "iRepository.h"
 #include "iMemory.h"
+#include "iTaskMaker.h"
 #include "private.h"
 
 class cRepository:public iRepository {
 private:
 	iLlist *mpi_cxt_list; // context list
 	iLlist *mpi_ext_list; // extensions list
+	iTaskMaker *mpi_tmaker;
 	bool m_b_ready;
 
 	iRepoExtension *get_extension(_str_t file, _str_t alias) {
@@ -215,13 +217,12 @@ public:
 					}
 					if(r && info.flags & RF_TASK) {
 						// start task
-						//...
+						if(mpi_tmaker)
+							mpi_tmaker->start(r);
 					}
-				} else {
-					if((info.flags & rf) & RF_ORIGINAL) {
-						r = bentry->pi_base;
-						bentry->ref_cnt++;
-					}
+				} else if((info.flags & rf) & RF_ORIGINAL) {
+					r = bentry->pi_base;
+					bentry->ref_cnt++;
 				}
 			}
 		}
@@ -313,6 +314,7 @@ public:
 		switch(cmd) {
 			case OCTL_INIT:
 				mpi_cxt_list = mpi_ext_list = 0;
+				mpi_tmaker = 0;
 				m_b_ready = false;
 				if((mpi_cxt_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE)))
 					mpi_cxt_list->init(LL_VECTOR, 1);
@@ -321,6 +323,7 @@ public:
 					mpi_ext_list->init(LL_VECTOR, 1);
 					r = m_b_ready = true;
 				}
+				mpi_tmaker = (iTaskMaker*)object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
 				break;
 			case OCTL_UNINIT:
 				//...

@@ -185,3 +185,4 @@ static void *starter(_task_t *task) {
 	return r;
 }
 
+static cTaskMaker _g_task_maker_;
