@@ -178,10 +178,6 @@ static void *starter(_task_t *task) {
 	task->state &= ~TS_RUNNING;
 	task->state |= TS_STOPPED;
 
-	cTaskMaker *tm = (cTaskMaker *)task->tmaker;
-	if(tm)
-		tm->remove_task(task);
-
 	return r;
 }
 
