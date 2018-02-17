@@ -71,7 +71,7 @@ public:
 		register_object(this); \
 	} \
 	DESTRUCTOR(_class_) {} \
-	INFO(_class_, name, flags, a, i, r) \
+	INFO(_class_, name, flags, a, i, r)
 
 
 extern void register_object(iBase *);

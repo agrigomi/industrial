@@ -1,4 +1,5 @@
 #include <string.h>
+#include <unistd.h>
 #include <pthread.h>
 #include "iRepository.h"
 #include "iTaskMaker.h"
@@ -12,7 +13,6 @@ typedef struct {
 	_task_proc_t	*proc;
 	pthread_t 	thread;
 	void		*arg;
-	void		*tmaker;
 	_u8		state;
 }_task_t;
 
@@ -75,6 +75,35 @@ private:
 		}
 	}
 
+	bool stop_task(_task_t *task) {
+		bool r = false;
+
+		r = task->pi_base->object_ctl(OCTL_STOP, 0);
+		_u32 n = 100;
+		while(task->state & TS_RUNNING) {
+			usleep(100);
+			n--;
+		}
+
+		if(!n)
+			r = false;
+
+		return r;
+	}
+
+	_task_t *validate_handle(HTASK h) {
+		_task_t *r = 0;
+
+		if(mpi_list) {
+			HMUTEX hm = mpi_list->lock();
+			if(mpi_list->sel((_task_t *)h, hm))
+				r = (_task_t *)h;
+			mpi_list->unlock(hm);
+		}
+
+		return r;
+	}
+
 public:
 	BASE(cTaskMaker, "cTaskMaker", RF_ORIGINAL, 1,0,0);
 
@@ -108,7 +137,6 @@ public:
 			memset(&task, 0, sizeof(_task_t));
 			task.pi_base = pi_base;
 			task.arg = arg;
-			task.tmaker = this;
 			r = start_task(&task);
 		}
 
@@ -121,7 +149,6 @@ public:
 		memset(&task, 0, sizeof(_task_t));
 		task.proc = proc;
 		task.arg = arg;
-		task.tmaker = this;
 		return start_task(&task);
 	}
 
@@ -133,9 +160,20 @@ public:
 		return get_handle((void *)proc);
 	}
 
-	_err_t stop(HTASK h) {
-		_err_t r = 0;
-		//...
+	bool stop(HTASK h) {
+		bool r = false;
+		_task_t *task = validate_handle(h);
+
+		if(task) {
+			if(task->state & TS_RUNNING)
+				r = stop_task(task);
+			else
+				r = true;
+
+			if(r)
+				remove_task(task);
+		}
+
 		return r;
 	}
 

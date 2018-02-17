@@ -16,7 +16,7 @@ public:
 	virtual HTASK start(_task_proc_t *, void *arg=0)=0;
 	virtual HTASK handle(iBase *)=0;
 	virtual HTASK handle(_task_proc_t *)=0;
-	virtual _err_t stop(HTASK)=0;
+	virtual bool stop(HTASK)=0;
 	virtual _err_t join(HTASK)=0;
 	virtual _err_t detach(HTASK)=0;
 	virtual _err_t set_name(HTASK, _cstr_t name)=0;
