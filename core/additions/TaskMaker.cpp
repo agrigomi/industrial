@@ -178,26 +178,42 @@ public:
 	}
 
 	_err_t join(HTASK h) {
-		_err_t r = 0;
-		//...
+		_err_t r = ERR_UNKNOWN;
+		_task_t *task = validate_handle(h);
+
+		if(task)
+			r = pthread_join(task->thread, 0);
+
 		return r;
 	}
 
 	_err_t detach(HTASK h) {
-		_err_t r = 0;
-		//...
+		_err_t r = ERR_UNKNOWN;
+		_task_t *task = validate_handle(h);
+
+		if(task)
+			r = pthread_detach(task->thread);
+
 		return r;
 	}
 
 	_err_t set_name(HTASK h, _cstr_t name) {
-		_err_t r = 0;
-		//...
+		_err_t r = ERR_UNKNOWN;
+		_task_t *task = validate_handle(h);
+
+		if(task)
+			r = pthread_setname_np(task->thread, name);
+
 		return r;
 	}
 
 	_err_t get_name(HTASK h, _str_t name, _u32 len) {
-		_err_t r = 0;
-		//...
+		_err_t r = ERR_UNKNOWN;
+		_task_t *task = validate_handle(h);
+
+		if(task)
+			r = pthread_getname_np(task->thread, name, len);
+
 		return r;
 	}
 };
