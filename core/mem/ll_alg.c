@@ -285,6 +285,7 @@ void  ll_del(_ll_context_t *p_cxt, _u64 hlock) {
 			p_cxt->state[p_cxt->ccol].current--;
 		}
 
+		p_cur->cxt = 0; /* do not belong to this list any more */
 		p_cxt->state[p_cxt->ccol].count--;
 
 		/* release memory */
