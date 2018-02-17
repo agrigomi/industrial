@@ -54,7 +54,7 @@ private:
 			HMUTEX hm = mpi_list->lock();
 			_task_t *t = (_task_t *)mpi_list->add(&task, sizeof(_task_t), hm);
 
-			if((t)) {
+			if(t) {
 				if(pthread_create(&t->thread, 0, (_task_proc_t *)starter, t) != ERR_NONE)
 					mpi_list->del(hm);
 				else
