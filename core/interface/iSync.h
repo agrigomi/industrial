@@ -20,7 +20,7 @@ public:
 class iEvent: public iBase {
 public:
 	INTERFACE(iEvent, I_EVENT);
-	virtual _evt_t wait(_evt_t mask)=0;
+	virtual _evt_t wait(_evt_t mask, _u32 sleep=0)=0;
 	virtual _evt_t check(_evt_t mask)=0;
 	virtual void set(_evt_t mask)=0;
 };
