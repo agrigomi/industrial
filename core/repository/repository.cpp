@@ -73,16 +73,25 @@ private:
 		return r;
 	}
 
-	_base_entry_t *find_in_array(_object_request_t *req, _base_entry_t *array, _u32 count) {
+	_base_entry_t *find_in_array(_object_request_t *req, _base_entry_t *array, _u32 count, bool check_disable_flag) {
 		_base_entry_t *r = 0;
 		_u32 it = 0;;
 
 		while(array && it < count) {
 			_base_entry_t *pe = &array[it];
-			if(pe->pi_base && !(pe->state & ST_DISABLED)) {
-				if(compare(req, pe->pi_base)) {
-					r = pe;
-					break;
+			if(pe->pi_base) {
+				bool check = true;
+
+				if(check_disable_flag) {
+					if(pe->state & ST_DISABLED)
+						check = false;
+				}
+
+				if(check) {
+					if(compare(req, pe->pi_base)) {
+						r = pe;
+						break;
+					}
 				}
 			}
 			it++;
@@ -90,12 +99,12 @@ private:
 		return r;
 	}
 
-	_base_entry_t *find(_object_request_t *req) {
+	_base_entry_t *find(_object_request_t *req, bool check_disable_flag=true) {
 		_base_entry_t *r = 0;
 		_u32 count, limit;
 		_base_entry_t *array = get_base_array(&count, &limit); // local vector
 
-		if(!(r = find_in_array(req, array, count))) {
+		if(!(r = find_in_array(req, array, count, check_disable_flag))) {
 			_u32 sz;
 			HMUTEX hm = mpi_ext_list->lock();
 			iRepoExtension **px = (iRepoExtension **)mpi_ext_list->first(&sz, hm);
@@ -103,7 +112,7 @@ private:
 			if(px) {
 				do {
 					if((array = (*px)->array(&count, &limit))) {
-						if((r = find_in_array(req, array, count)))
+						if((r = find_in_array(req, array, count, check_disable_flag)))
 							break;
 					}
 				} while((px = (iRepoExtension**)mpi_ext_list->next(&sz, hm)));
@@ -249,7 +258,7 @@ public:
 					info.cname, info.iname};
 		req.version.version = info.version.version;
 
-		_base_entry_t *bentry = find(&req);
+		_base_entry_t *bentry = find(&req, false);
 
 		if(bentry) {
 			if(ptr != bentry->pi_base) {
