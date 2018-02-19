@@ -47,19 +47,12 @@ private:
 		return r;
 	}
 
-	HTASK start_task(_task_t *task) {
-		HTASK r = 0;
+	_task_t *add_task(_task_t *task) {
+		_task_t *r = 0;
 
 		if(mpi_list) {
 			HMUTEX hm = mpi_list->lock();
-			_task_t *t = (_task_t *)mpi_list->add(&task, sizeof(_task_t), hm);
-
-			if(t) {
-				if(pthread_create(&t->thread, 0, (_task_proc_t *)starter, t) != ERR_NONE)
-					mpi_list->del(hm);
-				else
-					r = t;
-			}
+			r = (_task_t *)mpi_list->add(&task, sizeof(_task_t), hm);
 			mpi_list->unlock(hm);
 		}
 
@@ -75,18 +68,36 @@ private:
 		}
 	}
 
+	HTASK start_task(_task_t *task) {
+		HTASK r = 0;
+		_task_t *t = add_task(task);
+
+		if(t) {
+			if(pthread_create(&t->thread, 0, (_task_proc_t *)starter, t) != ERR_NONE)
+				remove_task(t);
+			else
+				r = t;
+		}
+
+		return r;
+	}
+
+
 	bool stop_task(_task_t *task) {
 		bool r = false;
 
-		r = task->pi_base->object_ctl(OCTL_STOP, 0);
-		_u32 n = 100;
-		while(task->state & TS_RUNNING) {
-			usleep(100);
-			n--;
-		}
+		if((r = task->pi_base->object_ctl(OCTL_STOP, 0))) {
+			_u32 n = 100;
+			while(task->state & TS_RUNNING) {
+				usleep(100);
+				n--;
+			}
 
-		if(!n)
-			r = false;
+			if(!n)
+				r = false;
+			else
+				remove_task(task);
+		}
 
 		return r;
 	}
@@ -138,6 +149,10 @@ public:
 			task.pi_base = pi_base;
 			task.arg = arg;
 			r = start_task(&task);
+		} else {
+			_task_t *task = (_task_t *)r;
+			if(!(task->state & TS_RUNNING))
+				pthread_create(&task->thread, 0, (_task_proc_t *)starter, task);
 		}
 
 		return r;
@@ -167,11 +182,10 @@ public:
 		if(task) {
 			if(task->state & TS_RUNNING)
 				r = stop_task(task);
-			else
-				r = true;
-
-			if(r)
+			else {
 				remove_task(task);
+				r = true;
+			}
 		}
 
 		return r;

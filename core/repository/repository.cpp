@@ -129,7 +129,8 @@ private:
 						pe->state |= ST_INITIALIZED;
 						if(oi.flags & RF_TASK) {
 							//start task
-							//...
+							if(mpi_tmaker)
+								mpi_tmaker->start(pe->pi_base);
 						}
 					}
 				}
