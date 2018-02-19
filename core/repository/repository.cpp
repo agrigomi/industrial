@@ -162,6 +162,16 @@ private:
 		//...
 	}
 
+	void disable_array(_base_entry_t *array, _u32 count) {
+		_u32 it = 0;
+
+		while(array && it < count) {
+			_base_entry_t *pe = &array[it];
+			pe->state |= ST_DISABLED;
+			it++;
+		}
+	}
+
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 1, 0, 0);
 
@@ -206,12 +216,12 @@ public:
 
 							memcpy(r, bentry->pi_base, size);
 
-							if(!r->object_ctl(OCTL_INIT, this)) {
-								pi_heap->free(r, size);
-								r = 0;
-							} else {
+							if(r->object_ctl(OCTL_INIT, this)) {
 								bentry->ref_cnt++;
 								*state = ST_INITIALIZED;
+							} else {
+								pi_heap->free(r, size);
+								r = 0;
 							}
 							object_release(pi_heap);
 						}
@@ -309,7 +319,18 @@ public:
 
 	_err_t extension_unload(_str_t alias) {
 		_err_t r = ERR_UNKNOWN;
-		//...
+		iRepoExtension *pi_ext = get_extension(0, alias);
+
+		if(pi_ext) {
+			_u32 count = 0, limit = 0;
+			_base_entry_t *array = pi_ext->array(&count, &limit);
+
+			if(array) {
+				disable_array(array, count);
+				//...
+			}
+		}
+
 		return r;
 	}
 
@@ -330,7 +351,12 @@ public:
 				mpi_tmaker = (iTaskMaker*)object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
 				break;
 			case OCTL_UNINIT:
-				//...
+				object_release(mpi_tmaker);
+				mpi_tmaker = 0;
+				object_release(mpi_ext_list);
+				mpi_ext_list = 0;
+				object_release(mpi_cxt_list);
+				mpi_cxt_list = 0;
 				r = true;
 				break;
 		}
