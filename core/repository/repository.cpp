@@ -344,11 +344,11 @@ public:
 				if((mpi_cxt_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE)))
 					mpi_cxt_list->init(LL_VECTOR, 1);
 				mpi_ext_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE);
-				if(mpi_cxt_list && mpi_ext_list) {
+				mpi_tmaker = (iTaskMaker*)object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
+				if(mpi_cxt_list && mpi_ext_list && mpi_tmaker) {
 					mpi_ext_list->init(LL_VECTOR, 1);
 					r = m_b_ready = true;
 				}
-				mpi_tmaker = (iTaskMaker*)object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
 				break;
 			case OCTL_UNINIT:
 				object_release(mpi_tmaker);
