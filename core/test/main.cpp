@@ -37,10 +37,15 @@ public:
 				iRepository *pi_repo = (iRepository*)arg;
 				if((mpi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL)))
 					mpi_log->write(LMT_INFO, "init cTest");
+				pi_repo->monitoring_add(0, "iObj1", 0, this);
 				break;
 			}
 
 			case OCTL_UNINIT:
+				break;
+
+			case OCTL_NOTIFY:
+				_notification_t *pn = (_notification_t *)arg;
 				break;
 		}
 		return true;

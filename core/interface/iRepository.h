@@ -39,8 +39,8 @@ public:
 
 	// notifications
 	virtual HNOTIFY monitoring_add(iBase *mon_obj, // monitored object
-					_str_t mon_iname, // monitored interface
-					_str_t mon_cname, // monitored object name
+					_cstr_t mon_iname, // monitored interface
+					_cstr_t mon_cname, // monitored object name
 					iBase *handler_obj // notifications receiver
 					)=0;
 	virtual void monitoring_remove(HNOTIFY)=0;

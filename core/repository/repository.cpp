@@ -6,8 +6,8 @@
 
 typedef struct {
 	iBase	*monitored;
-	_str_t	iname;
-	_str_t	cname;
+	_cstr_t	iname;
+	_cstr_t	cname;
 	iBase	*handler;
 }_notify_t;
 
@@ -398,7 +398,7 @@ public:
 	}
 
 	// notifications
-	HNOTIFY monitoring_add(iBase *mon_obj, _str_t mon_iname, _str_t mon_cname, iBase *handler_obj) {
+	HNOTIFY monitoring_add(iBase *mon_obj, _cstr_t mon_iname, _cstr_t mon_cname, iBase *handler_obj) {
 		_notify_t *r = 0;
 
 		if(mpi_notify_list && handler_obj) {
