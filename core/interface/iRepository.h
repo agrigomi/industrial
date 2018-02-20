@@ -6,6 +6,12 @@
 
 #define I_REPOSITORY	"iRepository"
 
+typedef struct {
+	iBase *pi_base;
+	_u32  ref_cnt;
+	_u8   state;
+}_base_entry_t;
+
 // ogject request flags
 #define RQ_NAME		(1<<0)
 #define RQ_INTERFACE	(1<<1)
@@ -19,6 +25,8 @@ typedef struct {
 	_version_t	version;
 }_object_request_t;
 
+typedef void* HNOTIFY;
+
 class iRepository: public iBase {
 public:
 	INTERFACE(iRepository, I_REPOSITORY);
@@ -26,6 +34,16 @@ public:
 	virtual void   object_release(iBase *)=0;
 	virtual iBase *object_by_cname(_cstr_t cname, _rf_t)=0;
 	virtual iBase *object_by_iname(_cstr_t iname, _rf_t)=0;
+
+	virtual void init_array(_base_entry_t *array, _u32 count)=0;
+
+	// notifications
+	virtual HNOTIFY monitoring_add(iBase *mon_obj, // monitored object
+					_str_t mon_iname, // monitored interface
+					_str_t mon_cname, // monitored object name
+					iBase *handler_obj // notifications receiver
+					)=0;
+	virtual void monitoring_remove(HNOTIFY)=0;
 
 	// extensions
 	virtual _err_t extension_load(_str_t file, _str_t alias=0)=0;

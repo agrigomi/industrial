@@ -4,12 +4,19 @@
 #include "iTaskMaker.h"
 #include "private.h"
 
+typedef struct {
+	iBase	*monitored;
+	_str_t	iname;
+	_str_t	cname;
+	iBase	*handler;
+}_notify_t;
+
 class cRepository:public iRepository {
 private:
 	iLlist *mpi_cxt_list; // context list
 	iLlist *mpi_ext_list; // extensions list
+	iLlist *mpi_notify_list;
 	iTaskMaker *mpi_tmaker;
-	bool m_b_ready;
 
 	iRepoExtension *get_extension(_str_t file, _str_t alias) {
 		iRepoExtension *r = 0;
@@ -75,7 +82,7 @@ private:
 
 	_base_entry_t *find_in_array(_object_request_t *req, _base_entry_t *array, _u32 count, bool check_disable_flag) {
 		_base_entry_t *r = 0;
-		_u32 it = 0;;
+		_u32 it = 0;
 
 		while(array && it < count) {
 			_base_entry_t *pe = &array[it];
@@ -123,7 +130,73 @@ private:
 		return r;
 	}
 
-	void update_array(_base_entry_t *array, _u32 count) {
+	void disable_array(_base_entry_t *array, _u32 count) {
+		_u32 it = 0;
+
+		while(array && it < count) {
+			_base_entry_t *pe = &array[it];
+			pe->state |= ST_DISABLED;
+			it++;
+		}
+	}
+
+	void remove_notifications(iBase *handler) {
+		if(mpi_notify_list) {
+			HMUTEX hm = mpi_notify_list->lock();
+			_u32 sz = 0;
+			_notify_t *rec = (_notify_t *)mpi_notify_list->first(&sz, hm);
+
+			while(rec) {
+				if(rec->handler == handler) {
+					mpi_notify_list->del(hm);
+					rec = (_notify_t *)mpi_notify_list->current(&sz, hm);
+				} else
+					rec = (_notify_t *)mpi_notify_list->next(&sz, hm);
+			}
+
+			mpi_notify_list->unlock(hm);
+		}
+	}
+
+	void notify(_u32 flags, iBase *mon_obj) {
+		if(mpi_notify_list) {
+			_notification_t msg = {flags, mon_obj};
+			_object_info_t info;
+
+			mon_obj->object_info(&info);
+
+			HMUTEX hm = mpi_notify_list->lock();
+			bool send = false;
+			_u32 sz = 0;
+			_notify_t *rec = (_notify_t *)mpi_notify_list->first(&sz, hm);
+
+			while(rec) {
+				if(rec->monitored && rec->monitored == mon_obj)
+					send = true;
+				else if(rec->iname && strcmp(rec->iname, info.iname) == 0)
+					send = true;
+				else if(rec->cname && strcmp(rec->cname, info.cname) == 0)
+					send = true;
+
+				if(send) {
+					mpi_notify_list->unlock(hm);
+					rec->handler->object_ctl(OCTL_NOTIFY, &msg);
+					hm = mpi_notify_list->lock();
+					mpi_notify_list->sel(rec, hm);
+					send = false;
+				}
+
+				rec = (_notify_t *)mpi_notify_list->next(&sz, hm);
+			}
+
+			mpi_notify_list->unlock(hm);
+		}
+	}
+
+public:
+	BASE(cRepository, "cRepository", RF_ORIGINAL, 1, 0, 0);
+
+	void init_array(_base_entry_t *array, _u32 count) {
 		_u32 it = 0;
 
 		while(array && it < count) {
@@ -136,10 +209,15 @@ private:
 				if(oi.flags & RF_ORIGINAL) {
 					if(pe->pi_base->object_ctl(OCTL_INIT, this)) {
 						pe->state |= ST_INITIALIZED;
+						//notify for init
+						notify(NF_INIT, pe->pi_base);
 						if(oi.flags & RF_TASK) {
 							//start task
-							if(mpi_tmaker)
+							if(mpi_tmaker) {
 								mpi_tmaker->start(pe->pi_base);
+								// notify for start
+								notify(NF_START, pe->pi_base);
+							}
 						}
 					}
 				}
@@ -147,42 +225,6 @@ private:
 			it++;
 		}
 	}
-
-	void update(void) {
-		_u32 count, limit;
-		_base_entry_t *array = get_base_array(&count, &limit); // local array
-
-		// update main vector
-		update_array(array, count);
-
-		_u32 sz;
-		HMUTEX hm = mpi_ext_list->lock();
-		iRepoExtension **px = (iRepoExtension **)mpi_ext_list->first(&sz, hm);
-
-		if(px) {
-			do {
-				if((array = (*px)->array(&count, &limit)))
-					update_array(array, count);
-			} while((px = (iRepoExtension**)mpi_ext_list->next(&sz, hm)));
-		}
-		mpi_ext_list->unlock(hm);
-
-		// update dynamic objects
-		//...
-	}
-
-	void disable_array(_base_entry_t *array, _u32 count) {
-		_u32 it = 0;
-
-		while(array && it < count) {
-			_base_entry_t *pe = &array[it];
-			pe->state |= ST_DISABLED;
-			it++;
-		}
-	}
-
-public:
-	BASE(cRepository, "cRepository", RF_ORIGINAL, 1, 0, 0);
 
 	iBase *object_request(_object_request_t *req, _rf_t rf) {
 		iBase *r = 0;
@@ -205,6 +247,8 @@ public:
 							if(r->object_ctl(OCTL_INIT, this)) {
 								bentry->ref_cnt++;
 								*state = ST_INITIALIZED;
+								// notify for INIT
+								notify(NF_INIT, r);
 							} else { // release
 								HMUTEX hm = mpi_cxt_list->lock();
 								if(mpi_cxt_list->sel(r, hm)) {
@@ -228,6 +272,8 @@ public:
 							if(r->object_ctl(OCTL_INIT, this)) {
 								bentry->ref_cnt++;
 								*state = ST_INITIALIZED;
+								// notify for INIT
+								notify(NF_INIT, r);
 							} else {
 								pi_heap->free(r, size);
 								r = 0;
@@ -237,8 +283,11 @@ public:
 					}
 					if(r && info.flags & RF_TASK) {
 						// start task
-						if(mpi_tmaker)
+						if(mpi_tmaker) {
 							mpi_tmaker->start(r);
+							// notify for START
+							notify(NF_START, r);
+						}
 					}
 				} else if((info.flags & rf) & RF_ORIGINAL) {
 					r = bentry->pi_base;
@@ -264,10 +313,15 @@ public:
 			if(ptr != bentry->pi_base) {
 				// cloning
 				if((info.flags & RF_TASK) && mpi_tmaker) {
+					// notifi for STOP
+					notify(NF_STOP, ptr);
 					HTASK h = mpi_tmaker->handle(ptr);
 					if(h)
 						mpi_tmaker->stop(h);
 				}
+				// notify for UNINIT
+				notify(NF_UNINIT, ptr);
+				remove_notifications(ptr);
 				if(ptr->object_ctl(OCTL_UNINIT, this)) {
 					HMUTEX hm = mpi_cxt_list->lock();
 					if(mpi_cxt_list->sel(ptr, hm))
@@ -312,8 +366,7 @@ public:
 								mpi_ext_list->del(hm);
 							mpi_ext_list->unlock(hm);
 							px->unload();
-						} else // update repository
-							update();
+						}
 					} else
 						r = ERR_MEMORY;
 				}
@@ -336,6 +389,7 @@ public:
 
 			if(array) {
 				disable_array(array, count);
+				// uninit objects
 				//...
 			}
 		}
@@ -343,20 +397,44 @@ public:
 		return r;
 	}
 
+	// notifications
+	HNOTIFY monitoring_add(iBase *mon_obj, _str_t mon_iname, _str_t mon_cname, iBase *handler_obj) {
+		_notify_t *r = 0;
+
+		if(mpi_notify_list && handler_obj) {
+			_notify_t n = {	mon_obj, mon_iname, mon_cname, handler_obj };
+			r = (_notify_t *)mpi_notify_list->add(&n, sizeof(_notify_t));
+		}
+
+		return r;
+	}
+
+	void monitoring_remove(HNOTIFY h) {
+		_notify_t *rec = (_notify_t *)h;
+
+		if(mpi_notify_list) {
+			HMUTEX hm = mpi_notify_list->lock();
+			if(mpi_notify_list->sel(rec, hm))
+				mpi_notify_list->del(hm);
+			mpi_notify_list->unlock(hm);
+		}
+	}
+
 	bool object_ctl(_u32 cmd, void *arg) {
 		bool r = false;
 		switch(cmd) {
 			case OCTL_INIT:
-				mpi_cxt_list = mpi_ext_list = 0;
+				mpi_cxt_list = mpi_ext_list = mpi_notify_list = 0;
 				mpi_tmaker = 0;
-				m_b_ready = false;
 				if((mpi_cxt_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE)))
 					mpi_cxt_list->init(LL_VECTOR, 1);
 				mpi_ext_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE);
 				mpi_tmaker = (iTaskMaker*)object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
-				if(mpi_cxt_list && mpi_ext_list && mpi_tmaker) {
+				mpi_notify_list = (iLlist *)object_by_iname(I_LLIST, RF_CLONE);
+				if(mpi_cxt_list && mpi_ext_list && mpi_tmaker && mpi_notify_list) {
 					mpi_ext_list->init(LL_VECTOR, 1);
-					r = m_b_ready = true;
+					mpi_notify_list->init(LL_VECTOR, 1);
+					r = true;
 				}
 				break;
 			case OCTL_UNINIT:

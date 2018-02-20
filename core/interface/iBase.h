@@ -22,9 +22,9 @@ typedef union {
 typedef _u8 	_rf_t;
 
 // flags
-#define RF_CLONE     1
-#define RF_ORIGINAL  2
-#define RF_TASK      4
+#define RF_CLONE     (1<<0)
+#define RF_ORIGINAL  (1<<1)
+#define RF_TASK      (1<<2)
 
 
 typedef struct {
@@ -35,19 +35,31 @@ typedef struct {
 	_rf_t		flags;   // repository flags
 }_object_info_t;
 
-// object controll
-#define OCTL_INIT	10 // arg: iRepository*
-#define OCTL_UNINIT	11 // arg: iRepository*
-#define OCTL_START	12 // arg: void*
-#define OCTL_STOP	13
-#define OCTL_RELEASE	14 // arg: iBase*
-
 class iBase {
 public:
 	INTERFACE(iBase, I_BASE);
 	virtual void object_info(_object_info_t *pi)=0;
 	virtual bool object_ctl(_u32 cmd, void *arg)=0;
 };
+
+// notification flags
+#define NF_INIT		(1<<0)
+#define NF_START	(1<<1)
+#define NF_STOP		(1<<2)
+#define NF_UNINIT	(1<<3)
+#define NF_REMOVE	(1<<4)
+
+typedef struct {
+	_u32	flags;
+	iBase	*object;
+}_notification_t;
+
+// object controll
+#define OCTL_INIT	10 // arg: iRepository*
+#define OCTL_UNINIT	11 // arg: iRepository*
+#define OCTL_START	12 // arg: void*
+#define OCTL_STOP	13
+#define OCTL_NOTIFY	14 // arg: _notification_t*
 
 #define CONSTRUCTOR(_class_) \
 	_class_()

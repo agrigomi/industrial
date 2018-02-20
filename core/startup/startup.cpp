@@ -45,11 +45,11 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 	_gpi_repo_ = pi_repo;
 #endif
 	_err_t r = ERR_UNKNOWN;
-	_u32 i = 0;
 	_u32 count, limit;
 	_base_entry_t *array = get_base_array(&count, &limit);
 
 #ifdef _CORE_
+	_u32 i = 0;
 	while(array && i < count) {
 		_object_info_t oinfo;
 		if(array[i].pi_base) {
@@ -108,33 +108,7 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 	}
 #endif
 	if(_gpi_repo_) {
-		// init everyone else
-		iTaskMaker *pi_tmaker = (iTaskMaker *)_gpi_repo_->object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
-		i = 0;
-
-		while(array && i < count) {
-			_base_entry_t *pbe = &array[i];
-
-			if(pbe->pi_base && !(pbe->state & ST_INITIALIZED)) {
-				_object_info_t oi;
-
-				pbe->pi_base->object_info(&oi);
-				if(oi.flags & RF_ORIGINAL) {
-					// init here ORIGINAL flagged objects only
-					if(pbe->pi_base->object_ctl(OCTL_INIT, _gpi_repo_)) {
-						pbe->state |= ST_INITIALIZED;
-						if(oi.flags & RF_TASK) {
-							// start task
-							if(pi_tmaker)
-								pi_tmaker->start(pbe->pi_base);
-						}
-					}
-				}
-			}
-			i++;
-		}
-
-		_gpi_repo_->object_release(pi_tmaker);
+		_gpi_repo_->init_array(array, count);
 		r = ERR_NONE;
 	}
 #ifdef _CORE_

@@ -10,12 +10,6 @@
 #define ST_INITIALIZED	(1<<0)
 #define ST_DISABLED	(1<<1)
 
-typedef struct {
-	iBase *pi_base;
-	_u32  ref_cnt;
-	_u8   state;
-}_base_entry_t;
-
 extern "C" {
 #ifdef _CORE_
 _err_t init(int argc, char *argv[]);
