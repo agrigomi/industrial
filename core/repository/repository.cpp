@@ -18,7 +18,7 @@ private:
 	iLlist *mpi_notify_list;
 	iTaskMaker *mpi_tmaker;
 
-	iRepoExtension *get_extension(_str_t file, _str_t alias) {
+	iRepoExtension *get_extension(_cstr_t file, _cstr_t alias) {
 		iRepoExtension *r = 0;
 		if(mpi_ext_list) {
 			_u32 sz = 0;
@@ -342,7 +342,7 @@ public:
 	}
 
 	// extensions
-	_err_t extension_load(_str_t file, _str_t alias=0) {
+	_err_t extension_load(_cstr_t file, _cstr_t alias=0) {
 		_err_t r = ERR_UNKNOWN;
 		if(!get_extension(file, alias)) {
 			iRepoExtension *px = (iRepoExtension*)object_by_iname(I_REPO_EXTENSION, RF_CLONE);
@@ -371,7 +371,7 @@ public:
 		return r;
 	}
 
-	_err_t extension_unload(_str_t alias) {
+	_err_t extension_unload(_cstr_t alias) {
 		_err_t r = ERR_UNKNOWN;
 		iRepoExtension *pi_ext = get_extension(0, alias);
 

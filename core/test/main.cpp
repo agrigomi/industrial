@@ -20,7 +20,8 @@ _err_t main(int argc, char *argv[]) {
 			pi_repo->object_release(pi_log);
 		}
 
-		pi_repo->extension_load((_str_t)"bin/core/unix/ext-1/ext-1.so", (_str_t)"ext-1");
+		pi_repo->extension_load((_str_t)"bin/core/unix/ext-1/ext-1.so");
+		pi_repo->extension_unload("ext-1.so");
 	}
 	return r;
 }

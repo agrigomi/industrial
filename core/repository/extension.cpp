@@ -43,7 +43,7 @@ public:
 		return m_alias;
 	}
 
-	_err_t load(_str_t file, _str_t alias=0) {
+	_err_t load(_cstr_t file, _cstr_t alias=0) {
 		_err_t r = ERR_UNKNOWN;
 		if((m_handle = dlopen(file, RTLD_NOW | RTLD_DEEPBIND))) {
 			m_init = (_init_t *)dlsym(m_handle, "init");
