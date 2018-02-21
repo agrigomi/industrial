@@ -193,6 +193,23 @@ private:
 		}
 	}
 
+	bool init_object(iBase *pi, _u8 *state, _object_info_t *info) {
+		bool r = false;
+
+		if(!(*state & ST_INITIALIZED)) {
+			if((r = pi->object_ctl(OCTL_INIT, this))) {
+				*state |= ST_INITIALIZED;
+				notify(NF_INIT, pi);
+				if((info->flags & RF_TASK) && mpi_tmaker) {
+					if(mpi_tmaker->start(pi))
+						notify(NF_START, pi);
+				}
+			}
+		} else
+			r = true;
+
+		return r;
+	}
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 1, 0, 0);
 
@@ -206,21 +223,8 @@ public:
 				_object_info_t oi;
 
 				pe->pi_base->object_info(&oi);
-				if(oi.flags & RF_ORIGINAL) {
-					if(pe->pi_base->object_ctl(OCTL_INIT, this)) {
-						pe->state |= ST_INITIALIZED;
-						//notify for init
-						notify(NF_INIT, pe->pi_base);
-						if(oi.flags & RF_TASK) {
-							//start task
-							if(mpi_tmaker) {
-								mpi_tmaker->start(pe->pi_base);
-								// notify for start
-								notify(NF_START, pe->pi_base);
-							}
-						}
-					}
-				}
+				if(oi.flags & RF_ORIGINAL)
+					init_object(pe->pi_base, &pe->state, &oi);
 			}
 			it++;
 		}
@@ -243,20 +247,16 @@ public:
 						if((r = (iBase *)mpi_cxt_list->add(bentry->pi_base, size))) {
 							_u8 *state = (_u8 *)r;
 							state += size;
-
-							if(r->object_ctl(OCTL_INIT, this)) {
-								bentry->ref_cnt++;
-								*state = ST_INITIALIZED;
-								// notify for INIT
-								notify(NF_INIT, r);
-							} else { // release
+							*state = 0;
+							if(!init_object(r, state, &info)) {
 								HMUTEX hm = mpi_cxt_list->lock();
 								if(mpi_cxt_list->sel(r, hm)) {
 									mpi_cxt_list->del(hm);
 									r = 0;
 								}
 								mpi_cxt_list->unlock(hm);
-							}
+							} else
+								bentry->ref_cnt++;
 						}
 					} else {
 						// here we needed of heap
@@ -266,32 +266,24 @@ public:
 							r = (iBase *)pi_heap->alloc(size);
 							_u8 *state = (_u8 *)r;
 							state += size;
+							*state = 0;
 
 							memcpy(r, bentry->pi_base, size);
 
-							if(r->object_ctl(OCTL_INIT, this)) {
-								bentry->ref_cnt++;
-								*state = ST_INITIALIZED;
-								// notify for INIT
-								notify(NF_INIT, r);
-							} else {
+							if(!init_object(r, state, &info)) {
 								pi_heap->free(r, size);
 								r = 0;
-							}
+							} else
+								bentry->ref_cnt++;
+
 							object_release(pi_heap);
 						}
 					}
-					if(r && info.flags & RF_TASK) {
-						// start task
-						if(mpi_tmaker) {
-							mpi_tmaker->start(r);
-							// notify for START
-							notify(NF_START, r);
-						}
-					}
 				} else if((info.flags & rf) & RF_ORIGINAL) {
-					r = bentry->pi_base;
-					bentry->ref_cnt++;
+					if(init_object(bentry->pi_base, &bentry->state, &info)) {
+						r = bentry->pi_base;
+						bentry->ref_cnt++;
+					}
 				}
 			}
 		}
@@ -422,6 +414,7 @@ public:
 
 	bool object_ctl(_u32 cmd, void *arg) {
 		bool r = false;
+
 		switch(cmd) {
 			case OCTL_INIT:
 				mpi_cxt_list = mpi_ext_list = mpi_notify_list = 0;
@@ -447,6 +440,7 @@ public:
 				r = true;
 				break;
 		}
+
 		return r;
 	}
 };
