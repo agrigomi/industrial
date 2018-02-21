@@ -212,6 +212,50 @@ private:
 
 		return r;
 	}
+
+	bool uninit_object(iBase *pi, _u8 *state, _object_info_t *info) {
+		bool r = false;
+		_u32 flags = 0;
+
+		if(*state & ST_INITIALIZED) {
+			flags |= NF_UNINIT;
+			if(info->flags & RF_TASK)
+				flags |= NF_STOP;
+
+			notify(flags, pi);
+			remove_notifications(pi);
+
+			if((flags & NF_STOP) && mpi_tmaker) {
+				HTASK h = mpi_tmaker->handle(pi);
+				if(h)
+					mpi_tmaker->stop(h);
+			}
+
+			if((r = pi->object_ctl(OCTL_UNINIT, this)))
+				*state &= ~ST_INITIALIZED;
+		} else
+			r = true;
+
+		return r;
+	}
+
+	void uninit_array(_base_entry_t *array, _u32 count) {
+		_u32 it = 0;
+
+		while(array && it < count) {
+			_base_entry_t *pe = &array[it];
+			_object_info_t oi;
+
+			pe->pi_base->object_info(&oi);
+			if(oi.flags & RF_ORIGINAL)
+				uninit_object(pe->pi_base, &pe->state, &oi);
+			if(oi.flags & RF_CLONE) {
+				//...
+			}
+			it++;
+		}
+	}
+
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 1, 0, 0);
 
@@ -388,7 +432,7 @@ public:
 
 			if(array) {
 				disable_array(array, count);
-				// uninit objects
+				uninit_array(array, count);
 				//...
 			}
 		}
