@@ -198,12 +198,14 @@ private:
 
 		if(!(*state & ST_INITIALIZED)) {
 			if((r = pi->object_ctl(OCTL_INIT, this))) {
+				_u32 flags = NF_INIT;
 				*state |= ST_INITIALIZED;
-				notify(NF_INIT, pi);
 				if((info->flags & RF_TASK) && mpi_tmaker) {
 					if(mpi_tmaker->start(pi))
-						notify(NF_START, pi);
+						flags |= NF_START;
 				}
+
+				notify(flags, pi);
 			}
 		} else
 			r = true;
@@ -304,16 +306,21 @@ public:
 		if(bentry) {
 			if(ptr != bentry->pi_base) {
 				// cloning
-				if((info.flags & RF_TASK) && mpi_tmaker) {
-					// notifi for STOP
-					notify(NF_STOP, ptr);
+				_u32 flags = NF_UNINIT;
+
+				if((info.flags & RF_TASK) && mpi_tmaker)
+					flags |= NF_STOP;
+
+				notify(flags, ptr);
+
+				if(flags & NF_STOP) {
 					HTASK h = mpi_tmaker->handle(ptr);
 					if(h)
 						mpi_tmaker->stop(h);
 				}
-				// notify for UNINIT
-				notify(NF_UNINIT, ptr);
+
 				remove_notifications(ptr);
+
 				if(ptr->object_ctl(OCTL_UNINIT, this)) {
 					HMUTEX hm = mpi_cxt_list->lock();
 					if(mpi_cxt_list->sel(ptr, hm))
