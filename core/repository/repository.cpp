@@ -229,9 +229,9 @@ private:
 		return r;
 	}
 
-	bool uninit_object(iBase *pi, _u8 *state, _object_info_t *info) {
+	bool uninit_object(iBase *pi, _u8 *state, _object_info_t *info, _u32 f=0) {
 		bool r = false;
-		_u32 flags = 0;
+		_u32 flags = f;
 
 		if(*state & ST_INITIALIZED) {
 			flags |= NF_UNINIT;
@@ -273,7 +273,7 @@ private:
 
 			pe->pi_base->object_info(&oi);
 			if(oi.flags & RF_ORIGINAL)
-				uninit_object(pe->pi_base, &pe->state, &oi);
+				uninit_object(pe->pi_base, &pe->state, &oi, NF_REMOVE);
 			if(oi.flags & RF_CLONE) {
 				_u32 sz;
 				_u8 *state;
@@ -289,7 +289,7 @@ private:
 							strcmp(oi.cname, info.cname) == 0 &&
 							oi.version.version == info.version.version) {
 						mpi_cxt_list->unlock(hm);
-						bool r = uninit_object(obj, state, &info);
+						bool r = uninit_object(obj, state, &info, NF_REMOVE);
 						hm = mpi_cxt_list->lock();
 						if(r)
 							remove_context(obj, hm);
@@ -341,14 +341,9 @@ public:
 							_u8 *state = (_u8 *)r;
 							state += size;
 							*state = 0;
-							if(!init_object(r, state, &info)) {
-								HMUTEX hm = mpi_cxt_list->lock();
-								if(mpi_cxt_list->sel(r, hm)) {
-									mpi_cxt_list->del(hm);
-									r = 0;
-								}
-								mpi_cxt_list->unlock(hm);
-							} else
+							if(!init_object(r, state, &info))
+								remove_context(r);
+							else
 								bentry->ref_cnt++;
 						}
 					} else {
