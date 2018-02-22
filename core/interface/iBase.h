@@ -80,7 +80,7 @@ typedef struct {
 
 #define BASE(_class_, name, flags, a, i, r) \
 	CONSTRUCTOR(_class_) { \
-		register_object(this); \
+		register_object(dynamic_cast<iBase *>(this)); \
 	} \
 	DESTRUCTOR(_class_) {} \
 	INFO(_class_, name, flags, a, i, r)

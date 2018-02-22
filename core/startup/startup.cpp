@@ -20,8 +20,10 @@ void _EXPORT_ register_object(iBase *pi_base) {
 #else
 void _LOCAL_ register_object(iBase *pi_base) {
 #endif
-	_base_entry_t e={pi_base, 0, 0};
-	add_base_entry(&e);
+	if(pi_base) {
+		_base_entry_t e={pi_base, 0, 0};
+		add_base_entry(&e);
+	}
 }
 
 #ifdef _CORE_
