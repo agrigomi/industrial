@@ -46,6 +46,22 @@ private:
 		return r;
 	}
 
+	void remove_extension(iRepoExtension *pi_ext) {
+		HMUTEX hm = mpi_ext_list->lock();
+		_u32 sz = 0;
+		iRepoExtension **ppx = (iRepoExtension **)mpi_ext_list->first(&sz, hm);
+
+		while(ppx) {
+			if(*ppx == pi_ext) {
+				mpi_ext_list->del(hm);
+				break;
+			}
+			ppx = (iRepoExtension **)mpi_ext_list->next(&sz, hm);
+		}
+
+		mpi_ext_list->unlock(hm);
+	}
+
 	bool compare(_object_request_t *req, iBase *p) {
 		bool r = false;
 		_object_info_t inf;
@@ -239,6 +255,15 @@ private:
 		return r;
 	}
 
+	void remove_context(iBase *obj, HMUTEX hlock=0) {
+		HMUTEX hm = mpi_cxt_list->lock(hlock);
+
+		if(mpi_cxt_list->sel(obj, hm))
+			mpi_cxt_list->del(hm);
+
+		mpi_cxt_list->unlock(hm);
+	}
+
 	void uninit_array(_base_entry_t *array, _u32 count) {
 		_u32 it = 0;
 
@@ -250,7 +275,29 @@ private:
 			if(oi.flags & RF_ORIGINAL)
 				uninit_object(pe->pi_base, &pe->state, &oi);
 			if(oi.flags & RF_CLONE) {
-				//...
+				_u32 sz;
+				_u8 *state;
+				_object_info_t info;
+				HMUTEX hm = mpi_cxt_list->lock();
+				iBase *obj = (iBase *)mpi_cxt_list->first(&sz, hm);
+
+				while(obj) {
+					state = (_u8 *)obj;
+					state += sz;
+					obj->object_info(&info);
+					if(strcmp(oi.iname, info.iname) == 0 &&
+							strcmp(oi.cname, info.cname) == 0 &&
+							oi.version.version == info.version.version) {
+						mpi_cxt_list->unlock(hm);
+						bool r = uninit_object(obj, state, &info);
+						hm = mpi_cxt_list->lock();
+						if(r)
+							remove_context(obj, hm);
+					}
+					obj = (iBase *)mpi_cxt_list->next(&sz, hm);
+				}
+
+				mpi_cxt_list->unlock(hm);
 			}
 			it++;
 		}
@@ -344,36 +391,20 @@ public:
 		_object_request_t req = {RQ_NAME|RQ_INTERFACE|RQ_VERSION,
 					info.cname, info.iname};
 		req.version.version = info.version.version;
-
+		bool unref = true;
 		_base_entry_t *bentry = find(&req, false);
 
 		if(bentry) {
 			if(ptr != bentry->pi_base) {
 				// cloning
-				_u32 flags = NF_UNINIT;
+				_u8 *state = (_u8 *)ptr;
+				state += info.size+1;
 
-				if((info.flags & RF_TASK) && mpi_tmaker)
-					flags |= NF_STOP;
-
-				notify(flags, ptr);
-
-				if(flags & NF_STOP) {
-					HTASK h = mpi_tmaker->handle(ptr);
-					if(h)
-						mpi_tmaker->stop(h);
-				}
-
-				remove_notifications(ptr);
-
-				if(ptr->object_ctl(OCTL_UNINIT, this)) {
-					HMUTEX hm = mpi_cxt_list->lock();
-					if(mpi_cxt_list->sel(ptr, hm))
-						mpi_cxt_list->del(hm);
-					mpi_cxt_list->unlock(hm);
-				}
+				if((unref = uninit_object(ptr, state, &info)))
+					remove_context(ptr);
 			}
 
-			if(bentry->ref_cnt)
+			if(bentry->ref_cnt && unref)
 				bentry->ref_cnt--;
 		}
 	}
@@ -433,7 +464,10 @@ public:
 			if(array) {
 				disable_array(array, count);
 				uninit_array(array, count);
-				//...
+				if((r = pi_ext->unload()) == ERR_NONE) {
+					remove_extension(pi_ext);
+					object_release(pi_ext);
+				}
 			}
 		}
 

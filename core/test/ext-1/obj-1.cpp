@@ -33,6 +33,9 @@ public:
 				r = true;
 				break;
 			case OCTL_UNINIT:
+				if(mpi_log)
+					mpi_log->fwrite(LMT_INFO, "uninit %s", "cObj_1");
+				r = true;
 				break;
 		}
 		return r;
