@@ -10,7 +10,7 @@ class cObj_1: public iObj_1 {
 private:
 	iRepository *mpi_repo;
 	iLog *mpi_log;
-
+	bool t;
 	iLog *get_log(void) {
 		iLog *r = mpi_log;
 
@@ -20,7 +20,7 @@ private:
 	}
 
 public:
-	BASE(cObj_1, "cObj_1", RF_CLONE, 1,0,0);
+	BASE(cObj_1, "cObj_1", RF_CLONE|RF_TASK, 1,0,0);
 
 	bool object_ctl(_u32 cmd, void *arg) {
 		bool r = false;
@@ -35,6 +35,19 @@ public:
 			case OCTL_UNINIT:
 				if(mpi_log)
 					mpi_log->fwrite(LMT_INFO, "uninit %s", "cObj_1");
+				r = true;
+				break;
+			case OCTL_START:
+				t = true;
+				if(mpi_log)
+					mpi_log->fwrite(LMT_INFO, "start task %s", "cObj_1");
+				while(t);
+				r = true;
+				break;
+			case OCTL_STOP:
+				if(mpi_log)
+					mpi_log->fwrite(LMT_INFO, "stop task %s", "cObj_1");
+				t = false;
 				r = true;
 				break;
 		}

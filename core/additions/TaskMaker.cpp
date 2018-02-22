@@ -52,7 +52,7 @@ private:
 
 		if(mpi_list) {
 			HMUTEX hm = mpi_list->lock();
-			r = (_task_t *)mpi_list->add(&task, sizeof(_task_t), hm);
+			r = (_task_t *)mpi_list->add(task, sizeof(_task_t), hm);
 			mpi_list->unlock(hm);
 		}
 
