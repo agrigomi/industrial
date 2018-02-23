@@ -321,7 +321,6 @@ private:
 
 	void destroy(void) {
 		_u32 sz = 0;
-		_u32 it = 0;
 		_u32 count = 0, limit = 0;
 		_base_entry_t *array = 0;
 		HMUTEX hm = mpi_ext_list->lock();

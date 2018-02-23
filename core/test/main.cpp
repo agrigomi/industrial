@@ -20,9 +20,9 @@ _err_t main(int argc, char *argv[]) {
 			pi_log->add_listener(log_listener);
 			pi_repo->object_release(pi_log);
 		}
-
 		pi_repo->extension_load((_str_t)"bin/core/unix/ext-1/ext-1.so");
-		iBase *pi = pi_repo->object_by_iname("iObj1", RF_CLONE);
+		pi_repo->object_by_iname("iObj1", RF_CLONE);
+
 		usleep(1);
 		pi_repo->extension_unload("ext-1.so");
 		uninit();
@@ -52,6 +52,7 @@ public:
 
 			case OCTL_NOTIFY:
 				_notification_t *pn = (_notification_t *)arg;
+				mpi_log->fwrite(LMT_INFO, "catch notification flags=0x%02x; object=0x%x", pn->flags, pn->object);
 				break;
 		}
 		return true;
@@ -59,4 +60,3 @@ public:
 };
 
 static cTest _g_object_;
-
