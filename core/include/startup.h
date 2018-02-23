@@ -13,6 +13,7 @@
 extern "C" {
 #ifdef _CORE_
 _err_t init(int argc, char *argv[]);
+void uninit(void);
 #else
 _err_t init(iRepository *pi_repo);
 #endif

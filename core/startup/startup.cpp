@@ -41,6 +41,11 @@ _early_init_t ei[]= {
 	{0,		0}
 };
 
+void _EXPORT_ uninit(void) {
+	if(_gpi_repo_)
+		_gpi_repo_->destroy();
+}
+
 _err_t _EXPORT_ init(int argc, char *argv[]) {
 #else
 _err_t _EXPORT_ init(iRepository *pi_repo) {

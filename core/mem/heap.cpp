@@ -35,7 +35,14 @@ private:
 	friend void s2_unlock(_s2_hlock_t, void *p_udata);
 
 public:
-	BASE(cHeap, "cHeap", RF_CLONE|RF_ORIGINAL, 1, 0, 0);
+	INFO(cHeap, "cHeap", RF_CLONE|RF_ORIGINAL, 1, 0, 0);
+	CONSTRUCTOR(cHeap) {
+		register_object(this);
+	}
+	DESTRUCTOR(cHeap) {
+		m_disable_lock = true;
+		s2_destroy(&m_s2c);
+	}
 
 	bool object_ctl(_u32 cmd, void *arg) {
 		bool r = false;
@@ -59,8 +66,10 @@ public:
 				break;
 			case OCTL_UNINIT: {
 				iRepository *repo = (iRepository *)arg;
-				s2_destroy(&m_s2c);
 				repo->object_release(mpi_mutex);
+				m_disable_lock = true;
+				s2_destroy(&m_s2c);
+				memset(&m_s2c, 0, sizeof(_s2_context_t));
 				r = true;
 				break;
 			}

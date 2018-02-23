@@ -71,6 +71,7 @@ public:
 			case OCTL_UNINIT: {
 				iRepository *repo = (iRepository*)arg;
 				rb_destroy(&m_cxt);
+				memset(&m_cxt, 0, sizeof(m_cxt));
 				repo->object_release(mpi_heap);
 				repo->object_release(mpi_mutex);
 				break;

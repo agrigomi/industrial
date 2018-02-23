@@ -28,23 +28,26 @@ static _u64 _allign(_u32 sz, _u32 page_size) {
 
 static _s2_t *s2_entry(_s2_context_t *p_scxt, _u32 sz) {
 	_s2_t *r = 0;
-	_u64 _sz = _allign(sz, p_scxt->page_size);
-	_u64 b = S2_MIN_ALLOC;
-	_u32 pc = p_scxt->page_size / sizeof(_s2_t);
-	_u32 p = 0;
 
-	for(; p < pc; p++) {
-		if(_sz >= b && _sz < (b<<1)) {
-			if((r = p_scxt->p_s2 + p)) {
-				if(r->osz == 0) {
-					p_scxt->p_mem_set((_u8 *)r, 0, sizeof(_s2_t));
-					r->osz = _sz;
-					r->count = 0;
+	if(p_scxt->p_s2) {
+		_u64 _sz = _allign(sz, p_scxt->page_size);
+		_u64 b = S2_MIN_ALLOC;
+		_u32 pc = p_scxt->page_size / sizeof(_s2_t);
+		_u32 p = 0;
+
+		for(; p < pc; p++) {
+			if(_sz >= b && _sz < (b<<1)) {
+				if((r = p_scxt->p_s2 + p)) {
+					if(r->osz == 0) {
+						p_scxt->p_mem_set((_u8 *)r, 0, sizeof(_s2_t));
+						r->osz = _sz;
+						r->count = 0;
+					}
 				}
+				break;
 			}
-			break;
+			b <<= 1;
 		}
-		b <<= 1;
 	}
 	return r;
 }

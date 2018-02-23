@@ -48,6 +48,7 @@ public:
 	// extensions
 	virtual _err_t extension_load(_cstr_t file, _cstr_t alias=0)=0;
 	virtual _err_t extension_unload(_cstr_t alias)=0;
+	virtual void destroy(void)=0;
 };
 
 extern iRepository *_gpi_repo_;

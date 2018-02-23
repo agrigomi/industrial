@@ -264,16 +264,29 @@ private:
 		mpi_cxt_list->unlock(hm);
 	}
 
-	void uninit_array(_base_entry_t *array, _u32 count) {
-		_u32 it = 0;
+#define UNINIT_STATIC		1
+#define UNINIT_DYNAMIC		2
+#define UNINIT_REMOVE_CONTEXT	4
 
-		while(array && it < count) {
+	void uninit_array(_base_entry_t *array, _u32 count,
+			_u8 flags=UNINIT_STATIC|UNINIT_DYNAMIC|UNINIT_REMOVE_CONTEXT) {
+		_u32 it = 0;
+		_object_info_t oi;
+
+		while(array && it < count && (flags & UNINIT_STATIC)) {
 			_base_entry_t *pe = &array[it];
-			_object_info_t oi;
 
 			pe->pi_base->object_info(&oi);
 			if(oi.flags & RF_ORIGINAL)
 				uninit_object(pe->pi_base, &pe->state, &oi, NF_REMOVE);
+			it++;
+		}
+
+		it = 0;
+		while(array && it < count && (flags & UNINIT_DYNAMIC)) {
+			_base_entry_t *pe = &array[it];
+
+			pe->pi_base->object_info(&oi);
 			if(oi.flags & RF_CLONE) {
 				_u32 sz;
 				_u8 *state;
@@ -291,7 +304,7 @@ private:
 						mpi_cxt_list->unlock(hm);
 						bool r = uninit_object(obj, state, &info, NF_REMOVE);
 						hm = mpi_cxt_list->lock();
-						if(r) {
+						if(r && (flags && UNINIT_REMOVE_CONTEXT)) {
 							remove_context(obj, hm);
 							obj = (iBase *)mpi_cxt_list->current(&sz, hm);
 							continue;
@@ -304,6 +317,30 @@ private:
 			}
 			it++;
 		}
+	}
+
+	void destroy(void) {
+		_u32 sz = 0;
+		_u32 it = 0;
+		_u32 count = 0, limit = 0;
+		_base_entry_t *array = 0;
+		HMUTEX hm = mpi_ext_list->lock();
+		iRepoExtension **pprx = (iRepoExtension **)mpi_ext_list->first(&sz, hm);
+
+		while(pprx) {
+			array = (*pprx)->array(&count, &limit);
+			disable_array(array, count);
+			uninit_array(array, count);
+			(*pprx)->unload();
+			mpi_ext_list->del(hm);
+			pprx = (iRepoExtension **)mpi_ext_list->current(&sz, hm);
+		}
+
+		mpi_ext_list->unlock(hm);
+
+		array = get_base_array(&count, &limit);
+		disable_array(array, count);
+		uninit_array(array, count, UNINIT_STATIC);
 	}
 
 public:
@@ -514,12 +551,6 @@ public:
 				}
 				break;
 			case OCTL_UNINIT:
-				object_release(mpi_tmaker);
-				mpi_tmaker = 0;
-				object_release(mpi_ext_list);
-				mpi_ext_list = 0;
-				object_release(mpi_cxt_list);
-				mpi_cxt_list = 0;
 				r = true;
 				break;
 		}
