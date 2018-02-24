@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "private.h"
 #include "iRepository.h"
 #include "iLog.h"
@@ -33,20 +34,19 @@ public:
 				r = true;
 				break;
 			case OCTL_UNINIT:
-				if(mpi_log)
-					mpi_log->fwrite(LMT_INFO, "uninit %s", "cObj_1");
+				mpi_log->fwrite(LMT_INFO, "uninit %s", "cObj_1");
 				r = true;
 				break;
 			case OCTL_START:
 				t = true;
-				if(mpi_log)
-					mpi_log->fwrite(LMT_INFO, "start task %s", "cObj_1");
-				while(t);
+				mpi_log->fwrite(LMT_INFO, "start task %s", "cObj_1");
+				while(t)
+					usleep(1000);
+				mpi_log->fwrite(LMT_INFO, "task %s has stopped", "cObj_1");
 				r = true;
 				break;
 			case OCTL_STOP:
-				if(mpi_log)
-					mpi_log->fwrite(LMT_INFO, "stop task %s", "cObj_1");
+				mpi_log->fwrite(LMT_INFO, "stop task %s", "cObj_1");
 				t = false;
 				r = true;
 				break;

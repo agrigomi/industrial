@@ -23,7 +23,7 @@ _err_t main(int argc, char *argv[]) {
 		pi_repo->extension_load((_str_t)"bin/core/unix/ext-1/ext-1.so");
 		pi_repo->object_by_iname("iObj1", RF_CLONE);
 
-		usleep(1);
+		getchar();
 		pi_repo->extension_unload("ext-1.so");
 		uninit();
 	}
