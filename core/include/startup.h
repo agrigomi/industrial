@@ -1,7 +1,6 @@
 #ifndef __STARTUP_H__
 #define __STARTUP_H__
 
-#include <vector>
 #include "iRepository.h"
 
 #define _EXPORT_ __attribute__ ((visibility ("default")))
