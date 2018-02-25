@@ -70,33 +70,30 @@ private:
 
 	HTASK start_task(_task_t *task) {
 		HTASK r = 0;
-		_task_t *t = add_task(task);
 
-		if(t) {
-			if(pthread_create(&t->thread, 0, (_task_proc_t *)starter, t) != ERR_NONE)
-				remove_task(t);
-			else
-				r = t;
-		}
+		if(pthread_create(&task->thread, 0, (_task_proc_t *)starter, task) == ERR_NONE)
+			r = task;
 
 		return r;
 	}
 
-
 	bool stop_task(_task_t *task) {
 		bool r = false;
 
-		if((r = task->pi_base->object_ctl(OCTL_STOP, 0))) {
-			_u32 n = 100;
-			while(task->state & TS_RUNNING) {
-				usleep(100);
-				n--;
-			}
+		if(task->pi_base) {
+			if((r = task->pi_base->object_ctl(OCTL_STOP, 0))) {
+				_u32 n = 100;
+				while(task->state & TS_RUNNING) {
+					usleep(100);
+					n--;
+				}
 
-			if(!n)
-				r = false;
-			else
-				remove_task(task);
+				if(!n)
+					r = false;
+			}
+		} else if(task->proc) {
+			if(pthread_cancel(task->thread) == ERR_NONE)
+				r = true;
 		}
 
 		return r;
@@ -148,7 +145,9 @@ public:
 			memset(&task, 0, sizeof(_task_t));
 			task.pi_base = pi_base;
 			task.arg = arg;
-			r = start_task(&task);
+
+			_task_t *t = add_task(&task);
+			r = start_task(t);
 		} else {
 			_task_t *task = (_task_t *)r;
 			if(!(task->state & TS_RUNNING))
@@ -164,7 +163,9 @@ public:
 		memset(&task, 0, sizeof(_task_t));
 		task.proc = proc;
 		task.arg = arg;
-		return start_task(&task);
+
+		_task_t *t = add_task(&task);
+		return start_task(t);
 	}
 
 	HTASK handle(iBase *pi_base) {
@@ -180,9 +181,10 @@ public:
 		_task_t *task = validate_handle(h);
 
 		if(task) {
-			if(task->state & TS_RUNNING)
-				r = stop_task(task);
-			else {
+			if(task->state & TS_RUNNING) {
+				if((r = stop_task(task)))
+					remove_task(task);
+			} else {
 				remove_task(task);
 				r = true;
 			}
