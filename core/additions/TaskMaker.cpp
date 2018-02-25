@@ -248,6 +248,8 @@ static void *starter(_task_t *task) {
 	task->state &= ~TS_RUNNING;
 	task->state |= TS_STOPPED;
 
+	pthread_exit(0);
+
 	return r;
 }
 
