@@ -123,7 +123,7 @@ void *ll_add(_ll_context_t *p_cxt, void *p_data, _u32 size, _u64 hlock) {
 			p_cxt->state[p_cxt->ccol].p_last->next = _p;
 
 		_p->prev = p_cxt->state[p_cxt->ccol].p_last;
-		if(p_cxt->mode == LL_MODE_QUEUE)
+		if(p_cxt->mode == LL_MODE_RING)
 			_p->next = p_cxt->state[p_cxt->ccol].p_first;
 		else
 			_p->next = 0;
@@ -230,7 +230,7 @@ void  ll_rem(_ll_context_t *p_cxt, _u32 index, _u64 hlock) {
 		if(p_cur == p_cxt->state[p_cxt->ccol].p_first) {
 			p_cxt->state[p_cxt->ccol].p_current =
 					p_cxt->state[p_cxt->ccol].p_first = p_cur->next;
-			if(p_cxt->mode == LL_MODE_QUEUE)
+			if(p_cxt->mode == LL_MODE_RING)
 				p_cxt->state[p_cxt->ccol].p_last->next =
 					p_cxt->state[p_cxt->ccol].p_current;
 		}
@@ -238,7 +238,7 @@ void  ll_rem(_ll_context_t *p_cxt, _u32 index, _u64 hlock) {
 		if(p_cur == p_cxt->state[p_cxt->ccol].p_last) {
 			p_cxt->state[p_cxt->ccol].p_current =
 					p_cxt->state[p_cxt->ccol].p_last = p_cur->prev;
-			if(p_cxt->mode == LL_MODE_QUEUE)
+			if(p_cxt->mode == LL_MODE_RING)
 				p_cxt->state[p_cxt->ccol].p_current->next =
 					p_cxt->state[p_cxt->ccol].p_first;
 			p_cxt->state[p_cxt->ccol].current--;
@@ -273,14 +273,14 @@ void  ll_del(_ll_context_t *p_cxt, _u64 hlock) {
 		if(p_cur == p_cxt->state[p_cxt->ccol].p_first) {
 			p_cxt->state[p_cxt->ccol].p_current =
 					p_cxt->state[p_cxt->ccol].p_first = p_cur->next;
-			if(p_cxt->mode == LL_MODE_QUEUE)
+			if(p_cxt->mode == LL_MODE_RING)
 				p_cxt->state[p_cxt->ccol].p_last->next =
 					p_cxt->state[p_cxt->ccol].p_current;
 		}
 
 		if(p_cur == p_cxt->state[p_cxt->ccol].p_last) {
 			p_cxt->state[p_cxt->ccol].p_current = p_cxt->state[p_cxt->ccol].p_last = p_cur->prev;
-			if(p_cxt->mode == LL_MODE_QUEUE)
+			if(p_cxt->mode == LL_MODE_RING)
 				p_cxt->state[p_cxt->ccol].p_current->next = p_cxt->state[p_cxt->ccol].p_first;
 			p_cxt->state[p_cxt->ccol].current--;
 		}
@@ -374,7 +374,7 @@ _u8 ll_mov(_ll_context_t *p_cxt, void *p_data, _u8 col, _u64 hlock) {
 			if(p_ds->p_last) {
 				p_ds->p_last->next = p_hdr;
 				p_hdr->prev = p_ds->p_last;
-				if(p_cxt->mode == LL_MODE_QUEUE)
+				if(p_cxt->mode == LL_MODE_RING)
 					p_hdr->next = p_ds->p_first;
 				else
 					p_hdr->next = 0;
@@ -382,7 +382,7 @@ _u8 ll_mov(_ll_context_t *p_cxt, void *p_data, _u8 col, _u64 hlock) {
 			} else if(p_ds->p_first) {
 				p_ds->p_first->prev = p_hdr;
 				p_hdr->next = p_ds->p_first;
-				if(p_cxt->mode == LL_MODE_QUEUE)
+				if(p_cxt->mode == LL_MODE_RING)
 					p_hdr->prev = p_ds->p_last;
 				else
 					p_hdr->prev = 0;
@@ -391,7 +391,7 @@ _u8 ll_mov(_ll_context_t *p_cxt, void *p_data, _u8 col, _u64 hlock) {
 				goto _mov_done_;
 		} else {
 			p_ds->p_first = p_ds->p_last = p_ds->p_current = p_hdr;
-			if(p_cxt->mode == LL_MODE_QUEUE)
+			if(p_cxt->mode == LL_MODE_RING)
 				p_hdr->next = p_ds->p_first;
 			else
 				p_hdr->prev = p_hdr->next = 0;
@@ -406,7 +406,7 @@ _mov_done_:
 }
 
 void ll_roll(_ll_context_t *p_cxt, _u64 hlock) {
-	if(p_cxt->mode == LL_MODE_QUEUE) {
+	if(p_cxt->mode == LL_MODE_RING) {
 		_u64 hm = ll_lock(p_cxt, hlock);
 		_ll_item_hdr_t *pf = p_cxt->state[p_cxt->ccol].p_first;
 		_ll_item_hdr_t *pl = p_cxt->state[p_cxt->ccol].p_last;

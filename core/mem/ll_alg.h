@@ -4,7 +4,7 @@
 #include "dtype.h"
 
 #define LL_MODE_VECTOR	1
-#define LL_MODE_QUEUE	2
+#define LL_MODE_RING	2
 
 typedef void *_ll_alloc_t(_u32 size, _ulong limit, void *p_udata);
 typedef void _ll_free_t(void *ptr, _u32 size, void *p_udata);

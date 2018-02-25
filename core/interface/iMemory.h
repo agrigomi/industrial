@@ -27,7 +27,7 @@ public:
 };
 
 #define LL_VECTOR	1
-#define LL_QUEUE	2
+#define LL_RING		2
 
 class iLlist:public iBase {
 public:
