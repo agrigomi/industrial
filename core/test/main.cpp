@@ -37,7 +37,7 @@ private:
 public:
 	BASE(cTest, "cTest", RF_ORIGINAL, 1,0,0);
 
-	bool object_ctl(_u32 cmd, void *arg) {
+	bool object_ctl(_u32 cmd, void *arg, ...) {
 		switch(cmd) {
 			case OCTL_INIT: {
 				iRepository *pi_repo = (iRepository*)arg;

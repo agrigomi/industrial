@@ -39,7 +39,7 @@ class iBase {
 public:
 	INTERFACE(iBase, I_BASE);
 	virtual void object_info(_object_info_t *pi)=0;
-	virtual bool object_ctl(_u32 cmd, void *arg)=0;
+	virtual bool object_ctl(_u32 cmd, void *arg, ...)=0;
 };
 
 // notification flags

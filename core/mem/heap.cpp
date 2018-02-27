@@ -44,7 +44,7 @@ public:
 		s2_destroy(&m_s2c);
 	}
 
-	bool object_ctl(_u32 cmd, void *arg) {
+	bool object_ctl(_u32 cmd, void *arg, ...) {
 		bool r = false;
 		switch(cmd) {
 			case OCTL_INIT:

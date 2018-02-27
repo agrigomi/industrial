@@ -531,7 +531,7 @@ public:
 		}
 	}
 
-	bool object_ctl(_u32 cmd, void *arg) {
+	bool object_ctl(_u32 cmd, void *arg, ...) {
 		bool r = false;
 
 		switch(cmd) {

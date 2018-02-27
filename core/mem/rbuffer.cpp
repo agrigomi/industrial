@@ -53,7 +53,7 @@ public:
 		rb_reset_pull(&m_cxt);
 	}
 
-	bool object_ctl(_u32 cmd, void *arg) {
+	bool object_ctl(_u32 cmd, void *arg, ...) {
 		bool r = false;
 
 		switch(cmd) {

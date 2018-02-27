@@ -62,7 +62,7 @@ private:
 public:
 	BASE(cLog, "cLog", RF_CLONE|RF_ORIGINAL, 1,0,0);
 
-	bool object_ctl(_u32 cmd, void *arg) {
+	bool object_ctl(_u32 cmd, void *arg, ...) {
 		bool r = false;
 
 		switch(cmd) {

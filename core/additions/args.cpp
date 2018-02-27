@@ -57,7 +57,7 @@ private:
 public:
 	BASE(cArgs, "cArgs", RF_ORIGINAL, 1,0,0);
 
-	bool object_ctl(_u32 cmd, void *arg) {
+	bool object_ctl(_u32 cmd, void *arg, ...) {
 		bool r = false;
 		switch(cmd) {
 			case OCTL_INIT:
