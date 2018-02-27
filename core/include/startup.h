@@ -6,9 +6,6 @@
 #define _EXPORT_ __attribute__ ((visibility ("default")))
 #define _LOCAL_ __attribute__ ((visibility ("hidden")))
 
-#define ST_INITIALIZED	(1<<0)
-#define ST_DISABLED	(1<<1)
-
 extern "C" {
 #ifdef _CORE_
 _err_t init(int argc, char *argv[]);

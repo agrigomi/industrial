@@ -6,6 +6,9 @@
 
 #define I_REPOSITORY	"iRepository"
 
+#define ST_INITIALIZED	(1<<0)
+#define ST_DISABLED	(1<<1)
+
 typedef struct {
 	iBase *pi_base;
 	_u32  ref_cnt;
