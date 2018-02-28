@@ -198,7 +198,9 @@ private:
 					mpi_notify_list->unlock(hm);
 					rec->handler->object_ctl(OCTL_NOTIFY, &msg);
 					hm = mpi_notify_list->lock();
-					mpi_notify_list->sel(rec, hm);
+					if(!mpi_notify_list->sel(rec, hm))
+						break;
+
 					send = false;
 				}
 
