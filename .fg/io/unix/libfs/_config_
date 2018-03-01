@@ -1,0 +1,4 @@
+LIB_PATH=$(OUTDIR)/core/$(CONFIG)/libstartup-ext
+COMPILER_FLAGS+=-fPIC -g
+LINKER_FLAGS+=-fpic --shared -lpthread -u init $(LIB_PATH)/libstartup-ext.a
+
