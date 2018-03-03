@@ -16,15 +16,15 @@ _err_t main(int argc, char *argv[]) {
 	if(r == ERR_NONE) {
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
-		if(pi_log) {
+		if(pi_log)
 			pi_log->add_listener(log_listener);
-			pi_repo->object_release(pi_log);
-		}
 		pi_repo->extension_load((_str_t)"bin/core/unix/ext-1/ext-1.so");
-		pi_repo->object_by_iname("iObj1", RF_CLONE);
+		iBase *obj = pi_repo->object_by_iname("iObj1", RF_CLONE|RF_ORIGINAL);
 
 		getchar();
-		pi_repo->extension_unload("ext-1.so");
+		//pi_repo->object_release(obj);
+		if((r = pi_repo->extension_unload("ext-1.so")))
+			pi_log->fwrite(LMT_ERROR, "unable to unload ext-i.so error %d", r);
 		uninit();
 	}
 
@@ -50,10 +50,13 @@ public:
 			case OCTL_UNINIT:
 				break;
 
-			case OCTL_NOTIFY:
+			case OCTL_NOTIFY: {
 				_notification_t *pn = (_notification_t *)arg;
 				mpi_log->fwrite(LMT_INFO, "catch notification flags=0x%02x; object=0x%x", pn->flags, pn->object);
+				if(pn->flags & NF_REMOVE)
+					_gpi_repo_->object_release(pn->object);
 				break;
+			}
 		}
 		return true;
 	}

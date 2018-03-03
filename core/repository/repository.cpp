@@ -156,6 +156,18 @@ private:
 		}
 	}
 
+	_u32 get_references(_base_entry_t *array, _u32 count) {
+		_u32 r = 0;
+		_u32 it = 0;
+
+		while(array && it < count) {
+			r += array[it].ref_cnt;
+			it++;
+		}
+
+		return r;
+	}
+
 	void remove_notifications(iBase *handler) {
 		if(mpi_notify_list) {
 			HMUTEX hm = mpi_notify_list->lock();
@@ -231,7 +243,7 @@ private:
 		return r;
 	}
 
-	bool uninit_object(iBase *pi, _u8 *state, _object_info_t *info, _u32 f=0) {
+	bool uninit_object(iBase *pi, _u8 *state, _u32 *ref_cnt, _object_info_t *info, _u32 f=0) {
 		bool r = false;
 		_u32 flags = f;
 
@@ -241,6 +253,15 @@ private:
 				flags |= NF_STOP;
 
 			notify(flags, pi);
+
+			if(!(*state & ST_INITIALIZED))
+				// removed
+				return true;
+
+			if((flags & NF_REMOVE) && *ref_cnt)
+				// the object still busy, can't be removed
+				return false;
+
 			remove_notifications(pi);
 
 			if((flags & NF_STOP) && mpi_tmaker) {
@@ -280,7 +301,7 @@ private:
 
 			pe->pi_base->object_info(&oi);
 			if(oi.flags & RF_ORIGINAL)
-				uninit_object(pe->pi_base, &pe->state, &oi, NF_REMOVE);
+				uninit_object(pe->pi_base, &pe->state, &pe->ref_cnt, &oi, NF_REMOVE);
 			it++;
 		}
 
@@ -304,7 +325,7 @@ private:
 							strcmp(oi.cname, info.cname) == 0 &&
 							oi.version.version == info.version.version) {
 						mpi_cxt_list->unlock(hm);
-						bool r = uninit_object(obj, state, &info, NF_REMOVE);
+						bool r = uninit_object(obj, state, &pe->ref_cnt, &info, NF_REMOVE);
 						hm = mpi_cxt_list->lock();
 						if(r && (flags && UNINIT_REMOVE_CONTEXT)) {
 							remove_context(obj, hm);
@@ -436,7 +457,7 @@ public:
 				_u8 *state = (_u8 *)ptr;
 				state += info.size+1;
 
-				if((unref = uninit_object(ptr, state, &info)))
+				if((unref = uninit_object(ptr, state, &bentry->ref_cnt, &info)))
 					remove_context(ptr);
 			}
 
@@ -500,10 +521,13 @@ public:
 			if(array) {
 				disable_array(array, count);
 				uninit_array(array, count);
-				if((r = pi_ext->unload()) == ERR_NONE) {
-					remove_extension(pi_ext);
-					object_release(pi_ext);
-				}
+				if(get_references(array, count) == 0) {
+					if((r = pi_ext->unload()) == ERR_NONE) {
+						remove_extension(pi_ext);
+						object_release(pi_ext);
+					}
+				} else
+					r = ERR_BUSY;
 			}
 		}
 

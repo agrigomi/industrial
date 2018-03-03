@@ -27,7 +27,7 @@ public:
 class iFileIO: public iIO {
 public:
 	INTERFACE(iFileIO, I_FILE_IO);
-	virtual _ulong seek(_ulong offset)=0
+	virtual _ulong seek(_ulong offset)=0;
 	virtual _ulong size(void)=0;
 	virtual void *mmap(_u32 prot=MPF_EXEC|MPF_READ|MPF_WRITE, _u32 flags=MF_SHARED, _ulong offset=0)=0;
 	virtual void munmap(void)=0;
@@ -36,6 +36,7 @@ public:
 class iSocketIO: public iIO {
 public:
 	INTERFACE(iSocketIO, I_SOCKET_IO);
+	virtual void block(bool)=0; /* blocking or nonblocking IO */
 };
 
 #endif
