@@ -1,0 +1,49 @@
+#include "iFS.h"
+#include "iRepository.h"
+#include "private.h"
+
+class cFS: public iFS {
+public:
+	BASE(cFS, "cFS", RF_ORIGINAL, 1,0,0);
+
+	bool object_ctl(_u32 cmd, void *arg, ...) {
+		bool r = false;
+
+		switch(cmd) {
+			case OCTL_INIT:
+				r = true;
+				break;
+			case OCTL_UNINIT:
+				r = true;
+				break;
+		}
+
+		return r;
+	}
+	
+	iFileIO *open(_cstr_t path, _u32 flags) {
+		iFileIO *r = 0;
+
+		_s32 fd = ::open(path, flags);
+		if(fd > 0) {
+			cFileIO *_r = (cFileIO *)_gpi_repo_->object_by_cname(FILE_IO_CLASS_NAME, RF_CLONE);
+			if(_r) {
+				_r->m_fd = fd;
+				r = _r;
+			} else
+				::close(fd);
+		}
+
+		return r;
+	}
+
+	void close(iFileIO *pi) {
+		cFileIO *cfio = dynamic_cast<cFileIO*>(pi);
+		if(cfio) {
+			if(::close(cfio->m_fd) != -1) {
+				cfio->m_fd = 0;
+				_gpi_repo_->object_release(pi);
+			}
+		}
+	}
+};

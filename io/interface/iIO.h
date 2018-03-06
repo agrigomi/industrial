@@ -29,8 +29,10 @@ public:
 	INTERFACE(iFileIO, I_FILE_IO);
 	virtual _ulong seek(_ulong offset)=0;
 	virtual _ulong size(void)=0;
-	virtual void *mmap(_u32 prot=MPF_EXEC|MPF_READ|MPF_WRITE, _u32 flags=MF_SHARED, _ulong offset=0)=0;
-	virtual void munmap(void)=0;
+	virtual void *map(_u32 prot=MPF_EXEC|MPF_READ|MPF_WRITE, _u32 flags=MF_SHARED)=0;
+	virtual void unmap(void)=0;
+	virtual void sync(void)=0;
+	virtual bool truncate(_ulong len)=0;
 };
 
 class iSocketIO: public iIO {
