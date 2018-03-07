@@ -20,7 +20,7 @@ public:
 
 		return r;
 	}
-	
+
 	iFileIO *open(_cstr_t path, _u32 flags) {
 		iFileIO *r = 0;
 
@@ -40,10 +40,8 @@ public:
 	void close(iFileIO *pi) {
 		cFileIO *cfio = dynamic_cast<cFileIO*>(pi);
 		if(cfio) {
-			if(::close(cfio->m_fd) != -1) {
-				cfio->m_fd = 0;
-				_gpi_repo_->object_release(pi);
-			}
+			cfio->_close();
+			_gpi_repo_->object_release(pi);
 		}
 	}
 };

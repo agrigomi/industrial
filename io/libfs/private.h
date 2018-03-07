@@ -20,6 +20,7 @@ public:
 	void unmap(void);
 	void sync(void);
 	bool truncate(_ulong len);
+	void _close(void);
 };
 
 #endif

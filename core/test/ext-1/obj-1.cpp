@@ -21,7 +21,7 @@ private:
 	}
 
 public:
-	BASE(cObj_1, "cObj_1", RF_ORIGINAL|RF_TASK, 1,0,0);
+	BASE(cObj_1, "cObj_1", RF_CLONE|RF_TASK, 1,0,0);
 
 	bool object_ctl(_u32 cmd, void *arg, ...) {
 		bool r = false;

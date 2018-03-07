@@ -1,7 +1,6 @@
 #include <sys/mman.h>
 #include "private.h"
 
-
 bool cFileIO::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
 
@@ -13,7 +12,7 @@ bool cFileIO::object_ctl(_u32 cmd, void *arg, ...) {
 			r = true;
 			break;
 		case OCTL_UNINIT:
-			//...
+			_close();
 			r = true;
 			break;
 	}
@@ -30,7 +29,7 @@ _ulong cFileIO::seek(_ulong offset) {
 
 _ulong cFileIO::size(void) {
 	_ulong r = 0;
-	
+
 	if(m_fd > 0) {
 		// get current position
 		_ulong _r = lseek(m_fd, 0, SEEK_CUR);
@@ -41,6 +40,14 @@ _ulong cFileIO::size(void) {
 	}
 
 	return r;
+}
+
+void cFileIO::_close(void) {
+	if(m_fd > 0) {
+		unmap();
+		if(::close(m_fd) != -1)
+			m_fd = 0;
+	}
 }
 
 void *cFileIO::map(_u32 prot, _u32 flags) {
@@ -55,7 +62,7 @@ void *cFileIO::map(_u32 prot, _u32 flags) {
 }
 
 void cFileIO::unmap(void) {
-	if(m_fd > 0) {
+	if(m_fd > 0 && m_map_addr && m_map_len) {
 		if(munmap(m_map_addr, m_map_len) != -1) {
 			m_map_len = 0;
 			m_map_addr = 0;
@@ -70,7 +77,7 @@ void cFileIO::sync(void) {
 
 bool cFileIO::truncate(_ulong len) {
 	bool r = false;
-	
+
 	if(m_fd > 0) {
 		if(ftruncate(m_fd, len) != -1)
 			r = true;
@@ -78,5 +85,4 @@ bool cFileIO::truncate(_ulong len) {
 
 	return r;
 }
-
 
