@@ -12,7 +12,7 @@
 class iFS: public iBase {
 public:
 	INTERFACE(iFS, I_FS);
-	virtual iFileIO *open(_cstr_t path, _u32 flags)=0;
+	virtual iFileIO *open(_cstr_t path, _u32 flags, _u32 mode=0640)=0;
 	virtual void close(iFileIO *)=0;
 };
 

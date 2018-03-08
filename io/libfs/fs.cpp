@@ -24,10 +24,10 @@ public:
 		return r;
 	}
 
-	iFileIO *open(_cstr_t path, _u32 flags) {
+	iFileIO *open(_cstr_t path, _u32 flags, _u32 mode) {
 		iFileIO *r = 0;
 
-		_s32 fd = ::open(path, flags);
+		_s32 fd = ::open(path, flags, mode);
 		if(fd > 0) {
 			cFileIO *_r = (cFileIO *)_gpi_repo_->object_by_cname(FILE_IO_CLASS_NAME, RF_CLONE);
 			if(_r) {

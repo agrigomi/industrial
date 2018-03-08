@@ -23,6 +23,11 @@ _err_t main(int argc, char *argv[]) {
 		pi_repo->extension_load((_str_t)"bin/io/unix/libfs/libfs.so");
 		iBase *obj = pi_repo->object_by_iname("iObj1", RF_CLONE|RF_ORIGINAL);
 		iFS *pi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
+		iFileIO *pifio = pi_fs->open("./testfile", O_RDWR|O_CREAT);
+		pifio->write((_str_t)"alabala", 7);
+		pifio->sync();
+		_str_t pfc = (_str_t)pifio->map();
+		pi_fs->close(pifio);
 		getchar();
 		pi_repo->object_release(pi_fs);
 		if((r = pi_repo->extension_unload("libfs.so")))
