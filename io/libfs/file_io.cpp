@@ -20,6 +20,24 @@ bool cFileIO::object_ctl(_u32 cmd, void *arg, ...) {
 	return r;
 }
 
+_u32 cFileIO::read(void *data, _u32 size) {
+	_u32 r = 0;
+
+	if(m_fd > 0)
+		r = ::read(m_fd, data, size);
+
+	return r;
+}
+
+_u32 cFileIO::write(void *data, _u32 size) {
+	_u32 r = 0;
+
+	if(m_fd > 0)
+		r = ::write(m_fd, data, size);
+
+	return r;
+}
+
 _ulong cFileIO::seek(_ulong offset) {
 	_ulong r = -1;
 	if(m_fd > 0)
@@ -86,3 +104,4 @@ bool cFileIO::truncate(_ulong len) {
 	return r;
 }
 
+static cFileIO _g_file_io_;

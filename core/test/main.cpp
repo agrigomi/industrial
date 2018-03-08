@@ -4,6 +4,7 @@
 #include "iRepository.h"
 #include "iLog.h"
 #include "iArgs.h"
+#include "iFS.h"
 
 IMPLEMENT_BASE_ARRAY(1024);
 
@@ -19,12 +20,15 @@ _err_t main(int argc, char *argv[]) {
 		if(pi_log)
 			pi_log->add_listener(log_listener);
 		pi_repo->extension_load((_str_t)"bin/core/unix/ext-1/ext-1.so");
+		pi_repo->extension_load((_str_t)"bin/io/unix/libfs/libfs.so");
 		iBase *obj = pi_repo->object_by_iname("iObj1", RF_CLONE|RF_ORIGINAL);
-
+		iFS *pi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
 		getchar();
-		//pi_repo->object_release(obj);
+		if((r = pi_repo->extension_unload("libfs.so")))
+			pi_log->fwrite(LMT_ERROR, "unable to unload libfs.so error %d", r);
+		pi_repo->object_release(obj);
 		if((r = pi_repo->extension_unload("ext-1.so")))
-			pi_log->fwrite(LMT_ERROR, "unable to unload ext-i.so error %d", r);
+			pi_log->fwrite(LMT_ERROR, "unable to unload ext-1.so error %d", r);
 		uninit();
 	}
 

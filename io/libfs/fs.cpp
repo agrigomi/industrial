@@ -1,6 +1,9 @@
 #include "iFS.h"
 #include "iRepository.h"
 #include "private.h"
+#include "startup.h"
+
+IMPLEMENT_BASE_ARRAY(2);
 
 class cFS: public iFS {
 public:
@@ -45,3 +48,6 @@ public:
 		}
 	}
 };
+
+static cFS _g_fs_;
+
