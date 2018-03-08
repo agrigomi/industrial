@@ -24,6 +24,7 @@ _err_t main(int argc, char *argv[]) {
 		iBase *obj = pi_repo->object_by_iname("iObj1", RF_CLONE|RF_ORIGINAL);
 		iFS *pi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
 		getchar();
+		pi_repo->object_release(pi_fs);
 		if((r = pi_repo->extension_unload("libfs.so")))
 			pi_log->fwrite(LMT_ERROR, "unable to unload libfs.so error %d", r);
 		pi_repo->object_release(obj);

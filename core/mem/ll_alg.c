@@ -113,6 +113,11 @@ void *ll_add(_ll_context_t *p_cxt, void *p_data, _u32 size, _u64 hlock) {
 		_p = (_ll_item_hdr_t *)p_cxt->p_alloc(sz, p_cxt->addr_limit, p_cxt->p_udata);
 
 	if(_p) {
+		// clear memory region
+		_u8 *ptr = (_u8 *)_p;
+		for(_u32 i = 0; i < sz; i++)
+			*(ptr + i) = 0;
+
 		_p->cxt = p_cxt;
 		_p->size= size;
 		_p->col = p_cxt->ccol;
@@ -164,6 +169,11 @@ void *ll_ins(_ll_context_t *p_cxt, _u32 index, void *p_data, _u32 size, _u64 hlo
 			p_new = (_ll_item_hdr_t *)p_cxt->p_alloc(sz, p_cxt->addr_limit, p_cxt->p_udata);
 
 		if(p_new) {
+			// clear memory region
+			_u8 *ptr = (_u8 *)p_new;
+			for(_u32 i = 0; i < sz; i++)
+				*(ptr + i) = 0;
+
 			_u64 hm = ll_lock(p_cxt, hlock);
 
 			p_cur = _get(p_cxt, index);

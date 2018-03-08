@@ -77,7 +77,7 @@ void *ll_first(_ll_context_t *p_cxt, _u32 *p_size, _u64 hlock);
 void *ll_last(_ll_context_t *p_cxt, _u32 *p_size, _u64 hlock);
 /* get pointer to prev. (from current) record */
 void *ll_prev(_ll_context_t *p_cxt, _u32 *p_size, _u64 hlock);
-/* queue mode specific (last-->first-->seccond ...) */
+/* ring mode specific (last-->first-->seccond ...) */
 void  ll_roll(_ll_context_t *p_cxt, _u64 hlock);
 #ifdef __cplusplus
 }
