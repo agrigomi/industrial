@@ -19,6 +19,9 @@ public:
 				m_hcount = 0;
 				r = true;
 				break;
+			case OCTL_UNINIT:
+				r = true;
+				break;
 		}
 		return r;
 	}
