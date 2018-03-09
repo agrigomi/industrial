@@ -27,6 +27,9 @@ _err_t main(int argc, char *argv[]) {
 		pifio->write((_str_t)"alabala", 7);
 		pifio->sync();
 		_str_t pfc = (_str_t)pifio->map();
+		if(pfc) {
+			pi_log->fwrite(LMT_INFO, "file size: %d; file content: %s", pifio->size(), pfc);
+		}
 		pi_fs->close(pifio);
 		getchar();
 		pi_repo->object_release(pi_fs);
@@ -54,6 +57,7 @@ public:
 				if((mpi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL)))
 					mpi_log->write(LMT_INFO, "init cTest");
 				pi_repo->monitoring_add(0, "iObj1", 0, this);
+				pi_repo->monitoring_add(0, "iFileIO", 0, this);
 				break;
 			}
 

@@ -47,6 +47,24 @@ public:
 			_gpi_repo_->object_release(pi);
 		}
 	}
+
+	bool access(_cstr_t path, _u32 mode) {
+		bool r = false;
+
+		if(access(path, mode) == 0)
+			r = true;
+
+		return r;
+	}
+
+	bool remove(_cstr_t path) {
+		bool r = false;
+
+		if(unlink(path) == 0)
+			r = true;
+
+		return r;
+	}
 };
 
 static cFS _g_fs_;
