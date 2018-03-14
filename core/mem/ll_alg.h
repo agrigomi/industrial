@@ -21,9 +21,9 @@ struct ll_item_hdr {
 }__attribute__((packed));
 
 typedef struct {
-	_ll_item_hdr_t	*p_current;
 	_ll_item_hdr_t	*p_first;
 	_ll_item_hdr_t	*p_last;
+	_ll_item_hdr_t	*p_current;
 	_u32		count;
 	_u32		current;
 }_ll_state_t;

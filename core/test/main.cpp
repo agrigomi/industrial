@@ -19,23 +19,30 @@ _err_t main(int argc, char *argv[]) {
 		iLog *pi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
 		if(pi_log)
 			pi_log->add_listener(log_listener);
+
 		pi_repo->extension_load((_str_t)"bin/core/unix/ext-1/ext-1.so");
 		pi_repo->extension_load((_str_t)"bin/io/unix/libfs/libfs.so");
+
 		iBase *obj = pi_repo->object_by_iname("iObj1", RF_CLONE|RF_ORIGINAL);
+
 		iFS *pi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
-		iFileIO *pifio = pi_fs->open("./testfile", O_RDWR|O_CREAT);
-		pifio->write((_str_t)"alabala", 7);
-		pifio->sync();
-		_str_t pfc = (_str_t)pifio->map();
-		if(pfc) {
-			pi_log->fwrite(LMT_INFO, "file size: %d; file content: %s", pifio->size(), pfc);
+		if(pi_fs) {
+			iFileIO *pifio = pi_fs->open("./testfile", O_RDWR|O_CREAT);
+			if(pifio) {
+				pifio->write((_str_t)"alabala", 7);
+				pifio->sync();
+				_str_t pfc = (_str_t)pifio->map();
+				if(pfc) {
+					pi_log->fwrite(LMT_INFO, "file size: %d; file content: %s", pifio->size(), pfc);
+				}
+				pi_fs->close(pifio);
+			}
+			pi_repo->object_release(pi_fs);
 		}
-		pi_fs->close(pifio);
 		getchar();
-		pi_repo->object_release(pi_fs);
 		if((r = pi_repo->extension_unload("libfs.so")))
 			pi_log->fwrite(LMT_ERROR, "unable to unload libfs.so error %d", r);
-		pi_repo->object_release(obj);
+		//pi_repo->object_release(obj);
 		if((r = pi_repo->extension_unload("ext-1.so")))
 			pi_log->fwrite(LMT_ERROR, "unable to unload ext-1.so error %d", r);
 		uninit();
