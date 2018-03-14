@@ -36,6 +36,7 @@ _err_t main(int argc, char *argv[]) {
 					pi_log->fwrite(LMT_INFO, "file size: %d; file content: %s", pifio->size(), pfc);
 				}
 				pi_fs->close(pifio);
+				pi_fs->remove("./testfile");
 			}
 			pi_repo->object_release(pi_fs);
 		}
@@ -45,6 +46,13 @@ _err_t main(int argc, char *argv[]) {
 		//pi_repo->object_release(obj);
 		if((r = pi_repo->extension_unload("ext-1.so")))
 			pi_log->fwrite(LMT_ERROR, "unable to unload ext-1.so error %d", r);
+
+		pi_log->write(LMT_INFO, "-------------------------");
+		_str_t lm = pi_log->first();
+		while(lm) {
+			printf("%s\n", lm);
+			lm = pi_log->next();
+		}
 		uninit();
 	}
 
