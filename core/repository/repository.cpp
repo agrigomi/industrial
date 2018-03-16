@@ -327,7 +327,7 @@ private:
 						mpi_cxt_list->unlock(hm);
 						bool r = uninit_object(obj, state, &pe->ref_cnt, &info, NF_REMOVE);
 						hm = mpi_cxt_list->lock();
-						if(r && (flags && UNINIT_REMOVE_CONTEXT)) {
+						if(r && (flags & UNINIT_REMOVE_CONTEXT)) {
 							remove_context(obj, hm);
 							obj = (iBase *)mpi_cxt_list->current(&sz, hm);
 							continue;
