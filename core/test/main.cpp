@@ -9,7 +9,15 @@
 IMPLEMENT_BASE_ARRAY(1024);
 
 void log_listener(_u8 lmt, _str_t msg) {
-	printf("%s\n", msg);
+	_char_t pref = '-';
+
+	switch(lmt) {
+		case LMT_TEXT: pref = 'T'; break;
+		case LMT_INFO: pref = 'I'; break;
+		case LMT_ERROR: pref = 'E'; break;
+		case LMT_WARNING: pref = 'W';break;
+	}
+	printf("[%c] %s\n", pref, msg);
 }
 
 _err_t main(int argc, char *argv[]) {
@@ -33,7 +41,7 @@ _err_t main(int argc, char *argv[]) {
 				pifio->sync();
 				_str_t pfc = (_str_t)pifio->map();
 				if(pfc) {
-					pi_log->fwrite(LMT_INFO, "file size: %d; file content: %s", pifio->size(), pfc);
+					pi_log->fwrite(LMT_TEXT, "file size: %d; file content: %s", pifio->size(), pfc);
 				}
 				pi_fs->close(pifio);
 				pi_fs->remove("./testfile");
@@ -43,10 +51,13 @@ _err_t main(int argc, char *argv[]) {
 		getchar();
 		if((r = pi_repo->extension_unload("libfs.so")))
 			pi_log->fwrite(LMT_ERROR, "unable to unload libfs.so error %d", r);
+		else
+			pi_log->write(LMT_INFO, "libfs.so, unloaded");
 		//pi_repo->object_release(obj);
 		if((r = pi_repo->extension_unload("ext-1.so")))
 			pi_log->fwrite(LMT_ERROR, "unable to unload ext-1.so error %d", r);
-
+		else
+			pi_log->write(LMT_INFO, "ext-1.so, unloaded");
 		pi_log->write(LMT_INFO, "-------------------------");
 		_str_t lm = pi_log->first();
 		while(lm) {
@@ -72,7 +83,7 @@ public:
 				if((mpi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL)))
 					mpi_log->write(LMT_INFO, "init cTest");
 				pi_repo->monitoring_add(0, "iObj1", 0, this);
-				pi_repo->monitoring_add(0, "iFileIO", 0, this);
+				pi_repo->monitoring_add(0, I_FS, 0, this);
 				break;
 			}
 
