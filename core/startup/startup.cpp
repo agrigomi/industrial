@@ -37,7 +37,6 @@ _early_init_t ei[]= {
 	{I_HEAP,	0}, //1
 	{I_ARGS,	0}, //2
 	{I_LOG,		0}, //3
-	{I_TASK_MAKER,	0}, //4
 	{0,		0}
 };
 
@@ -102,13 +101,6 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 				if(pi_log->object_ctl(OCTL_INIT, _gpi_repo_)) {
 					ei[3].p_entry->state |= ST_INITIALIZED;
 					ei[3].p_entry->ref_cnt++;
-				}
-			}
-			iTaskMaker *pi_tmaker = 0;
-			if(ei[4].p_entry && (pi_tmaker = (iTaskMaker*)ei[4].p_entry->pi_base)) {
-				if(pi_tmaker->object_ctl(OCTL_INIT, _gpi_repo_)) {
-					ei[4].p_entry->state |= ST_INITIALIZED;
-					ei[4].p_entry->ref_cnt++;
 				}
 			}
 		}
