@@ -86,9 +86,7 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 			ei[0].p_entry->state |= ST_INITIALIZED;
 			// init args
 			iArgs *pi_args = 0;
-			if(ei[2].p_entry &&
-					!(ei[2].p_entry->state & ST_INITIALIZED) &&
-					(pi_args = (iArgs*)ei[2].p_entry->pi_base)) {
+			if(ei[2].p_entry && (pi_args = (iArgs*)ei[2].p_entry->pi_base)) {
 				// args is here
 				if(pi_args->object_ctl(OCTL_INIT, _gpi_repo_)) {
 					ei[2].p_entry->state |= ST_INITIALIZED;
