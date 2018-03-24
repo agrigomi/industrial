@@ -418,7 +418,7 @@ public:
 							state += size;
 							*state = 0;
 
-							memcpy(r, bentry->pi_base, size);
+							memcpy(r, bentry->pi_base, info.size);
 
 							if(!init_object(r, state, &info)) {
 								pi_heap->free(r, size);
