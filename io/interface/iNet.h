@@ -33,9 +33,9 @@ class iNet: public iBase {
 public:
 	INTERFACE(iNet, I_NET);
 	virtual iUDPServer *create_udp_server(_u32 port)=0;
-	virtual iUDPClient *create_udp_client(_u32 port)=0;
+	virtual iUDPClient *create_udp_client(_str_t dst_ip, _u32 port)=0;
 	virtual iTCPServer *create_tcp_server(_u32 port)=0;
-	virtual iTCPClient *create_tcp_client(_u32 port)=0;
+	virtual iTCPClient *create_tcp_client(_str_t dst_ip, _u32 port)=0;
 };
 
 #endif
