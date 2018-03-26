@@ -12,14 +12,16 @@ public:
 
 		switch(cmd) {
 			case OCTL_INIT:
+				r = true;
 				break;
 			case OCTL_UNINIT:
+				r = true;
 				break;
 		}
 
 		return r;
 	}
-	
+
 	iUDPServer *create_udp_server(_u32 port) {
 		iUDPServer *r = 0;
 		//...

@@ -17,6 +17,7 @@ public:
 class iUDPClient: public iBase {
 public:
 	INTERFACE(iUDPClient, I_UDP_CLIENT);
+	virtual iSocketIO *connect(void)=0;
 };
 
 class iTCPServer: public iBase {
@@ -27,6 +28,7 @@ public:
 class iTCPClient: public iBase {
 public:
 	INTERFACE(iTCPClient, I_TCP_CLIENT);
+	virtual iSocketIO *connect(void)=0;
 };
 
 class iNet: public iBase {
