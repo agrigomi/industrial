@@ -4,6 +4,22 @@
 #include "iFS.h"
 
 #define FILE_IO_CLASS_NAME	"cFileIO"
+#define DIR_CLASS_NAME		"cDir"
+
+
+class cDir: public iDir {
+private:
+	DIR *mp_dir;
+	dirent *mp_dentry;
+public:
+
+	BASE(cDir, DIR_CLASS_NAME, RF_CLONE, 1,0,0);
+	bool object_ctl(_u32 cmd, void *arg, ...);
+	bool first(_str_t *fname, _u8 *type);
+	bool next(_str_t *fname, _u8 *type);
+	void _init(DIR *p_dir);
+	void _close(void);
+};
 
 class cFileIO: public iFileIO {
 private:

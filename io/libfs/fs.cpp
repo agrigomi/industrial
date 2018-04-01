@@ -48,6 +48,15 @@ public:
 		}
 	}
 
+	iDir *open_dir(_cstr_t path) {
+		iDir *r = 0;
+		//...
+		return r;
+	}
+
+	void close_dir(iDir *pi) {
+	}
+
 	bool access(_cstr_t path, _u32 mode) {
 		bool r = false;
 
