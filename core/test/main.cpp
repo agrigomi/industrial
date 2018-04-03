@@ -46,6 +46,19 @@ _err_t main(int argc, char *argv[]) {
 				pi_fs->close(pifio);
 				pi_fs->remove("./testfile");
 			}
+
+			iDir *pi_dir = pi_fs->open_dir("./");
+			if(pi_dir) {
+				_str_t fname;
+				_u8 type;
+
+				if(pi_dir->first(&fname, &type)) {
+					do {
+						pi_log->fwrite(LMT_INFO, "dentry: '%s'", fname);
+					}while(pi_dir->next(&fname, &type));
+				}
+				pi_fs->close_dir(pi_dir);
+			}
 			pi_repo->object_release(pi_fs);
 		}
 		getchar();

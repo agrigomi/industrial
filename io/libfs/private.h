@@ -10,7 +10,7 @@
 class cDir: public iDir {
 private:
 	DIR *mp_dir;
-	dirent *mp_dentry;
+	off_t m_off_first;
 public:
 
 	BASE(cDir, DIR_CLASS_NAME, RF_CLONE, 1,0,0);

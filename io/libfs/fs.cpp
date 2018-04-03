@@ -3,7 +3,7 @@
 #include "private.h"
 #include "startup.h"
 
-IMPLEMENT_BASE_ARRAY(2);
+IMPLEMENT_BASE_ARRAY(3);
 
 class cFS: public iFS {
 public:
@@ -50,11 +50,26 @@ public:
 
 	iDir *open_dir(_cstr_t path) {
 		iDir *r = 0;
-		//...
+		DIR *p_dir = opendir(path);
+
+		if(p_dir) {
+			cDir *pc_dir = (cDir *)_gpi_repo_->object_by_cname(DIR_CLASS_NAME, RF_CLONE);
+			if(pc_dir) {
+				pc_dir->_init(p_dir);
+				r = pc_dir;
+			} else
+				closedir(p_dir);
+		}
+
 		return r;
 	}
 
 	void close_dir(iDir *pi) {
+		cDir *pc_dir = dynamic_cast<cDir*>(pi);
+		if(pc_dir) {
+			pc_dir->_close();
+			_gpi_repo_->object_release(pi);
+		}
 	}
 
 	bool access(_cstr_t path, _u32 mode) {
