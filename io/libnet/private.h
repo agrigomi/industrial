@@ -17,7 +17,7 @@ public:
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	_u32 read(void *data, _u32 size);
 	_u32 write(void *data, _u32 size);
-	void blocking(bool mode=_blocking_); /* blocking or nonblocking IO */
+	void blocking(bool mode); /* blocking or nonblocking IO */
 };
 
 class cUDPServer: public iUDPServer {
