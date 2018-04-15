@@ -41,7 +41,7 @@ public:
 class cUDPClient: public iUDPClient {
 public:
 	BASE(cUDPClient, CLASS_NAME_UDP_CLIENT, RF_CLONE, 1,0,0);
-	void _init(_u32 port);
+	void _init(_str_t ip, _u32 port);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	iSocketIO *connect(void);
@@ -50,7 +50,7 @@ public:
 class cTCPClient: public iTCPClient {
 public:
 	BASE(cTCPClient, CLASS_NAME_TCP_CLIENT, RF_CLONE, 1,0,0);
-	void _init(_u32 port);
+	void _init(_str_t ip, _u32 port);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	iSocketIO *connect(void);
