@@ -38,7 +38,7 @@ public:
 class iSocketIO: public iIO {
 public:
 	INTERFACE(iSocketIO, I_SOCKET_IO);
-	virtual void block(bool)=0; /* blocking or nonblocking IO */
+	virtual void blocking(bool)=0; /* blocking or nonblocking IO */
 };
 
 #endif

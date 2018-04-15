@@ -1,5 +1,5 @@
 #include "startup.h"
-#include "iNet.h"
+#include "private.h"
 
 IMPLEMENT_BASE_ARRAY(10)
 

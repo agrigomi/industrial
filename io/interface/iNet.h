@@ -9,9 +9,13 @@
 #define I_TCP_SERVER	"iTCPServer"
 #define I_TCP_CLIENT	"iTCPClient"
 
+#define  _non_blocking_	false
+#define _blocking_	true
+
 class iUDPServer: public iBase {
 public:
 	INTERFACE(iUDPServer, I_UDP_SERVER);
+	virtual iSocketIO *listen(bool blocking=_blocking_)=0;
 };
 
 class iUDPClient: public iBase {
@@ -23,6 +27,7 @@ public:
 class iTCPServer: public iBase {
 public:
 	INTERFACE(iTCPServer, I_TCP_SERVER);
+	virtual iSocketIO *listen(bool blocking=_blocking_)=0;
 };
 
 class iTCPClient: public iBase {
