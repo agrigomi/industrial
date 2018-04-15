@@ -1,6 +1,9 @@
 #ifndef __NET_PRIVATE_H__
 #define __NET_PRIVATE_H__
 
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
 #include "iNet.h"
 
 #define CLASS_NAME_SOCKET_IO	"cSocketIO"
@@ -10,9 +13,12 @@
 #define CLASS_NAME_TCP_CLIENT	"cTCPClient"
 
 class cSocketIO: public iSocketIO {
+private:
+	_s32 m_socket;
+	struct sockaddr_in m_sa;
 public:
 	BASE(cSocketIO, CLASS_NAME_SOCKET_IO, RF_CLONE, 1,0,0);
-	void _init(_s32 socket);
+	void _init(struct sockaddr_in *psa, _s32 socket);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	_u32 read(void *data, _u32 size);
