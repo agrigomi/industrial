@@ -16,6 +16,7 @@ class cSocketIO: public iSocketIO {
 private:
 	_s32 m_socket;
 	struct sockaddr_in m_sa;
+	socklen_t m_addrlen;
 public:
 	BASE(cSocketIO, CLASS_NAME_SOCKET_IO, RF_CLONE, 1,0,0);
 	void _init(struct sockaddr_in *psa, _s32 socket);
