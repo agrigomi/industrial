@@ -34,10 +34,11 @@ private:
 	_u32 m_port;
 public:
 	BASE(cUDPServer, CLASS_NAME_UDP_SERVER, RF_CLONE, 1,0,0);
-	void _init(_u32 port);
+	bool _init(_u32 port);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	iSocketIO *listen(bool blocking=_blocking_);
+	void close(iSocketIO *p_io);
 };
 
 class cTCPServer: public iTCPServer {
