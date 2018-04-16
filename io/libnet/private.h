@@ -28,6 +28,10 @@ public:
 };
 
 class cUDPServer: public iUDPServer {
+private:
+	_s32 m_socket;
+	struct sockaddr_in m_serveraddr; /* server's addr */
+	_u32 m_port;
 public:
 	BASE(cUDPServer, CLASS_NAME_UDP_SERVER, RF_CLONE, 1,0,0);
 	void _init(_u32 port);

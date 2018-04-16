@@ -54,7 +54,7 @@ _err_t main(int argc, char *argv[]) {
 
 				if(pi_dir->first(&fname, &type)) {
 					do {
-						pi_log->fwrite(LMT_INFO, "dentry: '%s'", fname);
+						pi_log->fwrite(LMT_TEXT, "dentry: '%s'", fname);
 					}while(pi_dir->next(&fname, &type));
 				}
 				pi_fs->close_dir(pi_dir);
