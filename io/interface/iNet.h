@@ -16,6 +16,7 @@ class iUDPServer: public iBase {
 public:
 	INTERFACE(iUDPServer, I_UDP_SERVER);
 	virtual iSocketIO *listen(void)=0;
+	virtual void close(iSocketIO *p_io)=0;
 };
 
 class iUDPClient: public iBase {

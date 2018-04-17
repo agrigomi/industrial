@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 #include "startup.h"
 #include "iRepository.h"
 #include "iLog.h"
 #include "iArgs.h"
 #include "iFS.h"
+#include "iNet.h"
 
 IMPLEMENT_BASE_ARRAY(1024);
 
@@ -30,6 +32,7 @@ _err_t main(int argc, char *argv[]) {
 
 		pi_repo->extension_load((_str_t)"bin/core/unix/ext-1/ext-1.so");
 		pi_repo->extension_load((_str_t)"bin/io/unix/libfs/libfs.so");
+		pi_repo->extension_load((_str_t)"bin/io/unix/libnet/libnet.so");
 
 		iBase *obj = pi_repo->object_by_iname("iObj1", RF_CLONE|RF_ORIGINAL);
 
@@ -61,6 +64,27 @@ _err_t main(int argc, char *argv[]) {
 			}
 			pi_repo->object_release(pi_fs);
 		}
+
+		iNet *pi_net = (iNet *)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
+		if(pi_net) {
+			iUDPServer *pi_udps = pi_net->create_udp_server(3000);
+			if(pi_udps) {
+				iSocketIO *pi_sio = pi_udps->listen();
+				if(pi_sio) {
+					_char_t iob[1024]="";
+					pi_sio->blocking(false);
+					while(memcmp(iob, "+++", 3) != 0) {
+						_u32 len = pi_sio->read(iob, sizeof(iob));
+						if(len)
+							pi_sio->write(iob, len);
+					}
+					pi_udps->close(pi_sio);
+				}
+
+				pi_repo->object_release(pi_udps);
+			}
+		}
+
 		getchar();
 		if((r = pi_repo->extension_unload("libfs.so")))
 			pi_log->fwrite(LMT_ERROR, "unable to unload libfs.so error %d", r);

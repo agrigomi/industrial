@@ -24,7 +24,15 @@ public:
 
 	iUDPServer *create_udp_server(_u32 port) {
 		iUDPServer *r = 0;
-		//...
+		cUDPServer *pcudps = (cUDPServer *)_gpi_repo_->object_by_cname(CLASS_NAME_UDP_SERVER, RF_CLONE);
+
+		if(pcudps) {
+			if(pcudps->_init(port))
+				r = pcudps;
+			else
+				_gpi_repo_->object_release(pcudps);
+		}
+
 		return r;
 	}
 
