@@ -59,7 +59,7 @@ iSocketIO *cUDPServer::listen(void) {
 		cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
 		if(pcsio) {
 			struct sockaddr_in sa;
-			pcsio->_init(&sa, m_socket);
+			pcsio->_init(&sa, m_socket, SOCKET_IO_UDP);
 			r = pcsio;
 		}
 	}

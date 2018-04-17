@@ -12,14 +12,18 @@
 #define CLASS_NAME_TCP_SERVER	"cTCPServer"
 #define CLASS_NAME_TCP_CLIENT	"cTCPClient"
 
+#define SOCKET_IO_UDP	1
+#define SOCKET_IO_TCP	2
+
 class cSocketIO: public iSocketIO {
 private:
 	_s32 m_socket;
 	struct sockaddr_in m_sa;
 	socklen_t m_addrlen;
+	_u8 m_mode;
 public:
 	BASE(cSocketIO, CLASS_NAME_SOCKET_IO, RF_CLONE, 1,0,0);
-	void _init(struct sockaddr_in *psa, _s32 socket);
+	void _init(struct sockaddr_in *psa, _s32 socket, _u8 mode);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	_u32 read(void *data, _u32 size);

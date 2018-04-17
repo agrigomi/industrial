@@ -23,10 +23,11 @@ bool cSocketIO::object_ctl(_u32 cmd, void *arg, ...) {
 	return r;
 }
 
-void cSocketIO::_init(struct sockaddr_in *psa, _s32 socket) {
+void cSocketIO::_init(struct sockaddr_in *psa, _s32 socket, _u8 mode) {
 	m_socket = socket;
 	memcpy(&m_sa, psa, sizeof(struct sockaddr_in));
 	m_addrlen = sizeof(m_sa);
+	m_mode = mode;
 }
 
 void cSocketIO::_close(void) {
@@ -40,9 +41,16 @@ _u32 cSocketIO::read(void *data, _u32 size) {
 	_u32 r = 0;
 
 	if(m_socket) {
-		_s32 _r = recvfrom(m_socket, data, size, 0, (struct sockaddr*)&m_sa, &m_addrlen);
-		if(_r > 0)
-			r = _r;
+		switch(m_mode) {
+			case SOCKET_IO_UDP: {
+				_s32 _r = recvfrom(m_socket, data, size, 0, (struct sockaddr*)&m_sa, &m_addrlen);
+				if(_r > 0)
+					r = _r;
+			} break;
+			case SOCKET_IO_TCP: {
+				//...
+			} break;
+		}
 	}
 
 	return r;
@@ -52,9 +60,16 @@ _u32 cSocketIO::write(void *data, _u32 size) {
 	_u32 r = 0;
 
 	if(m_socket) {
-		_s32 _r = sendto(m_socket, data, size, 0, (struct sockaddr*)&m_sa, sizeof(m_sa));
-		if(_r > 0)
-			r = _r;
+		switch(m_mode) {
+			case SOCKET_IO_UDP: {
+				_s32 _r = sendto(m_socket, data, size, 0, (struct sockaddr*)&m_sa, sizeof(m_sa));
+				if(_r > 0)
+					r = _r;
+			} break;
+			case SOCKET_IO_TCP: {
+				//...
+			} break;
+		}
 	}
 
 	return r;

@@ -72,7 +72,7 @@ _err_t main(int argc, char *argv[]) {
 				iSocketIO *pi_sio = pi_udps->listen();
 				if(pi_sio) {
 					_char_t iob[1024]="";
-					pi_sio->blocking(false);
+					pi_sio->blocking(true);
 					while(memcmp(iob, "+++", 3) != 0) {
 						_u32 len = pi_sio->read(iob, sizeof(iob));
 						if(len)
@@ -83,6 +83,7 @@ _err_t main(int argc, char *argv[]) {
 
 				pi_repo->object_release(pi_udps);
 			}
+			pi_repo->object_release(pi_net);
 		}
 
 		getchar();
