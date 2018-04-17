@@ -12,19 +12,6 @@
 #define  _non_blocking_	false
 #define _blocking_	true
 
-class iUDPServer: public iBase {
-public:
-	INTERFACE(iUDPServer, I_UDP_SERVER);
-	virtual iSocketIO *listen(void)=0;
-	virtual void close(iSocketIO *p_io)=0;
-};
-
-class iUDPClient: public iBase {
-public:
-	INTERFACE(iUDPClient, I_UDP_CLIENT);
-	virtual iSocketIO *connect(void)=0;
-};
-
 class iTCPServer: public iBase {
 public:
 	INTERFACE(iTCPServer, I_TCP_SERVER);
@@ -41,8 +28,9 @@ public:
 class iNet: public iBase {
 public:
 	INTERFACE(iNet, I_NET);
-	virtual iUDPServer *create_udp_server(_u32 port)=0;
-	virtual iUDPClient *create_udp_client(_str_t dst_ip, _u32 port)=0;
+	virtual iSocketIO *create_udp_server(_u32 port)=0;
+	virtual iSocketIO *create_udp_client(_str_t dst_ip, _u32 port)=0;
+	virtual void close_socket(iSocketIO *p_sio)=0;
 	virtual iTCPServer *create_tcp_server(_u32 port)=0;
 	virtual iTCPClient *create_tcp_client(_str_t dst_ip, _u32 port)=0;
 };

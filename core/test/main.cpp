@@ -67,21 +67,16 @@ _err_t main(int argc, char *argv[]) {
 
 		iNet *pi_net = (iNet *)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
 		if(pi_net) {
-			iUDPServer *pi_udps = pi_net->create_udp_server(3000);
-			if(pi_udps) {
-				iSocketIO *pi_sio = pi_udps->listen();
-				if(pi_sio) {
-					_char_t iob[1024]="";
-					pi_sio->blocking(true);
-					while(memcmp(iob, "+++", 3) != 0) {
-						_u32 len = pi_sio->read(iob, sizeof(iob));
-						if(len)
-							pi_sio->write(iob, len);
-					}
-					pi_udps->close(pi_sio);
-				}
+			iSocketIO *psio = pi_net->create_udp_server(3000);
+			if(psio) {
+				_char_t bio[1024]="";
 
-				pi_repo->object_release(pi_udps);
+				while(memcmp(bio, "+++", 3) != 0) {
+					_u32 len = psio->read(bio, sizeof(bio));
+					if(len)
+						psio->write(bio, len);
+				}
+				pi_net->close_socket(psio);
 			}
 			pi_repo->object_release(pi_net);
 		}

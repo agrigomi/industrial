@@ -1,9 +1,17 @@
 #include "startup.h"
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include "private.h"
+#include "iMemory.h"
+#include "iRepository.h"
 
 IMPLEMENT_BASE_ARRAY(10)
 
 class cNet: public iNet {
+private:
+	iHeap	*mpi_heap;
 public:
 	BASE(cNet, "cNet", RF_ORIGINAL, 1,0,0);
 
@@ -11,35 +19,82 @@ public:
 		bool r = false;
 
 		switch(cmd) {
-			case OCTL_INIT:
+			case OCTL_INIT: {
+				iRepository *pi_repo = (iRepository *)arg;
+				mpi_heap = (iHeap *)pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
 				r = true;
-				break;
-			case OCTL_UNINIT:
+			} break;
+			case OCTL_UNINIT: {
+				iRepository *pi_repo = (iRepository *)arg;
+				pi_repo->object_release(mpi_heap);
 				r = true;
-				break;
+			} break;
 		}
 
 		return r;
 	}
 
-	iUDPServer *create_udp_server(_u32 port) {
-		iUDPServer *r = 0;
-		cUDPServer *pcudps = (cUDPServer *)_gpi_repo_->object_by_cname(CLASS_NAME_UDP_SERVER, RF_CLONE);
+	iSocketIO *create_udp_server(_u32 port) {
+		iSocketIO *r = 0;
+		_s32 sfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-		if(pcudps) {
-			if(pcudps->_init(port))
-				r = pcudps;
-			else
-				_gpi_repo_->object_release(pcudps);
+		if(sfd > 0) {
+			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
+			if(pcsio) {
+				_s32 optv = 1;
+				struct sockaddr_in *p_saddr = 0;
+				struct sockaddr_in *p_caddr = 0;
+
+				if(mpi_heap) {
+					if((p_saddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in))))
+						memset(p_saddr, 0, sizeof(struct sockaddr_in));
+					if((p_caddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in))))
+						memset(p_caddr, 0, sizeof(struct sockaddr_in));
+				}
+
+				setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optv, sizeof(optv));
+				memset(p_saddr, 0, sizeof(struct sockaddr_in));
+				p_saddr->sin_family = AF_INET;
+				p_saddr->sin_addr.s_addr = htonl(INADDR_ANY);
+				p_saddr->sin_port = htons((unsigned short)port);
+				if(bind(sfd, (struct sockaddr *)p_saddr, sizeof(struct sockaddr_in)) >=0) {
+					pcsio->_init(p_saddr, p_caddr, sfd, SOCKET_IO_UDP);
+					r = pcsio;
+				} else {
+					::close(sfd);
+					mpi_heap->free(p_saddr, sizeof(struct sockaddr_in));
+					mpi_heap->free(p_caddr, sizeof(struct sockaddr_in));
+					_gpi_repo_->object_release(pcsio);
+				}
+			} else
+				::close(sfd);
 		}
 
 		return r;
 	}
 
-	iUDPClient *create_udp_client(_str_t dst_ip, _u32 port) {
-		iUDPClient *r = 0;
+	iSocketIO *create_udp_client(_str_t dst_ip, _u32 port) {
+		iSocketIO *r = 0;
 		//...
 		return r;
+	}
+
+	void close_socket(iSocketIO *p_sio) {
+		cSocketIO *pcsio = dynamic_cast<cSocketIO *>(p_sio);
+
+		if(pcsio) {
+			struct sockaddr_in *p_saddr = pcsio->serveraddr();
+			struct sockaddr_in *p_caddr = pcsio->clientaddr();
+
+			pcsio->_close();
+
+			if(p_saddr)
+				mpi_heap->free(p_saddr, sizeof(struct sockaddr_in));
+			if(p_caddr)
+				mpi_heap->free(p_caddr, sizeof(struct sockaddr_in));
+
+			_gpi_repo_->object_release(p_sio);
+		}
 	}
 
 	iTCPServer *create_tcp_server(_u32 port) {

@@ -18,32 +18,24 @@
 class cSocketIO: public iSocketIO {
 private:
 	_s32 m_socket;
-	struct sockaddr_in m_sa;
-	socklen_t m_addrlen;
+	struct sockaddr_in *mp_clientaddr;
+	struct sockaddr_in *mp_serveraddr;
 	_u8 m_mode;
 public:
+
 	BASE(cSocketIO, CLASS_NAME_SOCKET_IO, RF_CLONE, 1,0,0);
-	void _init(struct sockaddr_in *psa, _s32 socket, _u8 mode);
+	void _init(struct sockaddr_in *p_saddr, // server addr
+		struct sockaddr_in *p_caddr, // client addr
+		_s32 socket, _u8 mode);
 	void _close(void);
+	struct sockaddr_in *serveraddr(void);
+	struct sockaddr_in *clientaddr(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	_u32 read(void *data, _u32 size);
 	_u32 write(void *data, _u32 size);
 	void blocking(bool mode); /* blocking or nonblocking IO */
 };
 
-class cUDPServer: public iUDPServer {
-private:
-	_s32 m_socket;
-	struct sockaddr_in m_serveraddr; /* server's addr */
-	_u32 m_port;
-public:
-	BASE(cUDPServer, CLASS_NAME_UDP_SERVER, RF_CLONE, 1,0,0);
-	bool _init(_u32 port);
-	void _close(void);
-	bool object_ctl(_u32 cmd, void *arg, ...);
-	iSocketIO *listen(void);
-	void close(iSocketIO *p_io);
-};
 
 class cTCPServer: public iTCPServer {
 public:
@@ -52,15 +44,6 @@ public:
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	iSocketIO *listen(bool blocking=_blocking_);
-};
-
-class cUDPClient: public iUDPClient {
-public:
-	BASE(cUDPClient, CLASS_NAME_UDP_CLIENT, RF_CLONE, 1,0,0);
-	void _init(_str_t ip, _u32 port);
-	void _close(void);
-	bool object_ctl(_u32 cmd, void *arg, ...);
-	iSocketIO *connect(void);
 };
 
 class cTCPClient: public iTCPClient {
