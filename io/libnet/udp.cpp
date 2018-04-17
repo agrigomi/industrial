@@ -38,6 +38,8 @@ bool cUDPServer::_init(_u32 port) {
 		m_serveraddr.sin_port = htons((unsigned short)m_port);
 		if(bind(m_socket, (struct sockaddr *)&m_serveraddr, sizeof(m_serveraddr)) >=0)
 			r = true;
+		else
+			_close();
 	}
 
 	return r;
@@ -50,11 +52,16 @@ void cUDPServer::_close(void) {
 	}
 }
 
-iSocketIO *cUDPServer::listen(bool blocking) {
+iSocketIO *cUDPServer::listen(void) {
 	iSocketIO *r = 0;
 
 	if(m_socket) {
-		//...
+		cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
+		if(pcsio) {
+			struct sockaddr_in sa;
+			pcsio->_init(&sa, m_socket);
+			r = pcsio;
+		}
 	}
 
 	return r;
