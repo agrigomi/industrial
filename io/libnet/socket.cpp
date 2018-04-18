@@ -76,7 +76,9 @@ _u32 cSocketIO::read(void *data, _u32 size) {
 					r = _r;
 			} break;
 			case SOCKET_IO_TCP: {
-				//...
+				_s32 _r = ::read(m_socket, data, size);
+				if(_r > 0)
+					r = _r;
 			} break;
 		}
 	}
@@ -97,7 +99,9 @@ _u32 cSocketIO::write(void *data, _u32 size) {
 					r = _r;
 			} break;
 			case SOCKET_IO_TCP: {
-				//...
+				_s32 _r = ::write(m_socket, data, size);
+				if(_r > 0)
+					r = _r;
 			} break;
 		}
 	}

@@ -116,7 +116,15 @@ public:
 
 	iTCPServer *create_tcp_server(_u32 port) {
 		iTCPServer *r = 0;
-		//...
+
+		cTCPServer *pctcps = (cTCPServer *)_gpi_repo_->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE);
+		if(pctcps) {
+			if(pctcps->_init(port))
+				r = pctcps;
+			else
+				_gpi_repo_->object_release(pctcps);
+		}
+
 		return r;
 	}
 
