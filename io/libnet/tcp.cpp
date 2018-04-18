@@ -55,16 +55,10 @@ bool cTCPServer::object_ctl(_u32 cmd, void *arg, ...) {
 	return r;
 }
 
-iSocketIO *cTCPServer::listen(bool blocking) {
+iSocketIO *cTCPServer::listen(void) {
 	iSocketIO *r = 0;
 
 	if(m_server_socket) {
-		_s32 flags = fcntl(m_server_socket, F_GETFL, 0);
-		if(flags != -1) {
-			flags = (blocking) ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
-			fcntl(m_server_socket, F_SETFL, flags);
-		}
-
 		struct sockaddr_in caddr;
 
 		memset(&caddr, 0, sizeof(struct sockaddr_in));
@@ -95,6 +89,16 @@ iSocketIO *cTCPServer::listen(bool blocking) {
 	}
 
 	return r;
+}
+
+void cTCPServer::blocking(bool mode) { /* blocking or nonblocking IO */
+	if(m_server_socket) {
+		_s32 flags = fcntl(m_server_socket, F_GETFL, 0);
+		if(flags != -1) {
+			flags = (mode) ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
+			fcntl(m_server_socket, F_SETFL, flags);
+		}
+	}
 }
 
 void cTCPServer::close(iSocketIO *p_io) {

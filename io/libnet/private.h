@@ -50,7 +50,8 @@ public:
 	bool _init(_u32 port);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
-	iSocketIO *listen(bool blocking=_blocking_);
+	iSocketIO *listen(void);
+	void blocking(bool mode=true); /* blocking or nonblocking IO */
 	void close(iSocketIO *p_io);
 };
 

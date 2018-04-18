@@ -15,7 +15,8 @@
 class iTCPServer: public iBase {
 public:
 	INTERFACE(iTCPServer, I_TCP_SERVER);
-	virtual iSocketIO *listen(bool blocking=_blocking_)=0;
+	virtual iSocketIO *listen(void)=0;
+	virtual void blocking(bool)=0; /* blocking or nonblocking IO */
 	virtual void close(iSocketIO *p_io)=0;
 };
 
