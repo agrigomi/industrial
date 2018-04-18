@@ -53,7 +53,6 @@ public:
 				}
 
 				setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optv, sizeof(optv));
-				memset(p_saddr, 0, sizeof(struct sockaddr_in));
 				p_saddr->sin_family = AF_INET;
 				p_saddr->sin_addr.s_addr = htonl(INADDR_ANY);
 				p_saddr->sin_port = htons((unsigned short)port);
@@ -75,7 +74,26 @@ public:
 
 	iSocketIO *create_udp_client(_str_t dst_ip, _u32 port) {
 		iSocketIO *r = 0;
-		//...
+		_s32 sfd = socket(AF_INET, SOCK_DGRAM, 0);
+
+		if(sfd > 0) {
+			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
+			if(pcsio) {
+				struct sockaddr_in *p_caddr = 0;
+
+				if(mpi_heap) {
+					if((p_caddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in))))
+						memset(p_caddr, 0, sizeof(struct sockaddr_in));
+				}
+				p_caddr->sin_family = AF_INET;
+				p_caddr->sin_addr.s_addr = inet_addr(dst_ip);
+				p_caddr->sin_port = htons((unsigned short)port);
+				pcsio->_init(0, p_caddr, sfd, SOCKET_IO_UDP);
+				r = pcsio;
+			} else
+				::close(sfd);
+		}
+
 		return r;
 	}
 

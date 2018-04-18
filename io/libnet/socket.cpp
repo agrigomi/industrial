@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include "private.h"
+#include "iRepository.h"
+#include "iMemory.h"
 
 bool cSocketIO::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
@@ -44,6 +46,19 @@ void cSocketIO::_close(void) {
 	if(m_socket) {
 		close(m_socket);
 		m_socket = 0;
+
+		iHeap *pi_heap = (iHeap *)_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL);
+		if(pi_heap) {
+			if(mp_serveraddr) {
+				pi_heap->free(mp_serveraddr, sizeof(struct sockaddr_in));
+				mp_serveraddr = 0;
+			}
+			if(mp_clientaddr) {
+				pi_heap->free(mp_clientaddr, sizeof(struct sockaddr_in));
+				mp_clientaddr = 0;
+			}
+			_gpi_repo_->object_release(pi_heap);
+		}
 	}
 }
 
