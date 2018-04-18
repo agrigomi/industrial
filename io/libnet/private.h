@@ -6,6 +6,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "iNet.h"
+#include "iMemory.h"
+#include "iRepository.h"
 
 #define CLASS_NAME_SOCKET_IO	"cSocketIO"
 #define CLASS_NAME_UDP_SERVER	"cUDPServer"
@@ -39,9 +41,15 @@ public:
 
 
 class cTCPServer: public iTCPServer {
+private:
+	iHeap *mpi_heap;
+	_u32 m_port;
+	struct sockaddr_in m_serveraddr;
+	struct sockaddr_in m_clientaddr;
+	_s32 m_server_socket;
 public:
 	BASE(cTCPServer, CLASS_NAME_TCP_SERVER, RF_CLONE, 1,0,0);
-	void _init(_u32 port);
+	bool _init(_u32 port);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	iSocketIO *listen(bool blocking=_blocking_);

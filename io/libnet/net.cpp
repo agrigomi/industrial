@@ -4,14 +4,13 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "private.h"
-#include "iMemory.h"
-#include "iRepository.h"
 
 IMPLEMENT_BASE_ARRAY(10)
 
 class cNet: public iNet {
 private:
 	iHeap	*mpi_heap;
+	_s32	m_optval;
 public:
 	BASE(cNet, "cNet", RF_ORIGINAL, 1,0,0);
 
@@ -41,7 +40,7 @@ public:
 		if(sfd > 0) {
 			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
 			if(pcsio) {
-				_s32 optv = 1;
+				m_optval = 1;
 				struct sockaddr_in *p_saddr = 0;
 				struct sockaddr_in *p_caddr = 0;
 
@@ -52,7 +51,7 @@ public:
 						memset(p_caddr, 0, sizeof(struct sockaddr_in));
 				}
 
-				setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optv, sizeof(optv));
+				setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&m_optval, sizeof(m_optval));
 				p_saddr->sin_family = AF_INET;
 				p_saddr->sin_addr.s_addr = htonl(INADDR_ANY);
 				p_saddr->sin_port = htons((unsigned short)port);
