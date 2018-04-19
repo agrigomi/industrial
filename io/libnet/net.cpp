@@ -80,15 +80,17 @@ public:
 			if(pcsio) {
 				struct sockaddr_in *p_caddr = 0;
 
-				if(mpi_heap) {
-					if((p_caddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in))))
-						memset(p_caddr, 0, sizeof(struct sockaddr_in));
-				}
-				p_caddr->sin_family = AF_INET;
-				p_caddr->sin_addr.s_addr = inet_addr(dst_ip);
-				p_caddr->sin_port = htons((unsigned short)port);
-				pcsio->_init(0, p_caddr, sfd, SOCKET_IO_UDP);
-				r = pcsio;
+				if(mpi_heap)
+					p_caddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in));
+				if(p_caddr) {
+					memset(p_caddr, 0, sizeof(struct sockaddr_in));
+					p_caddr->sin_family = AF_INET;
+					p_caddr->sin_addr.s_addr = inet_addr(dst_ip);
+					p_caddr->sin_port = htons((unsigned short)port);
+					pcsio->_init(0, p_caddr, sfd, SOCKET_IO_UDP);
+					r = pcsio;
+				} else
+					::close(sfd);
 			} else
 				::close(sfd);
 		}
@@ -145,7 +147,7 @@ public:
 					p_saddr->sin_family = AF_INET;
 					p_saddr->sin_addr = *((struct in_addr *)server->h_addr);
 					p_saddr->sin_port = htons(port);
-					if(connect(sfd, (struct sockaddr *)p_saddr, sizeof(struct sockaddr)) >= 0) {
+					if(connect(sfd, (struct sockaddr *)p_saddr, sizeof(struct sockaddr_in)) >= 0) {
 						cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
 						if(pcsio) {
 							pcsio->_init(p_saddr, 0, sfd, SOCKET_IO_TCP);
