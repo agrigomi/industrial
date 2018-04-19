@@ -9,9 +9,6 @@
 #define I_TCP_SERVER	"iTCPServer"
 #define I_TCP_CLIENT	"iTCPClient"
 
-#define  _non_blocking_	false
-#define _blocking_	true
-
 class iTCPServer: public iBase {
 public:
 	INTERFACE(iTCPServer, I_TCP_SERVER);
