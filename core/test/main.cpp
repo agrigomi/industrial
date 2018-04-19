@@ -67,19 +67,17 @@ _err_t main(int argc, char *argv[]) {
 
 		iNet *pi_net = (iNet *)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
 		if(pi_net) {
-			iTCPServer *pi_tcps = pi_net->create_tcp_server(3000);
-			if(pi_tcps) {
-				iSocketIO *psio = pi_tcps->listen();
-				if(psio) {
-					_char_t buf[1024]="";
-					psio->blocking(false);
-					while(memcmp(buf, "+++", 3) != 0) {
-						_u32 len = psio->read(buf, sizeof(buf));
-						if(len)
-							psio->write(buf, len);
-					}
-					pi_tcps->close(psio);
+			iSocketIO *sio = pi_net->create_tcp_client("localhost", 3000);
+			if(sio) {
+				_char_t buf[1024]="";
+				sio->blocking(true);
+				while(memcmp(buf, "+++", 3) != 0) {
+					_u32 len = sio->read(buf, sizeof(buf));
+					if(len)
+						sio->write(buf, len);
 				}
+
+				pi_net->close_socket(sio);
 			}
 		}
 

@@ -128,9 +128,40 @@ public:
 		return r;
 	}
 
-	iTCPClient *create_tcp_client(_str_t dst_ip, _u32 port) {
-		iTCPClient *r = 0;
-		//...
+	iSocketIO *create_tcp_client(_str_t host, _u32 port) {
+		iSocketIO *r = 0;
+		_s32 sfd = socket(AF_INET, SOCK_STREAM, 0);
+
+		if(sfd > 0) {
+			struct hostent *server;
+			struct sockaddr_in *p_saddr = 0;
+
+			server = gethostbyname(host);
+			if(server) {
+				if(mpi_heap)
+					p_saddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in));
+				if(p_saddr) {
+					memset(p_saddr, 0, sizeof(struct sockaddr_in));
+					p_saddr->sin_family = AF_INET;
+					p_saddr->sin_addr = *((struct in_addr *)server->h_addr);
+					p_saddr->sin_port = htons(port);
+					if(connect(sfd, (struct sockaddr *)p_saddr, sizeof(struct sockaddr)) >= 0) {
+						cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
+						if(pcsio) {
+							pcsio->_init(p_saddr, 0, sfd, SOCKET_IO_TCP);
+							r = pcsio;
+						}
+					}
+				}
+			}
+
+			if(!r) {
+				::close(sfd);
+				if(p_saddr)
+					mpi_heap->free(p_saddr, sizeof(struct sockaddr_in));
+			}
+		}
+
 		return r;
 	}
 };

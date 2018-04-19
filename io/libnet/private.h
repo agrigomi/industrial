@@ -5,15 +5,13 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h> 
 #include "iNet.h"
 #include "iMemory.h"
 #include "iRepository.h"
 
 #define CLASS_NAME_SOCKET_IO	"cSocketIO"
-#define CLASS_NAME_UDP_SERVER	"cUDPServer"
-#define CLASS_NAME_UDP_CLIENT	"cUDPClient"
 #define CLASS_NAME_TCP_SERVER	"cTCPServer"
-#define CLASS_NAME_TCP_CLIENT	"cTCPClient"
 
 #define SOCKET_IO_UDP	1
 #define SOCKET_IO_TCP	2
@@ -53,15 +51,6 @@ public:
 	iSocketIO *listen(void);
 	void blocking(bool mode=true); /* blocking or nonblocking IO */
 	void close(iSocketIO *p_io);
-};
-
-class cTCPClient: public iTCPClient {
-public:
-	BASE(cTCPClient, CLASS_NAME_TCP_CLIENT, RF_CLONE, 1,0,0);
-	void _init(_str_t ip, _u32 port);
-	void _close(void);
-	bool object_ctl(_u32 cmd, void *arg, ...);
-	iSocketIO *connect(void);
 };
 
 #endif
