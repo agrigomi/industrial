@@ -67,18 +67,12 @@ _err_t main(int argc, char *argv[]) {
 
 		iNet *pi_net = (iNet *)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
 		if(pi_net) {
-			iSocketIO *sio = pi_net->create_tcp_client("localhost", 3000);
+			iSocketIO *sio = pi_net->create_tcp_client((_str_t)"localhost", 3000);
 			if(sio) {
-				_char_t buf[1024]="";
-				sio->blocking(true);
-				while(memcmp(buf, "+++", 3) != 0) {
-					_u32 len = sio->read(buf, sizeof(buf));
-					if(len)
-						sio->write(buf, len);
-				}
-
+				//...
 				pi_net->close_socket(sio);
 			}
+			pi_repo->object_release(pi_net);
 		}
 
 		getchar();
@@ -86,7 +80,7 @@ _err_t main(int argc, char *argv[]) {
 			pi_log->fwrite(LMT_ERROR, "unable to unload libfs.so error %d", r);
 		else
 			pi_log->write(LMT_INFO, "libfs.so, unloaded");
-		//pi_repo->object_release(obj);
+		pi_repo->object_release(obj);
 		if((r = pi_repo->extension_unload("ext-1.so")))
 			pi_log->fwrite(LMT_ERROR, "unable to unload ext-1.so error %d", r);
 		else
