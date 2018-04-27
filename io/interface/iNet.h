@@ -3,11 +3,15 @@
 
 #include "iIO.h"
 
+#define I_SOCKET_IO	"iSocketIO"
 #define I_NET		"iNet"
-#define I_UDP_SERVER	"iUDPServer"
-#define I_UDP_CLIENT	"iUDPClient"
 #define I_TCP_SERVER	"iTCPServer"
-#define I_TCP_CLIENT	"iTCPClient"
+
+class iSocketIO: public iIO {
+public:
+	INTERFACE(iSocketIO, I_SOCKET_IO);
+	virtual void blocking(bool)=0; /* blocking or nonblocking IO */
+};
 
 class iTCPServer: public iBase {
 public:
