@@ -3,7 +3,7 @@
 #include "private.h"
 #include "startup.h"
 
-IMPLEMENT_BASE_ARRAY(3);
+IMPLEMENT_BASE_ARRAY("fs", 3);
 
 class cFS: public iFS {
 public:

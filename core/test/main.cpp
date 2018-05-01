@@ -8,7 +8,7 @@
 #include "iFS.h"
 #include "iNet.h"
 
-IMPLEMENT_BASE_ARRAY(1024);
+IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
 void log_listener(_u8 lmt, _str_t msg) {
 	_char_t pref = '-';

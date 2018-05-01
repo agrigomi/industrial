@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "private.h"
 
-IMPLEMENT_BASE_ARRAY(10)
+IMPLEMENT_BASE_ARRAY("net", 10)
 
 class cNet: public iNet {
 private:

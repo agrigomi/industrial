@@ -1,6 +1,7 @@
 #ifndef __STARTUP_H__
 #define __STARTUP_H__
 
+#include <stdio.h>
 #include "iRepository.h"
 
 #define _EXPORT_ __attribute__ ((visibility ("default")))
@@ -18,7 +19,7 @@ void add_base_entry(_base_entry_t *entry);
 iRepository *get_repository(void);
 };
 
-#define IMPLEMENT_BASE_ARRAY(limit) \
+#define IMPLEMENT_BASE_ARRAY(ext_name, limit) \
 	_LOCAL_ _base_entry_t _g_base_array_[limit]; \
 	_LOCAL_ _u32 _base_array_limit_ = limit; \
 	_LOCAL_ _u32 _base_array_count_ = 0; \
@@ -33,7 +34,8 @@ iRepository *get_repository(void);
 			_g_base_array_[_base_array_count_].ref_cnt = e->ref_cnt; \
 			_g_base_array_[_base_array_count_].state = e->state; \
 			_base_array_count_++; \
-		} \
+		} else \
+			printf("No enough space in base array '%s'!\n", ext_name); \
 	}
 #endif
 
