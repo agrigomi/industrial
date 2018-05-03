@@ -28,7 +28,7 @@ public:
 		_evt_t state = m_state;
 		_evt_t r = state & ~mask;
 
-		m_state.exchange(r);
+		r = m_state.exchange(r);
 		if(mask)
 			r &= mask;
 
