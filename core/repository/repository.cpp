@@ -365,6 +365,65 @@ private:
 		uninit_array(array, count, UNINIT_STATIC);
 	}
 
+	void scan_array_for_notifications(_base_entry_t *array, _u32 count, _notify_t *pn) {
+		_u32 i = 0;
+
+		for(; i < count; i++) {
+			if(array[i].pi_base) {
+				_object_info_t oi;
+
+				array[i].pi_base->object_info(&oi);
+				if(oi.flags & RF_ORIGINAL) {
+					_notification_t msg = {NF_INIT, array[i].pi_base};
+					bool send = false;
+
+					if(array[i].pi_base == pn->monitored)
+						send = true;
+					else if(pn->iname && strcmp(pn->iname, oi.iname) == 0)
+						send = false;
+					else if(pn->cname && strcmp(pn->cname, oi.cname) == 0)
+						send = true;
+
+					if(send) {
+						pn->handler->object_ctl(OCTL_NOTIFY, &msg);
+						send = false;
+					}
+				}
+			}
+		}
+	}
+
+	void scan_for_notifications(_notify_t *pn, _u8 scan_flags) {
+		if(scan_flags & SCAN_ORIGINAL) {
+			_u32 count = 0, limit = 0;
+			_base_entry_t *p_array = get_base_array(&count, &limit);
+
+			// scan core array
+			if(p_array)
+				scan_array_for_notifications(p_array, count, pn);
+
+			// scan in extensions
+			HMUTEX hxm = mpi_ext_list->lock();
+			_u32 sz = 0;
+			iRepoExtension **pprx = (iRepoExtension **)mpi_ext_list->first(&sz, hxm);
+
+			while(pprx) {
+				p_array = (*pprx)->array(&count, &limit);
+				mpi_ext_list->unlock(hxm);
+				scan_array_for_notifications(p_array, count, pn);
+				hxm = mpi_ext_list->lock();
+				mpi_ext_list->sel(pprx, hxm);
+				pprx = (iRepoExtension **)mpi_ext_list->next(&sz, hxm);
+			}
+
+			mpi_ext_list->unlock(hxm);
+		}
+
+		if(scan_flags & SCAN_CLONE) {
+			//...
+		}
+	}
+
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 1, 0, 0);
 
@@ -535,12 +594,19 @@ public:
 	}
 
 	// notifications
-	HNOTIFY monitoring_add(iBase *mon_obj, _cstr_t mon_iname, _cstr_t mon_cname, iBase *handler_obj) {
+	HNOTIFY monitoring_add(iBase *mon_obj,
+				_cstr_t mon_iname,
+				_cstr_t mon_cname,
+				iBase *handler_obj,
+				_u8 scan_flags) {
 		_notify_t *r = 0;
 
 		if(mpi_notify_list && handler_obj) {
 			_notify_t n = {	mon_obj, mon_iname, mon_cname, handler_obj };
-			r = (_notify_t *)mpi_notify_list->add(&n, sizeof(_notify_t));
+			if((r = (_notify_t *)mpi_notify_list->add(&n, sizeof(_notify_t)))) {
+				if(scan_flags)
+					scan_for_notifications(&n, scan_flags);
+			}
 		}
 
 		return r;

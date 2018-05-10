@@ -29,6 +29,8 @@ typedef struct {
 }_object_request_t;
 
 typedef void* HNOTIFY;
+#define SCAN_ORIGINAL	1
+#define SCAN_CLONE	2
 
 class iRepository: public iBase {
 public:
@@ -44,7 +46,8 @@ public:
 	virtual HNOTIFY monitoring_add(iBase *mon_obj, // monitored object
 					_cstr_t mon_iname, // monitored interface
 					_cstr_t mon_cname, // monitored object name
-					iBase *handler_obj // notifications receiver
+					iBase *handler_obj,// notifications receiver
+					_u8 scan_flags=0 // scan for already registered objects
 					)=0;
 	virtual void monitoring_remove(HNOTIFY)=0;
 
