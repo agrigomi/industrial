@@ -14,8 +14,8 @@
 typedef struct {
 	_cstr_t	opt_name;
 	_u32	opt_flags;
-	_str_t	opt_value;
 	_cstr_t	opt_help;
+	_str_t	opt_value;
 }_cmd_opt_t;
 
 class iCmd;
@@ -30,6 +30,7 @@ typedef struct {
 	_cstr_t 	cmd_name;
 	_cmd_opt_t	*cmd_options;
 	_cmd_handler_t	*cmd_handler;
+	_str_t		cmd_usage;
 }_cmd_t;
 
 class iCmd: public iBase {
