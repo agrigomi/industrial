@@ -371,12 +371,11 @@ private:
 		for(; i < count; i++) {
 			if(array[i].pi_base) {
 				_object_info_t oi;
+				_notification_t msg;
+				bool send = false;
 
 				array[i].pi_base->object_info(&oi);
 				if(oi.flags & RF_ORIGINAL) {
-					_notification_t msg = {NF_INIT, array[i].pi_base};
-					bool send = false;
-
 					if(array[i].pi_base == pn->monitored)
 						send = true;
 					else if(pn->iname && strcmp(pn->iname, oi.iname) == 0)
@@ -385,6 +384,9 @@ private:
 						send = true;
 
 					if(send) {
+						msg.flags = NF_INIT;
+						msg.object = array[i].pi_base;
+
 						pn->handler->object_ctl(OCTL_NOTIFY, &msg);
 						send = false;
 					}
@@ -420,7 +422,37 @@ private:
 		}
 
 		if(scan_flags & SCAN_CLONE) {
-			//...
+			HMUTEX hcm = mpi_cxt_list->lock();
+			_u32 cxt_size = 0;
+			_object_info_t oi;
+			iBase *p_cxt = (iBase *)mpi_cxt_list->first(&cxt_size, hcm);
+			bool send = false;
+			_notification_t msg;
+
+			while(p_cxt) {
+				p_cxt->object_info(&oi);
+				if(p_cxt == pn->monitored)
+					send = true;
+				else if(pn->iname && strcmp(pn->iname, oi.iname) == 0)
+					send = true;
+				else if(pn->cname && strcmp(pn->cname, oi.cname) == 0)
+					send = true;
+
+				if(send) {
+					msg.flags = NF_INIT;
+					msg.object = p_cxt;
+
+					mpi_cxt_list->unlock(hcm);
+					pn->handler->object_ctl(OCTL_NOTIFY, &msg);
+					hcm = mpi_cxt_list->lock();
+					mpi_cxt_list->sel(p_cxt, hcm);
+					send = false;
+				}
+
+				p_cxt = (iBase *)mpi_cxt_list->next(&cxt_size, hcm);
+			}
+
+			mpi_cxt_list->unlock(hcm);
 		}
 	}
 
