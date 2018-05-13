@@ -19,9 +19,12 @@ typedef struct {
 }_cmd_opt_t;
 
 class iCmd;
-typedef void _cmd_handler_t(iCmd *, // command opbect
+class iCmdHost;
+
+typedef void _cmd_handler_t(iCmd *, // interface to command opbect
+			iCmdHost *, // interface to command host
+			iIO *, // interface to I/O object
 			_cmd_opt_t *, // options array
-			iIO *, // I/O object
 			_str_t args[], // additional arguments
 			_u8 nargs // number of additional arguments
 			);
@@ -43,6 +46,7 @@ class iCmdHost: public iBase {
 public:
 	INTERFACE(iCmdHost, I_CMD_HOST);
 	virtual void exec(_str_t, iIO *)=0;
+	virtual _cmd_t *get_info(_str_t cmd_name)=0;
 };
 
 #endif
