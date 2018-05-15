@@ -6,6 +6,11 @@
 
 IMPLEMENT_BASE_ARRAY("libcmd", 10)
 
+typedef struct {
+	_str_t	cmd_name;
+	iCmd	*pi_cmd;
+}_cmd_rec_t;
+
 class cCmdHost: public iCmdHost {
 private:
 	iLlist	*mpi_cmd_list;
@@ -14,7 +19,32 @@ private:
 
 	_cmd_t *find_command(iBase *pi_cmd, _str_t cmd_name) {
 		_cmd_t *r = 0;
-		//...
+		iCmd *pi_cmd_obj = dynamic_cast<iCmd *>(pi_cmd);
+
+		if(pi_cmd_obj && mpi_cmd_list) {
+			_u32 sz = 0;
+			HMUTEX hm = mpi_cmd_list->lock();
+			_cmd_rec_t *rec = (_cmd_rec_t *)mpi_cmd_list->first(&sz, hm);
+
+			while(rec) {
+				if(pi_cmd) {
+					if(pi_cmd_obj == rec->pi_cmd) {
+						r = rec->pi_cmd->get_info();
+						break;
+					}
+				}
+				if(cmd_name) {
+					if(mpi_str->str_cmp(cmd_name, rec->cmd_name) == 0 && rec->pi_cmd) {
+						r = rec->pi_cmd->get_info();
+						break;
+					}
+				}
+				rec = (_cmd_rec_t *)mpi_cmd_list->next(&sz, hm);
+			}
+
+			mpi_cmd_list->unlock(hm);
+		}
+
 		return r;
 	}
 
