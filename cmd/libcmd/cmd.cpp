@@ -71,7 +71,19 @@ private:
 		iCmd *pi_cmd_obj = dynamic_cast<iCmd *>(pi_cmd);
 
 		if(pi_cmd_obj) {
-			//...
+			HMUTEX hm = mpi_cmd_list->lock();
+			_u32 sz = 0;
+			_cmd_rec_t *p_rec = (_cmd_rec_t *)mpi_cmd_list->first(&sz, hm);
+
+			while(p_rec) {
+				if(p_rec->pi_cmd == pi_cmd_obj) {
+					mpi_cmd_list->del(hm);
+					p_rec = (_cmd_rec_t *)mpi_cmd_list->current(&sz, hm);
+				} else
+					p_rec = (_cmd_rec_t *)mpi_cmd_list->next(&sz, hm);
+			}
+
+			mpi_cmd_list->unlock(hm);
 		}
 	}
 public:
@@ -120,8 +132,10 @@ public:
 		return r;
 	}
 
-	void exec(_str_t cmd_line, iIO *pi_io) {
+	bool exec(_str_t cmd_line, iIO *pi_io) {
+		bool r = false;
 		//...
+		return r;
 	}
 };
 

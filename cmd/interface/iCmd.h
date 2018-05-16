@@ -45,7 +45,7 @@ public:
 class iCmdHost: public iBase {
 public:
 	INTERFACE(iCmdHost, I_CMD_HOST);
-	virtual void exec(_str_t, iIO *)=0;
+	virtual bool exec(_str_t, iIO *)=0;
 	virtual _cmd_t *get_info(_str_t cmd_name)=0;
 };
 
