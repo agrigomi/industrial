@@ -127,8 +127,22 @@ public:
 	}
 
 	_cmd_t *get_info(_str_t cmd_name) {
-		_cmd_t *r = 0;
-		//...
+		_cmd_t *r = find_command(0, cmd_name);
+
+		if(r) {
+			_u32 n = 0;
+
+			while(r[n].cmd_name) {
+				if(mpi_str->str_cmp(cmd_name, (_str_t)r[n].cmd_name) == 0) {
+					r += n;
+					break;
+				}
+				n++;
+			}
+
+			if(r[n].cmd_name == 0)
+				r = 0;
+		}
 		return r;
 	}
 
