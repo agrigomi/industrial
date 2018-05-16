@@ -7,7 +7,7 @@
 IMPLEMENT_BASE_ARRAY("libcmd", 10)
 
 typedef struct {
-	_str_t	cmd_name;
+	_cstr_t	cmd_name;
 	iCmd	*pi_cmd;
 }_cmd_rec_t;
 
@@ -34,7 +34,7 @@ private:
 					}
 				}
 				if(cmd_name) {
-					if(mpi_str->str_cmp(cmd_name, rec->cmd_name) == 0 && rec->pi_cmd) {
+					if(mpi_str->str_cmp(cmd_name, (_str_t)rec->cmd_name) == 0 && rec->pi_cmd) {
 						r = rec->pi_cmd->get_info();
 						break;
 					}
@@ -49,11 +49,30 @@ private:
 	}
 
 	void add_command(iBase *pi_cmd) {
-		//...
+		iCmd *pi_cmd_obj = dynamic_cast<iCmd *>(pi_cmd);
+
+		if(pi_cmd_obj) {
+			_cmd_t *p_cmd_info = pi_cmd_obj->get_info();
+			_u32 n = 0;
+
+			while(p_cmd_info[n].cmd_name) {
+				_cmd_rec_t rec;
+
+				rec.cmd_name = p_cmd_info[n].cmd_name;
+				rec.pi_cmd = pi_cmd_obj;
+
+				mpi_cmd_list->add(&rec, sizeof(_cmd_rec_t));
+				n++;
+			}
+		}
 	}
 
 	void remove_command(iBase *pi_cmd) {
-		//...
+		iCmd *pi_cmd_obj = dynamic_cast<iCmd *>(pi_cmd);
+
+		if(pi_cmd_obj) {
+			//...
+		}
 	}
 public:
 	BASE(cCmdHost, "cCmdHost", RF_ORIGINAL, 1,0,0);
