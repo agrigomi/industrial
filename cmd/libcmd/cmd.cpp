@@ -4,6 +4,9 @@
 #include "iMemory.h"
 #include "startup.h"
 
+#define MAX_CMD_LEN	64
+#define MAX_ARG_LEN	256
+
 IMPLEMENT_BASE_ARRAY("libcmd", 10)
 
 typedef struct {
@@ -15,6 +18,7 @@ class cCmdHost: public iCmdHost {
 private:
 	iLlist	*mpi_cmd_list;
 	iStr	*mpi_str;
+	iHeap	*mpi_heap;
 	HNOTIFY	mh_notify;
 
 	_cmd_t *find_command(iBase *pi_cmd, _str_t cmd_name) {
@@ -96,9 +100,10 @@ public:
 			case OCTL_INIT: {
 					iRepository *pi_repo = (iRepository *)arg;
 					mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
+					mpi_heap = (iHeap*) pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
 					if((mpi_cmd_list = (iLlist *)pi_repo->object_by_iname(I_LLIST, RF_CLONE)))
 						mpi_cmd_list->init(LL_VECTOR, 1);
-					if(mpi_str && mpi_cmd_list) {
+					if(mpi_str && mpi_heap && mpi_cmd_list) {
 						mh_notify = pi_repo->monitoring_add(0, I_CMD, 0, this, SCAN_ORIGINAL|SCAN_CLONE);
 						r = true;
 					}
@@ -109,6 +114,8 @@ public:
 						pi_repo->monitoring_remove(mh_notify);
 					if(mpi_str)
 						pi_repo->object_release(mpi_str);
+					if(mpi_heap)
+						pi_repo->object_release(mpi_heap);
 					if(mpi_cmd_list)
 						pi_repo->object_release(mpi_cmd_list);
 					r = true;
@@ -148,7 +155,20 @@ public:
 
 	bool exec(_str_t cmd_line, iIO *pi_io) {
 		bool r = false;
-		//...
+		_char_t cmd[MAX_CMD_LEN]="";
+		_char_t arg[MAX_ARG_LEN]="";
+
+		if(mpi_str->div_str(cmd_line, cmd, sizeof(cmd), arg, sizeof(arg), " ")) {
+			mpi_str->clrspc(cmd);
+			mpi_str->clrspc(arg);
+
+			_cmd_t *p_cmd = get_info(cmd);
+
+			if(p_cmd) {
+				//...
+			}
+		}
+
 		return r;
 	}
 };
