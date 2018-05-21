@@ -4,9 +4,6 @@
 #include "iMemory.h"
 #include "startup.h"
 
-#define MAX_CMD_LEN	64
-#define MAX_ARG_LEN	256
-
 IMPLEMENT_BASE_ARRAY("libcmd", 10)
 
 typedef struct {
@@ -155,18 +152,13 @@ public:
 
 	bool exec(_str_t cmd_line, iIO *pi_io) {
 		bool r = false;
-		_char_t cmd[MAX_CMD_LEN]="";
-		_char_t arg[MAX_ARG_LEN]="";
+		_str_t cmd=0;
+		_u32 cmd_len = mpi_str->str_len(cmd_line);
 
-		if(mpi_str->div_str(cmd_line, cmd, sizeof(cmd), arg, sizeof(arg), " ")) {
-			mpi_str->clrspc(cmd);
-			mpi_str->clrspc(arg);
-
-			_cmd_t *p_cmd = get_info(cmd);
-
-			if(p_cmd) {
-				//...
-			}
+		if((cmd = (_str_t)mpi_heap->alloc(cmd_len))) {
+			mpi_str->str_cpy(cmd, cmd_line, cmd_len);
+			//...
+			mpi_heap->free(cmd, cmd_len);
 		}
 
 		return r;
