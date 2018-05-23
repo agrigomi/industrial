@@ -216,9 +216,34 @@ public:
 			if((p_cmd = get_info(argv[0], &pi_cmd))) {
 				if(p_cmd->cmd_handler)
 					p_cmd->cmd_handler(pi_cmd, this, pi_io, p_cmd->cmd_options, argc, argv);
+			} else {
+				if(pi_io) {
+					_str_t ucmd = (_str_t)"Unknown command !\n";
+					pi_io->write(ucmd, mpi_str->str_len(ucmd));
+				}
 			}
+
 			mpi_heap->free(cmd, cmd_len);
 		}
+	}
+
+	// check for option
+	bool option_check(_str_t, _cmd_opt_t *) {
+		bool r = false;
+		//...
+		return r;
+	}
+	// get option value
+	_str_t option_value(_str_t, _cmd_opt_t *) {
+		_str_t r = 0;
+		//...
+		return r;
+	}
+	// get argument (outside options list)
+	_str_t arg_value(_u32 aidx, _cmd_opt_t *) {
+		_str_t r = 0;
+		//...
+		return r;
 	}
 };
 

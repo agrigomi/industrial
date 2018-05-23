@@ -7,15 +7,15 @@
 #define I_CMD_HOST	"iCmdHost"
 
 // option flags
-#define OF_PRESENT	(1<<0)	// for presence in command line
-#define OF_VALUE	(1<<1)	// value required
-#define OF_LONG		(1<<3)	// flag for long option (lead by --)
+#define OF_VALUE	(1<<0)	// value required
+#define OF_LONG		(1<<1)	// flag for long option (lead by --)
+#define OF_PRESENT	(1<<2)	// flag for presence by default
 
 typedef struct {
 	_cstr_t	opt_name;
 	_u32	opt_flags;
+	_str_t	opt_value; // default value
 	_cstr_t	opt_help;
-	_str_t	opt_value;
 }_cmd_opt_t;
 
 class iCmd;
@@ -47,6 +47,12 @@ public:
 	INTERFACE(iCmdHost, I_CMD_HOST);
 	virtual void exec(_str_t, iIO *)=0;
 	virtual _cmd_t *get_info(_str_t cmd_name, iCmd **pi_cmd=0)=0;
+	// check for option
+	virtual bool option_check(_str_t, _cmd_opt_t *)=0;
+	// get option value
+	virtual _str_t option_value(_str_t, _cmd_opt_t *)=0;
+	// get argument (outside options list)
+	virtual _str_t arg_value(_u32 aidx, _cmd_opt_t *)=0;
 };
 
 #endif
