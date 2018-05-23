@@ -118,7 +118,7 @@ _s32 _str_ncmp(_str_t str1, _str_t str2, _u32 sz) {
 }
 
 _u32 _str_cpy(_str_t dst, _str_t src, _u32 sz_max) {
-	_u32 _sz = sz_max - 1;
+	_u32 _sz = sz_max;
 	_u32 i = 0;
 
 	while(_sz) {
