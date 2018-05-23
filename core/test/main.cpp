@@ -7,6 +7,7 @@
 #include "iArgs.h"
 #include "iFS.h"
 #include "iNet.h"
+#include "iCmd.h"
 
 IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
@@ -34,6 +35,12 @@ _err_t main(int argc, char *argv[]) {
 		pi_repo->extension_load((_str_t)"bin/io/unix/libfs/libfs.so");
 		pi_repo->extension_load((_str_t)"bin/io/unix/libnet/libnet.so");
 		pi_repo->extension_load((_str_t)"bin/cmd/unix/libcmd/libcmd.so");
+
+		iCmdHost *pi_cmd_host = (iCmdHost *)pi_repo->object_by_iname(I_CMD_HOST, RF_ORIGINAL);
+		if(pi_cmd_host) {
+			pi_cmd_host->exec("grep -rn   -i 'some string'", 0);
+			pi_repo->object_release(pi_cmd_host);
+		}
 
 		iBase *obj = pi_repo->object_by_iname("iObj1", RF_CLONE|RF_ORIGINAL);
 

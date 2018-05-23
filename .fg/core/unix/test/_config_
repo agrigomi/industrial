@@ -1,4 +1,4 @@
 LIB_PATH=$(OUTDIR)/core/$(CONFIG)/libcore
-COMPILER_FLAGS+=-Icore/test/interface -Iio/interface -D_CORE_
+COMPILER_FLAGS+=-Icore/test/interface -Iio/interface -Icmd/interface -D_CORE_
 LINKER_FLAGS+=-lcore -ldl -L$(LIB_PATH)
-DEPENDENCY_FLAGS+= -Icore/test/interface -Iio/interface -D_CORE_
+DEPENDENCY_FLAGS+= -Icore/test/interface -Iio/interface -Icmd/interface -D_CORE_
