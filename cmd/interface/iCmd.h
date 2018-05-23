@@ -7,7 +7,7 @@
 #define I_CMD_HOST	"iCmdHost"
 
 // option flags
-#define OF_PRESENCE	(1<<0)	// for presence in command line
+#define OF_PRESENT	(1<<0)	// for presence in command line
 #define OF_VALUE	(1<<1)	// value required
 #define OF_LONG		(1<<3)	// flag for long option (lead by --)
 
@@ -25,8 +25,8 @@ typedef void _cmd_handler_t(iCmd *, // interface to command opbect
 			iCmdHost *, // interface to command host
 			iIO *, // interface to I/O object
 			_cmd_opt_t *, // options array
-			_str_t args[], // additional arguments
-			_u8 nargs // number of additional arguments
+			_u32 argc, // number of arguments
+			_str_t argv[] // arguments
 			);
 
 typedef struct {
@@ -45,8 +45,8 @@ public:
 class iCmdHost: public iBase {
 public:
 	INTERFACE(iCmdHost, I_CMD_HOST);
-	virtual bool exec(_str_t, iIO *)=0;
-	virtual _cmd_t *get_info(_str_t cmd_name)=0;
+	virtual void exec(_str_t, iIO *)=0;
+	virtual _cmd_t *get_info(_str_t cmd_name, iCmd **pi_cmd=0)=0;
 };
 
 #endif

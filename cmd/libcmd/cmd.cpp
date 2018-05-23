@@ -20,11 +20,11 @@ private:
 	iHeap	*mpi_heap;
 	HNOTIFY	mh_notify;
 
-	_cmd_t *find_command(iBase *pi_cmd, _str_t cmd_name) {
-		_cmd_t *r = 0;
+	_cmd_rec_t *find_command(iBase *pi_cmd, _str_t cmd_name) {
+		_cmd_rec_t *r = 0;
 		iCmd *pi_cmd_obj = dynamic_cast<iCmd *>(pi_cmd);
 
-		if(pi_cmd_obj && mpi_cmd_list) {
+		if(mpi_cmd_list) {
 			_u32 sz = 0;
 			HMUTEX hm = mpi_cmd_list->lock();
 			_cmd_rec_t *rec = (_cmd_rec_t *)mpi_cmd_list->first(&sz, hm);
@@ -32,13 +32,13 @@ private:
 			while(rec) {
 				if(pi_cmd) {
 					if(pi_cmd_obj == rec->pi_cmd) {
-						r = rec->pi_cmd->get_info();
+						r = rec;
 						break;
 					}
 				}
 				if(cmd_name) {
 					if(mpi_str->str_cmp(cmd_name, (_str_t)rec->cmd_name) == 0 && rec->pi_cmd) {
-						r = rec->pi_cmd->get_info();
+						r = rec;
 						break;
 					}
 				}
@@ -177,8 +177,9 @@ public:
 		return r;
 	}
 
-	_cmd_t *get_info(_str_t cmd_name) {
-		_cmd_t *r = find_command(0, cmd_name);
+	_cmd_t *get_info(_str_t cmd_name, iCmd **pi_cmd=0) {
+		_cmd_rec_t *cmd_rec = find_command(0, cmd_name);
+		_cmd_t *r = (cmd_rec) ? cmd_rec->pi_cmd->get_info() : 0;
 
 		if(r) {
 			_u32 n = 0;
@@ -186,6 +187,8 @@ public:
 			while(r[n].cmd_name) {
 				if(mpi_str->str_cmp(cmd_name, (_str_t)r[n].cmd_name) == 0) {
 					r += n;
+					if(pi_cmd)
+						*pi_cmd = cmd_rec->pi_cmd;
 					break;
 				}
 				n++;
@@ -197,23 +200,25 @@ public:
 		return r;
 	}
 
-	bool exec(_str_t cmd_line, iIO *pi_io) {
-		bool r = false;
+	void exec(_str_t cmd_line, iIO *pi_io) {
 		_str_t cmd=0;
-		_u32 cmd_len = mpi_str->str_len(cmd_line);
+		_u32 cmd_len = mpi_str->str_len(cmd_line) + 1;
 
 		if((cmd = (_str_t)mpi_heap->alloc(cmd_len))) {
 			_str_t argv[MAX_ARGV];
 			_u32 argc = 0;
+			_cmd_t *p_cmd = 0;
+			iCmd *pi_cmd = 0;
 
 			mpi_str->mem_set(argv, 0, sizeof(argv));
 			mpi_str->str_cpy(cmd, cmd_line, cmd_len);
 			argc = parse_argv(cmd, cmd_len, argv);
-			//...
+			if((p_cmd = get_info(argv[0], &pi_cmd))) {
+				if(p_cmd->cmd_handler)
+					p_cmd->cmd_handler(pi_cmd, this, pi_io, p_cmd->cmd_options, argc, argv);
+			}
 			mpi_heap->free(cmd, cmd_len);
 		}
-
-		return r;
 	}
 };
 
