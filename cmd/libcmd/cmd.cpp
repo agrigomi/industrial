@@ -4,6 +4,8 @@
 #include "iMemory.h"
 #include "startup.h"
 
+#define MAX_ARGV	128
+
 IMPLEMENT_BASE_ARRAY("libcmd", 10)
 
 typedef struct {
@@ -87,6 +89,51 @@ private:
 			mpi_cmd_list->unlock(hm);
 		}
 	}
+
+#define INV_POS  0xffffffff
+
+	_u32 parse_argv(_str_t cmd_line, _u32 cmd_len, _str_t argv[]) {
+		_u32 r = 0;
+		bool strophe = false;
+		bool quotes = false;
+		_u32 arg_pos = INV_POS;
+		_u32 i = 0;
+
+		while(i < cmd_len + 1) {
+			switch(cmd_line[i]) {
+				case '\'':
+					mpi_str->mem_cpy(cmd_line+i, cmd_line+i+1, cmd_len - i);
+					strophe = !strophe;
+					continue;
+				case '"':
+					mpi_str->mem_cpy(cmd_line+i, cmd_line+i+1, cmd_len - i);
+					quotes = !quotes;
+					continue;
+				case '\\':
+					mpi_str->mem_cpy(cmd_line+i, cmd_line+i+1, cmd_len - i);
+					break;
+				case 0:
+				case ' ':
+					if(arg_pos != INV_POS) {
+						if(!quotes && !strophe) {
+							argv[r] = cmd_line + arg_pos;
+							arg_pos = INV_POS;
+							cmd_line[i] = 0;
+							r++;
+						}
+					}
+					break;
+				default:
+					if(arg_pos == INV_POS)
+						arg_pos = i;
+					break;
+			}
+
+			i++;
+		}
+
+		return r;
+	}
 public:
 	BASE(cCmdHost, "cCmdHost", RF_ORIGINAL, 1,0,0);
 
@@ -156,7 +203,12 @@ public:
 		_u32 cmd_len = mpi_str->str_len(cmd_line);
 
 		if((cmd = (_str_t)mpi_heap->alloc(cmd_len))) {
+			_str_t argv[MAX_ARGV];
+			_u32 argc = 0;
+
+			mpi_str->mem_set(argv, 0, sizeof(argv));
 			mpi_str->str_cpy(cmd, cmd_line, cmd_len);
+			argc = parse_argv(cmd, cmd_len, argv);
 			//...
 			mpi_heap->free(cmd, cmd_len);
 		}
