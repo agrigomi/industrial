@@ -239,12 +239,6 @@ public:
 		//...
 		return r;
 	}
-	// get argument (outside options list)
-	_str_t arg_value(_u32 aidx, _cmd_opt_t *) {
-		_str_t r = 0;
-		//...
-		return r;
-	}
 };
 
 static cCmdHost _g_cmd_host_;

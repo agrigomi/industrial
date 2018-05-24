@@ -51,8 +51,6 @@ public:
 	virtual bool option_check(_str_t, _cmd_opt_t *)=0;
 	// get option value
 	virtual _str_t option_value(_str_t, _cmd_opt_t *)=0;
-	// get argument (outside options list)
-	virtual _str_t arg_value(_u32 aidx, _cmd_opt_t *)=0;
 };
 
 #endif
