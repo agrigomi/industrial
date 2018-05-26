@@ -134,6 +134,21 @@ private:
 
 		return r;
 	}
+
+	_u32 num_options(_cmd_opt_t *p_opt) {
+		_u32 r = 0;
+
+		if(p_opt) {
+			while(p_opt[r].opt_name)
+				r++;
+		}
+
+		return r;
+	}
+
+	void parse_options(_cmd_opt_t *p_opt, _u32 argc, _str_t argv[]) {
+		//...
+	}
 public:
 	BASE(cCmdHost, "cCmdHost", RF_ORIGINAL, 1,0,0);
 
@@ -213,9 +228,26 @@ public:
 			mpi_str->mem_set(argv, 0, sizeof(argv));
 			mpi_str->str_cpy(cmd, cmd_line, cmd_len);
 			argc = parse_argv(cmd, cmd_len, argv);
+
 			if((p_cmd = get_info(argv[0], &pi_cmd))) {
-				if(p_cmd->cmd_handler)
-					p_cmd->cmd_handler(pi_cmd, this, pi_io, p_cmd->cmd_options, argc, argv);
+				if(p_cmd->cmd_handler) {
+					_u32 noptions = num_options(p_cmd->cmd_options);
+					_u32 mem_options = noptions * sizeof(_cmd_opt_t);
+					_cmd_opt_t *p_opt = 0;
+
+					if(noptions) {
+						// copy options array
+						if((p_opt = (_cmd_opt_t *)mpi_heap->alloc(mem_options))) {
+							mpi_str->mem_cpy(p_opt, p_cmd->cmd_options, mem_options);
+							parse_options(p_opt, argc, argv);
+						}
+					}
+
+					p_cmd->cmd_handler(pi_cmd, this, pi_io, p_opt, argc, argv);
+
+					if(p_opt)
+						mpi_heap->free(p_opt, mem_options);
+				}
 			} else {
 				if(pi_io) {
 					_str_t ucmd = (_str_t)"Unknown command !\n";
