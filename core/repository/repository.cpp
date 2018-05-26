@@ -236,7 +236,8 @@ private:
 				}
 
 				notify(flags, pi);
-			}
+			} else
+				pi->object_ctl(OCTL_UNINIT, this);
 		} else
 			r = true;
 
