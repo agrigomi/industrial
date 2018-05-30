@@ -4,7 +4,8 @@
 #include "iMemory.h"
 #include "startup.h"
 
-#define MAX_ARGV	128
+#define MAX_ARGV		128
+#define MAX_OPTION_NAME		128
 
 IMPLEMENT_BASE_ARRAY("libcmd", 10)
 
@@ -146,8 +147,38 @@ private:
 		return r;
 	}
 
-	void parse_options(_cmd_opt_t *p_opt, _u32 argc, _str_t argv[]) {
-		//...
+	_cmd_opt_t *find_option(_str_t opt_name, _cmd_opt_t *opt_array) {
+		_cmd_opt_t *r = 0;
+		_u32 n = 0;
+
+		while(opt_array[n].opt_name) {
+			if(mpi_str->str_cmp(opt_name, (_str_t)opt_array[n].opt_name) == 0) {
+				r = &opt_array[n];
+				break;
+			}
+			n++;
+		}
+
+		return r;
+	}
+
+	void parse_options(_cmd_opt_t *p_opt_array, _u32 argc, _str_t argv[]) {
+		_u32 i = 0;
+
+		for(; i < argc; i++) {
+			if(argv[i][0] == '-') {
+				_cmd_opt_t *p_opt = 0;
+				_char_t opt_nmae[MAX_OPTION_NAME]="";
+
+				if(argv[i][1] == '-') {
+					// long option
+					//...
+				} else {
+					// short options
+					//...
+				}
+			}
+		}
 	}
 public:
 	BASE(cCmdHost, "cCmdHost", RF_ORIGINAL, 1,0,0);
@@ -260,13 +291,13 @@ public:
 	}
 
 	// check for option
-	bool option_check(_str_t, _cmd_opt_t *) {
+	bool option_check(_str_t opt_name, _cmd_opt_t *) {
 		bool r = false;
 		//...
 		return r;
 	}
 	// get option value
-	_str_t option_value(_str_t, _cmd_opt_t *) {
+	_str_t option_value(_str_t opt_nmae, _cmd_opt_t *) {
 		_str_t r = 0;
 		//...
 		return r;
