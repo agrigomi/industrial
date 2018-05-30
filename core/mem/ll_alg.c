@@ -115,7 +115,9 @@ void *ll_add(_ll_context_t *p_cxt, void *p_data, _u32 size, _u64 hlock) {
 	if(_p) {
 		// clear memory region
 		_u8 *ptr = (_u8 *)_p;
-		for(_u32 i = 0; i < sz; i++)
+		_u32 i = 0;
+
+		for(; i < sz; i++)
 			*(ptr + i) = 0;
 
 		_p->cxt = p_cxt;
@@ -171,7 +173,9 @@ void *ll_ins(_ll_context_t *p_cxt, _u32 index, void *p_data, _u32 size, _u64 hlo
 		if(p_new) {
 			// clear memory region
 			_u8 *ptr = (_u8 *)p_new;
-			for(_u32 i = 0; i < sz; i++)
+			_u32 i = 0;
+
+			for(; i < sz; i++)
 				*(ptr + i) = 0;
 
 			_u64 hm = ll_lock(p_cxt, hlock);
