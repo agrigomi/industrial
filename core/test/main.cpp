@@ -8,6 +8,7 @@
 #include "iFS.h"
 #include "iNet.h"
 #include "iCmd.h"
+#include "iMemory.h"
 
 IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
@@ -30,6 +31,12 @@ _err_t main(int argc, char *argv[]) {
 		iLog *pi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
 		if(pi_log)
 			pi_log->add_listener(log_listener);
+
+		iHeap *pi_heap = (iHeap *)pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
+		if(pi_heap) {
+			//...
+			pi_repo->object_release(pi_heap);
+		}
 
 		pi_repo->extension_load((_str_t)"bin/core/unix/ext-1/ext-1.so");
 		pi_repo->extension_load((_str_t)"bin/io/unix/libfs/libfs.so");
