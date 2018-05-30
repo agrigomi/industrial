@@ -168,14 +168,35 @@ private:
 		for(; i < argc; i++) {
 			if(argv[i][0] == '-') {
 				_cmd_opt_t *p_opt = 0;
-				_char_t opt_nmae[MAX_OPTION_NAME]="";
+				_char_t opt_name[MAX_OPTION_NAME]="";
 
 				if(argv[i][1] == '-') {
 					// long option
-					//...
+					_u32 j = 2, n = 0;
+
+					while(argv[i][j] != 0 && argv[i][j] != '=' && argv[i][j] != ':') {
+						opt_name[n] = argv[i][j];
+						n++;
+						j++;
+					}
+
+					opt_name[n] = 0;
+
+					if((p_opt = find_option(opt_name, p_opt_array))) {
+						//...
+					}
+
 				} else {
 					// short options
-					//...
+					_u32 j = 1;
+					while(argv[i][j]) {
+						opt_name[0] = argv[i][j];
+						opt_name[1] = 0;
+
+						if((p_opt = find_option(opt_name, p_opt_array))) {
+							//...
+						}
+					}
 				}
 			}
 		}
