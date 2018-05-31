@@ -16,7 +16,11 @@ static _cmd_opt_t _g_help_opt_[] = {
 };
 
 static _cmd_t _g_help_cmd_[] = {
-	{"help",	_g_help_opt_,	help_handler,	"usage: help [options] [command]"},
+	{"help",	_g_help_opt_,	help_handler,
+		"Display help information", 0,
+		"usage: help [options] [command]"
+	},
+
 	{0,		0,		0,		0}
 };
 

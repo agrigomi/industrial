@@ -35,6 +35,8 @@ typedef struct {
 	_cstr_t 	cmd_name;
 	_cmd_opt_t	*cmd_options;
 	_cmd_handler_t	*cmd_handler;
+	_cstr_t		cmd_summary;
+	_cstr_t		cmd_description;
 	_cstr_t		cmd_usage;
 }_cmd_t;
 
