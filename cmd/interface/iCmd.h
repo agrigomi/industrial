@@ -18,6 +18,8 @@ typedef struct {
 	_cstr_t	opt_help;
 }_cmd_opt_t;
 
+typedef void*	_cmd_enum_t;
+
 class iCmd;
 class iCmdHost;
 
@@ -51,6 +53,12 @@ public:
 	virtual bool option_check(_str_t, _cmd_opt_t *)=0;
 	// get option value
 	virtual _str_t option_value(_str_t, _cmd_opt_t *)=0;
+	// enumeration: get first
+	virtual _cmd_enum_t enum_first(void)=0;
+	// enumeration: get next
+	virtual _cmd_enum_t enum_next(_cmd_enum_t)=0;
+	// enumeration: get data
+	virtual _cmd_t *enum_get(_cmd_enum_t)=0;
 };
 
 #endif

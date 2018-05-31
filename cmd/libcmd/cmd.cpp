@@ -344,6 +344,43 @@ public:
 		//...
 		return r;
 	}
+
+	// enumeration: get first
+	_cmd_enum_t enum_first(void) {
+		_u32 sz = 0;
+
+		return mpi_cmd_list->first(&sz);
+	}
+
+	// enumeration: get next
+	_cmd_enum_t enum_next(_cmd_enum_t e) {
+		_cmd_enum_t r = 0;
+		HMUTEX hm = mpi_cmd_list->lock();
+		_u32 sz = 0;
+
+		if(mpi_cmd_list->sel(e, hm))
+			r = mpi_cmd_list->next(&sz, hm);
+
+		mpi_cmd_list->unlock(hm);
+
+		return r;
+	}
+
+	// enumeration: get data
+	_cmd_t *enum_get(_cmd_enum_t e) {
+		_cmd_t *r = 0;
+		_u32 sz = 0;
+		HMUTEX hm = mpi_cmd_list->lock();
+
+		if(mpi_cmd_list->sel(e, hm)) {
+			_cmd_rec_t *rec = (_cmd_rec_t *)mpi_cmd_list->current(&sz, hm);
+			if(rec && rec->pi_cmd)
+				r = rec->pi_cmd->get_info();
+		}
+
+		mpi_cmd_list->unlock(hm);
+		return r;
+	}
 };
 
 static cCmdHost _g_cmd_host_;
