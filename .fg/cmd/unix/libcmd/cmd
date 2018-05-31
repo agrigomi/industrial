@@ -1,2 +1,4 @@
 cmd/libcmd/cmd.cpp
+cmd/libcmd/help.cpp
+
 
