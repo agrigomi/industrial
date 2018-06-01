@@ -7,8 +7,8 @@ BUILD_FILE=.fg/compile.mk
 BUILD_DEPENDENCY=.fg/dependency.mk
 MAKE_INSTALL=.fg/install.mk
 #--------------------------------------
-COMPILER=gcc
-LINKER=gcc
+COMPILER=g++
+LINKER=g++
 ARCHIVER=ar
 ARCHIVER_FLAGS=-v -r
 PREPROCESSOR=gcc
