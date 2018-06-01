@@ -163,7 +163,7 @@ private:
 	}
 
 	void parse_options(_cmd_opt_t *p_opt_array, _u32 argc, _str_t argv[]) {
-		_u32 i = 0;
+		_u32 i = 1;
 
 		for(; i < argc; i++) {
 			if(argv[i][0] == '-') {
@@ -333,15 +333,27 @@ public:
 	}
 
 	// check for option
-	bool option_check(_str_t opt_name, _cmd_opt_t *) {
+	bool option_check(_str_t opt_name, _cmd_opt_t *opt_array) {
 		bool r = false;
-		//...
+		_cmd_opt_t *p_opt = find_option(opt_name, opt_array);
+
+		if(p_opt) {
+			if(p_opt->opt_flags & OF_PRESENT)
+				r = true;
+		}
+
 		return r;
 	}
 	// get option value
-	_str_t option_value(_str_t opt_nmae, _cmd_opt_t *) {
+	_str_t option_value(_str_t opt_name, _cmd_opt_t *opt_array) {
 		_str_t r = 0;
-		//...
+		_cmd_opt_t *p_opt = find_option(opt_name, opt_array);
+
+		if(p_opt) {
+			if(p_opt->opt_flags & OF_PRESENT)
+				r = p_opt->opt_value;
+		}
+
 		return r;
 	}
 
