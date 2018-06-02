@@ -38,7 +38,8 @@ static void help_command(_cmd_t *p_cmd, iIO *pi_io, bool bfull) {
 					output(pi_io, "-");
 				output(pi_io, p_opt[n].opt_name);
 				output(pi_io, "\t\t\t:");
-				output(pi_io, p_opt[n].opt_help);
+				if(p_opt[n].opt_help)
+					output(pi_io, p_opt[n].opt_help);
 				output(pi_io, "/n");
 
 				n++;
