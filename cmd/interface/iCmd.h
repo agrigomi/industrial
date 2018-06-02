@@ -52,9 +52,9 @@ public:
 	virtual void exec(_str_t, iIO *)=0;
 	virtual _cmd_t *get_info(_str_t cmd_name, iCmd **pi_cmd=0)=0;
 	// check for option
-	virtual bool option_check(_str_t, _cmd_opt_t *)=0;
+	virtual bool option_check(_cstr_t, _cmd_opt_t *)=0;
 	// get option value
-	virtual _str_t option_value(_str_t, _cmd_opt_t *)=0;
+	virtual _str_t option_value(_cstr_t, _cmd_opt_t *)=0;
 	// retrieve arguments
 	// example: command -s 'value for option s' --lopt arg1 arg2 ...
 	// note: idx=0 should return the command name

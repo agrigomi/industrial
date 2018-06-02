@@ -147,12 +147,12 @@ private:
 		return r;
 	}
 
-	_cmd_opt_t *find_option(_str_t opt_name, _cmd_opt_t *opt_array) {
+	_cmd_opt_t *find_option(_cstr_t opt_name, _cmd_opt_t *opt_array) {
 		_cmd_opt_t *r = 0;
 		_u32 n = 0;
 
 		while(opt_array[n].opt_name) {
-			if(mpi_str->str_cmp(opt_name, (_str_t)opt_array[n].opt_name) == 0) {
+			if(mpi_str->str_cmp((_str_t)opt_name, (_str_t)opt_array[n].opt_name) == 0) {
 				r = &opt_array[n];
 				break;
 			}
@@ -353,7 +353,7 @@ public:
 	}
 
 	// check for option
-	bool option_check(_str_t opt_name, _cmd_opt_t *opt_array) {
+	bool option_check(_cstr_t opt_name, _cmd_opt_t *opt_array) {
 		bool r = false;
 		_cmd_opt_t *p_opt = find_option(opt_name, opt_array);
 
@@ -365,7 +365,7 @@ public:
 		return r;
 	}
 	// get option value
-	_str_t option_value(_str_t opt_name, _cmd_opt_t *opt_array) {
+	_str_t option_value(_cstr_t opt_name, _cmd_opt_t *opt_array) {
 		_str_t r = 0;
 		_cmd_opt_t *p_opt = find_option(opt_name, opt_array);
 
