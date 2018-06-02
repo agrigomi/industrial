@@ -183,14 +183,16 @@ private:
 					opt_name[n] = 0;
 
 					if((p_opt = find_option(opt_name, p_opt_array))) {
-						p_opt->opt_flags |= OF_PRESENT;
-						if(p_opt->opt_flags & OF_VALUE) {
-							if(argv[i][j] == '=' || argv[i][j] == ':')
-								p_opt->opt_value = &argv[i][j+1];
-							else {
-								if(argv[i][j] == 0 && i < argc - 1) {
-									p_opt->opt_value = argv[i+1];
-									i++;
+						if(p_opt->opt_flags & OF_LONG) {
+							p_opt->opt_flags |= OF_PRESENT;
+							if(p_opt->opt_flags & OF_VALUE) {
+								if(argv[i][j] == '=' || argv[i][j] == ':')
+									p_opt->opt_value = &argv[i][j+1];
+								else {
+									if(argv[i][j] == 0 && i < argc - 1) {
+										p_opt->opt_value = argv[i+1];
+										i++;
+									}
 								}
 							}
 						}
