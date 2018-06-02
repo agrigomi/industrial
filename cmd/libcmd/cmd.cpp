@@ -205,9 +205,10 @@ private:
 						if((p_opt = find_option(opt_name, p_opt_array))) {
 							p_opt->opt_flags |= OF_PRESENT;
 							if(p_opt->opt_flags & OF_VALUE) {
-								if(argv[i][j+1] != 0)
+								if(argv[i][j+1] != 0) {
 									p_opt->opt_value = &argv[i][j+1];
-								else {
+									break;
+								} else {
 									if(i < argc - 1) {
 										i++;
 										p_opt->opt_value = argv[i];
@@ -305,7 +306,7 @@ public:
 			if((p_cmd = get_info(argv[0], &pi_cmd))) {
 				if(p_cmd->cmd_handler) {
 					_u32 noptions = num_options(p_cmd->cmd_options);
-					_u32 mem_options = noptions * sizeof(_cmd_opt_t);
+					_u32 mem_options = (noptions+1) * sizeof(_cmd_opt_t);
 					_cmd_opt_t *p_opt = 0;
 
 					if(noptions) {
