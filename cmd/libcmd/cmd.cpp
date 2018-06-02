@@ -225,6 +225,23 @@ private:
 			}
 		}
 	}
+
+	bool find_value(_str_t val, _cmd_opt_t *p_opt_array) {
+		bool r = false;
+		_u32 n = 0;
+
+		while(p_opt_array[n].opt_name) {
+			if(p_opt_array[n].opt_value) {
+				if(mpi_str->str_cmp(val, p_opt_array[n].opt_value) == 0) {
+					r = true;
+					break;
+				}
+			}
+			n++;
+		}
+
+		return r;
+	}
 public:
 	BASE(cCmdHost, "cCmdHost", RF_ORIGINAL, 1,0,0);
 
@@ -355,6 +372,29 @@ public:
 		if(p_opt) {
 			if(p_opt->opt_flags & OF_PRESENT)
 				r = p_opt->opt_value;
+		}
+
+		return r;
+	}
+
+	// retrive arguments
+	_str_t argument(_u32 argc, _str_t argv[], _cmd_opt_t *p_opt_array, _u32 idx) {
+		_str_t r = 0;
+		_u32 arg_idx = 0;
+
+		for(_u32 i = 0; i < argc; i++) {
+			_str_t arg = argv[i];
+
+			if(arg[0] != '-') {
+				if(find_value(arg, p_opt_array) == false) {
+					if(arg_idx == idx) {
+						r = arg;
+						break;
+					}
+
+					arg_idx++;
+				}
+			}
 		}
 
 		return r;

@@ -11,6 +11,7 @@ void help_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			_u32 argc, _str_t argv[]) {
 	bool bfull = pi_cmd_host->option_check(OPT_FULL, p_opt);
 	_str_t rows = pi_cmd_host->option_value(OPT_PAGE, p_opt);
+	_str_t arg = pi_cmd_host->argument(argc, argv, p_opt, 1);
 
 	asm("nop");
 }

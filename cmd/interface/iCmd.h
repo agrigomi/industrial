@@ -55,6 +55,11 @@ public:
 	virtual bool option_check(_str_t, _cmd_opt_t *)=0;
 	// get option value
 	virtual _str_t option_value(_str_t, _cmd_opt_t *)=0;
+	// retrieve arguments
+	// example: command -s 'value for option s' --lopt arg1 arg2 ...
+	// note: idx=0 should return the command name
+	//       idx=1 should return arg1
+	virtual _str_t argument(_u32 argc, _str_t argv[], _cmd_opt_t *p_opt_array, _u32 idx)=0;
 	// enumeration: get first
 	virtual _cmd_enum_t enum_first(void)=0;
 	// enumeration: get next
