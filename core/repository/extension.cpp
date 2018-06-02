@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "private.h"
 
-#define MAX_ALIAS_LEN	32
+#define MAX_ALIAS_LEN	64
 
 typedef void*	_dl_handle_t;
 typedef _base_entry_t *_get_base_array_t(_u32 *count, _u32 *limit);

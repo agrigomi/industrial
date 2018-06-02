@@ -1,4 +1,5 @@
 #include <string.h>
+#include <limits.h>
 #include "iRepository.h"
 #include "iMemory.h"
 #include "iTaskMaker.h"
@@ -17,6 +18,7 @@ private:
 	iLlist *mpi_ext_list; // extensions list
 	iLlist *mpi_notify_list;
 	iTaskMaker *mpi_tmaker;
+	_cstr_t	m_ext_dir;
 
 	iRepoExtension *get_extension(_cstr_t file, _cstr_t alias) {
 		iRepoExtension *r = 0;
@@ -573,12 +575,20 @@ public:
 	}
 
 	// extensions
+	void extension_dir(_cstr_t dir) {
+		m_ext_dir = dir;
+	}
+
 	_err_t extension_load(_cstr_t file, _cstr_t alias=0) {
 		_err_t r = ERR_UNKNOWN;
-		if(!get_extension(file, alias)) {
+		_char_t path[PATH_MAX]="";
+
+		sprintf(path, "%s/%s", m_ext_dir, file);
+
+		if(!get_extension(path, alias)) {
 			iRepoExtension *px = (iRepoExtension*)object_by_iname(I_REPO_EXTENSION, RF_CLONE);
 			if(px) {
-				if((r = px->load(file, alias)) == ERR_NONE) {
+				if((r = px->load(path, alias)) == ERR_NONE) {
 					iRepoExtension **_px =
 						(iRepoExtension **)mpi_ext_list->add(&px, sizeof(px));
 					if(_px) {
@@ -663,6 +673,7 @@ public:
 			case OCTL_INIT:
 				mpi_cxt_list = mpi_ext_list = mpi_notify_list = 0;
 				mpi_tmaker = 0;
+				m_ext_dir = "";
 				if((mpi_cxt_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE)))
 					mpi_cxt_list->init(LL_VECTOR, 1);
 				mpi_ext_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE);
