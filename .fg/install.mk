@@ -1,4 +1,4 @@
 .PHONY: $(PROJECT)
 
 $(PROJECT):
-	echo ---
+	@echo ---

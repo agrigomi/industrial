@@ -1,11 +1,9 @@
-DEFAULT_OUTDIR=bin
-DEPLOY_DIR=$(DEFAULT_OUTDIR)/deploy
 BUILD_PROJECT=.fg/build_project.mk
 BUILD_TARGET=.fg/build_target.mk
 BUILD_GROUP=.fg/build_group.mk
 BUILD_FILE=.fg/compile.mk
 BUILD_DEPENDENCY=.fg/dependency.mk
-MAKE_INSTALL=.fg/install.mk
+INSTALL_PROJECT=.fg/install.mk
 #--------------------------------------
 COMPILER=g++
 LINKER=g++
@@ -18,6 +16,9 @@ DEPSUFFIX=.d
 COMPILER_FLAGS=-c -g -Wall
 LINKER_FLAGS=
 LIBRARY=
+DEFAULT_OUTDIR=bin
+DEPLOY_DIR=$(DEFAULT_OUTDIR)/deploy
+INSTALL_DIR=~/
 DEPENDENCY_FLAGS=-MM
 DEPENDENCY_OUTFLAG=-MT
 LINKER_OUTFLAG=-o

@@ -18,7 +18,7 @@ $(projects):
 install:
 	for i in $(projects); do \
 		echo install [$$i]; \
-		make $(MAKE_FLAGS) -f $(MAKE_INSTALL) PROJECT=$$i; \
+		make $(MAKE_FLAGS) -f $(INSTALL_PROJECT) PROJECT=$$i; \
 	done
 
 
