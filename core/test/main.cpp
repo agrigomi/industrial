@@ -45,7 +45,7 @@ _err_t main(int argc, char *argv[]) {
 
 		iCmdHost *pi_cmd_host = (iCmdHost *)pi_repo->object_by_iname(I_CMD_HOST, RF_ORIGINAL);
 		if(pi_cmd_host) {
-			pi_cmd_host->exec((_str_t)"grep -rn   -i 'some string'", 0);
+			pi_cmd_host->exec((_str_t)"help -f -p10", 0);
 			pi_repo->object_release(pi_cmd_host);
 		}
 
