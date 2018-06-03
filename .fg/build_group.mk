@@ -8,8 +8,6 @@ target_config=.fg/$(PROJECT)/$(CONFIG)/$(basename $(TARGET))/_config_
 -include $(target_config)
 
 #supress target PRE/POST build steps before include group config
-PREBUILD=
-POSTBUILD=
 #set default linker flag for link relocatable
 LINKER=ld
 LINKER_FLAGS=-r
@@ -32,7 +30,6 @@ group_dep=$(addprefix $(target_dir)/$(GROUP)-, $(notdir $(group_src:$(SRCSUFFIX)
 $(group_target): $(group_out)
 	@echo '    ' [$(LINKER)] $@
 	$(LINKER) $(LINKER_FLAGS) $^ $(LINKER_OUTFLAG) $@
-	$(POSTBUILD) PROJECT=$(PROJECT) TARGET=$(TARGET) CONFIG=$(CONFIG) GROUP=$(GROUP)
 
 $(group_out): $(group_dep)
 	for i in $(group_src); do \
