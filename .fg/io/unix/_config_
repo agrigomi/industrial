@@ -2,6 +2,6 @@ OUTDIR=bin
 SRCSUFFIX=.cpp
 INCLUDES=-Icore/include -Icore/interface -Iio/interface
 COMPILER_FLAGS+=$(INCLUDES)
-LINKER_FLAGS+=-lstdc++
-DEPENDENCY_FLAGS+=-Wall $(INCLUDES)
+LIBRARY+=-lstdc++
+DEPENDENCY_FLAGS+=$(INCLUDES)
 

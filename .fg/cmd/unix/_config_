@@ -3,5 +3,5 @@ SRCSUFFIX=.cpp
 INCLUDES=-Icore/include -Icore/interface -Icmd/interface
 COMPILER_FLAGS+=$(INCLUDES)
 LIBRARY += -lstdc++
-DEPENDENCY_FLAGS+=-Wall $(INCLUDES)
+DEPENDENCY_FLAGS+=$(INCLUDES)
 
