@@ -21,12 +21,10 @@ endif
 $(targets_basename):
 	mkdir -p $(OUTDIR)/$(PROJECT)
 	mkdir -p $(OUTDIR)/$(PROJECT)/$(CONFIG)
-	$(shell $(PREBUILD))
 	for i in $(targets); do \
 		echo ' ' build target [$$i]; \
 		make $(MAKE_FLAGS) -f $(BUILD_TARGET) PROJECT=$(PROJECT) CONFIG=$(CONFIG) TARGET=$$i || exit; \
 	done
-	$(shell $(POSTBUILD))
 clean:
 	for i in $(targets); do \
 		make $(MAKE_FLAGS) -f $(BUILD_TARGET) PROJECT=$(PROJECT) CONFIG=$(CONFIG) TARGET=$$i clean || exit; \
