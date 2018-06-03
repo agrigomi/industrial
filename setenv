@@ -1,1 +1,1 @@
-export LD_LIBRARY_PATH=bin/core/unix/libcore/
+export LD_LIBRARY_PATH=bin/deploy

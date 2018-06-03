@@ -24,3 +24,8 @@ DEPENDENCY_OUTFLAG=-MT
 LINKER_OUTFLAG=-o
 MAKE_FLAGS=-s --no-print-directory
 LINK_TARGET=$(LINKER) $(LINKER_FLAGS) $^ $(LIBRARY) $(LINKER_OUTFLAG) $@
+
+POSTBUILD = \
+	@echo postbuild ... &&\
+	mkdir -p $(DEPLOY_DIR) &&\
+	cp -v $(OUTDIR)/$(PROJECT)/$(CONFIG)/$(basename $(TARGET))/$(TARGET) $(DEPLOY_DIR)/

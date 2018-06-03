@@ -38,11 +38,11 @@ _err_t main(int argc, char *argv[]) {
 			pi_repo->object_release(pi_heap);
 		}
 
-		pi_repo->extension_dir("./bin");
-		pi_repo->extension_load("core/unix/ext-1/ext-1.so");
-		pi_repo->extension_load("io/unix/libfs/libfs.so");
-		pi_repo->extension_load("io/unix/libnet/libnet.so");
-		pi_repo->extension_load("cmd/unix/libcmd/libcmd.so");
+		pi_repo->extension_dir("./bin/deploy");
+		pi_repo->extension_load("ext-1.so");
+		pi_repo->extension_load("libfs.so");
+		pi_repo->extension_load("libnet.so");
+		pi_repo->extension_load("libcmd.so");
 
 		iCmdHost *pi_cmd_host = (iCmdHost *)pi_repo->object_by_iname(I_CMD_HOST, RF_ORIGINAL);
 		if(pi_cmd_host) {

@@ -6,8 +6,6 @@ project_config = .fg/$(PROJECT)/$(CONFIG)/_config_
 include $(project_config)
 
 #supress project PRE/POST build steps before include target config
-PREBUILD=
-POSTBUILD=
 
 target_config=.fg/$(PROJECT)/$(CONFIG)/$(basename $(TARGET))/_config_
 -include $(target_config)
@@ -42,4 +40,5 @@ clean:
 	done
 	rm -f $(target_dir)/$(TARGET)
 	rm -rf $(target_dir)
+	rm -f $(DEPLOY_DIR)/$(TARGET)
 
