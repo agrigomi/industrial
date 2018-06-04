@@ -1,4 +1,4 @@
 cmd/libcmd/cmd.cpp
 cmd/libcmd/help.cpp
-
+cmd/libcmd/repo.cpp
 
