@@ -1,3 +1,4 @@
+#include <string.h>
 #include "iCmd.h"
 
 // options
@@ -49,8 +50,12 @@ static void cmd_repo_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 		_u32 n = 0;
 
 		while(_g_cmd_repo_actions_[n].a_name) {
-			_g_cmd_repo_actions_[n].a_handler(pi_cmd, pi_cmd_host, pi_io, p_opt,
+			if(strcmp(arg, _g_cmd_repo_actions_[n].a_name) == 0) {
+				_g_cmd_repo_actions_[n].a_handler(pi_cmd, pi_cmd_host,
+								pi_io, p_opt,
 								argc, argv);
+				break;
+			}
 			n++;
 		}
 	}
