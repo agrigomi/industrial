@@ -1,5 +1,13 @@
 #include "iCmd.h"
 
+// options
+#define OPT_EXT_ONLY	"ext-only"
+
+// sctopns
+#define ACT_LIST	"list"
+#define ACT_LOAD	"load"
+#define ACT_UNLOAD	"unload"
+
 typedef struct {
 	_cstr_t	a_name;
 	_cmd_handler_t	*a_handler;
@@ -26,9 +34,9 @@ static void cmd_ext_unload(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 }
 
 static _cmd_action_t _g_cmd_repo_actions_[]={
-	{"list",		cmd_repo_list},
-	{"load",		cmd_ext_load},
-	{"unload",		cmd_ext_unload},
+	{ACT_LIST,		cmd_repo_list},
+	{ACT_LOAD,		cmd_ext_load},
+	{ACT_UNLOAD,		cmd_ext_unload},
 	{0,			0}
 };
 
@@ -49,17 +57,18 @@ static void cmd_repo_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 }
 
 static _cmd_opt_t _g_cmd_repo_opt_[]={
+	{OPT_EXT_ONLY,	OF_LONG,	0,	"Extensions only"},
 	//...
-	{0,	0,	0,	0}
+	{0,		0,		0,	0}
 };
 
 static _cmd_t _g_cmd_repo_[]={
 	{"repo",	_g_cmd_repo_opt_, cmd_repo_handler,
 		"Repository management",
 		"Manage reposiotory by following actions:\n"
-		"\tlist		Print available objects\n"
-		"\tload		Load extension\n"
-		"\tunload	Unload extension\n",
+		"\t" ACT_LIST "\t\t\tPrint available objects\n"
+		"\t" ACT_LOAD "\t\t\tLoad extension\n"
+		"\t" ACT_UNLOAD "\t\t\tUnload extension\n",
 		"repo [options] <action>"
 	},
 	{0,	0,	0,	0,	0,	0}
