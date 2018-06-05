@@ -692,6 +692,84 @@ public:
 
 		return r;
 	}
+
+	// enumeration
+	_enum_ext_t enum_ext_first(void) {
+		_u32 sz=0;
+		return mpi_ext_list->first(&sz);
+	}
+
+	_enum_ext_t enum_ext_next(_enum_ext_t en) {
+		_enum_ext_t r = 0;
+		HMUTEX hm = mpi_ext_list->lock();
+		_u32 sz;
+
+		if(mpi_ext_list->sel(en, hm))
+			r = mpi_ext_list->next(&sz, hm);
+
+		mpi_ext_list->unlock(hm);
+
+		return r;
+	}
+
+	_u32 enum_ext_array_count(_enum_ext_t en) {
+		_u32 r = 0;
+		_u32 sz = 0;
+		HMUTEX hm = mpi_ext_list->lock();
+
+		if(mpi_ext_list->sel(en, hm)) {
+			iRepoExtension **ppx = (iRepoExtension **)mpi_ext_list->current(&sz, hm);
+			if(ppx) {
+				_u32 limit=0;
+				(*ppx)->array(&r, &limit);
+			}
+		}
+
+		mpi_ext_list->unlock(hm);
+
+		return r;
+	}
+
+	_u32 enum_ext_array_limit(_enum_ext_t en) {
+		_u32 r = 0;
+		_u32 sz = 0;
+		HMUTEX hm = mpi_ext_list->lock();
+
+		if(mpi_ext_list->sel(en, hm)) {
+			iRepoExtension **ppx = (iRepoExtension **)mpi_ext_list->current(&sz, hm);
+			if(ppx) {
+				_u32 count=0;
+				(*ppx)->array(&count, &r);
+			}
+		}
+
+		mpi_ext_list->unlock(hm);
+
+		return r;
+	}
+
+	bool enum_ext_array(_enum_ext_t en, _u32 aidx, _base_entry_t *p_base_entry) {
+		bool r = false;
+		_u32 sz = 0;
+		HMUTEX hm = mpi_ext_list->lock();
+
+		if(mpi_ext_list->sel(en, hm)) {
+			iRepoExtension **ppx = (iRepoExtension **)mpi_ext_list->current(&sz, hm);
+			if(ppx) {
+				_u32 count, limit;
+
+				_base_entry_t *pbe = (*ppx)->array(&count, &limit);
+				if(pbe && aidx < count) {
+					memcpy(p_base_entry, &pbe[aidx], sizeof(_base_entry_t));
+					r = true;
+				}
+			}
+		}
+
+		mpi_ext_list->unlock(hm);
+
+		return r;
+	}
 };
 
 static cRepository _g_object_;
