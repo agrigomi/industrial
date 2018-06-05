@@ -29,6 +29,8 @@ typedef struct {
 }_object_request_t;
 
 typedef void* HNOTIFY;
+typedef void* _enum_ext_t;
+
 #define SCAN_ORIGINAL	1
 #define SCAN_CLONE	2
 
@@ -55,6 +57,12 @@ public:
 	virtual void extension_dir(_cstr_t dir)=0;
 	virtual _err_t extension_load(_cstr_t file, _cstr_t alias=0)=0;
 	virtual _err_t extension_unload(_cstr_t alias)=0;
+	// enumeration
+	virtual _enum_ext_t enum_ext_first(void)=0;
+	virtual _enum_ext_t enum_ext_next(_enum_ext_t)=0;
+	virtual _u32 enum_ext_array_count(_enum_ext_t)=0;
+	virtual _u32 enum_ext_array_limit(_enum_ext_t)=0;
+	virtual bool enum_ext_array(_enum_ext_t, _u32 aidx, _base_entry_t*)=0;
 	virtual void destroy(void)=0;
 };
 
