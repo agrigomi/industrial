@@ -18,18 +18,21 @@ typedef struct {
 class cCmdRepo;
 
 static void fout(iIO *pi_io, _cstr_t fmt, ...) {
-	va_list va;
-	_char_t lb[1024]="";
-	_u32 sz=0;
+	if(pi_io) {
+		va_list va;
+		_char_t lb[1024]="";
+		_u32 sz=0;
 
-	va_start(va, fmt);
-	sz = vsnprintf(lb, sizeof(lb), fmt, va);
-	pi_io->write(lb, sz);
-	va_end(va);
+		va_start(va, fmt);
+		sz = vsnprintf(lb, sizeof(lb), fmt, va);
+		pi_io->write(lb, sz);
+		va_end(va);
+	}
 }
 
 static void out(iIO *pi_io, _cstr_t str) {
-	pi_io->write((void *)str, strlen(str));
+	if(pi_io)
+		pi_io->write((void *)str, strlen(str));
 }
 
 static void cmd_repo_list(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
@@ -51,10 +54,10 @@ static void cmd_ext_unload(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 }
 
 static _cmd_action_t _g_cmd_repo_actions_[]={
-	{ACT_LIST,		cmd_repo_list},
-	{ACT_LOAD,		cmd_ext_load},
-	{ACT_UNLOAD,		cmd_ext_unload},
-	{0,			0}
+	{ ACT_LIST,		cmd_repo_list },
+	{ ACT_LOAD,		cmd_ext_load },
+	{ ACT_UNLOAD,		cmd_ext_unload },
+	{ 0,			0 }
 };
 
 static void cmd_repo_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
@@ -78,13 +81,13 @@ static void cmd_repo_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 }
 
 static _cmd_opt_t _g_cmd_repo_opt_[]={
-	{OPT_EXT_ONLY,	OF_LONG,	0,	"Extensions only"},
+	{ OPT_EXT_ONLY,	OF_LONG,	0,	"Extensions only" },
 	//...
-	{0,		0,		0,	0}
+	{ 0,		0,		0,	0 }
 };
 
 static _cmd_t _g_cmd_repo_[]={
-	{"repo",	_g_cmd_repo_opt_, cmd_repo_handler,
+	{ "repo",	_g_cmd_repo_opt_, cmd_repo_handler,
 		"Repository management",
 		"Manage reposiotory by following actions:\n"
 		"\t" ACT_LIST "\t\t\tPrint available objects\n"
@@ -92,7 +95,7 @@ static _cmd_t _g_cmd_repo_[]={
 		"\t" ACT_UNLOAD "\t\t\tUnload extension\n",
 		"repo [options] <action>"
 	},
-	{0,	0,	0,	0,	0,	0}
+	{ 0,	0,	0,	0,	0,	0 }
 };
 
 class cCmdRepo: public iCmd {
