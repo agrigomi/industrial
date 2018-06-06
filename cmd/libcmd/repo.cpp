@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include "iCmd.h"
 
 // options
@@ -15,6 +16,21 @@ typedef struct {
 }_cmd_action_t;
 
 class cCmdRepo;
+
+static void fout(iIO *pi_io, _cstr_t fmt, ...) {
+	va_list va;
+	_char_t lb[1024]="";
+	_u32 sz=0;
+
+	va_start(va, fmt);
+	sz = vsnprintf(lb, sizeof(lb), fmt, va);
+	pi_io->write(lb, sz);
+	va_end(va);
+}
+
+static void out(iIO *pi_io, _cstr_t str) {
+	pi_io->write((void *)str, strlen(str));
+}
 
 static void cmd_repo_list(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
