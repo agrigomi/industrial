@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "iCmd.h"
+#include "iRepository.h"
 
 // options
 #define OPT_EXT_ONLY	"ext-only"
@@ -30,15 +31,57 @@ static void fout(iIO *pi_io, _cstr_t fmt, ...) {
 	}
 }
 
-static void out(iIO *pi_io, _cstr_t str) {
-	if(pi_io)
-		pi_io->write((void *)str, strlen(str));
+static void flags2str(_u32 f, _str_t str, _u32 sz) {
+	if(sz > 10) {
+		_u8 i = 0;
+
+		if(f & RF_ORIGINAL) {
+			str[i] = 'O';
+			i++;
+		}
+		if(f & RF_CLONE) {
+			str[i] = 'C';
+			i++;
+		}
+		if(f & RF_TASK) {
+			str[i] = 'T';
+			i++;
+		}
+		str[i] = 0;
+	}
 }
 
 static void cmd_repo_list(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
 			_u32 argc, _str_t argv[]) {
-	//...
+	_enum_ext_t eext = _gpi_repo_->enum_ext_first();
+	bool ext_only = pi_cmd_host->option_check(OPT_EXT_ONLY, p_opt);
+
+	while(eext) {
+		_u32 count = _gpi_repo_->enum_ext_array_count(eext);
+		_u32 i = 0;
+
+		fout(pi_io, "%s\n", _gpi_repo_->enum_ext_alias(eext));
+		if(!ext_only) {
+			for(; i < count; i++) {
+				_base_entry_t be;
+
+				if(_gpi_repo_->enum_ext_array(eext, i, &be)) {
+					_object_info_t oi;
+
+					if(be.pi_base) {
+						_char_t sf[10]="";
+						be.pi_base->object_info(&oi);
+
+						flags2str(oi.flags, sf, sizeof(sf));
+						fout(pi_io, "\t\tiname: '%s'; cname: '%s'; flags: '%s'; size: %u\n",
+								oi.iname, oi.cname, sf, oi.size);
+					}
+				}
+			}
+		}
+		eext = _gpi_repo_->enum_ext_next(eext);
+	}
 }
 
 static void cmd_ext_load(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
