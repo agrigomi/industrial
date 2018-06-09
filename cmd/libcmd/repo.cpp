@@ -74,8 +74,10 @@ static void cmd_repo_list(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 						be.pi_base->object_info(&oi);
 
 						flags2str(oi.flags, sf, sizeof(sf));
-						fout(pi_io, "\t\tiname: '%s'; cname: '%s'; flags: '%s'; size: %u\n",
-								oi.iname, oi.cname, sf, oi.size);
+						fout(pi_io, "\t\tiname: '%s'; cname: '%s'; flags: '%s'; version: %u,%u,%u; size: %u\n",
+								oi.iname, oi.cname, sf,
+								oi.version.major, oi.version.minor, oi.version.revision,
+								oi.size);
 					}
 				}
 			}
