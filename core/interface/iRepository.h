@@ -60,6 +60,7 @@ public:
 	// enumeration
 	virtual _enum_ext_t enum_ext_first(void)=0;
 	virtual _enum_ext_t enum_ext_next(_enum_ext_t)=0;
+	virtual _cstr_t enum_ext_alias(_enum_ext_t)=0;
 	virtual _u32 enum_ext_array_count(_enum_ext_t)=0;
 	virtual _u32 enum_ext_array_limit(_enum_ext_t)=0;
 	virtual bool enum_ext_array(_enum_ext_t, _u32 aidx, _base_entry_t*)=0;

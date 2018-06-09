@@ -712,6 +712,23 @@ public:
 		return r;
 	}
 
+	_cstr_t enum_ext_alias(_enum_ext_t en) {
+		_cstr_t r = 0;
+		HMUTEX hm = mpi_ext_list->lock();
+
+		if(mpi_ext_list->sel(en, hm)) {
+			_u32 sz = 0;
+			iRepoExtension **ppx = (iRepoExtension **)mpi_ext_list->current(&sz, hm);
+			if(ppx) {
+				r = (*ppx)->alias();
+			}
+		}
+
+		mpi_ext_list->unlock(hm);
+
+		return r;
+	}
+
 	_u32 enum_ext_array_count(_enum_ext_t en) {
 		_u32 r = 0;
 		_u32 sz = 0;
