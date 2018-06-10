@@ -1,4 +1,4 @@
 COMPILER_FLAGS+=-fPIC -D_CORE_
 LINKER_FLAGS+=-fpic --shared
-LIBRARY+=-lpthread
+LIBRARY+=-lpthread -ldl
 DEPENDENCY_FLAGS+= -D_CORE_
