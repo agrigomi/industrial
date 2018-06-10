@@ -5,6 +5,7 @@
 
 // options
 #define OPT_EXT_ONLY	"ext-only"
+#define OPT_ALIAS	"alias"
 
 // sctopns
 #define ACT_LIST	"list"
@@ -89,13 +90,28 @@ static void cmd_repo_list(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 static void cmd_ext_load(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
 			_u32 argc, _str_t argv[]) {
-	//...
+	_str_t arg = pi_cmd_host->argument(argc, argv, p_opt, 2);
+	_str_t alias = pi_cmd_host->option_value(OPT_ALIAS, p_opt);
+
+	if(arg) {
+		_err_t err = _gpi_repo_->extension_load(arg, alias);
+
+		if(err != ERR_NONE)
+			fout(pi_io, "Failed to load extension, error=%d\n", err);
+	}
 }
 
 static void cmd_ext_unload(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
 			_u32 argc, _str_t argv[]) {
-	//...
+	_str_t arg = pi_cmd_host->argument(argc, argv, p_opt, 2);
+
+	if(arg) {
+		_err_t err = _gpi_repo_->extension_unload(arg);
+
+		if(err != ERR_NONE)
+			fout(pi_io, "Failed to unload extension, error=%d\n", err);
+	}
 }
 
 static _cmd_action_t _g_cmd_repo_actions_[]={
@@ -127,6 +143,7 @@ static void cmd_repo_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 
 static _cmd_opt_t _g_cmd_repo_opt_[]={
 	{ OPT_EXT_ONLY,	OF_LONG,	0,	"Extensions only" },
+	{ OPT_ALIAS,	OF_LONG,	0,	"Extension alias" },
 	//...
 	{ 0,		0,		0,	0 }
 };
@@ -145,6 +162,8 @@ static _cmd_t _g_cmd_repo_[]={
 
 class cCmdRepo: public iCmd {
 public:
+	BASE(cCmdRepo, "cCmdRepo", RF_ORIGINAL, 1,0,0);
+
 	bool object_ctl(_u32 cmd, void *arg, ...) {
 		bool r = false;
 
@@ -164,3 +183,6 @@ public:
 		return _g_cmd_repo_;
 	}
 };
+
+static cCmdRepo _g_cmd_repo_object_;
+
