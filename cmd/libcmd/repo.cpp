@@ -6,6 +6,7 @@
 // options
 #define OPT_EXT_ONLY	"ext-only"
 #define OPT_ALIAS	"alias"
+#define OPT_EXT_DIR	"ext-dir"
 
 // sctopns
 #define ACT_LIST	"list"
@@ -125,6 +126,10 @@ static void cmd_repo_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
 			_u32 argc, _str_t argv[]) {
 	_str_t arg = pi_cmd_host->argument(argc, argv, p_opt, 1);
+	_str_t ext_dir = pi_cmd_host->option_value(OPT_EXT_DIR, p_opt);
+
+	if(ext_dir)
+		_gpi_repo_->extension_dir(ext_dir);
 
 	if(arg) {
 		_u32 n = 0;
@@ -144,6 +149,7 @@ static void cmd_repo_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 static _cmd_opt_t _g_cmd_repo_opt_[]={
 	{ OPT_EXT_ONLY,	OF_LONG,	0,	"Extensions only" },
 	{ OPT_ALIAS,	OF_LONG,	0,	"Extension alias" },
+	{ OPT_EXT_DIR,	OF_LONG,	0,	"Set extensions directory" },
 	//...
 	{ 0,		0,		0,	0 }
 };
