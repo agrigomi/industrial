@@ -32,6 +32,7 @@ void cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
 	m_mode = mode;
 	mp_clientaddr = p_caddr;
 	mp_serveraddr = p_saddr;
+	m_alive = true;
 }
 
 struct sockaddr_in *cSocketIO::serveraddr(void) {
@@ -74,11 +75,19 @@ _u32 cSocketIO::read(void *data, _u32 size) {
 						(mp_clientaddr)?&addrlen:0);
 				if(_r > 0)
 					r = _r;
+				else {
+					if(_r == 0)
+						m_alive = false;
+				}
 			} break;
 			case SOCKET_IO_TCP: {
 				_s32 _r = ::read(m_socket, data, size);
 				if(_r > 0)
 					r = _r;
+				else {
+					if(_r == 0)
+						m_alive = false;
+				}
 			} break;
 		}
 	}
@@ -117,6 +126,10 @@ void cSocketIO::blocking(bool mode) { /* blocking or nonblocking IO */
 			fcntl(m_socket, F_SETFL, flags);
 		}
 	}
+}
+
+bool cSocketIO::alive(void) {
+	return m_alive;
 }
 
 static cSocketIO _g_socket_io_;

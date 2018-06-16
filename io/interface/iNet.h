@@ -11,6 +11,7 @@ class iSocketIO: public iIO {
 public:
 	INTERFACE(iSocketIO, I_SOCKET_IO);
 	virtual void blocking(bool)=0; /* blocking or nonblocking IO */
+	virtual bool alive(void)=0;
 };
 
 class iTCPServer: public iBase {

@@ -22,6 +22,7 @@ private:
 	struct sockaddr_in *mp_clientaddr;
 	struct sockaddr_in *mp_serveraddr;
 	_u8 m_mode;
+	bool m_alive;
 public:
 
 	BASE(cSocketIO, CLASS_NAME_SOCKET_IO, RF_CLONE, 1,0,0);
@@ -35,6 +36,7 @@ public:
 	_u32 read(void *data, _u32 size);
 	_u32 write(void *data, _u32 size);
 	void blocking(bool mode); /* blocking or nonblocking IO */
+	bool alive(void);
 };
 
 class cTCPServer: public iTCPServer {
