@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "startup.h"
 #include "iRepository.h"
 #include "iLog.h"
@@ -24,8 +25,6 @@ static _cstr_t extensions[] = {
 	0
 };
 
-#define DEFAULT_EXT_DIR	(_str_t)"./"
-
 _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
 
@@ -40,16 +39,24 @@ _err_t main(int argc, char *argv[]) {
 		}
 
 		// arguments
-		_str_t ext_dir = DEFAULT_EXT_DIR;
-
 		iArgs *pi_arg = (iArgs *)pi_repo->object_by_iname(I_ARGS, RF_ORIGINAL);
-		if(pi_arg) {
-			ext_dir = pi_arg->value("ext-dir");
-			ext_dir = (ext_dir) ? ext_dir : DEFAULT_EXT_DIR;
-		}
-		// load extensions
-		pi_repo->extension_dir(ext_dir);
 
+		if(pi_arg) {
+			// retrieve extensions directory from command line
+			_str_t ext_dir = pi_arg->value("ext-dir");
+
+			if(!ext_dir)
+				// not found in command line, try from environment
+				ext_dir = getenv("LD_LIBRARY_PATH");
+
+			// set extensions directory
+			pi_repo->extension_dir((ext_dir) ? ext_dir : "./");
+
+			// no longer needed of arguments
+			pi_repo->object_release(pi_arg);
+		}
+
+		// load extensions
 		_u32 n = 0;
 
 		while(extensions[n]) {
