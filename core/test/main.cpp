@@ -85,7 +85,9 @@ _err_t main(int argc, char *argv[]) {
 		if(pi_net) {
 			iSocketIO *sio = pi_net->create_tcp_client((_str_t)"localhost", 3000);
 			if(sio) {
-				//...
+				sio->write((_str_t)"---\n", 4);
+				sio->write((_str_t)"Hello\n", 6);
+				sio->write((_str_t)"---\n", 4);
 				pi_net->close_socket(sio);
 			}
 			pi_repo->object_release(pi_net);
