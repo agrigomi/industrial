@@ -24,8 +24,9 @@ void rb_init(_rb_context_t *pcxt, _u32 capacity, void *udata) {
 	if(pcxt->mem_alloc && !pcxt->rb_addr) {
 		if((pcxt->rb_addr = pcxt->mem_alloc(capacity, udata))) {
 			pcxt->rb_size = capacity;
-			pcxt->rb_first = pcxt->rb_last = pcxt->rb_pull = 0;
+			pcxt->rb_first = pcxt->rb_last;
 			pcxt->rb_udata = udata;
+			pcxt->rb_pull = INVALID_PULL_POSITION;
 			pcxt->mem_set(pcxt->rb_addr, 0, capacity, udata);
 		}
 	}
