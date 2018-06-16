@@ -41,8 +41,10 @@ private:
 			_u16 sz = 0;
 
 			mpi_rb->reset_pull();
-			while((msg = (_str_t)mpi_rb->pull(&sz)))
-				lstr(msg[0], msg+1);
+			while((msg = (_str_t)mpi_rb->pull(&sz))) {
+				if(sz)
+					lstr(msg[0], msg+1);
+			}
 		}
 	}
 
