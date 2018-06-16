@@ -93,7 +93,11 @@ _err_t main(int argc, char *argv[]) {
 
 			if(pi_server) {
 				pi_server->blocking(false);
-				bool prompt = true;
+
+				typedef struct {
+					bool prompt = true;
+					iSocketIO *pi_io;
+				}_client_t;
 
 				for(;;) {
 					_u32 sz = 0;
@@ -101,36 +105,39 @@ _err_t main(int argc, char *argv[]) {
 
 					if(pi_io) {
 						pi_io->blocking(false); // non blocking I/O
-						pi_list->add(&pi_io, sizeof(pi_io));
+						_client_t client = {true, pi_io};
+						pi_list->add(&client, sizeof(_client_t));
+						pi_log->fwrite(LMT_INFO, "Incoming connection 0x%x", pi_io);
 					}
 
-					iSocketIO **ppi_io = (iSocketIO **)pi_list->first(&sz);
+					_client_t *pc = (_client_t *)pi_list->first(&sz);
 
-					while(ppi_io) {
+					while(pc) {
 						_char_t buffer[1024]="";
 						_u32 len = 0;
 
-						pi_io = *ppi_io;
-						if(pi_io->alive() == false) {
+						if(pc->pi_io->alive() == false) {
+							pi_server->close(pc->pi_io);
+							pi_log->fwrite(LMT_INFO, "Close connection 0x%x", pc->pi_io);
 							pi_list->del();
-							ppi_io = (iSocketIO **)pi_list->current(&sz);
+							pc = (_client_t *)pi_list->current(&sz);
 							continue;
 						}
 
-						if(prompt) {
-							pi_io->write((_str_t)"cmdex: ", 7);
-							prompt = false;
+						if(pc->prompt) {
+							pc->pi_io->write((_str_t)"cmdex: ", 7);
+							pc->prompt = false;
 						}
-						if((len = pi_io->read(buffer, sizeof(buffer))) > 0) {
+						if((len = pc->pi_io->read(buffer, sizeof(buffer))) > 0) {
 							// allow only higher than ascii 32 (space) characters
 							for(_u32 i = 0; i < len; i++)
 								if(buffer[i] < ' ')
 									buffer[i] = 0;
 
-							pi_cmd_host->exec(buffer, pi_io);
-							prompt = true;
+							pi_cmd_host->exec(buffer, pc->pi_io);
+							pc->prompt = true;
 						}
-						ppi_io = (iSocketIO **)pi_list->next(&sz);
+						pc = (_client_t *)pi_list->next(&sz);
 					}
 
 					usleep(10000);
