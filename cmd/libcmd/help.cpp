@@ -24,7 +24,7 @@ static void help_command(_cmd_t *p_cmd, iIO *pi_io, bool bfull) {
 		if(p_cmd->cmd_description) {
 			output(pi_io, "Description:\n");
 			output(pi_io, p_cmd->cmd_description);
-			output(pi_io, "/n");
+			output(pi_io, "\n");
 		}
 
 		if(p_cmd->cmd_options) {
@@ -40,17 +40,18 @@ static void help_command(_cmd_t *p_cmd, iIO *pi_io, bool bfull) {
 				output(pi_io, "\t\t\t:");
 				if(p_opt[n].opt_help)
 					output(pi_io, p_opt[n].opt_help);
-				output(pi_io, "/n");
+				output(pi_io, "\n");
 
 				n++;
 			}
 		}
 
 		if(p_cmd->cmd_usage) {
-			output(pi_io, "Usage:\n");
+			output(pi_io, "Usage: ");
 			output(pi_io, p_cmd->cmd_usage);
-			output(pi_io, "/n");
+			output(pi_io, "\n");
 		}
+		output(pi_io, "------------------------\n");
 	}
 }
 
@@ -69,7 +70,7 @@ static void help_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 		else {
 			output(pi_io, "Unknown command '");
 			output(pi_io, arg);
-			output(pi_io, "'\n");
+			output(pi_io, "\n");
 		}
 	} else {
 		// enum commands
@@ -79,7 +80,6 @@ static void help_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			_cmd_t *p_cmd = pi_cmd_host->enum_get(en);
 			if(p_cmd)
 				help_command(p_cmd, pi_io, bfull);
-
 			en = pi_cmd_host->enum_next(en);
 		}
 	}

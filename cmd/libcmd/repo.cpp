@@ -34,7 +34,7 @@ static void fout(iIO *pi_io, _cstr_t fmt, ...) {
 }
 
 static void flags2str(_u32 f, _str_t str, _u32 sz) {
-	if(sz > 10) {
+	if(sz > 4) {
 		_u8 i = 0;
 
 		if(f & RF_ORIGINAL) {
@@ -76,7 +76,7 @@ static void cmd_repo_list(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 						be.pi_base->object_info(&oi);
 
 						flags2str(oi.flags, sf, sizeof(sf));
-						fout(pi_io, "\t\tiname: '%s'; cname: '%s'; flags: '%s'; version: %u,%u,%u; size: %u\n",
+						fout(pi_io, "\tiname: '%s'; cname: '%s'; flags: '%s'; version: %u,%u,%u; size: %u\n",
 								oi.iname, oi.cname, sf,
 								oi.version.major, oi.version.minor, oi.version.revision,
 								oi.size);
@@ -158,9 +158,9 @@ static _cmd_t _g_cmd_repo_[]={
 	{ "repo",	_g_cmd_repo_opt_, cmd_repo_handler,
 		"Repository management",
 		"Manage reposiotory by following actions:\n"
-		"\t" ACT_LIST "\t\t\tPrint available objects\n"
-		"\t" ACT_LOAD "\t\t\tLoad extension\n"
-		"\t" ACT_UNLOAD "\t\t\tUnload extension\n",
+		ACT_LIST "\t\t\tPrint available objects\n"
+		ACT_LOAD "\t\t\tLoad extension\n"
+		ACT_UNLOAD "\t\t\tUnload extension\n",
 		"repo [options] <action>"
 	},
 	{ 0,	0,	0,	0,	0,	0 }

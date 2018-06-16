@@ -310,45 +310,48 @@ public:
 
 	void exec(_str_t cmd_line, iIO *pi_io) {
 		_str_t cmd=0;
-		_u32 cmd_len = mpi_str->str_len(cmd_line) + 1;
+		_u32 cmd_len = mpi_str->str_len(cmd_line);
 
-		if((cmd = (_str_t)mpi_heap->alloc(cmd_len))) {
-			_str_t argv[MAX_ARGV];
-			_u32 argc = 0;
-			_cmd_t *p_cmd = 0;
-			iCmd *pi_cmd = 0;
+		if(cmd_len) {
+			cmd_len++;
+			if((cmd = (_str_t)mpi_heap->alloc(cmd_len))) {
+				_str_t argv[MAX_ARGV];
+				_u32 argc = 0;
+				_cmd_t *p_cmd = 0;
+				iCmd *pi_cmd = 0;
 
-			mpi_str->mem_set(argv, 0, sizeof(argv));
-			mpi_str->str_cpy(cmd, cmd_line, cmd_len);
-			argc = parse_argv(cmd, cmd_len, argv);
+				mpi_str->mem_set(argv, 0, sizeof(argv));
+				mpi_str->str_cpy(cmd, cmd_line, cmd_len);
+				argc = parse_argv(cmd, cmd_len, argv);
 
-			if((p_cmd = get_info(argv[0], &pi_cmd))) {
-				if(p_cmd->cmd_handler) {
-					_u32 noptions = num_options(p_cmd->cmd_options);
-					_u32 mem_options = (noptions+1) * sizeof(_cmd_opt_t);
-					_cmd_opt_t *p_opt = 0;
+				if((p_cmd = get_info(argv[0], &pi_cmd))) {
+					if(p_cmd->cmd_handler) {
+						_u32 noptions = num_options(p_cmd->cmd_options);
+						_u32 mem_options = (noptions+1) * sizeof(_cmd_opt_t);
+						_cmd_opt_t *p_opt = 0;
 
-					if(noptions) {
-						// copy options array
-						if((p_opt = (_cmd_opt_t *)mpi_heap->alloc(mem_options))) {
-							mpi_str->mem_cpy(p_opt, p_cmd->cmd_options, mem_options);
-							parse_options(p_opt, argc, argv);
+						if(noptions) {
+							// copy options array
+							if((p_opt = (_cmd_opt_t *)mpi_heap->alloc(mem_options))) {
+								mpi_str->mem_cpy(p_opt, p_cmd->cmd_options, mem_options);
+								parse_options(p_opt, argc, argv);
+							}
 						}
+
+						p_cmd->cmd_handler(pi_cmd, this, pi_io, p_opt, argc, argv);
+
+						if(p_opt)
+							mpi_heap->free(p_opt, mem_options);
 					}
-
-					p_cmd->cmd_handler(pi_cmd, this, pi_io, p_opt, argc, argv);
-
-					if(p_opt)
-						mpi_heap->free(p_opt, mem_options);
+				} else {
+					if(pi_io) {
+						_str_t ucmd = (_str_t)"Unknown command !\n";
+						pi_io->write(ucmd, mpi_str->str_len(ucmd));
+					}
 				}
-			} else {
-				if(pi_io) {
-					_str_t ucmd = (_str_t)"Unknown command !\n";
-					pi_io->write(ucmd, mpi_str->str_len(ucmd));
-				}
+
+				mpi_heap->free(cmd, cmd_len);
 			}
-
-			mpi_heap->free(cmd, cmd_len);
 		}
 	}
 
