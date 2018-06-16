@@ -147,11 +147,11 @@ static void cmd_repo_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 }
 
 static _cmd_opt_t _g_cmd_repo_opt_[]={
-	{ OPT_EXT_ONLY,	OF_LONG,	0,	"Extensions only" },
-	{ OPT_ALIAS,	OF_LONG,	0,	"Extension alias" },
-	{ OPT_EXT_DIR,	OF_LONG,	0,	"Set extensions directory" },
+	{ OPT_EXT_ONLY,	OF_LONG,		0,	"Extensions only" },
+	{ OPT_ALIAS,	OF_LONG|OF_VALUE,	0,	"Extension alias" },
+	{ OPT_EXT_DIR,	OF_LONG|OF_VALUE,	0,	"Set extensions directory" },
 	//...
-	{ 0,		0,		0,	0 }
+	{ 0,		0,			0,	0 }
 };
 
 static _cmd_t _g_cmd_repo_[]={
