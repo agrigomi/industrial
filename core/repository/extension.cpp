@@ -2,6 +2,7 @@
 #include <link.h>
 #include <dlfcn.h>
 #include <stdlib.h>
+#include <limits.h>
 #include "private.h"
 
 #define MAX_ALIAS_LEN	64
@@ -13,6 +14,7 @@ typedef _err_t _init_t(iRepository *);
 class cRepoExtension: public iRepoExtension {
 private:
 	_s8 m_alias[MAX_ALIAS_LEN];
+	_s8 m_file[PATH_MAX];
 	_dl_handle_t m_handle;
 	_get_base_array_t *m_get_base_array;
 	_init_t *m_init;
@@ -49,6 +51,7 @@ public:
 			m_init = (_init_t *)dlsym(m_handle, "init");
 			m_get_base_array = (_get_base_array_t *)dlsym(m_handle, "get_base_array");
 			if(m_init ) {
+				strncpy(m_file, file, sizeof(m_file));
 				strncpy(m_alias, (alias)?alias:basename(file), sizeof(m_alias));
 				r = ERR_NONE;
 			} else
@@ -67,6 +70,7 @@ public:
 
 	_err_t unload(void) {
 		_err_t r = ERR_UNKNOWN;
+
 		if(m_handle) {
 			if(dlclose(m_handle) == 0)
 				r = ERR_NONE;
@@ -76,11 +80,9 @@ public:
 
 	_str_t file(void) {
 		_str_t r = 0;
-		if(m_handle) {
-			link_map info;
-			if(dlinfo(m_handle, RTLD_DI_LINKMAP, &info) == 0)
-				r = info.l_name;
-		}
+
+		if(m_handle)
+			r = m_file;
 		return r;
 	}
 

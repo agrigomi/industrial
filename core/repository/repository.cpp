@@ -585,7 +585,7 @@ public:
 
 		sprintf(path, "%s/%s", m_ext_dir, file);
 
-		if(!get_extension(path, alias)) {
+		if(!get_extension(path, 0)) {
 			iRepoExtension *px = (iRepoExtension*)object_by_iname(I_REPO_EXTENSION, RF_CLONE);
 			if(px) {
 				if((r = px->load(path, alias)) == ERR_NONE) {
