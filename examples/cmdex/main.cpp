@@ -12,16 +12,20 @@
 
 IMPLEMENT_BASE_ARRAY("command_example", 100);
 
+static iStdIO *gpi_stdio = 0;
+
 void log_listener(_u8 lmt, _str_t msg) {
 	_char_t pref = '-';
 
-	switch(lmt) {
-		case LMT_TEXT: pref = 'T'; break;
-		case LMT_INFO: pref = 'I'; break;
-		case LMT_ERROR: pref = 'E'; break;
-		case LMT_WARNING: pref = 'W';break;
+	if(gpi_stdio) {
+		switch(lmt) {
+			case LMT_TEXT: pref = 'T'; break;
+			case LMT_INFO: pref = 'I'; break;
+			case LMT_ERROR: pref = 'E'; break;
+			case LMT_WARNING: pref = 'W';break;
+		}
+		gpi_stdio->fwrite("[%c] %s\n", pref, msg);
 	}
-	printf("[%c] %s\n", pref, msg);
 }
 
 static _cstr_t extensions[] = {
@@ -37,6 +41,7 @@ _err_t main(int argc, char *argv[]) {
 		_u32 listen_port = 3000;
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
+		gpi_stdio = (iStdIO *)pi_repo->object_by_iname(I_STD_IO, RF_ORIGINAL);
 
 		if(pi_log)
 			pi_log->add_listener(log_listener);
