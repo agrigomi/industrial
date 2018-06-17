@@ -115,6 +115,9 @@ private:
 					break;
 				case 0:
 				case ' ':
+				case '\n':
+				case '\r':
+				case '\t':
 					if(arg_pos != INV_POS) {
 						if(!quotes && !strophe) {
 							argv[r] = cmd_line + arg_pos;

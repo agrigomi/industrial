@@ -129,11 +129,6 @@ _err_t main(int argc, char *argv[]) {
 							pc->prompt = false;
 						}
 						if((len = pc->pi_io->read(buffer, sizeof(buffer))) > 0) {
-							// allow only higher than ascii 32 (space) characters
-							for(_u32 i = 0; i < len; i++)
-								if(buffer[i] < ' ')
-									buffer[i] = 0;
-
 							pi_cmd_host->exec(buffer, pc->pi_io);
 							pc->prompt = true;
 						}
