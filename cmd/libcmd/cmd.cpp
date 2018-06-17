@@ -315,7 +315,7 @@ public:
 		_str_t cmd=0;
 		_u32 cmd_len = mpi_str->str_len(cmd_line);
 
-		if(cmd_len) {
+		if(cmd_len > 1) {
 			cmd_len++;
 			if((cmd = (_str_t)mpi_heap->alloc(cmd_len))) {
 				_str_t argv[MAX_ARGV];
