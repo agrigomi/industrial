@@ -2,4 +2,5 @@ core/additions/log.cpp
 core/additions/args.cpp
 core/additions/TaskMaker.cpp
 core/additions/str.cpp
+core/additions/stdio.cpp
 
