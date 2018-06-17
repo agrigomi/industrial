@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdio.h>
 #include "iIO.h"
 
@@ -45,6 +46,12 @@ public:
 		va_end(va);
 
 		return r;
+	}
+
+	_u32 reads(_str_t str, _u32 size) {
+		memset(str, 0, size);
+		fgets(str, size, stdin);
+		return strlen(str);
 	}
 };
 
