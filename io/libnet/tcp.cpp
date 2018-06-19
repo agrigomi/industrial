@@ -44,11 +44,13 @@ bool cTCPServer::object_ctl(_u32 cmd, void *arg, ...) {
 			mpi_heap = (iHeap *)pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
 			memset(&m_serveraddr, 0, sizeof(struct sockaddr_in));
 			m_server_socket = 0;
+			r = true;
 		} break;
 		case OCTL_UNINIT: {
 			_close();
 			iRepository *pi_repo = (iRepository *)arg;
 			pi_repo->object_release(mpi_heap);
+			r = true;
 		} break;
 	}
 
