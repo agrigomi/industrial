@@ -22,7 +22,7 @@ static void help_command(_cmd_t *p_cmd, iIO *pi_io, bool bfull) {
 
 	if(bfull) {
 		if(p_cmd->cmd_description) {
-			output(pi_io, "Description:\n");
+			output(pi_io, "\n");
 			output(pi_io, p_cmd->cmd_description);
 			output(pi_io, "\n");
 		}
@@ -47,11 +47,12 @@ static void help_command(_cmd_t *p_cmd, iIO *pi_io, bool bfull) {
 		}
 
 		if(p_cmd->cmd_usage) {
+			output(pi_io, "\n");
 			output(pi_io, "Usage: ");
 			output(pi_io, p_cmd->cmd_usage);
 			output(pi_io, "\n");
 		}
-		output(pi_io, "------------------------\n");
+		output(pi_io, "------------------------\n\n");
 	}
 }
 
@@ -61,6 +62,7 @@ static void help_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 	bool bfull = pi_cmd_host->option_check(OPT_FULL, p_opt);
 	_str_t arg = pi_cmd_host->argument(argc, argv, p_opt, 1);
 
+	output(pi_io, "\n");
 	if(arg) {
 		// force full help
 		bfull = true;

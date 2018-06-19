@@ -148,6 +148,9 @@ static void cmd_repo_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			}
 			n++;
 		}
+
+		if(_g_cmd_repo_actions_[n].a_name == 0)
+			fout(pi_io, "Unknown action '%s'\n", arg);
 	}
 }
 
@@ -163,9 +166,9 @@ static _cmd_t _g_cmd_repo_[]={
 	{ "repo",	_g_cmd_repo_opt_, cmd_repo_handler,
 		"Repository management",
 		"Manage reposiotory by following actions:\n"
-		ACT_LIST "\t\t\tPrint available objects\n"
-		ACT_LOAD "\t\t\tLoad extension\n"
-		ACT_UNLOAD "\t\t\tUnload extension\n",
+		ACT_LIST "\t\t:Print available objects\n"
+		ACT_LOAD "\t\t:Load extension\n"
+		ACT_UNLOAD "\t\t:Unload extension\n",
 		"repo [options] <action>"
 	},
 	{ 0,	0,	0,	0,	0,	0 }

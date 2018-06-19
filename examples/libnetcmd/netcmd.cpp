@@ -69,7 +69,7 @@ public:
 						else {
 							m_port = DEFAULT_PORT;
 							mpi_log->fwrite(LMT_WARNING,
-								"%srequire '--netcmd-port' argument."
+								"%srequire '--netcmd-port' argument in command line."
 								" Defaulting listen port to %d",
 								NC_LOG_PREFIX, m_port);
 						}

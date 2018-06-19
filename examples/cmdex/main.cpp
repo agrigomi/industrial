@@ -60,7 +60,7 @@ _err_t main(int argc, char *argv[]) {
 			if(!ext_dir) {
 				// not found in command line, try from environment
 				ext_dir = getenv("LD_LIBRARY_PATH");
-				pi_log->fwrite(LMT_WARNING, "cmdex: require '--ext-dir' aggument."
+				pi_log->fwrite(LMT_WARNING, "cmdex: require '--ext-dir' aggument in command line."
 						" Use LD_LIBRARY_PATH=%s", ext_dir);
 			}
 
