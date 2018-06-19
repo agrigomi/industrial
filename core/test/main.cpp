@@ -40,9 +40,9 @@ _err_t main(int argc, char *argv[]) {
 
 		pi_repo->extension_dir("./bin/deploy");
 		pi_repo->extension_load("ext-1.so");
-		pi_repo->extension_load("libfs.so");
-		pi_repo->extension_load("libnet.so");
-		pi_repo->extension_load("libcmd.so");
+		pi_repo->extension_load("extfs.so");
+		pi_repo->extension_load("extnet.so");
+		pi_repo->extension_load("extcmd.so");
 
 		iCmdHost *pi_cmd_host = (iCmdHost *)pi_repo->object_by_iname(I_CMD_HOST, RF_ORIGINAL);
 		if(pi_cmd_host) {
@@ -94,10 +94,10 @@ _err_t main(int argc, char *argv[]) {
 		}
 
 		getchar();
-		if((r = pi_repo->extension_unload("libfs.so")))
-			pi_log->fwrite(LMT_ERROR, "unable to unload libfs.so error %d", r);
+		if((r = pi_repo->extension_unload("extfs.so")))
+			pi_log->fwrite(LMT_ERROR, "unable to unload extfs.so error %d", r);
 		else
-			pi_log->write(LMT_INFO, "libfs.so, unloaded");
+			pi_log->write(LMT_INFO, "extfs.so, unloaded");
 		pi_repo->object_release(obj);
 		if((r = pi_repo->extension_unload("ext-1.so")))
 			pi_log->fwrite(LMT_ERROR, "unable to unload ext-1.so error %d", r);

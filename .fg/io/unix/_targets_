@@ -1,2 +1,2 @@
-libfs.so
-libnet.so
+extfs.so
+extnet.so

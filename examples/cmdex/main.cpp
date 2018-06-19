@@ -29,9 +29,9 @@ void log_listener(_u8 lmt, _str_t msg) {
 }
 
 static _cstr_t extensions[] = {
-	"libcmd.so",
-	"libnet.so",
-	"libnetcmd.so",
+	"extcmd.so",
+	"extnet.so",
+	"extnetcmd.so",
 	0
 };
 
