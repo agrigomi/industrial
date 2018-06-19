@@ -91,27 +91,32 @@ static void cmd_repo_list(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 static void cmd_ext_load(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
 			_u32 argc, _str_t argv[]) {
-	_str_t arg = pi_cmd_host->argument(argc, argv, p_opt, 2);
+	_str_t arg = 0;
 	_str_t alias = pi_cmd_host->option_value(OPT_ALIAS, p_opt);
+	_u32 i = 2;
 
-	if(arg) {
+	while((arg = pi_cmd_host->argument(argc, argv, p_opt, i))) {
 		_err_t err = _gpi_repo_->extension_load(arg, alias);
 
 		if(err != ERR_NONE)
 			fout(pi_io, "Failed to load extension, error=%d\n", err);
+		i++;
 	}
 }
 
 static void cmd_ext_unload(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
 			_u32 argc, _str_t argv[]) {
-	_str_t arg = pi_cmd_host->argument(argc, argv, p_opt, 2);
+	_str_t arg = 0;
+	_u32 i = 2;
 
-	if(arg) {
+	while((arg = pi_cmd_host->argument(argc, argv, p_opt, i)))  {
 		_err_t err = _gpi_repo_->extension_unload(arg);
 
 		if(err != ERR_NONE)
 			fout(pi_io, "Failed to unload extension, error=%d\n", err);
+
+		i++;
 	}
 }
 
