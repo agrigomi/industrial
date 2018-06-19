@@ -372,7 +372,7 @@ private:
 		_u32 i = 0;
 
 		for(; i < count; i++) {
-			if(array[i].pi_base) {
+			if(array[i].pi_base && (array[i].state & ST_INITIALIZED)) {
 				_object_info_t oi;
 				_notification_t msg;
 				bool send = false;
