@@ -382,7 +382,7 @@ private:
 					if(array[i].pi_base == pn->monitored)
 						send = true;
 					else if(pn->iname && strcmp(pn->iname, oi.iname) == 0)
-						send = false;
+						send = true;
 					else if(pn->cname && strcmp(pn->cname, oi.cname) == 0)
 						send = true;
 
