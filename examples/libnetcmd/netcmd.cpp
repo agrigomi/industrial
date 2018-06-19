@@ -142,7 +142,7 @@ public:
 
 							pi_io->blocking(false); // non blocking I/O
 							mpi_list->add(&cnt, sizeof(_connection_t));
-							mpi_log->fwrite(LMT_INFO, "%sIncomming connection 0x%x",
+							mpi_log->fwrite(LMT_INFO, "%sIncoming connection 0x%x",
 									NC_LOG_PREFIX, pi_io);
 						}
 
@@ -168,8 +168,15 @@ public:
 								_u32 len = p_cnt->pi_io->read(buffer, sizeof(buffer));
 
 								if(len) {
-									if(mpi_cmd_host)
+									if(mpi_cmd_host) {
+										// needed to unlock
+										mpi_list->unlock(hml);
+										mpi_mutex->unlock(hm);
 										mpi_cmd_host->exec(buffer, p_cnt->pi_io);
+										// lock again
+										hml = mpi_list->lock();
+										hm = mpi_mutex->lock();
+									}
 
 									p_cnt->prompt = true;
 								}
