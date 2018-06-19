@@ -15,7 +15,7 @@ IMPLEMENT_BASE_ARRAY("libnetcmd", 1);
 #define NC_LOG_PREFIX	"netcmd: "
 
 typedef struct {
-	bool promp;
+	bool prompt;
 	iSocketIO *pi_io;
 }_connection_t;
 
@@ -29,6 +29,7 @@ private:
 	HNOTIFY mhn_net, mhn_cmd_host;
 	volatile bool m_running, m_stopped;
 	_u32 m_port;
+	iTCPServer *mpi_server;
 
 	void release(iRepository *pi_repo, iBase **pp_obj) {
 		if(*pp_obj) {
@@ -44,6 +45,25 @@ private:
 				mpi_mutex->unlock(hm);
 		}
 	}
+
+	void close_connections(void) {
+		_u32 sz = 0;
+		HMUTEX hm = mpi_list->lock();
+		_connection_t *p_cnt = (_connection_t *)mpi_list->first(&sz, hm);
+
+		while(p_cnt) {
+			if(mpi_server) {
+				mpi_log->fwrite(LMT_INFO, "%sClose connection 0x%x",
+						NC_LOG_PREFIX, p_cnt->pi_io);
+				mpi_server->close(p_cnt->pi_io);
+			}
+			mpi_list->del(hm); // remove current connection
+			// next
+			p_cnt = (_connection_t *)mpi_list->current(&sz, hm);
+		}
+
+		mpi_list->unlock(hm);
+	}
 public:
 	BASE(cNetCmd, "cNetCmd", RF_ORIGINAL | RF_TASK, 1,0,0);
 
@@ -56,6 +76,9 @@ public:
 
 				m_running = false;
 				m_stopped = true;
+				mpi_cmd_host = 0;
+				mpi_net = 0;
+				mpi_server = 0;
 				mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
 				mpi_list = (iLlist *)pi_repo->object_by_iname(I_LLIST, RF_CLONE);
 				mpi_mutex = (iMutex *)pi_repo->object_by_iname(I_MUTEX, RF_CLONE);
@@ -95,7 +118,9 @@ public:
 				pi_repo->monitoring_remove(mhn_net);
 				pi_repo->monitoring_remove(mhn_cmd_host);
 
+				close_connections();
 				release(pi_repo, (iBase **)&mpi_list);
+				release(pi_repo, (iBase **)&mpi_server);
 				release(pi_repo, (iBase **)&mpi_net);
 				release(pi_repo, (iBase **)&mpi_cmd_host);
 				release(pi_repo, (iBase **)&mpi_log);
@@ -107,7 +132,56 @@ public:
 				m_running = true;
 
 				while(m_running) {
-					//...
+					HMUTEX hm = mpi_mutex->lock();
+
+					if(mpi_server) {
+						iSocketIO *pi_io = mpi_server->listen();
+
+						if(pi_io) {
+							_connection_t cnt = {true, pi_io};
+
+							pi_io->blocking(false); // non blocking I/O
+							mpi_list->add(&cnt, sizeof(_connection_t));
+							mpi_log->fwrite(LMT_INFO, "%sIncomming connection 0x%x",
+									NC_LOG_PREFIX, pi_io);
+						}
+
+						_u32 sz = 0;
+						HMUTEX hml = mpi_list->lock();
+						_connection_t *p_cnt = (_connection_t *)mpi_list->first(&sz, hml);
+
+						while(p_cnt) {
+							if(p_cnt->pi_io->alive() == false) {
+								mpi_log->fwrite(LMT_INFO, "%sClose connection 0x%x",
+										NC_LOG_PREFIX, p_cnt->pi_io);
+								mpi_server->close(p_cnt->pi_io);
+								mpi_list->del(hml);
+								p_cnt = (_connection_t *)mpi_list->current(&sz, hml);
+								continue;
+							} else {
+								_char_t buffer[1024]="";
+
+								if(p_cnt->prompt) {
+									p_cnt->pi_io->write((_str_t)"netcmd: ", 8);
+									p_cnt->prompt = false;
+								}
+								_u32 len = p_cnt->pi_io->read(buffer, sizeof(buffer));
+
+								if(len) {
+									if(mpi_cmd_host)
+										mpi_cmd_host->exec(buffer, p_cnt->pi_io);
+
+									p_cnt->prompt = true;
+								}
+
+								p_cnt = (_connection_t *)mpi_list->next(&sz, hml);
+							}
+						}
+
+						mpi_list->unlock(hml);
+					}
+
+					mpi_mutex->unlock(hm);
 					usleep(10000);
 				}
 
@@ -133,7 +207,7 @@ public:
 				if(pn->object)
 					pn->object->object_info(&oi);
 
-				if(pn->flags & NF_INIT) {
+				if(pn->flags & NF_INIT) { // catch
 					if(strcmp(oi.iname, I_CMD_HOST) == 0) {
 						mpi_cmd_host = (iCmdHost *)pn->object;
 						mpi_log->fwrite(LMT_INFO, "%s"
@@ -144,20 +218,31 @@ public:
 						mpi_log->fwrite(LMT_INFO, "%s"
 								"Catch networking", NC_LOG_PREFIX);
 						// Create server
-						//...
+						if(mpi_net) {
+							if((mpi_server = mpi_net->create_tcp_server(m_port))) {
+								mpi_log->fwrite(LMT_INFO, "%s"
+										"Create TCP server on port %d",
+										NC_LOG_PREFIX, m_port);
+								// waiting for connections in non blocking mode
+								mpi_server->blocking(false);
+							} else
+								mpi_log->fwrite(LMT_ERROR, "%s"
+										"Failed to create TCP server on port %d",
+										NC_LOG_PREFIX, m_port);
+						}
 					}
-				} else if(pn->flags & (NF_UNINIT | NF_REMOVE)) {
+				} else if(pn->flags & (NF_UNINIT | NF_REMOVE)) { // release
 					if(strcmp(oi.iname, I_CMD_HOST) == 0) {
 						release(_gpi_repo_, (iBase **)&mpi_cmd_host);
 						mpi_log->fwrite(LMT_INFO, "%s"
 								"Release command host", NC_LOG_PREFIX);
 					}
 					if(strcmp(oi.iname, I_NET) == 0) {
-						// close connections
-						//...
+						close_connections();
 
 						// Close server
-						//...
+						mpi_log->fwrite(LMT_INFO, "%sClose server", NC_LOG_PREFIX);
+						release(_gpi_repo_, (iBase **)&mpi_server);
 
 						release(_gpi_repo_, (iBase **)&mpi_net);
 						mpi_log->fwrite(LMT_INFO, "%s"
