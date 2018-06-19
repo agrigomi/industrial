@@ -28,7 +28,7 @@ group_file=.fg/$(PROJECT)/$(CONFIG)/$(basename $(TARGET))/$(GROUP)
 src=$(shell cat $(group_file))
 
 $(groups_out): %$(OUTSUFFIX): $(target_dir)
-	@echo '  ' build group [$(basename $(notdir $@))]
+	@echo '  ' group [$(basename $(notdir $@))]
 	make $(MAKE_FLAGS) -f $(BUILD_GROUP) PROJECT=$(PROJECT) TARGET=$(TARGET) CONFIG=$(CONFIG) GROUP=$(basename $(notdir $@))
 
 $(target_dir):

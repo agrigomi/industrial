@@ -22,7 +22,7 @@ $(targets_basename):
 	mkdir -p $(OUTDIR)/$(PROJECT)
 	mkdir -p $(OUTDIR)/$(PROJECT)/$(CONFIG)
 	for i in $(targets); do \
-		echo ' ' build target [$$i]; \
+		echo ' ' target [$$i]; \
 		make $(MAKE_FLAGS) -f $(BUILD_TARGET) PROJECT=$(PROJECT) CONFIG=$(CONFIG) TARGET=$$i || exit; \
 	done
 clean:

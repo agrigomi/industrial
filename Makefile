@@ -8,7 +8,7 @@ all: $(projects)
 
 
 $(projects):
-	@echo build project [$@]; \
+	@echo project [$@]; \
 	if [ -f .fg/$@/build_$@.mk ]; then \
 		make $(MAKE_FLAGS) -f .fg/$@/build_$@.mk PROJECT=$@; \
 	else \
