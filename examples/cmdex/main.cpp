@@ -30,6 +30,8 @@ void log_listener(_u8 lmt, _str_t msg) {
 
 static _cstr_t extensions[] = {
 	"libcmd.so",
+	"libnet.so",
+	"libnetcmd.so",
 	0
 };
 
@@ -55,9 +57,12 @@ _err_t main(int argc, char *argv[]) {
 			// retrieve extensions directory from command line
 			_str_t ext_dir = pi_arg->value("ext-dir");
 
-			if(!ext_dir)
+			if(!ext_dir) {
 				// not found in command line, try from environment
 				ext_dir = getenv("LD_LIBRARY_PATH");
+				pi_log->fwrite(LMT_WARNING, "cmdex: require '--ext-dir' aggument."
+						" Use LD_LIBRARY_PATH=%s", ext_dir);
+			}
 
 			// set extensions directory
 			pi_repo->extension_dir((ext_dir) ? ext_dir : "./");
