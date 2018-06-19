@@ -694,15 +694,21 @@ public:
 	}
 
 	// enumeration
+#define ENUM_CORE_EXT	(_enum_ext_t)0x1cc2cc
+#define ENUM_CORE_ALIAS	"core"
+
 	_enum_ext_t enum_ext_first(void) {
-		_u32 sz=0;
-		return mpi_ext_list->first(&sz);
+		return ENUM_CORE_EXT;
 	}
 
 	_enum_ext_t enum_ext_next(_enum_ext_t en) {
 		_enum_ext_t r = 0;
-		HMUTEX hm = mpi_ext_list->lock();
 		_u32 sz;
+
+		if(en == ENUM_CORE_EXT)
+			return mpi_ext_list->first(&sz);
+
+		HMUTEX hm = mpi_ext_list->lock();
 
 		if(mpi_ext_list->sel(en, hm))
 			r = mpi_ext_list->next(&sz, hm);
@@ -714,6 +720,10 @@ public:
 
 	_cstr_t enum_ext_alias(_enum_ext_t en) {
 		_cstr_t r = 0;
+
+		if(en == ENUM_CORE_EXT)
+			return ENUM_CORE_ALIAS;
+
 		HMUTEX hm = mpi_ext_list->lock();
 
 		if(mpi_ext_list->sel(en, hm)) {
@@ -731,18 +741,22 @@ public:
 
 	_u32 enum_ext_array_count(_enum_ext_t en) {
 		_u32 r = 0;
-		_u32 sz = 0;
-		HMUTEX hm = mpi_ext_list->lock();
+		_u32 limit=0;
 
-		if(mpi_ext_list->sel(en, hm)) {
-			iRepoExtension **ppx = (iRepoExtension **)mpi_ext_list->current(&sz, hm);
-			if(ppx) {
-				_u32 limit=0;
-				(*ppx)->array(&r, &limit);
+		if(en == ENUM_CORE_EXT)
+			get_base_array(&r, &limit);
+		else {
+			_u32 sz = 0;
+			HMUTEX hm = mpi_ext_list->lock();
+
+			if(mpi_ext_list->sel(en, hm)) {
+				iRepoExtension **ppx = (iRepoExtension **)mpi_ext_list->current(&sz, hm);
+				if(ppx)
+					(*ppx)->array(&r, &limit);
 			}
-		}
 
-		mpi_ext_list->unlock(hm);
+			mpi_ext_list->unlock(hm);
+		}
 
 		return r;
 	}
@@ -750,17 +764,21 @@ public:
 	_u32 enum_ext_array_limit(_enum_ext_t en) {
 		_u32 r = 0;
 		_u32 sz = 0;
-		HMUTEX hm = mpi_ext_list->lock();
+		_u32 count=0;
 
-		if(mpi_ext_list->sel(en, hm)) {
-			iRepoExtension **ppx = (iRepoExtension **)mpi_ext_list->current(&sz, hm);
-			if(ppx) {
-				_u32 count=0;
-				(*ppx)->array(&count, &r);
+		if(en == ENUM_CORE_EXT)
+			get_base_array(&count, &r);
+		else {
+			HMUTEX hm = mpi_ext_list->lock();
+
+			if(mpi_ext_list->sel(en, hm)) {
+				iRepoExtension **ppx = (iRepoExtension **)mpi_ext_list->current(&sz, hm);
+				if(ppx)
+					(*ppx)->array(&count, &r);
 			}
-		}
 
-		mpi_ext_list->unlock(hm);
+			mpi_ext_list->unlock(hm);
+		}
 
 		return r;
 	}
@@ -768,22 +786,31 @@ public:
 	bool enum_ext_array(_enum_ext_t en, _u32 aidx, _base_entry_t *p_base_entry) {
 		bool r = false;
 		_u32 sz = 0;
-		HMUTEX hm = mpi_ext_list->lock();
+		_u32 count, limit;
+		_base_entry_t *pbe = 0;
 
-		if(mpi_ext_list->sel(en, hm)) {
-			iRepoExtension **ppx = (iRepoExtension **)mpi_ext_list->current(&sz, hm);
-			if(ppx) {
-				_u32 count, limit;
+		if(en == ENUM_CORE_EXT) {
+			pbe = get_base_array(&count, &limit);
+			if(pbe && aidx < count) {
+				memcpy(p_base_entry, &pbe[aidx], sizeof(_base_entry_t));
+				r = true;
+			}
+		} else {
+			HMUTEX hm = mpi_ext_list->lock();
 
-				_base_entry_t *pbe = (*ppx)->array(&count, &limit);
-				if(pbe && aidx < count) {
-					memcpy(p_base_entry, &pbe[aidx], sizeof(_base_entry_t));
-					r = true;
+			if(mpi_ext_list->sel(en, hm)) {
+				iRepoExtension **ppx = (iRepoExtension **)mpi_ext_list->current(&sz, hm);
+				if(ppx) {
+					pbe = (*ppx)->array(&count, &limit);
+					if(pbe && aidx < count) {
+						memcpy(p_base_entry, &pbe[aidx], sizeof(_base_entry_t));
+						r = true;
+					}
 				}
 			}
-		}
 
-		mpi_ext_list->unlock(hm);
+			mpi_ext_list->unlock(hm);
+		}
 
 		return r;
 	}
