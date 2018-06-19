@@ -32,8 +32,16 @@ private:
 
 	void release(iRepository *pi_repo, iBase **pp_obj) {
 		if(*pp_obj) {
+			HMUTEX hm = 0;
+
+			if(*pp_obj != mpi_mutex && mpi_mutex)
+				hm = mpi_mutex->lock();
+
 			pi_repo->object_release(*pp_obj);
 			*pp_obj = 0;
+
+			if(hm)
+				mpi_mutex->unlock(hm);
 		}
 	}
 public:
@@ -90,8 +98,8 @@ public:
 				release(pi_repo, (iBase **)&mpi_list);
 				release(pi_repo, (iBase **)&mpi_net);
 				release(pi_repo, (iBase **)&mpi_cmd_host);
-				release(pi_repo, (iBase **)&mpi_mutex);
 				release(pi_repo, (iBase **)&mpi_log);
+				release(pi_repo, (iBase **)&mpi_mutex);
 				r = true;
 			} break;
 			case OCTL_START: {
