@@ -2,10 +2,10 @@
 #include <link.h>
 #include <dlfcn.h>
 #include <stdlib.h>
-#include <limits.h>
 #include "private.h"
 
 #define MAX_ALIAS_LEN	64
+#define MAX_FILE_PATH	256
 
 typedef void*	_dl_handle_t;
 typedef _base_entry_t *_get_base_array_t(_u32 *count, _u32 *limit);
@@ -14,7 +14,7 @@ typedef _err_t _init_t(iRepository *);
 class cRepoExtension: public iRepoExtension {
 private:
 	_s8 m_alias[MAX_ALIAS_LEN];
-	_s8 m_file[PATH_MAX];
+	_s8 m_file[MAX_FILE_PATH];
 	_dl_handle_t m_handle;
 	_get_base_array_t *m_get_base_array;
 	_init_t *m_init;
