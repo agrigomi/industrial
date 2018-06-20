@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "iCmd.h"
 #include "iStr.h"
 #include "iRepository.h"
@@ -12,6 +13,7 @@ IMPLEMENT_BASE_ARRAY("libcmd", 10)
 typedef struct {
 	_cstr_t	cmd_name;
 	iCmd	*pi_cmd;
+	volatile bool running;
 }_cmd_rec_t;
 
 class cCmdHost: public iCmdHost {
@@ -64,6 +66,7 @@ private:
 
 				rec.cmd_name = p_cmd_info[n].cmd_name;
 				rec.pi_cmd = pi_cmd_obj;
+				rec.running = false;
 
 				mpi_cmd_list->add(&rec, sizeof(_cmd_rec_t));
 				n++;
@@ -81,6 +84,8 @@ private:
 
 			while(p_rec) {
 				if(p_rec->pi_cmd == pi_cmd_obj) {
+					while(p_rec->running)
+						usleep(1000);
 					mpi_cmd_list->del(hm);
 					p_rec = (_cmd_rec_t *)mpi_cmd_list->current(&sz, hm);
 				} else
@@ -245,6 +250,29 @@ private:
 
 		return r;
 	}
+
+	_cmd_t *get_cmd_info(_str_t cmd_name, iCmd **pi_cmd, _cmd_rec_t **pp_rec) {
+		_cmd_rec_t *cmd_rec = find_command(0, cmd_name);
+		_cmd_t *r = (cmd_rec) ? cmd_rec->pi_cmd->get_info() : 0;
+
+		if(r) {
+			_u32 n = 0;
+
+			while(r[n].cmd_name) {
+				if(mpi_str->str_cmp(cmd_name, (_str_t)r[n].cmd_name) == 0) {
+					r += n;
+					*pi_cmd = cmd_rec->pi_cmd;
+					*pp_rec = cmd_rec;
+					break;
+				}
+				n++;
+			}
+
+			if(r[n].cmd_name == 0)
+				r = 0;
+		}
+		return r;
+	}
 public:
 	BASE(cCmdHost, "cCmdHost", RF_ORIGINAL, 1,0,0);
 
@@ -289,25 +317,12 @@ public:
 	}
 
 	_cmd_t *get_info(_str_t cmd_name, iCmd **pi_cmd=0) {
-		_cmd_rec_t *cmd_rec = find_command(0, cmd_name);
-		_cmd_t *r = (cmd_rec) ? cmd_rec->pi_cmd->get_info() : 0;
+		iCmd *_pi_cmd = 0;
+		_cmd_rec_t *p_rec = 0;
+		_cmd_t *r = get_cmd_info(cmd_name, &_pi_cmd, &p_rec);
 
-		if(r) {
-			_u32 n = 0;
-
-			while(r[n].cmd_name) {
-				if(mpi_str->str_cmp(cmd_name, (_str_t)r[n].cmd_name) == 0) {
-					r += n;
-					if(pi_cmd)
-						*pi_cmd = cmd_rec->pi_cmd;
-					break;
-				}
-				n++;
-			}
-
-			if(r[n].cmd_name == 0)
-				r = 0;
-		}
+		if(pi_cmd)
+			*pi_cmd = _pi_cmd;
 		return r;
 	}
 
@@ -322,12 +337,13 @@ public:
 				_u32 argc = 0;
 				_cmd_t *p_cmd = 0;
 				iCmd *pi_cmd = 0;
+				_cmd_rec_t *p_rec = 0;
 
 				mpi_str->mem_set(argv, 0, sizeof(argv));
 				mpi_str->str_cpy(cmd, cmd_line, cmd_len);
 				argc = parse_argv(cmd, cmd_len, argv);
 
-				if((p_cmd = get_info(argv[0], &pi_cmd))) {
+				if((p_cmd = get_cmd_info(argv[0], &pi_cmd, &p_rec))) {
 					if(p_cmd->cmd_handler) {
 						_u32 noptions = num_options(p_cmd->cmd_options);
 						_u32 mem_options = (noptions+1) * sizeof(_cmd_opt_t);
@@ -341,7 +357,9 @@ public:
 							}
 						}
 
+						p_rec->running = true;
 						p_cmd->cmd_handler(pi_cmd, this, pi_io, p_opt, argc, argv);
+						p_rec->running = false;
 
 						if(p_opt)
 							mpi_heap->free(p_opt, mem_options);
