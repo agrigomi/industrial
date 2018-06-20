@@ -102,6 +102,7 @@ public:
 
 					mpi_list->init(LL_VECTOR, 1);
 
+					// we wants to receive notifications for I_NET and I_CMD_HOST
 					mhn_net = pi_repo->monitoring_add(0, I_NET,
 									0, this, SCAN_ORIGINAL);
 					mhn_cmd_host = pi_repo->monitoring_add(0, I_CMD_HOST,
@@ -251,9 +252,9 @@ public:
 						mpi_log->fwrite(LMT_INFO, "%sClose server", NC_LOG_PREFIX);
 						release(_gpi_repo_, (iBase **)&mpi_server);
 
-						release(_gpi_repo_, (iBase **)&mpi_net);
 						mpi_log->fwrite(LMT_INFO, "%s"
 								"Release networking", NC_LOG_PREFIX);
+						release(_gpi_repo_, (iBase **)&mpi_net);
 					}
 				}
 			} break;
