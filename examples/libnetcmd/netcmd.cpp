@@ -9,7 +9,7 @@
 #include "iLog.h"
 #include "iArgs.h"
 
-IMPLEMENT_BASE_ARRAY("libnetcmd", 1);
+IMPLEMENT_BASE_ARRAY("netcmd", 1);
 
 #define DEFAULT_PORT	3000
 #define NC_LOG_PREFIX	"netcmd: "
