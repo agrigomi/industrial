@@ -129,10 +129,13 @@ public:
 			_u32 idx = 0;
 			for(_u32 i = 1; i < m_argc; i++) {
 				if(check(sopt, m_argv[i], OPT_VALUE, &idx)) {
-					if(idx+1 < (_u32)strlen(m_argv[i]))
+					if(idx+1 < (_u32)strlen(m_argv[i])) {
 						r = m_argv[i] + idx+1;
-					else if(i+1 < m_argc && m_argv[i+1][0] != '-')
+						break;
+					} else if(i+1 < m_argc && m_argv[i+1][0] != '-') {
 						r = m_argv[i+1];
+						break;
+					}
 				}
 			}
 		}
@@ -146,10 +149,13 @@ public:
 			_u32 idx = 0;
 			for(_u32 i = 1; i < m_argc; i++) {
 				if(check(opt, m_argv[i], OPT_VALUE|OPT_LONG, &idx)) {
-					if(m_argv[i][idx] == '=')
+					if(m_argv[i][idx] == '=') {
 						r = m_argv[i] + idx+1;
-					else if(i+1 < m_argc && m_argv[i+1][0] != '-')
+						break;
+					} else if(i+1 < m_argc && m_argv[i+1][0] != '-') {
 						r = m_argv[i+1];
+						break;
+					}
 				}
 			}
 		}
