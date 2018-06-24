@@ -19,14 +19,14 @@ endif
 .PHONY: $(targets_basename) clean
 
 $(targets_basename):
-	mkdir -p $(OUTDIR)/$(PROJECT)
-	mkdir -p $(OUTDIR)/$(PROJECT)/$(CONFIG)
-	for i in $(targets); do \
+	@mkdir -p $(OUTDIR)/$(PROJECT)
+	@mkdir -p $(OUTDIR)/$(PROJECT)/$(CONFIG)
+	@for i in $(targets); do \
 		echo ' ' target [$$i]; \
 		make $(MAKE_FLAGS) -f $(BUILD_TARGET) PROJECT=$(PROJECT) CONFIG=$(CONFIG) TARGET=$$i || exit; \
 	done
 clean:
-	for i in $(targets); do \
+	@for i in $(targets); do \
 		make $(MAKE_FLAGS) -f $(BUILD_TARGET) PROJECT=$(PROJECT) CONFIG=$(CONFIG) TARGET=$$i clean || exit; \
 	done
 	rm -rf $(OUTDIR)/$(PROJECT)

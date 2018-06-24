@@ -35,10 +35,10 @@ $(target_dir):
 	mkdir -p $@
 
 clean:
-	for i in $(groups); do \
+	@for i in $(groups); do \
 		make $(MAKE_FLAGS) -f $(BUILD_GROUP)  PROJECT=$(PROJECT) CONFIG=$(CONFIG) TARGET=$(TARGET) GROUP=$$i clean; \
 	done
-	rm -f $(target_dir)/$(TARGET)
-	rm -rf $(target_dir)
-	rm -f $(DEPLOY_DIR)/$(TARGET)
+	@rm -f $(target_dir)/$(TARGET)
+	@rm -rf $(target_dir)
+	@rm -f $(DEPLOY_DIR)/$(TARGET)
 

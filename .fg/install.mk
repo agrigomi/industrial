@@ -19,7 +19,7 @@ endif
 .PHONY: $(targets_basename) clean
 
 $(targets_basename):
-	for i in $(targets); do \
+	@for i in $(targets); do \
 		echo ' ' install target [$$i]; \
 	done
 

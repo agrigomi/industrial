@@ -16,15 +16,15 @@ $(projects):
 	fi;
 
 install:
-	for i in $(projects); do \
+	@for i in $(projects); do \
 		echo install [$$i]; \
 		make $(MAKE_FLAGS) -f $(INSTALL_PROJECT) PROJECT=$$i; \
 	done
 
 
 clean:
-	for i in $(projects); do \
-		echo clean project [$$i]; \
+	@for i in $(projects); do \
+		echo clean [$$i]; \
 		if [ -f .fg/$$i/build_$$i.mk ]; then \
 			make $(MAKE_FLAGS) -f .fg/$$i/build_$$i.mk PROJECT=$$i clean || exit; \
 		else \
