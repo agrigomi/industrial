@@ -257,6 +257,7 @@ public:
 						release(_gpi_repo_, (iBase **)&mpi_net);
 					}
 				}
+				r = true;
 			} break;
 		}
 
