@@ -63,7 +63,10 @@ static void cmd_repo_list(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 		_u32 count = _gpi_repo_->enum_ext_array_count(eext);
 		_u32 i = 0;
 
-		fout(pi_io, "%s\n", _gpi_repo_->enum_ext_alias(eext));
+		fout(pi_io, "%s\tobjects:%d; limit:%d\n",
+				_gpi_repo_->enum_ext_alias(eext),
+				_gpi_repo_->enum_ext_array_count(eext),
+				_gpi_repo_->enum_ext_array_limit(eext));
 		if(!ext_only) {
 			for(; i < count; i++) {
 				_base_entry_t be;
