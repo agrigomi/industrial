@@ -1,10 +1,14 @@
 #ifndef __HT_CONTEXT_H__
 #define __HT_CONTEXT_H__
 
+#define MACHINE_ORDER_LE	1
+#define MACHINE_ORDER_BE	2
+
 typedef struct { /* hypertext content info. */
 	void 		*p_content; /* hypertext content */
 	unsigned long	sz_content; /* sizeof hypertext content */
 	unsigned long	c_pos; /* current position in content */
+	unsigned char	machine_order;
 } _ht_content_t;
 
 typedef void *_mem_alloc_t(unsigned int nbytes);

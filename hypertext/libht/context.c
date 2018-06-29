@@ -1,6 +1,61 @@
 #include <string.h>
 #include "context.h"
 
+typedef struct {
+	const unsigned char	*bom;
+	unsigned char		sz_bom;
+	_read_t			*pf_read;
+} _bom_t;
+
+static unsigned int read_utf8(_ht_content_t *p_htc) {
+	unsigned int r = 0;
+
+	/*...*/
+
+	return r;
+}
+
+static unsigned int read_utf16_be(_ht_content_t *p_htc) {
+	unsigned int r = 0;
+
+	/*...*/
+
+	return r;
+}
+
+static unsigned int read_utf16_le(_ht_content_t *p_htc) {
+	unsigned int r = 0;
+
+	/*...*/
+
+	return r;
+}
+
+static unsigned int read_utf32_be(_ht_content_t *p_htc) {
+	unsigned int r = 0;
+
+	/*...*/
+
+	return r;
+}
+
+static unsigned int read_utf32_le(_ht_content_t *p_htc) {
+	unsigned int r = 0;
+
+	/*...*/
+
+	return r;
+}
+
+static _bom_t _g_bom_[] = {
+	{ (const unsigned char *)"\xef\xbb\xbf",	3,	read_utf8 },
+	{ (const unsigned char *)"\xfe\xff",		2,	read_utf16_be },
+	{ (const unsigned char *)"\xff\xfe",		2,	read_utf16_le },
+	{ (const unsigned char *)"\x00\x00\xfe\xff",	4,	read_utf32_be },
+	{ (const unsigned char *)"\xff\xfe\x00\x00",	4,	read_utf32_le },
+	{ NULL,						0,	NULL }
+};
+
 /* allocate memory for hypertext context */
 _ht_context_t *ht_create_context(_mem_alloc_t *p_alloc, _mem_free_t *p_free) {
 	_ht_context_t *r = NULL;
@@ -21,8 +76,27 @@ void ht_init_context(_ht_context_t *p_htc, void *p_content, unsigned long sz_con
 	p_htc->ht_content.p_content = p_content;
 	p_htc->ht_content.sz_content = sz_content;
 
-	/* try to detect encoding by BOM */
-	/*...*/
+	/* should be considered in utf8 by default */
+	p_htc->pf_read = read_utf8;
+
+	if(p_content && sz_content > 4) {
+		int n=0;
+
+		/* try to detect encoding by BOM */
+		while(_g_bom_[n].bom) {
+			if(memcmp(_g_bom_[n].bom, p_content, _g_bom_[n].sz_bom) == 0) {
+				p_htc->pf_read = _g_bom_[n].pf_read;
+				p_htc->ht_content.c_pos = _g_bom_[n].sz_bom;
+				break;
+			}
+
+			n++;
+		}
+
+		/* detect machine order */
+		volatile short word = (MACHINE_ORDER_BE << 8) | MACHINE_ORDER_LE;
+		p_htc->ht_content.machine_order = *((char *)&word);
+	}
 }
 
 /* destroy (deallocate) context */
