@@ -9,8 +9,24 @@ typedef struct {
 
 static unsigned int read_utf8(_ht_content_t *p_htc) {
 	unsigned int r = 0;
+	unsigned long pos = p_htc->c_pos;
+	unsigned char *content = p_htc->p_content;
 
-	/*...*/
+	if(pos < p_htc->sz_content) {
+		unsigned char c = *(content + pos);
+
+		r = c;
+		pos++;
+
+		while((c & 0xc0) == 0xc0 && pos < p_htc->sz_content) {
+			r <<= 8;
+			c <<= 1;
+			r |= (unsigned char)*(content + pos);
+			pos++;
+		}
+
+		p_htc->c_pos = pos;
+	}
 
 	return r;
 }
