@@ -36,6 +36,7 @@ extern "C" {
 _ht_context_t *ht_create_context(_mem_alloc_t *, _mem_free_t *);
 /* initialize context with content and size of hypertext */
 void ht_init_context(_ht_context_t *, void *, unsigned long);
+unsigned long ht_position(_ht_context_t *);
 /* destroy (deallocate) context */
 void ht_destroy_context(_ht_context_t *);
 #ifdef __cplusplus

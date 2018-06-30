@@ -146,6 +146,10 @@ void ht_init_context(_ht_context_t *p_htc, void *p_content, unsigned long sz_con
 	}
 }
 
+unsigned long ht_position(_ht_context_t *p_htc) {
+	return p_htc->ht_content.c_pos;
+}
+
 /* destroy (deallocate) context */
 void ht_destroy_context(_ht_context_t *p_htc) {
 	if(p_htc->pf_mem_free)
