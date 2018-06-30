@@ -4,6 +4,7 @@
 typedef struct {
 	const unsigned char	*bom;
 	unsigned char		sz_bom;
+	unsigned char		type;
 	_read_t			*pf_read;
 } _bom_t;
 
@@ -92,12 +93,12 @@ static unsigned int read_utf32_le(_ht_content_t *p_htc) {
 }
 
 static _bom_t _g_bom_[] = {
-	{ (const unsigned char *)"\xef\xbb\xbf",	3,	read_utf8 },
-	{ (const unsigned char *)"\xfe\xff",		2,	read_utf16_be },
-	{ (const unsigned char *)"\xff\xfe",		2,	read_utf16_le },
-	{ (const unsigned char *)"\x00\x00\xfe\xff",	4,	read_utf32_be },
-	{ (const unsigned char *)"\xff\xfe\x00\x00",	4,	read_utf32_le },
-	{ NULL,						0,	NULL }
+	{ (const unsigned char *)"\xef\xbb\xbf",	3,	E_UTF_8,	read_utf8 },
+	{ (const unsigned char *)"\xfe\xff",		2,	E_UTF_16_BE,	read_utf16_be },
+	{ (const unsigned char *)"\xff\xfe",		2,	E_UTF_16_LE,	read_utf16_le },
+	{ (const unsigned char *)"\x00\x00\xfe\xff",	4,	E_UTF_32_BE,	read_utf32_be },
+	{ (const unsigned char *)"\xff\xfe\x00\x00",	4,	E_UTF_32_LE,	read_utf32_le },
+	{ NULL,						0,	0,		NULL }
 };
 
 /* allocate memory for hypertext context */
@@ -122,6 +123,7 @@ void ht_init_context(_ht_context_t *p_htc, void *p_content, unsigned long sz_con
 
 	/* should be considered in utf8 by default */
 	p_htc->pf_read = read_utf8;
+	p_htc->ht_content.encoding = E_UTF_8;
 
 	if(p_content && sz_content > 4) {
 		int n=0;
@@ -131,6 +133,7 @@ void ht_init_context(_ht_context_t *p_htc, void *p_content, unsigned long sz_con
 			if(memcmp(_g_bom_[n].bom, p_content, _g_bom_[n].sz_bom) == 0) {
 				p_htc->pf_read = _g_bom_[n].pf_read;
 				p_htc->ht_content.c_pos = _g_bom_[n].sz_bom;
+				p_htc->ht_content.encoding = _g_bom_[n].type;
 				break;
 			}
 

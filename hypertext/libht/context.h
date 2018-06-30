@@ -4,10 +4,17 @@
 #define MACHINE_ORDER_LE	1
 #define MACHINE_ORDER_BE	2
 
+#define E_UTF_8		0
+#define E_UTF_16_BE	1
+#define E_UTF_16_LE	2
+#define E_UTF_32_BE	3
+#define E_UTF_32_LE	4
+
 typedef struct { /* hypertext content info. */
 	void 		*p_content; /* hypertext content */
 	unsigned long	sz_content; /* sizeof hypertext content */
 	unsigned long	c_pos; /* current position in content */
+	unsigned char	encoding; /* content ancoding */
 	unsigned char	machine_order;
 } _ht_content_t;
 
