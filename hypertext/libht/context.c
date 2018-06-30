@@ -63,16 +63,30 @@ static unsigned int read_utf16_le(_ht_content_t *p_htc) {
 
 static unsigned int read_utf32_be(_ht_content_t *p_htc) {
 	unsigned int r = 0;
+	unsigned int *content = (unsigned int *)p_htc->p_content;
+	unsigned long pos = p_htc->c_pos;
 
-	/*...*/
+	if(pos < (p_htc->sz_content - 4)) {
+		unsigned int c = *(content + pos);
+
+		r = (p_htc->machine_order == MACHINE_ORDER_LE) ? __builtin_bswap32(c) : c;
+		p_htc->c_pos += 4;
+	}
 
 	return r;
 }
 
 static unsigned int read_utf32_le(_ht_content_t *p_htc) {
 	unsigned int r = 0;
+	unsigned int *content = (unsigned int *)p_htc->p_content;
+	unsigned long pos = p_htc->c_pos;
 
-	/*...*/
+	if(pos < (p_htc->sz_content - 4)) {
+		unsigned int c = *(content + pos);
+
+		r = (p_htc->machine_order == MACHINE_ORDER_BE) ? __builtin_bswap32(c) : c;
+		p_htc->c_pos += 4;
+	}
 
 	return r;
 }
