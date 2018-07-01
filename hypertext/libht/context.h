@@ -11,7 +11,7 @@
 #define E_UTF_32_LE	4
 
 typedef struct { /* hypertext content info. */
-	void 		*p_content; /* hypertext content */
+	unsigned char	*p_content; /* hypertext content */
 	unsigned long	sz_content; /* sizeof hypertext content */
 	unsigned long	c_pos; /* current position in content */
 	unsigned char	encoding; /* content ancoding */
@@ -37,6 +37,8 @@ _ht_context_t *ht_create_context(_mem_alloc_t *, _mem_free_t *);
 /* initialize context with content and size of hypertext */
 void ht_init_context(_ht_context_t *, void *, unsigned long);
 unsigned long ht_position(_ht_context_t *);
+/* compare memory with taking care about document encoding */
+int ht_compare(_ht_content_t *, unsigned char *, unsigned char *, unsigned int);
 /* destroy (deallocate) context */
 void ht_destroy_context(_ht_context_t *);
 #ifdef __cplusplus
