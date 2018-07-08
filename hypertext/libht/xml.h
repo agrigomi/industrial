@@ -6,16 +6,15 @@
 #define XML_OK			0
 #define XML_PARSE_ERROR		-1
 
-typedef int _xml_err_t;
-
-typedef struct ht_tag _ht_tag_t;
-
 /* tag flags */
 #define	TF_ONELINE	(1<<0)
 #define TF_EMBEDDED	(1<<1)
 #define TF_SKIP		(1<<2)
 #define TF_HOOK_PARSE	(1<<8)
 #define TF_HOOK_EXPORT	(1<<9)
+
+typedef int _xml_err_t;
+typedef struct ht_tag _ht_tag_t;
 
 typedef _xml_err_t _tag_hook_t(_ht_context_t *p_htc, /* hypertext context */
 				unsigned int flags, /* one bit (TF_HOOK_PARSE | TF_HOOK_EXPORT) */
@@ -30,6 +29,7 @@ typedef struct {
 	_tag_hook_t		*pf_hook; /* callback proc. (can be NULL) */
 	void			*p_udata; /* user data (can be NULL) */
 } _tag_def_t;
+
 
 struct ht_tag {
 	unsigned char	*p_name;	/* tag name */
@@ -66,6 +66,9 @@ _ht_tag_t *xml_select(_xml_context_t *p_xc,
 			_ht_tag_t *p_start_point, /* start tag (can be NULL) */
 			unsigned int index);
 void xml_add_tdef_array(_xml_context_t *p_xc, /* XML context */
+			_tag_def_t *p_tdef_array /* array of tag definitions, terminated by empty struct. */
+			);
+void xml_remove_tdef_array(_xml_context_t *p_xc, /* XML context */
 			_tag_def_t *p_tdef_array /* array of tag definitions, terminated by empty struct. */
 			);
 /* destroy (deallocate) XML context */
