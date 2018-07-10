@@ -47,6 +47,7 @@ typedef struct {
 	_ht_context_t	*p_htc;		/* hypertext context */
 	_ht_tag_t	*p_root;	/* list of root tags */
 	_tag_def_t	**pp_tdef;	/* array of tag_definitions */
+	unsigned long	err_pos;	/* error position */
 	unsigned int	num_tdef;	/* number of tag definitions */
 } _xml_context_t;
 

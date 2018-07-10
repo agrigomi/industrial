@@ -20,7 +20,7 @@ typedef struct { /* hypertext content info. */
 
 typedef void *_mem_alloc_t(unsigned int nbytes);
 typedef void _mem_free_t(void *ptr, unsigned int nbytes);
-typedef unsigned int _read_t(_ht_content_t *p_ht_content);
+typedef unsigned int _read_t(_ht_content_t *p_ht_content, unsigned long *pos);
 
 typedef struct { /* context of hypertext parser */
 	_ht_content_t	ht_content; /* hypertext content info. */

@@ -5,14 +5,13 @@
 #define INITIAL_TAG_LIST	16
 
 /* state bitmask */
-#define SCOPE_CLOSE	1	/* > */
-#define SCOPE_OPEN	2	/* < */
-#define STROPHE		4	/* ' */
-#define QUOTES		8	/* " */
-#define SLASH		16	/* / */
-#define TAG_OPEN	32	/* <name */
-#define TAG_PARAMS	64	/* <name ... */
-
+#define SCOPE_OPEN	1	/* < */
+#define STROPHE		2	/* ' */
+#define QUOTES		4	/* " */
+#define SLASH		8	/* / */
+#define TAG_OPEN	16	/* <name */
+#define TAG_PARAMS	32	/* <name ... */
+#define SYMBOL		64
 
 /* allocate memory for XML context */
 _xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free) {
@@ -116,8 +115,23 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t
 	_ht_context_t *p_htc = p_xc->p_htc;
 	_ht_content_t *p_hc = &p_xc->p_htc->ht_content;
 	unsigned long pos = ht_position(p_htc);
+	unsigned int c = 0;
 
-	/*...*/
+	while((c = p_htc->pf_read(p_hc, &pos))) {
+		if(c == '>') {
+			if(!(state & (QUOTES|STROPHE))) {
+				if(state & SCOPE_OPEN) {
+					/*...*/
+				} else {
+					p_xc->err_pos = pos;
+					break;
+				}
+			}
+		} else if(c == '<') {
+		}
+
+		/*...*/
+	}
 
 	return r;
 }
