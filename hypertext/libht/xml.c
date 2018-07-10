@@ -115,6 +115,8 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t
 	_ht_context_t *p_htc = p_xc->p_htc;
 	_ht_content_t *p_hc = &p_xc->p_htc->ht_content;
 	unsigned long pos = ht_position(p_htc);
+	unsigned char *ptr_tname = NULL;
+	unsigned char *ptr_tparams = NULL;
 	unsigned int c = 0;
 
 	while((c = p_htc->pf_read(p_hc, &pos))) {
@@ -126,8 +128,13 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t
 					p_xc->err_pos = pos;
 					break;
 				}
+				state &= ~SCOPE_OPEN;
 			}
 		} else if(c == '<') {
+			if(!(state & (QUOTES|STROPHE))) {
+				/*...*/
+				state |= SCOPE_OPEN;
+			}
 		}
 
 		/*...*/

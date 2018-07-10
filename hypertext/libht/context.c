@@ -155,6 +155,10 @@ unsigned long ht_position(_ht_context_t *p_htc) {
 	return p_htc->ht_content.c_pos;
 }
 
+unsigned char *ht_ptr(_ht_context_t *p_htc) {
+	return p_htc->ht_content.p_content + p_htc->ht_content.c_pos;
+}
+
 int ht_compare(_ht_content_t *p_htc, unsigned char *p1, unsigned char *p2, unsigned int size) {
 	int r = 0;
 	unsigned int i = 0;
