@@ -111,6 +111,7 @@ _find_empty_:
 	return r;
 }
 
+
 _xml_err_t xml_parse(_xml_context_t *p_xc, /* XML context */
 			unsigned char *p_xml_content, /* XML content */
 			unsigned long sz_xml_content /* size of XML content */
@@ -120,7 +121,15 @@ _xml_err_t xml_parse(_xml_context_t *p_xc, /* XML context */
 
 	if(phtc) {
 		ht_init_context(phtc, p_xml_content, sz_xml_content);
-		/*...*/
+
+		if(!p_xc->p_root)
+			p_xc->p_root = xml_create_tag(p_xc, NULL);
+
+		if(p_xc->p_root) {
+			p_xc->p_root->p_content = p_xml_content;
+			p_xc->p_root->sz_content = sz_xml_content;
+			/*...*/
+		}
 	}
 
 	return r;

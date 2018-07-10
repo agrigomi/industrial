@@ -45,8 +45,7 @@ struct ht_tag {
 
 typedef struct {
 	_ht_context_t	*p_htc;		/* hypertext context */
-	_ht_tag_t	**pp_root;	/* list of root tags */
-	unsigned short	num_root;	/* number of root tags */
+	_ht_tag_t	*p_root;	/* list of root tags */
 	_tag_def_t	**pp_tdef;	/* array of tag_definitions */
 	unsigned int	num_tdef;	/* number of tag definitions */
 } _xml_context_t;
