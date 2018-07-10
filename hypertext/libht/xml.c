@@ -111,6 +111,15 @@ _find_empty_:
 	return r;
 }
 
+static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t *p_tag) {
+	_xml_err_t r = XML_PARSE_ERROR;
+
+	/*...*/
+
+	return r;
+}
+
+static unsigned char *root_tag_name = (unsigned char*)"ht_root";
 
 _xml_err_t xml_parse(_xml_context_t *p_xc, /* XML context */
 			unsigned char *p_xml_content, /* XML content */
@@ -126,9 +135,11 @@ _xml_err_t xml_parse(_xml_context_t *p_xc, /* XML context */
 			p_xc->p_root = xml_create_tag(p_xc, NULL);
 
 		if(p_xc->p_root) {
+			p_xc->p_root->p_name = root_tag_name;
+			p_xc->p_root->sz_name = strlen((char *)root_tag_name);
 			p_xc->p_root->p_content = p_xml_content;
 			p_xc->p_root->sz_content = sz_xml_content;
-			/*...*/
+			r = _xml_parse(p_xc, 0, p_xc->p_root);
 		}
 	}
 
