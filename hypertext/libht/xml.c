@@ -110,12 +110,15 @@ _find_empty_:
 	return r;
 }
 
-static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t *p_tag) {
+static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t *p_tag, _ht_tag_t *p_parent_tag) {
 	_xml_err_t r = XML_PARSE_ERROR;
 	_ht_context_t *p_htc = p_xc->p_htc;
 	_ht_content_t *p_hc = &p_xc->p_htc->ht_content;
+	_ht_tag_t *p_ctag = p_tag;
 	unsigned long pos = ht_position(p_htc);
 	unsigned char *ptr_tname = NULL;
+	unsigned long pos_tname = 0;
+	unsigned int sz_tag_name = 0;
 	unsigned char *ptr_tparams = NULL;
 	unsigned int c = 0;
 
@@ -123,7 +126,14 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t
 		if(c == '>') {
 			if(!(state & (QUOTES|STROPHE))) {
 				if(state & SCOPE_OPEN) {
-					/*...*/
+					if(state & SLASH) {
+						/* close tag */
+						/*...*/
+						state &= ~SLASH;
+					} else {
+						/* open tag */
+						/*...*/
+					}
 				} else {
 					p_xc->err_pos = pos;
 					break;
@@ -132,11 +142,26 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t
 			}
 		} else if(c == '<') {
 			if(!(state & (QUOTES|STROPHE))) {
+				/* fix position and pointer for tag name */
+				ptr_tname = ht_ptr(p_htc);
+				pos_tname = ht_position(p_htc);
 				/*...*/
 				state |= SCOPE_OPEN;
 				state &= ~SYMBOL;
 			}
-		}
+		} else if(c == '/') {
+			if(!(state & (QUOTES|STROPHE))) {
+				if(state & SCOPE_OPEN) {
+					/* fix position and pointer for tag name */
+					ptr_tname = ht_ptr(p_htc);
+					pos_tname = ht_position(p_htc);
+					state |= SLASH;
+				}
+			}
+		} else if(c == '\'')
+			state ^= STROPHE;
+		else if(c == '"')
+			state ^= QUOTES;
 
 		/*...*/
 	}
@@ -164,7 +189,7 @@ _xml_err_t xml_parse(_xml_context_t *p_xc, /* XML context */
 			p_xc->p_root->sz_name = strlen((char *)root_tag_name);
 			p_xc->p_root->p_content = p_xml_content;
 			p_xc->p_root->sz_content = sz_xml_content;
-			r = _xml_parse(p_xc, 0, p_xc->p_root);
+			r = _xml_parse(p_xc, 0, NULL, p_xc->p_root);
 		}
 	}
 
