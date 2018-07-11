@@ -128,12 +128,13 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t
 					p_xc->err_pos = pos;
 					break;
 				}
-				state &= ~SCOPE_OPEN;
+				state &= ~(SCOPE_OPEN|SYMBOL);
 			}
 		} else if(c == '<') {
 			if(!(state & (QUOTES|STROPHE))) {
 				/*...*/
 				state |= SCOPE_OPEN;
+				state &= ~SYMBOL;
 			}
 		}
 
