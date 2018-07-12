@@ -159,20 +159,20 @@ unsigned char *ht_ptr(_ht_context_t *p_htc) {
 	return p_htc->ht_content.p_content + p_htc->ht_content.c_pos;
 }
 
-int ht_compare(_ht_content_t *p_htc, unsigned char *p1, unsigned char *p2, unsigned int size) {
+int ht_compare(_ht_context_t *p_htc, unsigned char *p1, unsigned char *p2, unsigned int size) {
 	int r = 0;
 	unsigned int i = 0;
 	unsigned char en1 = E_UTF_8, en2 = E_UTF_8;
 	unsigned int c1 = 0, c2 = 0;
 
 	/* obtain p1 encoding */
-	if(p1 >= p_htc->p_content && p1 < (p_htc->p_content + p_htc->sz_content))
+	if(p1 >= p_htc->ht_content.p_content && p1 < (p_htc->ht_content.p_content + p_htc->ht_content.sz_content))
 		/* p1 belongs to current document */
-		en1 = p_htc->encoding;
+		en1 = p_htc->ht_content.encoding;
 	/* obtain p2 encoding */
-	if(p2 >= p_htc->p_content && p2 < (p_htc->p_content + p_htc->sz_content))
+	if(p2 >= p_htc->ht_content.p_content && p2 < (p_htc->ht_content.p_content + p_htc->ht_content.sz_content))
 		/* p2 belongs to current document */
-		en2 = p_htc->encoding;
+		en2 = p_htc->ht_content.encoding;
 
 	while(i < size) {
 		switch(en1) {
@@ -181,22 +181,22 @@ int ht_compare(_ht_content_t *p_htc, unsigned char *p1, unsigned char *p2, unsig
 				break;
 			case E_UTF_16_BE:
 				c1 = *(((unsigned short *)p1) + i);
-				if(p_htc->machine_order == MACHINE_ORDER_LE)
+				if(p_htc->ht_content.machine_order == MACHINE_ORDER_LE)
 					c1 = __builtin_bswap32(c1);
 				break;
 			case E_UTF_16_LE:
 				c1 = *(((unsigned short *)p1) + i);
-				if(p_htc->machine_order == MACHINE_ORDER_BE)
+				if(p_htc->ht_content.machine_order == MACHINE_ORDER_BE)
 					c1 = __builtin_bswap32(c1);
 				break;
 			case E_UTF_32_BE:
 				c1 = *(((unsigned int *)p1) + i);
-				if(p_htc->machine_order == MACHINE_ORDER_LE)
+				if(p_htc->ht_content.machine_order == MACHINE_ORDER_LE)
 					c1 = __builtin_bswap32(c1);
 				break;
 			case E_UTF_32_LE:
 				c1 = *(((unsigned int *)p1) + i);
-				if(p_htc->machine_order == MACHINE_ORDER_BE)
+				if(p_htc->ht_content.machine_order == MACHINE_ORDER_BE)
 					c1 = __builtin_bswap32(c1);
 				break;
 		}
@@ -206,22 +206,22 @@ int ht_compare(_ht_content_t *p_htc, unsigned char *p1, unsigned char *p2, unsig
 				break;
 			case E_UTF_16_BE:
 				c2 = *(((unsigned short *)p2) + i);
-				if(p_htc->machine_order == MACHINE_ORDER_LE)
+				if(p_htc->ht_content.machine_order == MACHINE_ORDER_LE)
 					c2 = __builtin_bswap32(c2);
 				break;
 			case E_UTF_16_LE:
 				c2 = *(((unsigned short *)p2) + i);
-				if(p_htc->machine_order == MACHINE_ORDER_BE)
+				if(p_htc->ht_content.machine_order == MACHINE_ORDER_BE)
 					c2 = __builtin_bswap32(c2);
 				break;
 			case E_UTF_32_BE:
 				c2 = *(((unsigned int *)p2) + i);
-				if(p_htc->machine_order == MACHINE_ORDER_LE)
+				if(p_htc->ht_content.machine_order == MACHINE_ORDER_LE)
 					c2 = __builtin_bswap32(c2);
 				break;
 			case E_UTF_32_LE:
 				c2 = *(((unsigned int *)p2) + i);
-				if(p_htc->machine_order == MACHINE_ORDER_BE)
+				if(p_htc->ht_content.machine_order == MACHINE_ORDER_BE)
 					c2 = __builtin_bswap32(c2);
 				break;
 		}

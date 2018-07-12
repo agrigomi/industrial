@@ -39,7 +39,7 @@ void ht_init_context(_ht_context_t *, void *, unsigned long);
 unsigned long ht_position(_ht_context_t *);
 unsigned char *ht_ptr(_ht_context_t *);
 /* compare memory with taking care about document encoding */
-int ht_compare(_ht_content_t *, unsigned char *, unsigned char *, unsigned int);
+int ht_compare(_ht_context_t *, unsigned char *, unsigned char *, unsigned int);
 /* destroy (deallocate) context */
 void ht_destroy_context(_ht_context_t *);
 #ifdef __cplusplus

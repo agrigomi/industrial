@@ -46,7 +46,7 @@ static _tag_def_t *find_tdef(_xml_context_t *p_xc, unsigned long pos, unsigned i
 
 			while(n < p_xc->num_tdef) {
 				if(p_xc->pp_tdef[n]) {
-					if(ht_compare(&(p_xc->p_htc->ht_content), ptr,
+					if(ht_compare(p_xc->p_htc, ptr,
 							(unsigned char *)p_xc->pp_tdef[n]->p_tag_name, sz) == 0) {
 						r = p_xc->pp_tdef[n];
 						break;
@@ -125,7 +125,15 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t
 				if(state & SCOPE_OPEN) {
 					if(state & SLASH) {
 						/* close tag */
-						/*...*/
+						if(ht_compare(p_xc->p_htc, p_parent_tag->p_name, ptr_tag_name, p_parent_tag->sz_name) == 0) {
+							/* close parent tag */
+							p_parent_tag->sz_content = (p_parent_tag->p_content + pos) - p_parent_tag->p_content; /*???*/
+							r = XML_OK;
+							break;
+						} else {
+							/* close one line tag */
+							/*...*/
+						}
 						state &= ~SLASH;
 					} else {
 						/* open tag */
