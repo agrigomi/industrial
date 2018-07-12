@@ -112,47 +112,32 @@ _find_empty_:
 
 static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t *p_parent_tag) {
 	_xml_err_t r = XML_PARSE_ERROR;
-	_ht_context_t *p_htc = p_xc->p_htc;
 	_ht_content_t *p_hc = &p_xc->p_htc->ht_content;
 	_ht_tag_t *p_ctag = NULL;
-	unsigned long pos = ht_position(p_htc);
+	unsigned long pos = ht_position(p_xc->p_htc);
 	unsigned char *ptr_tag_name = NULL;
-	unsigned long pos_tag_name = 0;
-	unsigned int sz_tag_name = 0;
-	unsigned char *ptr_tag_content = NULL;
-	unsigned long sz_tag_content = 0;
-	unsigned long pos_tag_content = 0;
 	unsigned char *ptr_tag_params = NULL;
-	unsigned long pos_tag_params = 0;
-	unsigned int sz_tag_params = 0;
 	unsigned int c = 0;
 
-	while((c = p_htc->pf_read(p_hc, &pos))) {
+	while((c = p_xc->p_htc->pf_read(p_hc, &pos))) {
 		if(c == '>') {
 			if(!(state & (QUOTES|STROPHE))) {
 				if(state & SCOPE_OPEN) {
-					if(ptr_tag_params)
-						sz_tag_params = pos - pos_tag_params;
-					else
-						sz_tag_name = pos - pos_tag_name;
-
 					if(state & SLASH) {
 						/* close tag */
 						/*...*/
 						state &= ~SLASH;
 					} else {
 						/* open tag */
-						ptr_tag_content = ht_ptr(p_htc);
-						pos_tag_content = ht_position(p_htc);
 						if((p_ctag = xml_create_tag(p_xc, p_parent_tag))) {
 							p_ctag->p_name = ptr_tag_name;
-							p_ctag->sz_name = sz_tag_name;
-							p_ctag->p_content = ptr_tag_content;
+							p_ctag->sz_name = (p_hc->p_content + pos) - ptr_tag_name;
+							p_ctag->p_content = ht_ptr(p_xc->p_htc);
 							p_ctag->p_parameters = ptr_tag_params;
-							p_ctag->sz_parameters = sz_tag_params;
+							p_ctag->sz_parameters = (p_hc->p_content + pos) - ptr_tag_params;
 							/*...*/
 							if((r = _xml_parse(p_xc, 0, p_ctag)) == XML_OK)
-								p_ctag->sz_content = ht_position(p_htc) - pos_tag_content;
+								p_ctag->sz_content = ht_ptr(p_xc->p_htc) - p_ctag->p_content;
 							else
 								break;
 						} else
@@ -167,8 +152,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t
 		} else if(c == '<') {
 			if(!(state & (QUOTES|STROPHE))) {
 				/* fix position and pointer for tag name */
-				ptr_tag_name = ht_ptr(p_htc);
-				pos_tag_name = ht_position(p_htc);
+				ptr_tag_name = ht_ptr(p_xc->p_htc);
 				/*...*/
 				state |= SCOPE_OPEN;
 				state &= ~SYMBOL;
@@ -177,8 +161,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, unsigned int state, _ht_tag_t
 			if(!(state & (QUOTES|STROPHE))) {
 				if(state & SCOPE_OPEN) {
 					/* fix position and pointer for tag name */
-					ptr_tag_name = ht_ptr(p_htc);
-					pos_tag_name = ht_position(p_htc);
+					ptr_tag_name = ht_ptr(p_xc->p_htc);
 					state |= SLASH;
 				}
 			}
