@@ -19,7 +19,7 @@ typedef struct ht_tag _ht_tag_t;
 typedef _xml_err_t _tag_hook_t(_ht_context_t *p_htc, /* hypertext context */
 				unsigned int flags, /* one bit (TF_HOOK_PARSE | TF_HOOK_EXPORT) */
 				_ht_tag_t *p_tag, /* tag info */
-				void *p_udata; /* user data */
+				void *p_udata /* user data */
 				);
 
 typedef struct {
