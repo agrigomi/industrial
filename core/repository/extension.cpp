@@ -3,6 +3,7 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 #include "private.h"
+#include "iLog.h"
 
 #define MAX_ALIAS_LEN	64
 #define MAX_FILE_PATH	256
@@ -18,6 +19,7 @@ private:
 	_dl_handle_t m_handle;
 	_get_base_array_t *m_get_base_array;
 	_init_t *m_init;
+	iLog *mpi_log;
 public:
 	BASE(cRepoExtension, "cRepoExtension", RF_CLONE, 1, 0,0);
 
@@ -29,10 +31,12 @@ public:
 				m_handle = 0;
 				m_get_base_array = 0;
 				m_init = 0;
+				mpi_log = (iLog *)_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL);
 				r = true;
 				break;
 			}
 			case OCTL_UNINIT: {
+				_gpi_repo_->object_release(mpi_log);
 				unload();
 				r = true;
 				break;
@@ -50,14 +54,18 @@ public:
 		if((m_handle = dlopen(file, RTLD_NOW | RTLD_DEEPBIND))) {
 			m_init = (_init_t *)dlsym(m_handle, "init");
 			m_get_base_array = (_get_base_array_t *)dlsym(m_handle, "get_base_array");
-			if(m_init ) {
+			if(m_init) {
 				strncpy(m_file, file, sizeof(m_file));
 				strncpy(m_alias, (alias)?alias:basename(file), sizeof(m_alias));
 				r = ERR_NONE;
-			} else
+			} else {
 				dlclose(m_handle);
-		} else
+				mpi_log->write(LMT_ERROR, "Unable to find 'init' function");
+			}
+		} else {
 			r = ERR_LOADEXT;
+			mpi_log->write(LMT_ERROR, dlerror());
+		}
 		return r;
 	}
 
