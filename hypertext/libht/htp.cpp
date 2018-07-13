@@ -45,6 +45,20 @@ public:
 	void destroy_context(HTCONTEXT hc) {
 		xml_destroy_context((_xml_context_t *)hc);
 	}
+
+	bool parse(HTCONTEXT hc, _str_t xml_text, _ulong size) {
+		bool r = false;
+
+		if(xml_parse((_xml_context_t *)hc, (unsigned char*)xml_text, size) == XML_OK)
+			r = true;
+
+		return r;
+	}
+
+	HTTAG select(HTCONTEXT hc, _str_t xpath, HTTAG start_point, _u32 index) {
+		return xml_select((_xml_context_t *)hc, xpath,
+				(_ht_tag_t *)start_point, index);
+	}
 };
 
 static cHT _g_hypertext_;
