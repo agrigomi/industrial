@@ -32,6 +32,10 @@ _xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free) 
 	return r;
 }
 
+void xml_destroy_context(_xml_context_t *p_xc) {
+	/*...*/
+}
+
 /* find tag definitian */
 static _tag_def_t *find_tdef(_xml_context_t *p_xc, unsigned long pos, unsigned int sz) {
 	_tag_def_t * r = NULL;
@@ -211,3 +215,13 @@ _xml_err_t xml_parse(_xml_context_t *p_xc, /* XML context */
 	return r;
 }
 
+_ht_tag_t *xml_select(_xml_context_t *p_xc,
+			char *xpath,
+			_ht_tag_t *p_start_point, /* start tag (can be NULL) */
+			unsigned int index) {
+	_ht_tag_t *r = NULL;
+
+	/*...*/
+
+	return r;
+}
