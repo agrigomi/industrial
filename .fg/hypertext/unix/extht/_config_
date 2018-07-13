@@ -1,4 +1,4 @@
 LIB_PATH=$(OUTDIR)/core/$(CONFIG)/libstartup-ext
-COMPILER_FLAGS+=-fPIC
+COMPILER_FLAGS+=-fPIC -Ihypertext/interface
 LINKER_FLAGS+=-fpic --shared -u init $(LIB_PATH)/libstartup-ext.a
 

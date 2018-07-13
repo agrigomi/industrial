@@ -2,16 +2,19 @@
 #include "iMemory.h"
 #include "iHT.h"
 #include "xml.h"
+#include "startup.h"
 
-static void *mem_alloc(unsigned int);
-static void mem_free(void *, unsigned int);
+IMPLEMENT_BASE_ARRAY("extht", 10);
+
+static void *_mem_alloc(unsigned int);
+static void _mem_free(void *, unsigned int);
 
 class cHT: public iHT {
 private:
 	iHeap *mpi_heap;
 
-	friend void *mem_alloc(unsigned int);
-	friend void mem_free(void *, unsigned int);
+	friend void *_mem_alloc(unsigned int);
+	friend void _mem_free(void *, unsigned int);
 public:
 	BASE(cHT, "cHT", RF_ORIGINAL, 1,0,0);
 
@@ -39,7 +42,7 @@ public:
 	}
 
 	HTCONTEXT create_context(void) {
-		return xml_create_context(mem_alloc, mem_free);
+		return xml_create_context(_mem_alloc, _mem_free);
 	}
 
 	void destroy_context(HTCONTEXT hc) {
@@ -63,7 +66,7 @@ public:
 
 static cHT _g_hypertext_;
 
-static void *mem_alloc(unsigned int sz) {
+static void *_mem_alloc(unsigned int sz) {
 	void *r = NULL;
 
 	if(_g_hypertext_.mpi_heap)
@@ -72,7 +75,7 @@ static void *mem_alloc(unsigned int sz) {
 	return r;
 }
 
-static void mem_free(void *ptr, unsigned int sz) {
+static void _mem_free(void *ptr, unsigned int sz) {
 	if(_g_hypertext_.mpi_heap)
 		_g_hypertext_.mpi_heap->free(ptr, sz);
 }

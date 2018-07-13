@@ -39,6 +39,7 @@ _err_t main(int argc, char *argv[]) {
 		}
 
 		pi_repo->extension_dir("./bin/deploy");
+		pi_repo->extension_load("extht.so");
 		pi_repo->extension_load("ext-1.so");
 		pi_repo->extension_load("extfs.so");
 		pi_repo->extension_load("extnet.so");
