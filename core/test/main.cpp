@@ -9,6 +9,7 @@
 #include "iNet.h"
 #include "iCmd.h"
 #include "iMemory.h"
+#include "iHT.h"
 
 IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
@@ -24,92 +25,32 @@ void log_listener(_u8 lmt, _str_t msg) {
 	printf("[%c] %s\n", pref, msg);
 }
 
+const char *xml="\
+<tag1>\
+	<chtag1 param1=\"v1\">\
+		<inltag param=\"value\"/>\
+	</chtag1>\
+</tag1>\
+";
+
 _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
 	if(r == ERR_NONE) {
 		iRepository *pi_repo = get_repository();
-		iLog *pi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
-		if(pi_log)
-			pi_log->add_listener(log_listener);
-
-		iHeap *pi_heap = (iHeap *)pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
-		if(pi_heap) {
-			//...
-			pi_repo->object_release(pi_heap);
-		}
 
 		pi_repo->extension_dir("./bin/deploy");
 		pi_repo->extension_load("extht.so");
 		pi_repo->extension_load("ext-1.so");
-		pi_repo->extension_load("extfs.so");
-		pi_repo->extension_load("extnet.so");
-		pi_repo->extension_load("extcmd.so");
 
-		iCmdHost *pi_cmd_host = (iCmdHost *)pi_repo->object_by_iname(I_CMD_HOST, RF_ORIGINAL);
-		if(pi_cmd_host) {
-			pi_cmd_host->exec((_str_t)"help -f", 0);
-			pi_repo->object_release(pi_cmd_host);
+		iHT *pi_ht = (iHT *)pi_repo->object_by_iname(I_HT, RF_ORIGINAL);
+		if(pi_ht) {
+			HTCONTEXT hc = pi_ht->create_context();
+			_ulong xlen = strlen(xml);
+			pi_ht->parse(hc, (_str_t)xml, xlen);
+			//...
+			pi_ht->destroy_context(hc);
 		}
 
-		iBase *obj = pi_repo->object_by_iname("iObj1", RF_CLONE|RF_ORIGINAL);
-
-		iFS *pi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
-		if(pi_fs) {
-			iFileIO *pifio = pi_fs->open("./testfile", O_RDWR|O_CREAT);
-			if(pifio) {
-				pifio->write((_str_t)"alabala", 7);
-				pifio->sync();
-				_str_t pfc = (_str_t)pifio->map();
-				if(pfc) {
-					pi_log->fwrite(LMT_TEXT, "file size: %d; file content: %s", pifio->size(), pfc);
-				}
-				pi_fs->close(pifio);
-				pi_fs->remove("./testfile");
-			}
-
-			iDir *pi_dir = pi_fs->open_dir("./");
-			if(pi_dir) {
-				_str_t fname;
-				_u8 type;
-
-				if(pi_dir->first(&fname, &type)) {
-					do {
-						pi_log->fwrite(LMT_TEXT, "dentry: '%s'", fname);
-					}while(pi_dir->next(&fname, &type));
-				}
-				pi_fs->close_dir(pi_dir);
-			}
-			pi_repo->object_release(pi_fs);
-		}
-
-		iNet *pi_net = (iNet *)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
-		if(pi_net) {
-			iSocketIO *sio = pi_net->create_tcp_client((_str_t)"localhost", 3000);
-			if(sio) {
-				sio->write((_str_t)"---\n", 4);
-				sio->write((_str_t)"Hello\n", 6);
-				sio->write((_str_t)"---\n", 4);
-				pi_net->close_socket(sio);
-			}
-			pi_repo->object_release(pi_net);
-		}
-
-		getchar();
-		if((r = pi_repo->extension_unload("extfs.so")))
-			pi_log->fwrite(LMT_ERROR, "unable to unload extfs.so error %d", r);
-		else
-			pi_log->write(LMT_INFO, "extfs.so, unloaded");
-		pi_repo->object_release(obj);
-		if((r = pi_repo->extension_unload("ext-1.so")))
-			pi_log->fwrite(LMT_ERROR, "unable to unload ext-1.so error %d", r);
-		else
-			pi_log->write(LMT_INFO, "ext-1.so, unloaded");
-		pi_log->write(LMT_INFO, "-------------------------");
-		_str_t lm = pi_log->first();
-		while(lm) {
-			printf("%s\n", lm);
-			lm = pi_log->next();
-		}
 		uninit();
 	}
 

@@ -118,8 +118,8 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 	_ht_content_t *p_hc = &p_xc->p_htc->ht_content;
 	_ht_tag_t *p_ctag = NULL;
 	unsigned long pos = ht_position(p_xc->p_htc);
-	unsigned long pos_scope_open = 0;
 	unsigned char *ptr_tag_name = NULL;
+	unsigned long sz_tag_name = 0;
 	unsigned char *ptr_tag_params = NULL;
 	unsigned int c = 0;
 
@@ -129,38 +129,11 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 				if(state & SCOPE_OPEN) {
 					if(state & SLASH) {
 						/* close tag */
-						if(ht_compare(p_xc->p_htc, p_parent_tag->p_name, ptr_tag_name, p_parent_tag->sz_name) == 0) {
-							/* close parent tag */
-							p_parent_tag->sz_content = (p_hc->p_content + pos_scope_open) - p_hc->p_content;
-							r = XML_OK;
-							break;
-						} else {
-							/* close one line tag */
-							if((p_ctag = xml_create_tag(p_xc, p_parent_tag))) {
-								p_ctag->p_name = ptr_tag_name;
-								if(ptr_tag_params) {
-									p_ctag->sz_name = ptr_tag_params - ptr_tag_name;
-									p_ctag->p_parameters = ptr_tag_params;
-									p_ctag->sz_parameters = (p_hc->p_content + pos) - ptr_tag_params;
-								} else
-									p_ctag->sz_name = (p_hc->p_content + pos) - ptr_tag_name;
-							}
-						}
+						/*...*/
 						state &= ~SLASH;
 					} else {
 						/* open tag */
-						if((p_ctag = xml_create_tag(p_xc, p_parent_tag))) {
-							p_ctag->p_name = ptr_tag_name;
-							p_ctag->sz_name = (p_hc->p_content + pos) - ptr_tag_name;
-							p_ctag->p_content = ht_ptr(p_xc->p_htc);
-							p_ctag->p_parameters = ptr_tag_params;
-							p_ctag->sz_parameters = (p_hc->p_content + pos) - ptr_tag_params;
-							if((r = _xml_parse(p_xc, p_ctag)) == XML_OK)
-								p_ctag->sz_content = ht_ptr(p_xc->p_htc) - p_ctag->p_content;
-							else
-								break;
-						} else
-							break;
+						/*...*/
 					}
 					ptr_tag_name = ptr_tag_params = NULL;
 				} else {
@@ -171,21 +144,12 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 			}
 		} else if(c == '<') {
 			if(!(state & (QUOTES|STROPHE))) {
-				/* fix position and pointer for tag name */
-				ptr_tag_name = ht_ptr(p_xc->p_htc);
-				ptr_tag_params = NULL;
-				pos_scope_open = pos;
-				/*...*/
 				state |= SCOPE_OPEN;
 				state &= ~SYMBOL;
 			}
 		} else if(c == '/') {
 			if(!(state & (QUOTES|STROPHE))) {
-				if(state & SCOPE_OPEN) {
-					/* fix position and pointer for tag name */
-					ptr_tag_name = ht_ptr(p_xc->p_htc);
-					state |= SLASH;
-				}
+				state |= SLASH;
 				state &= ~SYMBOL;
 			}
 		} else if(c == '\'') {
@@ -196,19 +160,18 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 			state &= ~SYMBOL;
 		} else if(c == ' ') {
 			if(!(state & (QUOTES|STROPHE))) {
-				if(state & SCOPE_OPEN) {
-					if(state & SYMBOL) {
-						ptr_tag_params = p_hc->p_content + pos;
-						state &= ~SYMBOL;
-					} else {
-						p_xc->err_pos = pos;
-						break;
-					}
-				}
+				/*...*/
 			}
-		} else
-			state |= SYMBOL;
+		} else {
+			if(!(state & (QUOTES|STROPHE))) {
+				/*...*/
+				state |= SYMBOL;
+			}
+		}
 	}
+
+	if(!c)
+		r = XML_OK;
 
 	return r;
 }
