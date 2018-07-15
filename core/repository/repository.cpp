@@ -355,8 +355,11 @@ private:
 		while(pprx) {
 			array = (*pprx)->array(&count, &limit);
 			disable_array(array, count);
+			mpi_ext_list->unlock(hm);
 			uninit_array(array, count);
+			hm = mpi_ext_list->lock();
 			(*pprx)->unload();
+			mpi_ext_list->sel(pprx, hm);
 			mpi_ext_list->del(hm);
 			pprx = (iRepoExtension **)mpi_ext_list->current(&sz, hm);
 		}
