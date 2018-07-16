@@ -153,6 +153,9 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 									r = XML_MEMORY_ERROR;
 									break;
 								}
+							} else { /* parse error */
+								p_xc->err_pos = pos;
+								break;
 							}
 						}
 						state &= ~SLASH;
