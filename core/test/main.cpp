@@ -25,30 +25,37 @@ void log_listener(_u8 lmt, _str_t msg) {
 	printf("[%c] %s\n", pref, msg);
 }
 
-const char *xml="\
-<tag1>\
-	<chtag1 param1=\"v1\">\
-		<inltag param=\"value\"/>\
-	</chtag1>\
-</tag1>\
-";
-
 _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
 	if(r == ERR_NONE) {
 		iRepository *pi_repo = get_repository();
+		iLog *pi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
+
+		pi_log->add_listener(log_listener);
 
 		pi_repo->extension_dir("./bin/deploy");
 		pi_repo->extension_load("extht.so");
-		pi_repo->extension_load("ext-1.so");
+		//pi_repo->extension_load("ext-1.so");
+		pi_repo->extension_load("extfs.so");
 
-		iHT *pi_ht = (iHT *)pi_repo->object_by_iname(I_HT, RF_ORIGINAL);
-		if(pi_ht) {
-			HTCONTEXT hc = pi_ht->create_context();
-			_ulong xlen = strlen(xml);
-			pi_ht->parse(hc, (_str_t)xml, xlen);
-			//...
-			pi_ht->destroy_context(hc);
+		iFS *pi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
+		if(pi_fs) {
+			iFileIO *pi_fio = pi_fs->open("test.xml", O_RDONLY);
+			if(pi_fio) {
+				iHT *pi_ht = (iHT *)pi_repo->object_by_iname(I_HT, RF_ORIGINAL);
+				if(pi_ht) {
+					_str_t xml = (_str_t)pi_fio->map(MPF_READ);
+					_ulong xlen = pi_fio->size();
+					HTCONTEXT hc = pi_ht->create_context();
+					pi_ht->parse(hc, xml, xlen);
+					//...
+					pi_ht->destroy_context(hc);
+					pi_repo->object_release(pi_ht);
+				}
+
+				pi_fs->close(pi_fio);
+			}
+			pi_repo->object_release(pi_fs);
 		}
 
 		uninit();

@@ -5,6 +5,7 @@
 
 #define XML_OK			0
 #define XML_PARSE_ERROR		-1
+#define XML_MEMORY_ERROR	-2
 
 /* tag flags */
 #define	TF_ONELINE	(1<<0)
