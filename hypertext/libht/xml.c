@@ -13,7 +13,7 @@
 #define EXCLAM		32	/* ! */
 #define DASH		64	/* - */
 #define COMMENT		256	/* <!-- */
-#define IGNORE		512	/* ? */
+#define IGNORE		512	/* <? */
 
 /* allocate memory for XML context */
 _xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free) {
@@ -136,57 +136,60 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 					if(state & COMMENT) {
 						if((state & DASH) && !(state & SYMBOL))
 							state &= ~(COMMENT | DASH | SCOPE_OPEN);
-					} else if((state & IGNORE) && !(state & SYMBOL) && _c == '?') {
+					} else if((state & IGNORE) && _c == '?') {
 							state &= ~(IGNORE | SCOPE_OPEN);
 					} else {
-						if(ptr_tag_name && !sz_tag_name)
-							sz_tag_name = (p_hc->p_content + pos) - ptr_tag_name;
-						if(ptr_tag_params && !sz_tag_params)
-							sz_tag_params = (p_hc->p_content + pos) - ptr_tag_params;
+						if(!(state & (COMMENT|IGNORE))) {
+							if(ptr_tag_name && !sz_tag_name)
+								sz_tag_name = (p_hc->p_content + pos) - ptr_tag_name;
+							if(ptr_tag_params && !sz_tag_params)
+								sz_tag_params = (p_hc->p_content + pos) - ptr_tag_params;
 
-						if(state & SLASH) {
-							/* close tag */
-							if(ht_compare(p_xc->p_htc, ptr_tag_name, p_parent_tag->p_name, p_parent_tag->sz_name) == 0) {
-								/* close parent tag */
-								p_parent_tag->sz_content = ht_ptr(p_xc->p_htc) - p_parent_tag->p_content;
-								r = XML_OK;
-								break;
-							} else {
-								if(!(state & SYMBOL) && _c == '/') {
-									/* close one line tag */
-									if((p_ctag = xml_create_tag(p_xc, p_parent_tag))) {
-										p_ctag->p_name = ptr_tag_name;
-										p_ctag->sz_name = sz_tag_name;
-										p_ctag->p_parameters = ptr_tag_params;
-										p_ctag->sz_parameters = sz_tag_params;
-									} else {
-										r = XML_MEMORY_ERROR;
+							if(state & SLASH) {
+								/* close tag */
+								if(ht_compare(p_xc->p_htc, ptr_tag_name, p_parent_tag->p_name, p_parent_tag->sz_name) == 0) {
+									/* close parent tag */
+									p_parent_tag->sz_content = ht_ptr(p_xc->p_htc) - p_parent_tag->p_content;
+									r = XML_OK;
+									break;
+								} else {
+									if(!(state & SYMBOL) && _c == '/') {
+										/* close one line tag */
+										if((p_ctag = xml_create_tag(p_xc, p_parent_tag))) {
+											p_ctag->p_name = ptr_tag_name;
+											p_ctag->sz_name = sz_tag_name;
+											p_ctag->p_parameters = ptr_tag_params;
+											p_ctag->sz_parameters = sz_tag_params;
+										} else {
+											r = XML_MEMORY_ERROR;
+											break;
+										}
+									} else { /* parse error */
+										p_xc->err_pos = pos;
 										break;
 									}
-								} else { /* parse error */
-									p_xc->err_pos = pos;
+								}
+								state &= ~SLASH;
+							} else {
+								/* open tag */
+								if((p_ctag = xml_create_tag(p_xc, p_parent_tag))) {
+									p_ctag->p_name = ptr_tag_name;
+									p_ctag->sz_name = sz_tag_name;
+									p_ctag->p_content = ht_ptr(p_xc->p_htc);
+									p_ctag->p_parameters = ptr_tag_params;
+									p_ctag->sz_parameters = sz_tag_params;
+
+									if((r = _xml_parse(p_xc, p_ctag)) != XML_OK)
+										break;
+								} else {
+									r = XML_MEMORY_ERROR;
 									break;
 								}
 							}
-							state &= ~SLASH;
-						} else {
-							/* open tag */
-							if((p_ctag = xml_create_tag(p_xc, p_parent_tag))) {
-								p_ctag->p_name = ptr_tag_name;
-								p_ctag->sz_name = sz_tag_name;
-								p_ctag->p_content = ht_ptr(p_xc->p_htc);
-								p_ctag->p_parameters = ptr_tag_params;
-								p_ctag->sz_parameters = sz_tag_params;
-
-								if((r = _xml_parse(p_xc, p_ctag)) != XML_OK)
-									break;
-							} else {
-								r = XML_MEMORY_ERROR;
-								break;
-							}
+							ptr_tag_name = ptr_tag_params = NULL;
+							sz_tag_name = sz_tag_params = 0;
+							state &= ~SCOPE_OPEN;
 						}
-						ptr_tag_name = ptr_tag_params = NULL;
-						state &= ~SCOPE_OPEN;
 					}
 				} else {
 					p_xc->err_pos = pos;
@@ -205,26 +208,24 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 				state &= ~SYMBOL;
 			}
 		} else if(c == '/') {
-			if(!(state & (QUOTES|STROPHE|COMMENT))) {
+			if(!(state & (QUOTES|STROPHE|COMMENT|IGNORE))) {
 				if(state & SCOPE_OPEN) {
-					if(state & SYMBOL) {
-						if(ptr_tag_params && !sz_tag_params)
-							sz_tag_params = (p_hc->p_content + pos) - ptr_tag_params;
-					}
+					if(ptr_tag_params && !sz_tag_params)
+						sz_tag_params = (p_hc->p_content + pos) - ptr_tag_params;
 					state |= SLASH;
 				}
 				state &= ~SYMBOL;
 			}
 		} else if(c == '\'') {
-			if(!(state & COMMENT))
+			if(!(state & (COMMENT|IGNORE)))
 				state ^= STROPHE;
 			state &= ~SYMBOL;
 		} else if(c == '"') {
-			if(!(state & COMMENT))
+			if(!(state & (COMMENT|IGNORE)))
 				state ^= QUOTES;
 			state &= ~SYMBOL;
 		} else if(c == ' ') {
-			if(!(state & (QUOTES|STROPHE|COMMENT))) {
+			if(!(state & (QUOTES|STROPHE|COMMENT|IGNORE))) {
 				if(state & SCOPE_OPEN) {
 					if(state & SYMBOL) {
 						if(ptr_tag_name && !ptr_tag_params) {
@@ -237,7 +238,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 				state &= ~SYMBOL;
 			}
 		} else if(c == '!') {
-			if(!(state & (QUOTES|STROPHE|COMMENT))) {
+			if(!(state & (QUOTES|STROPHE|COMMENT|IGNORE))) {
 				if((state & SCOPE_OPEN) && _c == '<') {
 					if(!(state & SYMBOL))
 						state |= EXCLAM;
@@ -246,7 +247,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 				state &= ~SYMBOL;
 			}
 		} else if(c == '-') {
-			if(!(state & (QUOTES|STROPHE))) {
+			if(!(state & (QUOTES|STROPHE|IGNORE))) {
 				if((state & SCOPE_OPEN) && !(state & SYMBOL)) {
 					if(state & EXCLAM) {
 						if((state & DASH) && _c == '-') {
@@ -260,7 +261,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 				state &= ~SYMBOL;
 			}
 		} else if(c == '?') {
-			if(!(state & (QUOTES|STROPHE|COMMENT))) {
+			if(!(state & (QUOTES|STROPHE|COMMENT|IGNORE))) {
 				if((state & SCOPE_OPEN) && _c == '<') {
 					if(!(state & (SYMBOL|DASH|EXCLAM|IGNORE)))
 						state |= IGNORE;
@@ -269,7 +270,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 			}
 		} else {
 			if(!(state & (QUOTES|STROPHE))) {
-				if((state & SCOPE_OPEN) && !(state & (SYMBOL|COMMENT))) {
+				if((state & SCOPE_OPEN) && !(state & (SYMBOL|COMMENT|IGNORE))) {
 					if(!ptr_tag_name) {
 						ptr_tag_name = p_hc->p_content + pos;
 						ptr_tag_params = 0;
@@ -278,7 +279,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 					}
 				}
 				state |= SYMBOL;
-				state &= ~(EXCLAM | DASH | IGNORE);
+				state &= ~(EXCLAM | DASH);
 			}
 		}
 

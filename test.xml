@@ -1,7 +1,11 @@
-<tag1>
+<t1>
+	<?
+		 <t p='a'/>
+	?>
 	<!-- <t par='val' />
 	-->
-	<chtag1 param1="v1">
-		<inltag param="value"/>
-	</chtag1>
-</tag1>
+	<c1 p1="v1">
+		<i p="v"/>
+		<j p='a' />
+	</c1>
+</t1>
