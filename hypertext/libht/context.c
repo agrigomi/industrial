@@ -35,12 +35,12 @@ static unsigned int read_utf8(_ht_content_t *p_htc, unsigned long *pos) {
 
 static unsigned int read_utf16_be(_ht_content_t *p_htc, unsigned long *pos) {
 	unsigned int r = 0;
-	unsigned short *content = (unsigned short *)p_htc->p_content;
+	unsigned char *content = p_htc->p_content;
 	unsigned long cpos = p_htc->c_pos;
 
 	*pos = cpos;
 	if(cpos < (p_htc->sz_content - 2)) {
-		unsigned short c = *(content + cpos);
+		unsigned short c = *(unsigned short *)(content + cpos);
 
 		r = (p_htc->machine_order == MACHINE_ORDER_LE) ? __builtin_bswap16(c) : c;
 		p_htc->c_pos += 2;
@@ -51,12 +51,12 @@ static unsigned int read_utf16_be(_ht_content_t *p_htc, unsigned long *pos) {
 
 static unsigned int read_utf16_le(_ht_content_t *p_htc, unsigned long *pos) {
 	unsigned int r = 0;
-	unsigned short *content = (unsigned short *)p_htc->p_content;
+	unsigned char *content = p_htc->p_content;
 	unsigned long cpos = p_htc->c_pos;
 
 	*pos = cpos;
 	if(cpos < (p_htc->sz_content - 2)) {
-		unsigned short c = *(content + cpos);
+		unsigned short c = *(unsigned short *)(content + cpos);
 
 		r = (p_htc->machine_order == MACHINE_ORDER_BE) ? __builtin_bswap16(c) : c;
 		p_htc->c_pos += 2;
@@ -67,12 +67,12 @@ static unsigned int read_utf16_le(_ht_content_t *p_htc, unsigned long *pos) {
 
 static unsigned int read_utf32_be(_ht_content_t *p_htc, unsigned long *pos) {
 	unsigned int r = 0;
-	unsigned int *content = (unsigned int *)p_htc->p_content;
+	unsigned char *content = p_htc->p_content;
 	unsigned long cpos = p_htc->c_pos;
 
 	*pos = cpos;
 	if(cpos < (p_htc->sz_content - 4)) {
-		unsigned int c = *(content + cpos);
+		unsigned int c = *(unsigned int *)(content + cpos);
 
 		r = (p_htc->machine_order == MACHINE_ORDER_LE) ? __builtin_bswap32(c) : c;
 		p_htc->c_pos += 4;
@@ -83,12 +83,12 @@ static unsigned int read_utf32_be(_ht_content_t *p_htc, unsigned long *pos) {
 
 static unsigned int read_utf32_le(_ht_content_t *p_htc, unsigned long *pos) {
 	unsigned int r = 0;
-	unsigned int *content = (unsigned int *)p_htc->p_content;
+	unsigned char *content = p_htc->p_content;
 	unsigned long cpos = p_htc->c_pos;
 
 	*pos = cpos;
 	if(cpos < (p_htc->sz_content - 4)) {
-		unsigned int c = *(content + cpos);
+		unsigned int c = *(unsigned int *)(content + cpos);
 
 		r = (p_htc->machine_order == MACHINE_ORDER_BE) ? __builtin_bswap32(c) : c;
 		p_htc->c_pos += 4;
@@ -99,10 +99,10 @@ static unsigned int read_utf32_le(_ht_content_t *p_htc, unsigned long *pos) {
 
 static _bom_t _g_bom_[] = {
 	{ (const unsigned char *)"\xef\xbb\xbf",	3,	E_UTF_8,	read_utf8 },
-	{ (const unsigned char *)"\xfe\xff",		2,	E_UTF_16_BE,	read_utf16_be },
-	{ (const unsigned char *)"\xff\xfe",		2,	E_UTF_16_LE,	read_utf16_le },
 	{ (const unsigned char *)"\x00\x00\xfe\xff",	4,	E_UTF_32_BE,	read_utf32_be },
 	{ (const unsigned char *)"\xff\xfe\x00\x00",	4,	E_UTF_32_LE,	read_utf32_le },
+	{ (const unsigned char *)"\xfe\xff",		2,	E_UTF_16_BE,	read_utf16_be },
+	{ (const unsigned char *)"\xff\xfe",		2,	E_UTF_16_LE,	read_utf16_le },
 	{ NULL,						0,	0,		NULL }
 };
 
