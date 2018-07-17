@@ -12,8 +12,8 @@
 #define SYMBOL		16
 #define EXCLAM		32	/* ! */
 #define DASH		64	/* - */
-#define COMMENT		256	/* <!-- */
-#define IGNORE		512	/* <? */
+#define COMMENT		128	/* <!-- */
+#define IGNORE		256	/* <? */
 
 /* allocate memory for XML context */
 _xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free) {
@@ -210,6 +210,8 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 		} else if(c == '/') {
 			if(!(state & (QUOTES|STROPHE|COMMENT|IGNORE))) {
 				if(state & SCOPE_OPEN) {
+					if(ptr_tag_name && !sz_tag_name)
+						sz_tag_name = (p_hc->p_content + pos) - ptr_tag_name;
 					if(ptr_tag_params && !sz_tag_params)
 						sz_tag_params = (p_hc->p_content + pos) - ptr_tag_params;
 					state |= SLASH;
