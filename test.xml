@@ -1,4 +1,6 @@
 <tag1>
+	<!-- <t par='val' />
+	-->
 	<chtag1 param1="v1">
 		<inltag param="value"/>
 	</chtag1>

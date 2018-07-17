@@ -10,6 +10,10 @@
 #define QUOTES		4	/* " */
 #define SLASH		8	/* / */
 #define SYMBOL		16
+#define EXCLAM		32	/* ! */
+#define DASH		64	/* - */
+#define COMMENT		256	/* <!-- */
+#define IGNORE		512	/* ? */
 
 /* allocate memory for XML context */
 _xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free) {
@@ -123,67 +127,75 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 	unsigned char *ptr_tag_params = NULL;
 	unsigned long sz_tag_params = 0;
 	unsigned int c = 0;
+	unsigned int _c = 0;
 
 	while((c = p_xc->p_htc->pf_read(p_hc, &pos))) {
 		if(c == '>') {
 			if(!(state & (QUOTES|STROPHE))) {
 				if(state & SCOPE_OPEN) {
-					if(ptr_tag_name && !sz_tag_name)
-						sz_tag_name = (p_hc->p_content + pos) - ptr_tag_name;
-					if(ptr_tag_params && !sz_tag_params)
-						sz_tag_params = (p_hc->p_content + pos) - ptr_tag_params;
+					if(state & COMMENT) {
+						if((state & DASH) && !(state & SYMBOL))
+							state &= ~(COMMENT | DASH | SCOPE_OPEN);
+					} else if((state & IGNORE) && !(state & SYMBOL) && _c == '?') {
+							state &= ~(IGNORE | SCOPE_OPEN);
+					} else {
+						if(ptr_tag_name && !sz_tag_name)
+							sz_tag_name = (p_hc->p_content + pos) - ptr_tag_name;
+						if(ptr_tag_params && !sz_tag_params)
+							sz_tag_params = (p_hc->p_content + pos) - ptr_tag_params;
 
-					if(state & SLASH) {
-						/* close tag */
-						if(ht_compare(p_xc->p_htc, ptr_tag_name, p_parent_tag->p_name, p_parent_tag->sz_name) == 0) {
-							/* close parent tag */
-							p_parent_tag->sz_content = ht_ptr(p_xc->p_htc) - p_parent_tag->p_content;
-							r = XML_OK;
-							break;
-						} else {
-							if(!(state & SYMBOL)) {
-								/* close one line tag */
-								if((p_ctag = xml_create_tag(p_xc, p_parent_tag))) {
-									p_ctag->p_name = ptr_tag_name;
-									p_ctag->sz_name = sz_tag_name;
-									p_ctag->p_content = ht_ptr(p_xc->p_htc);
-									p_ctag->p_parameters = ptr_tag_params;
-									p_ctag->sz_parameters = sz_tag_params;
-								} else {
-									r = XML_MEMORY_ERROR;
+						if(state & SLASH) {
+							/* close tag */
+							if(ht_compare(p_xc->p_htc, ptr_tag_name, p_parent_tag->p_name, p_parent_tag->sz_name) == 0) {
+								/* close parent tag */
+								p_parent_tag->sz_content = ht_ptr(p_xc->p_htc) - p_parent_tag->p_content;
+								r = XML_OK;
+								break;
+							} else {
+								if(!(state & SYMBOL) && _c == '/') {
+									/* close one line tag */
+									if((p_ctag = xml_create_tag(p_xc, p_parent_tag))) {
+										p_ctag->p_name = ptr_tag_name;
+										p_ctag->sz_name = sz_tag_name;
+										p_ctag->p_parameters = ptr_tag_params;
+										p_ctag->sz_parameters = sz_tag_params;
+									} else {
+										r = XML_MEMORY_ERROR;
+										break;
+									}
+								} else { /* parse error */
+									p_xc->err_pos = pos;
 									break;
 								}
-							} else { /* parse error */
-								p_xc->err_pos = pos;
+							}
+							state &= ~SLASH;
+						} else {
+							/* open tag */
+							if((p_ctag = xml_create_tag(p_xc, p_parent_tag))) {
+								p_ctag->p_name = ptr_tag_name;
+								p_ctag->sz_name = sz_tag_name;
+								p_ctag->p_content = ht_ptr(p_xc->p_htc);
+								p_ctag->p_parameters = ptr_tag_params;
+								p_ctag->sz_parameters = sz_tag_params;
+
+								if((r = _xml_parse(p_xc, p_ctag)) != XML_OK)
+									break;
+							} else {
+								r = XML_MEMORY_ERROR;
 								break;
 							}
 						}
-						state &= ~SLASH;
-					} else {
-						/* open tag */
-						if((p_ctag = xml_create_tag(p_xc, p_parent_tag))) {
-							p_ctag->p_name = ptr_tag_name;
-							p_ctag->sz_name = sz_tag_name;
-							p_ctag->p_content = ht_ptr(p_xc->p_htc);
-							p_ctag->p_parameters = ptr_tag_params;
-							p_ctag->sz_parameters = sz_tag_params;
-
-							if((r = _xml_parse(p_xc, p_ctag)) != XML_OK)
-								break;
-						} else {
-							r = XML_MEMORY_ERROR;
-							break;
-						}
+						ptr_tag_name = ptr_tag_params = NULL;
+						state &= ~SCOPE_OPEN;
 					}
-					ptr_tag_name = ptr_tag_params = NULL;
 				} else {
 					p_xc->err_pos = pos;
 					break;
 				}
-				state &= ~(SCOPE_OPEN|SYMBOL);
+				state &= ~SYMBOL;
 			}
 		} else if(c == '<') {
-			if(!(state & (QUOTES|STROPHE))) {
+			if(!(state & (QUOTES|STROPHE|COMMENT|IGNORE))) {
 				if(!(state & SCOPE_OPEN))
 					state |= SCOPE_OPEN;
 				else {
@@ -193,22 +205,26 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 				state &= ~SYMBOL;
 			}
 		} else if(c == '/') {
-			if(!(state & (QUOTES|STROPHE))) {
+			if(!(state & (QUOTES|STROPHE|COMMENT))) {
 				if(state & SCOPE_OPEN) {
-					if(ptr_tag_params && !sz_tag_params)
-						sz_tag_params = (p_hc->p_content + pos) - ptr_tag_params;
+					if(state & SYMBOL) {
+						if(ptr_tag_params && !sz_tag_params)
+							sz_tag_params = (p_hc->p_content + pos) - ptr_tag_params;
+					}
 					state |= SLASH;
 				}
 				state &= ~SYMBOL;
 			}
 		} else if(c == '\'') {
-			state ^= STROPHE;
+			if(!(state & COMMENT))
+				state ^= STROPHE;
 			state &= ~SYMBOL;
 		} else if(c == '"') {
-			state ^= QUOTES;
+			if(!(state & COMMENT))
+				state ^= QUOTES;
 			state &= ~SYMBOL;
 		} else if(c == ' ') {
-			if(!(state & (QUOTES|STROPHE))) {
+			if(!(state & (QUOTES|STROPHE|COMMENT))) {
 				if(state & SCOPE_OPEN) {
 					if(state & SYMBOL) {
 						if(ptr_tag_name && !ptr_tag_params) {
@@ -220,21 +236,53 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 				}
 				state &= ~SYMBOL;
 			}
+		} else if(c == '!') {
+			if(!(state & (QUOTES|STROPHE|COMMENT))) {
+				if((state & SCOPE_OPEN) && _c == '<') {
+					if(!(state & SYMBOL))
+						state |= EXCLAM;
+				}
+
+				state &= ~SYMBOL;
+			}
+		} else if(c == '-') {
+			if(!(state & (QUOTES|STROPHE))) {
+				if((state & SCOPE_OPEN) && !(state & SYMBOL)) {
+					if(state & EXCLAM) {
+						if((state & DASH) && _c == '-') {
+							/* second dash */
+							state |= COMMENT;
+							state &= ~EXCLAM;
+						}
+					}
+					state |= DASH;
+				}
+				state &= ~SYMBOL;
+			}
+		} else if(c == '?') {
+			if(!(state & (QUOTES|STROPHE|COMMENT))) {
+				if((state & SCOPE_OPEN) && _c == '<') {
+					if(!(state & (SYMBOL|DASH|EXCLAM|IGNORE)))
+						state |= IGNORE;
+				}
+				state &= ~SYMBOL;
+			}
 		} else {
 			if(!(state & (QUOTES|STROPHE))) {
-				if((state & SCOPE_OPEN)) {
-					if(!(state & SYMBOL)) {
-						if(!ptr_tag_name) {
-							ptr_tag_name = p_hc->p_content + pos;
-							ptr_tag_params = 0;
-							sz_tag_name = 0;
-							sz_tag_params = 0;
-						}
+				if((state & SCOPE_OPEN) && !(state & (SYMBOL|COMMENT))) {
+					if(!ptr_tag_name) {
+						ptr_tag_name = p_hc->p_content + pos;
+						ptr_tag_params = 0;
+						sz_tag_name = 0;
+						sz_tag_params = 0;
 					}
 				}
 				state |= SYMBOL;
+				state &= ~(EXCLAM | DASH | IGNORE);
 			}
 		}
+
+		_c = c;
 	}
 
 	if(!c)
