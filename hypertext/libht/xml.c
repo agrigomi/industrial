@@ -321,13 +321,46 @@ _xml_err_t xml_parse(_xml_context_t *p_xc, /* XML context */
 	return r;
 }
 
+static _ht_tag_t *find_tag(_xml_context_t *p_xc, char *tname,
+			unsigned int sz_tname,
+			_ht_tag_t *p_tparent, unsigned int index) {
+	_ht_tag_t *r = NULL;
+
+	/*...*/
+
+	return r;
+}
+
 _ht_tag_t *xml_select(_xml_context_t *p_xc,
 			char *xpath,
 			_ht_tag_t *p_start_point, /* start tag (can be NULL) */
 			unsigned int index) {
-	_ht_tag_t *r = NULL;
+	_ht_tag_t *r = p_start_point;
+	char *tname = NULL;
+	unsigned int sz_tname = 0;
+	unsigned int l = strlen(xpath);
+	unsigned int i = 0;
 
-	/*...*/
+	for(i = 0; i < l; i++) {
+		if(xpath[i] == '/') {
+			if(tname) {
+				sz_tname = (xpath + i) - tname;
+				r = find_tag(p_xc, tname, sz_tname, r, index);
+				tname = NULL;
+				sz_tname = 0;
+				if(!r)
+					break;
+			}
+		} else {
+			if(!tname)
+				tname = xpath + i;
+		}
+	}
+
+	if(tname) {
+		sz_tname = (xpath + i) - tname;
+		r = find_tag(p_xc, tname, sz_tname, r, index);
+	}
 
 	return r;
 }
