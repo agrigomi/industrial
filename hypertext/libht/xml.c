@@ -338,7 +338,7 @@ _ht_tag_t *xml_select(_xml_context_t *p_xc,
 	_ht_tag_t *r = p_start_point;
 	char *tname = NULL;
 	unsigned int sz_tname = 0;
-	unsigned int l = strlen(xpath);
+	unsigned int l = (xpath) ? strlen(xpath) : 0;
 	unsigned int i = 0;
 
 	for(i = 0; i < l; i++) {
@@ -357,10 +357,8 @@ _ht_tag_t *xml_select(_xml_context_t *p_xc,
 		}
 	}
 
-	if(tname) {
-		sz_tname = (xpath + i) - tname;
-		r = find_tag(p_xc, tname, sz_tname, r, index);
-	}
+	sz_tname = (tname) ? ((xpath + i) - tname) : 0;
+	r = find_tag(p_xc, tname, sz_tname, r, index);
 
 	return r;
 }
