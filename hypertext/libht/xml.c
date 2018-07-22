@@ -325,8 +325,15 @@ static _ht_tag_t *find_tag(_xml_context_t *p_xc, char *tname,
 			unsigned int sz_tname,
 			_ht_tag_t *p_tparent, unsigned int index) {
 	_ht_tag_t *r = NULL;
+	_ht_tag_t *p_tstart = (p_tparent) ? p_tparent : p_xc->p_root;
 
-	/*...*/
+	if(p_tstart) {
+		unsigned int i = 0;
+
+		for(; i < p_tstart->num_childs; i++) {
+			/*...*/
+		}
+	}
 
 	return r;
 }
