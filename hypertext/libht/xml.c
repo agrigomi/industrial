@@ -329,9 +329,32 @@ static _ht_tag_t *find_tag(_xml_context_t *p_xc, char *tname,
 
 	if(p_tstart) {
 		unsigned int i = 0;
+		unsigned int idx = 0;
 
 		for(; i < p_tstart->num_childs; i++) {
-			/*...*/
+			if(p_tstart->pp_childs[i]) {
+				if(tname && sz_tname) {
+					/* by name and index */
+					if(sz_tname == p_tstart->pp_childs[i]->sz_name) {
+						if(ht_compare(p_xc->p_htc, (unsigned char *)tname,
+								p_tstart->pp_childs[i]->p_name,
+								sz_tname) == 0) {
+							if(idx == index) {
+								r = p_tstart->pp_childs[i];
+								break;
+							}
+							idx++;
+						}
+					}
+				} else {
+					/* by index only */
+					if(idx == index) {
+						r = p_tstart->pp_childs[i];
+						break;
+					}
+					idx++;
+				}
+			}
 		}
 	}
 
