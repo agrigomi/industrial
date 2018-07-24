@@ -1,17 +1,17 @@
 include .fg/_config_
-project_defaults = .fg/$(PROJECT)/_config_
+project_defaults = $(PROJECT)/.fg/_config_
 -include $(project_defaults)
 
-project_config = .fg/$(PROJECT)/$(CONFIG)/_config_
+project_config = $(PROJECT)/.fg/$(CONFIG)/_config_
 include $(project_config)
 
 #supress project PRE/POST build steps before include target config
 
-target_config=.fg/$(PROJECT)/$(CONFIG)/$(basename $(TARGET))/_config_
+target_config=$(PROJECT)/.fg/$(CONFIG)/$(basename $(TARGET))/_config_
 -include $(target_config)
 
 #read target groups
-groups_file = .fg/$(PROJECT)/$(CONFIG)/$(basename $(TARGET))/_groups_
+groups_file = $(PROJECT)/.fg/$(CONFIG)/$(basename $(TARGET))/_groups_
 groups = $(shell cat $(groups_file))
 target_name=$(basename $(TARGET))
 target_dir=$(OUTDIR)/$(PROJECT)/$(CONFIG)/$(target_name)
@@ -24,7 +24,7 @@ $(target_dir)/$(TARGET): $(groups_out)
 	$(POSTBUILD)
 
 #read source files from group file
-group_file=.fg/$(PROJECT)/$(CONFIG)/$(basename $(TARGET))/$(GROUP)
+group_file=$(PROJECT)/.fg/$(CONFIG)/$(basename $(TARGET))/$(GROUP)
 src=$(shell cat $(group_file))
 
 $(groups_out): %$(OUTSUFFIX): $(target_dir)

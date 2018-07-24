@@ -1,21 +1,21 @@
 include .fg/_config_
--include .fg/$(PROJECT)/_config_
+-include $(PROJECT)/.fg/_config_
 
-project_config=.fg/$(PROJECT)/$(CONFIG)/_config_
+project_config=$(PROJECT)/.fg/$(CONFIG)/_config_
 -include $(project_config)
 
-target_config=.fg/$(PROJECT)/$(CONFIG)/$(basename $(TARGET))/_config_
+target_config=$(PROJECT)/.fg/$(CONFIG)/$(basename $(TARGET))/_config_
 -include $(target_config)
 
 #supress target PRE/POST build steps before include group config
 #set default linker flag for link relocatable
 LINKER=ld
 LINKER_FLAGS=-r
-group_config=.fg/$(PROJECT)/$(CONFIG)/$(basename $(TARGET))/$(GROUP)._config_
+group_config=$(PROJECT)/.fg/$(CONFIG)/$(basename $(TARGET))/$(GROUP)._config_
 -include $(group_config)
 
 #read source files from group file
-group_file=.fg/$(PROJECT)/$(CONFIG)/$(basename $(TARGET))/$(GROUP)
+group_file=$(PROJECT)/.fg/$(CONFIG)/$(basename $(TARGET))/$(GROUP)
 
 target_name=$(basename $(TARGET))
 target_dir=$(OUTDIR)/$(PROJECT)/$(CONFIG)/$(target_name)

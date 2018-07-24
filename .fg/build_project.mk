@@ -1,6 +1,6 @@
 include .fg/_config_
--include .fg/$(PROJECT)/_config_
-targets = $(shell cat .fg/$(PROJECT)/$(CONFIG)/_targets_)
+-include $(PROJECT)/.fg/_config_
+targets = $(shell cat $(PROJECT)/.fg/$(CONFIG)/_targets_)
 targets_basename = $(basename $(targets))
 
 #default output directory
@@ -14,7 +14,7 @@ ifeq ($(CONFIG),)
 	exit
 endif
 
--include .fg/$(PROJECT)/$(CONFIG)/_config_
+-include $(PROJECT)/.fg/$(CONFIG)/_config_
 
 .PHONY: $(targets_basename) clean
 

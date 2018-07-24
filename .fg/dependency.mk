@@ -1,13 +1,13 @@
 include .fg/_config_
--include .fg/$(PROJECT)/_config_
+-include $(PROJECT)/.fg/_config_
 
-project_config=.fg/$(PROJECT)/$(CONFIG)/_config_
+project_config=$(PROJECT)/.fg/$(CONFIG)/_config_
 -include $(project_config)
 
-target_config=.fg/$(PROJECT)/$(CONFIG)/$(basename $(TARGET))/_config_
+target_config=$(PROJECT)/.fg/$(CONFIG)/$(basename $(TARGET))/_config_
 -include $(target_config)
 
-group_config=.fg/$(PROJECT)/$(CONFIG)/$(basename $(TARGET))/$(GROUP)._config_
+group_config=$(PROJECT)/.fg/$(CONFIG)/$(basename $(TARGET))/$(GROUP)._config_
 -include $(group_config)
 
 dep_pcfg=
