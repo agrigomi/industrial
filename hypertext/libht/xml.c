@@ -300,7 +300,7 @@ _xml_err_t xml_parse(_xml_context_t *p_xc, /* XML context */
 	_xml_err_t r = XML_PARSE_ERROR;
 	_ht_context_t *phtc = p_xc->p_htc;
 
-	if(phtc) {
+	if(phtc && phtc->ht_content.p_content == NULL) {
 		ht_init_context(phtc, p_xml_content, sz_xml_content);
 
 		if(!p_xc->p_root)
