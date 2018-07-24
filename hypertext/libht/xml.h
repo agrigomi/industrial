@@ -63,7 +63,7 @@ _xml_err_t xml_parse(_xml_context_t *p_xc, /* XML context */
 			unsigned long sz_xml_content /* size of XML content */
 			);
 _ht_tag_t *xml_select(_xml_context_t *p_xc,
-			char *xpath,
+			const char *xpath,
 			_ht_tag_t *p_start_point, /* start tag (can be NULL) */
 			unsigned int index);
 void xml_add_tdef_array(_xml_context_t *p_xc, /* XML context */

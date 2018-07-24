@@ -58,7 +58,7 @@ public:
 		return r;
 	}
 
-	HTTAG select(HTCONTEXT hc, _str_t xpath, HTTAG start_point, _u32 index) {
+	HTTAG select(HTCONTEXT hc, _cstr_t xpath, HTTAG start_point, _u32 index) {
 		return xml_select((_xml_context_t *)hc, xpath,
 				(_ht_tag_t *)start_point, index);
 	}

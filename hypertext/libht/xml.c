@@ -318,7 +318,7 @@ _xml_err_t xml_parse(_xml_context_t *p_xc, /* XML context */
 	return r;
 }
 
-static _ht_tag_t *find_tag(_xml_context_t *p_xc, char *tname,
+static _ht_tag_t *find_tag(_xml_context_t *p_xc, const char *tname,
 			unsigned int sz_tname,
 			_ht_tag_t *p_tparent, unsigned int index) {
 	_ht_tag_t *r = NULL;
@@ -359,11 +359,11 @@ static _ht_tag_t *find_tag(_xml_context_t *p_xc, char *tname,
 }
 
 _ht_tag_t *xml_select(_xml_context_t *p_xc,
-			char *xpath,
+			const char *xpath,
 			_ht_tag_t *p_start_point, /* start tag (can be NULL) */
 			unsigned int index) {
 	_ht_tag_t *r = p_start_point;
-	char *tname = NULL;
+	const char *tname = NULL;
 	unsigned int sz_tname = 0;
 	unsigned int l = (xpath) ? strlen(xpath) : 0;
 	unsigned int i = 0;

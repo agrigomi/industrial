@@ -47,8 +47,10 @@ _err_t main(int argc, char *argv[]) {
 					_str_t xml = (_str_t)pi_fio->map(MPF_READ);
 					_ulong xlen = pi_fio->size();
 					HTCONTEXT hc = pi_ht->create_context();
-					pi_ht->parse(hc, xml, xlen);
-					//...
+					if(pi_ht->parse(hc, xml, xlen)) {
+						HTTAG c1 = pi_ht->select(hc, "/t1/c1", NULL, 0);
+						//...
+					}
 					pi_ht->destroy_context(hc);
 					pi_repo->object_release(pi_ht);
 				}
