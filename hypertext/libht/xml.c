@@ -34,10 +34,6 @@ _xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free) 
 	return r;
 }
 
-void xml_destroy_context(_xml_context_t *p_xc) {
-	/*...*/
-}
-
 /* find tag definitian */
 static _tag_def_t *find_tdef(_xml_context_t *p_xc, unsigned long pos, unsigned int sz) {
 	_tag_def_t * r = NULL;
@@ -147,7 +143,8 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 
 							if(state & SLASH) {
 								/* close tag */
-								if(ht_compare(p_xc->p_htc, ptr_tag_name, p_parent_tag->p_name, p_parent_tag->sz_name) == 0) {
+								if(ht_compare(p_xc->p_htc, ptr_tag_name,
+										p_parent_tag->p_name, p_parent_tag->sz_name) == 0) {
 									/* close parent tag */
 									p_parent_tag->sz_content = ht_ptr(p_xc->p_htc) - p_parent_tag->p_content;
 									r = XML_OK;
@@ -392,3 +389,31 @@ _ht_tag_t *xml_select(_xml_context_t *p_xc,
 
 	return r;
 }
+
+static void xml_destroy_tag(_xml_context_t *p_xc, _ht_tag_t *p_tag) {
+	unsigned int i = 0;
+
+	for(; i < p_tag->num_childs; i++) {
+		if(p_tag->pp_childs[i]) {
+			xml_destroy_tag(p_xc, p_tag->pp_childs[i]);
+			/* deallocate child tag */
+			p_xc->p_htc->pf_mem_free(p_tag->pp_childs[i], sizeof(_ht_tag_t));
+		}
+	}
+
+	/* deallocate array for child tags */
+	p_xc->p_htc->pf_mem_free(p_tag->pp_childs, p_tag->num_childs * sizeof(_ht_tag_t *));
+}
+
+void xml_destroy_context(_xml_context_t *p_xc) {
+	_ht_context_t *p_htc = p_xc->p_htc;
+
+	if(p_xc->p_root)
+		xml_destroy_tag(p_xc, p_xc->p_root);
+
+	/* deallocate XML context */
+	p_htc->pf_mem_free(p_xc, sizeof(_xml_context_t));
+	/* destroy hypertext context */
+	ht_destroy_context(p_htc);
+}
+
