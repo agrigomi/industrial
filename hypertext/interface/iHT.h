@@ -4,6 +4,7 @@
 #include "iBase.h"
 
 #define I_HT	"iHT"
+#define I_XML	"iXML"
 
 #define HTCONTEXT	void*
 #define HTTAG		void*
@@ -15,6 +16,11 @@ public:
 	virtual void destroy_context(HTCONTEXT)=0;
 	virtual bool parse(HTCONTEXT, _str_t, _ulong)=0;
 	virtual HTTAG select(HTCONTEXT, _cstr_t xpath, HTTAG, _u32)=0;
+};
+
+class iXML: public iHT {
+public:
+	INTERFACE(iXML, I_XML);
 };
 
 #endif

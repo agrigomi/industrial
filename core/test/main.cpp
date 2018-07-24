@@ -42,17 +42,17 @@ _err_t main(int argc, char *argv[]) {
 		if(pi_fs) {
 			iFileIO *pi_fio = pi_fs->open("test.xml", O_RDONLY);
 			if(pi_fio) {
-				iHT *pi_ht = (iHT *)pi_repo->object_by_iname(I_HT, RF_ORIGINAL);
-				if(pi_ht) {
+				iXML *pi_xml = (iXML *)pi_repo->object_by_iname(I_XML, RF_ORIGINAL);
+				if(pi_xml) {
 					_str_t xml = (_str_t)pi_fio->map(MPF_READ);
 					_ulong xlen = pi_fio->size();
-					HTCONTEXT hc = pi_ht->create_context();
-					if(pi_ht->parse(hc, xml, xlen)) {
-						HTTAG c1 = pi_ht->select(hc, "/t1/c1", NULL, 0);
+					HTCONTEXT hc = pi_xml->create_context();
+					if(pi_xml->parse(hc, xml, xlen)) {
+						HTTAG c1 = pi_xml->select(hc, "/t1/c1", NULL, 0);
 						//...
 					}
-					pi_ht->destroy_context(hc);
-					pi_repo->object_release(pi_ht);
+					pi_xml->destroy_context(hc);
+					pi_repo->object_release(pi_xml);
 				}
 
 				pi_fs->close(pi_fio);
