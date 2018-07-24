@@ -1,5 +1,5 @@
 include .fg/_config_
-include $(PROJECT)/.fg/_config_
+-include $(PROJECT)/.fg/_config_
 targets = $(shell cat $(PROJECT)/.fg/$(CONFIG)/_targets_)
 targets_basename = $(basename $(targets))
 
