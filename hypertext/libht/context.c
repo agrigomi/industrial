@@ -309,13 +309,13 @@ unsigned int ht_read(_ht_context_t *p_htc, /* context */
 		case E_UTF_16_BE:
 			r = *(unsigned short *)p;
 			if(p_htc->ht_content.machine_order == MACHINE_ORDER_LE)
-				r =  __builtin_bswap16(r);
+				r =  __builtin_bswap32(r);
 			*ppn = p + 2;
 			break;
 		case E_UTF_16_LE:
 			r = *(unsigned short *)p;
 			if(p_htc->ht_content.machine_order == MACHINE_ORDER_BE)
-				r =  __builtin_bswap16(r);
+				r =  __builtin_bswap32(r);
 			*ppn = p + 2;
 			break;
 		case E_UTF_32_LE:
