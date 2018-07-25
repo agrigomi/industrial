@@ -14,6 +14,7 @@
 #define DASH		64	/* - */
 #define COMMENT		128	/* <!-- */
 #define IGNORE		256	/* <? */
+#define EQUAL		512	/* = */
 
 /* allocate memory for XML context */
 _xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free) {
@@ -35,7 +36,7 @@ _xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free) 
 }
 
 /* find tag definitian */
-static _tag_def_t *find_tdef(_xml_context_t *p_xc, unsigned long pos, unsigned int sz) {
+/*static _tag_def_t *find_tdef(_xml_context_t *p_xc, unsigned long pos, unsigned int sz) {
 	_tag_def_t * r = NULL;
 
 	if(p_xc->pp_tdef) {
@@ -61,6 +62,7 @@ static _tag_def_t *find_tdef(_xml_context_t *p_xc, unsigned long pos, unsigned i
 
 	return r;
 }
+*/
 
 static _ht_tag_t *xml_create_tag(_xml_context_t *p_xc, _ht_tag_t *p_parent) {
 	_ht_tag_t *r = NULL;
@@ -137,16 +139,18 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 					} else {
 						if(!(state & (COMMENT|IGNORE))) {
 							if(ptr_tag_name && !sz_tag_name)
-								sz_tag_name = (p_hc->p_content + pos) - ptr_tag_name;
+								sz_tag_name = ht_symbols(p_xc->p_htc, (p_hc->p_content + pos), ptr_tag_name);
 							if(ptr_tag_params && !sz_tag_params)
-								sz_tag_params = (p_hc->p_content + pos) - ptr_tag_params;
+								sz_tag_params = ht_symbols(p_xc->p_htc, (p_hc->p_content + pos), ptr_tag_params);
 
 							if(state & SLASH) {
 								/* close tag */
 								if(ht_compare(p_xc->p_htc, ptr_tag_name,
 										p_parent_tag->p_name, p_parent_tag->sz_name) == 0) {
 									/* close parent tag */
-									p_parent_tag->sz_content = ht_ptr(p_xc->p_htc) - p_parent_tag->p_content;
+									p_parent_tag->sz_content = ht_symbols(p_xc->p_htc,
+													ht_ptr(p_xc->p_htc),
+													p_parent_tag->p_content);
 									r = XML_OK;
 									break;
 								} else {
@@ -208,9 +212,9 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 			if(!(state & (QUOTES|STROPHE|COMMENT|IGNORE))) {
 				if(state & SCOPE_OPEN) {
 					if(ptr_tag_name && !sz_tag_name)
-						sz_tag_name = (p_hc->p_content + pos) - ptr_tag_name;
+						sz_tag_name = ht_symbols(p_xc->p_htc, (p_hc->p_content + pos), ptr_tag_name);
 					if(ptr_tag_params && !sz_tag_params)
-						sz_tag_params = (p_hc->p_content + pos) - ptr_tag_params;
+						sz_tag_params = ht_symbols(p_xc->p_htc, (p_hc->p_content + pos), ptr_tag_params);
 					state |= SLASH;
 				}
 				state &= ~SYMBOL;
@@ -229,7 +233,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 					if(state & SYMBOL) {
 						if(ptr_tag_name && !ptr_tag_params) {
 							ptr_tag_params = ht_ptr(p_xc->p_htc);
-							sz_tag_name = (p_hc->p_content + pos) - ptr_tag_name;
+							sz_tag_name = ht_symbols(p_xc->p_htc, (p_hc->p_content + pos), ptr_tag_name);
 							sz_tag_params = 0;
 						}
 					}
@@ -386,6 +390,15 @@ _ht_tag_t *xml_select(_xml_context_t *p_xc,
 
 	sz_tname = (tname) ? ((xpath + i) - tname) : 0;
 	r = find_tag(p_xc, tname, sz_tname, r, index);
+
+	return r;
+}
+
+/* get parameter value */
+char *xml_tag_parameter(_ht_tag_t *p_tag, const char *pname, unsigned int *sz) {
+	char *r = NULL;
+
+	/*...*/
 
 	return r;
 }
