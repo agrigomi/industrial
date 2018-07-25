@@ -40,6 +40,13 @@ unsigned long ht_position(_ht_context_t *);
 unsigned char *ht_ptr(_ht_context_t *);
 /* compare memory with taking care about document encoding */
 int ht_compare(_ht_context_t *, unsigned char *, unsigned char *, unsigned int);
+/* return number of symbols between two pointers */
+int ht_symbols(_ht_context_t *, unsigned char *, unsigned char *);
+/* read symbol */
+unsigned int ht_read(_ht_context_t *, /* context */
+			unsigned char *, /* input pointer */
+			unsigned char ** /* output pointer (to next symbol) */
+			);
 /* destroy (deallocate) context */
 void ht_destroy_context(_ht_context_t *);
 #ifdef __cplusplus

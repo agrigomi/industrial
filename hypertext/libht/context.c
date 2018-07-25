@@ -234,6 +234,90 @@ int ht_compare(_ht_context_t *p_htc, unsigned char *p1, unsigned char *p2, unsig
 	return r;
 }
 
+/* return number of symbols between two pointers */
+int ht_symbols(_ht_context_t *p_htc, unsigned char *p1, unsigned char *p2) {
+	int r = 0;
+
+	if((p1 >= p_htc->ht_content.p_content &&
+				p1 < (p_htc->ht_content.p_content + p_htc->ht_content.sz_content)) &&
+			(p2 >= p_htc->ht_content.p_content &&
+				p2 < (p_htc->ht_content.p_content + p_htc->ht_content.sz_content))) {
+
+		r = (p1 < p2) ? p2 - p1 : p1 - p2;
+
+		switch(p_htc->ht_content.encoding) {
+			case E_UTF_16_LE:
+			case E_UTF_16_BE:
+				r /= 2;
+				break;
+			case E_UTF_32_LE:
+			case E_UTF_32_BE:
+				r /= 4;
+				break;
+		}
+	}
+
+	return r;
+}
+
+/* read symbol */
+unsigned int ht_read(_ht_context_t *p_htc, /* context */
+			unsigned char *p, /* input pointer */
+			unsigned char **ppn /* output pointer (to next symbol */
+			) {
+	unsigned int r = 0;
+	unsigned char en = E_UTF_8;
+
+	if(p >= p_htc->ht_content.p_content && p < (p_htc->ht_content.p_content + p_htc->ht_content.sz_content))
+		/* p belongs to current document */
+		en = p_htc->ht_content.encoding;
+
+	switch(en) {
+		case E_UTF_8: {
+			unsigned int i = 0;
+			unsigned char c = *(p + i);
+
+			r = c;
+			i++;
+
+			while((c & 0xc0) == 0xc0) {
+				r <<= 8;
+				c <<= 1;
+				r |= (unsigned char)*(p + i);
+				i++;
+			}
+
+			*ppn = p + i;
+		} break;
+		case E_UTF_16_BE:
+			r = *(unsigned short *)p;
+			if(p_htc->ht_content.machine_order == MACHINE_ORDER_LE)
+				r =  __builtin_bswap16(r);
+			*ppn = p + 2;
+			break;
+		case E_UTF_16_LE:
+			r = *(unsigned short *)p;
+			if(p_htc->ht_content.machine_order == MACHINE_ORDER_BE)
+				r =  __builtin_bswap16(r);
+			*ppn = p + 2;
+			break;
+		case E_UTF_32_LE:
+			r = *(unsigned int *)p;
+			if(p_htc->ht_content.machine_order == MACHINE_ORDER_BE)
+				r =  __builtin_bswap32(r);
+			*ppn = p + 4;
+			break;
+		case E_UTF_32_BE:
+			r = *(unsigned int *)p;
+			if(p_htc->ht_content.machine_order == MACHINE_ORDER_LE)
+				r =  __builtin_bswap32(r);
+			*ppn = p + 4;
+			break;
+	}
+
+	return r;
+}
+
 /* destroy (deallocate) context */
 void ht_destroy_context(_ht_context_t *p_htc) {
 	if(p_htc->pf_mem_free)
