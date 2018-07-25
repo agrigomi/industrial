@@ -235,8 +235,8 @@ int ht_compare(_ht_context_t *p_htc, unsigned char *p1, unsigned char *p2, unsig
 }
 
 /* return number of symbols between two pointers */
-int ht_symbols(_ht_context_t *p_htc, unsigned char *p1, unsigned char *p2) {
-	int r = 0;
+unsigned int ht_symbols(_ht_context_t *p_htc, unsigned char *p1, unsigned char *p2) {
+	unsigned int r = 0;
 
 	if((p1 >= p_htc->ht_content.p_content &&
 				p1 < (p_htc->ht_content.p_content + p_htc->ht_content.sz_content)) &&
@@ -255,6 +255,23 @@ int ht_symbols(_ht_context_t *p_htc, unsigned char *p1, unsigned char *p2) {
 				r /= 4;
 				break;
 		}
+	}
+
+	return r;
+}
+
+unsigned int ht_bytes(_ht_context_t *p_htc, unsigned int num_symbols) {
+	unsigned int r = num_symbols;
+
+	switch(p_htc->ht_content.encoding) {
+		case E_UTF_16_LE:
+		case E_UTF_16_BE:
+			r *= 2;
+			break;
+		case E_UTF_32_LE:
+		case E_UTF_32_BE:
+			r *= 4;
+			break;
 	}
 
 	return r;
