@@ -395,7 +395,8 @@ _ht_tag_t *xml_select(_xml_context_t *p_xc,
 }
 
 /* get parameter value */
-char *xml_tag_parameter(_ht_tag_t *p_tag, const char *pname, unsigned int *sz) {
+char *xml_tag_parameter(_xml_context_t *p_xc, _ht_tag_t *p_tag,
+			const char *pname, unsigned int *sz) {
 	char *r = NULL;
 
 	/*...*/

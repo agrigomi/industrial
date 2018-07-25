@@ -67,7 +67,8 @@ _ht_tag_t *xml_select(_xml_context_t *p_xc,
 			_ht_tag_t *p_start_point, /* start tag (can be NULL) */
 			unsigned int index);
 /* get parameter value */
-char *xml_tag_parameter(_ht_tag_t *p_tag, const char *pname, unsigned int *sz);
+char *xml_tag_parameter(_xml_context_t *,_ht_tag_t *p_tag,
+			const char *pname, unsigned int *sz);
 void xml_add_tdef_array(_xml_context_t *p_xc, /* XML context */
 			_tag_def_t *p_tdef_array /* array of tag definitions, terminated by empty struct. */
 			);
