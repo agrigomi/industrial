@@ -15,6 +15,7 @@
 #define COMMENT		128	/* <!-- */
 #define IGNORE		256	/* <? */
 #define EQUAL		512	/* = */
+#define ESCAPE		1024	/* \ */
 
 /* allocate memory for XML context */
 _xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free) {
@@ -129,7 +130,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 
 	while((c = p_xc->p_htc->pf_read(p_hc, &pos))) {
 		if(c == '>') {
-			if(!(state & (QUOTES|STROPHE))) {
+			if(!(state & (QUOTES | STROPHE | ESCAPE))) {
 				if(state & SCOPE_OPEN) {
 					if(state & COMMENT) {
 						if((state & DASH) && !(state & SYMBOL))
@@ -137,7 +138,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 					} else if((state & IGNORE) && _c == '?') {
 							state &= ~(IGNORE | SCOPE_OPEN);
 					} else {
-						if(!(state & (COMMENT|IGNORE))) {
+						if(!(state & (COMMENT | IGNORE | ESCAPE))) {
 							if(ptr_tag_name && !sz_tag_name)
 								sz_tag_name = ht_symbols(p_xc->p_htc, (p_hc->p_content + pos), ptr_tag_name);
 							if(ptr_tag_params && !sz_tag_params)
@@ -196,20 +197,20 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 					p_xc->err_pos = pos;
 					break;
 				}
-				state &= ~SYMBOL;
+				state &= ~(SYMBOL | ESCAPE);
 			}
 		} else if(c == '<') {
-			if(!(state & (QUOTES|STROPHE|COMMENT|IGNORE))) {
+			if(!(state & (QUOTES | STROPHE | COMMENT | IGNORE | ESCAPE))) {
 				if(!(state & SCOPE_OPEN))
 					state |= SCOPE_OPEN;
 				else {
 					p_xc->err_pos = pos;
 					break;
 				}
-				state &= ~SYMBOL;
+				state &= ~(SYMBOL | ESCAPE);
 			}
 		} else if(c == '/') {
-			if(!(state & (QUOTES|STROPHE|COMMENT|IGNORE))) {
+			if(!(state & (QUOTES | STROPHE | COMMENT | IGNORE | ESCAPE))) {
 				if(state & SCOPE_OPEN) {
 					if(ptr_tag_name && !sz_tag_name)
 						sz_tag_name = ht_symbols(p_xc->p_htc, (p_hc->p_content + pos), ptr_tag_name);
@@ -217,18 +218,18 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 						sz_tag_params = ht_symbols(p_xc->p_htc, (p_hc->p_content + pos), ptr_tag_params);
 					state |= SLASH;
 				}
-				state &= ~SYMBOL;
+				state &= ~(SYMBOL | ESCAPE);
 			}
 		} else if(c == '\'') {
-			if(!(state & (COMMENT|IGNORE)))
+			if(!(state & (COMMENT | IGNORE | ESCAPE)))
 				state ^= STROPHE;
-			state &= ~SYMBOL;
+			state &= ~(SYMBOL | ESCAPE);
 		} else if(c == '"') {
-			if(!(state & (COMMENT|IGNORE)))
+			if(!(state & (COMMENT | IGNORE | ESCAPE)))
 				state ^= QUOTES;
-			state &= ~SYMBOL;
+			state &= ~(SYMBOL | ESCAPE);
 		} else if(c == ' ') {
-			if(!(state & (QUOTES|STROPHE|COMMENT|IGNORE))) {
+			if(!(state & (QUOTES | STROPHE | COMMENT |IGNORE | ESCAPE))) {
 				if(state & SCOPE_OPEN) {
 					if(state & SYMBOL) {
 						if(ptr_tag_name && !ptr_tag_params) {
@@ -238,19 +239,19 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 						}
 					}
 				}
-				state &= ~SYMBOL;
+				state &= ~(SYMBOL | ESCAPE);
 			}
 		} else if(c == '!') {
-			if(!(state & (QUOTES|STROPHE|COMMENT|IGNORE))) {
+			if(!(state & (QUOTES | STROPHE | COMMENT | IGNORE | ESCAPE))) {
 				if((state & SCOPE_OPEN) && _c == '<') {
 					if(!(state & SYMBOL))
 						state |= EXCLAM;
 				}
 
-				state &= ~SYMBOL;
+				state &= ~(SYMBOL | ESCAPE);
 			}
 		} else if(c == '-') {
-			if(!(state & (QUOTES|STROPHE|IGNORE))) {
+			if(!(state & (QUOTES | STROPHE | IGNORE | ESCAPE))) {
 				if((state & SCOPE_OPEN) && !(state & SYMBOL)) {
 					if(state & EXCLAM) {
 						if((state & DASH) && _c == '-') {
@@ -261,19 +262,25 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 					}
 					state |= DASH;
 				}
-				state &= ~SYMBOL;
+				state &= ~(SYMBOL | ESCAPE);
 			}
 		} else if(c == '?') {
-			if(!(state & (QUOTES|STROPHE|COMMENT|IGNORE))) {
+			if(!(state & (QUOTES | STROPHE | COMMENT | IGNORE | ESCAPE))) {
 				if((state & SCOPE_OPEN) && _c == '<') {
 					if(!(state & (SYMBOL|DASH|EXCLAM|IGNORE)))
 						state |= IGNORE;
 				}
-				state &= ~SYMBOL;
+				state &= ~(SYMBOL | ESCAPE);
 			}
+		} else if(c == '\\') {
+			if(!(state & ESCAPE) && _c != '\\')
+				state |= ESCAPE;
+			else
+				state &= ~ESCAPE;
+			state &= ~SYMBOL;
 		} else {
 			if(!(state & (QUOTES|STROPHE))) {
-				if((state & SCOPE_OPEN) && !(state & (SYMBOL|COMMENT|IGNORE))) {
+				if((state & SCOPE_OPEN) && !(state & (SYMBOL | COMMENT | IGNORE | ESCAPE))) {
 					if(!ptr_tag_name) {
 						ptr_tag_name = p_hc->p_content + pos;
 						ptr_tag_params = 0;
@@ -282,7 +289,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 					}
 				}
 				state |= SYMBOL;
-				state &= ~(EXCLAM | DASH);
+				state &= ~(EXCLAM | DASH | ESCAPE);
 			}
 		}
 
@@ -398,8 +405,82 @@ _ht_tag_t *xml_select(_xml_context_t *p_xc,
 char *xml_tag_parameter(_xml_context_t *p_xc, _ht_tag_t *p_tag,
 			const char *pname, unsigned int *sz) {
 	char *r = NULL;
+	unsigned char *p_var = NULL;
+	unsigned char *p_val = NULL;
+	unsigned char sz_var = 0;
+	unsigned char sz_val = 0;
+	unsigned int state = 0;
 
-	/*...*/
+	if(p_tag->p_parameters && p_tag->sz_parameters) {
+		unsigned char *p_end = p_tag->p_parameters + p_tag->sz_parameters;
+		unsigned char *ptr = p_tag->p_parameters;
+		unsigned char *_ptr = NULL;
+		unsigned int c = 0;
+		unsigned int _c = 0;
+
+		while(ptr < p_end) {
+			_ptr = ptr; /* backup the current pointer */
+			_c = c; /* backup the current symbol */
+
+			if(!(c = ht_read(p_xc->p_htc, ptr, &ptr)))
+				break;
+
+			if(c == '"') {
+				if(!(state & (ESCAPE | STROPHE))) {
+					/*...*/
+					state ^= QUOTES;
+				}
+				state &= ~(SYMBOL | ESCAPE);
+			} else if(c == '\'') {
+				if(!(state & (ESCAPE | QUOTES))) {
+					/*...*/
+					state ^= STROPHE;
+				}
+				state &= ~(SYMBOL | ESCAPE);
+			} else if(c == '=') {
+				if(!(state & (STROPHE | QUOTES | ESCAPE))) {
+					if(state & EQUAL)
+						break;
+					if(p_var && !sz_var && (state & SYMBOL))
+						sz_var = ht_symbols(p_xc->p_htc, _ptr, p_var);
+					state |= EQUAL;
+				}
+				state &= ~(SYMBOL | ESCAPE);
+			} else if(c == ' ') {
+				if(!(state & (STROPHE | QUOTES | ESCAPE | EQUAL))) {
+					if(p_var && !sz_var && (state & SYMBOL))
+						sz_var = ht_symbols(p_xc->p_htc, _ptr, p_var);
+				}
+				state &= ~(SYMBOL | ESCAPE);
+			} else if(c == '\\') {
+				if(!(state & ESCAPE) && _c != '\\')
+					state |= ESCAPE;
+				else
+					state &= ~ESCAPE;
+				state &= ~SYMBOL;
+			} else {
+				if(!(state & (SYMBOL | ESCAPE))) {
+					if(!(state & (STROPHE | QUOTES))) {
+						if(!p_var && !(state & EQUAL)) {
+							p_var = _ptr;
+							sz_var = 0;
+							p_val = NULL;
+							sz_val = 0;
+						}
+					} else {
+						if(!p_val && (state & EQUAL) && p_var && sz_var) {
+							p_val = _ptr;
+							sz_val = 0;
+						}
+					}
+				}
+				state |= SYMBOL;
+				state &= ~ESCAPE;
+			}
+		}
+	}
+
+	*sz = sz_val;
 
 	return r;
 }
