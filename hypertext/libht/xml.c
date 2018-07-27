@@ -427,13 +427,31 @@ char *xml_tag_parameter(_xml_context_t *p_xc, _ht_tag_t *p_tag,
 
 			if(c == '"') {
 				if(!(state & (ESCAPE | STROPHE))) {
-					/*...*/
+					if(state & QUOTES) {
+						/* closed */
+						if(p_var && sz_var && p_val && !sz_val) {
+							/* get value size and check variable name */
+							sz_val = ht_symbols(p_xc->p_htc, _ptr, p_val);
+							/*...*/
+						} else
+							/* syntax error */
+							break;
+					}
 					state ^= QUOTES;
 				}
 				state &= ~(SYMBOL | ESCAPE);
 			} else if(c == '\'') {
 				if(!(state & (ESCAPE | QUOTES))) {
-					/*...*/
+					if(state & STROPHE) {
+						/* closed */
+						if(p_var && sz_var && p_val && !sz_val) {
+							/* get value size and check variable name */
+							sz_val = ht_symbols(p_xc->p_htc, _ptr, p_val);
+							/*...*/
+						} else
+							/* syntax error */
+							break;
+					}
 					state ^= STROPHE;
 				}
 				state &= ~(SYMBOL | ESCAPE);
