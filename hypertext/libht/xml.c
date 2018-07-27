@@ -432,7 +432,14 @@ char *xml_tag_parameter(_xml_context_t *p_xc, _ht_tag_t *p_tag,
 						if(p_var && sz_var && p_val && !sz_val) {
 							/* get value size and check variable name */
 							sz_val = ht_symbols(p_xc->p_htc, _ptr, p_val);
-							/*...*/
+							if(ht_compare(p_xc->p_htc, p_var, (unsigned char *)pname, sz_var) == 0) {
+								r = (char *)p_val;
+								break;
+							}
+							p_var = p_val = NULL;
+							sz_var = sz_val = 0;
+							state = 0;
+							continue;
 						} else
 							/* syntax error */
 							break;
@@ -447,7 +454,14 @@ char *xml_tag_parameter(_xml_context_t *p_xc, _ht_tag_t *p_tag,
 						if(p_var && sz_var && p_val && !sz_val) {
 							/* get value size and check variable name */
 							sz_val = ht_symbols(p_xc->p_htc, _ptr, p_val);
-							/*...*/
+							if(ht_compare(p_xc->p_htc, p_var, (unsigned char *)pname, sz_var) == 0) {
+								r = (char *)p_val;
+								break;
+							}
+							p_var = p_val = NULL;
+							sz_var = sz_val = 0;
+							state = 0;
+							continue;
 						} else
 							/* syntax error */
 							break;

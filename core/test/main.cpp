@@ -48,7 +48,11 @@ _err_t main(int argc, char *argv[]) {
 					_ulong xlen = pi_fio->size();
 					HTCONTEXT hc = pi_xml->create_context();
 					if(pi_xml->parse(hc, xml, xlen)) {
+						_u32 sz  = 0;
+
 						HTTAG c1 = pi_xml->select(hc, "/t1/c1", NULL, 0);
+						_str_t p1 = pi_xml->parameter(hc, c1, "p1", &sz);
+						asm("nop");
 						//...
 					}
 					pi_xml->destroy_context(hc);

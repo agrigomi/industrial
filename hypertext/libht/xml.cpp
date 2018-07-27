@@ -59,6 +59,10 @@ public:
 		return xml_select((_xml_context_t *)hc, xpath,
 				(_ht_tag_t *)start_point, index);
 	}
+
+	_str_t parameter(HTCONTEXT hc, HTTAG ht, _cstr_t pname, _u32 *sz) {
+		return xml_tag_parameter((_xml_context_t *)hc, (_ht_tag_t *)ht, pname, sz);
+	}
 };
 
 static cXML _g_xml_;
