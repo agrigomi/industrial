@@ -125,6 +125,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 	unsigned long sz_tag_name = 0;
 	unsigned char *ptr_tag_params = NULL;
 	unsigned long sz_tag_params = 0;
+	unsigned long pos_scope_open = 0;
 	unsigned int c = 0;
 	unsigned int _c = 0;
 
@@ -149,9 +150,12 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 								if(ht_compare(p_xc->p_htc, ptr_tag_name,
 										p_parent_tag->p_name, p_parent_tag->sz_name) == 0) {
 									/* close parent tag */
+									p_parent_tag->sz_end_tag = ht_symbols(p_xc->p_htc,
+											ht_ptr(p_xc->p_htc),
+											p_hc->p_content + pos_scope_open);
 									p_parent_tag->sz_content = ht_symbols(p_xc->p_htc,
-													ht_ptr(p_xc->p_htc),
-													p_parent_tag->p_content);
+											p_parent_tag->p_content,
+											p_hc->p_content + pos_scope_open);
 									r = XML_OK;
 									break;
 								} else {
@@ -189,7 +193,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 								}
 							}
 							ptr_tag_name = ptr_tag_params = NULL;
-							sz_tag_name = sz_tag_params = 0;
+							sz_tag_name = sz_tag_params = pos_scope_open = 0;
 							state &= ~SCOPE_OPEN;
 						}
 					}
@@ -201,9 +205,10 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 			}
 		} else if(c == '<') {
 			if(!(state & (QUOTES | STROPHE | COMMENT | IGNORE | ESCAPE))) {
-				if(!(state & SCOPE_OPEN))
+				if(!(state & SCOPE_OPEN)) {
 					state |= SCOPE_OPEN;
-				else {
+					pos_scope_open = pos;
+				} else {
 					p_xc->err_pos = pos;
 					break;
 				}
@@ -402,9 +407,9 @@ _ht_tag_t *xml_select(_xml_context_t *p_xc,
 }
 
 /* get parameter value */
-char *xml_tag_parameter(_xml_context_t *p_xc, _ht_tag_t *p_tag,
+unsigned char *xml_tag_parameter(_xml_context_t *p_xc, _ht_tag_t *p_tag,
 			const char *pname, unsigned int *sz) {
-	char *r = NULL;
+	unsigned char *r = NULL;
 	unsigned char *p_var = NULL;
 	unsigned char *p_val = NULL;
 	unsigned char sz_var = 0;
@@ -433,7 +438,7 @@ char *xml_tag_parameter(_xml_context_t *p_xc, _ht_tag_t *p_tag,
 							/* get value size and check variable name */
 							sz_val = ht_symbols(p_xc->p_htc, _ptr, p_val);
 							if(ht_compare(p_xc->p_htc, p_var, (unsigned char *)pname, sz_var) == 0) {
-								r = (char *)p_val;
+								r = p_val;
 								break;
 							}
 							p_var = p_val = NULL;
@@ -455,7 +460,7 @@ char *xml_tag_parameter(_xml_context_t *p_xc, _ht_tag_t *p_tag,
 							/* get value size and check variable name */
 							sz_val = ht_symbols(p_xc->p_htc, _ptr, p_val);
 							if(ht_compare(p_xc->p_htc, p_var, (unsigned char *)pname, sz_var) == 0) {
-								r = (char *)p_val;
+								r = p_val;
 								break;
 							}
 							p_var = p_val = NULL;
@@ -515,6 +520,12 @@ char *xml_tag_parameter(_xml_context_t *p_xc, _ht_tag_t *p_tag,
 	*sz = sz_val;
 
 	return r;
+}
+
+/* get tag content */
+unsigned char *xml_tag_content(_ht_tag_t *p_tag, unsigned int *sz) {
+	*sz = p_tag->sz_content;
+	return p_tag->p_content;
 }
 
 static void xml_destroy_tag(_xml_context_t *p_xc, _ht_tag_t *p_tag) {

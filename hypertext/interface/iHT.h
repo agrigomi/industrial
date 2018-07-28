@@ -17,6 +17,7 @@ public:
 	virtual bool parse(HTCONTEXT, _str_t, _ulong)=0;
 	virtual HTTAG select(HTCONTEXT, _cstr_t xpath, HTTAG, _u32)=0;
 	virtual _str_t parameter(HTCONTEXT, HTTAG, _cstr_t, _u32 *)=0;
+	virtual _str_t content(HTTAG, _u32 *)=0;
 };
 
 class iXML: public iHT {

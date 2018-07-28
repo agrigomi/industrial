@@ -52,6 +52,10 @@ _err_t main(int argc, char *argv[]) {
 
 						HTTAG c1 = pi_xml->select(hc, "/t1/c1", NULL, 0);
 						_str_t p1 = pi_xml->parameter(hc, c1, "p1", &sz);
+						HTTAG j = pi_xml->select(hc, "/t1/c1/j", NULL, 0);
+						_str_t p = pi_xml->parameter(hc, j, "p", &sz);
+						_str_t p1c = pi_xml->content(c1, &sz);
+						_str_t jc = pi_xml->content(j, &sz);
 						asm("nop");
 						//...
 					}

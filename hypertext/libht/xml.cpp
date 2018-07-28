@@ -61,7 +61,11 @@ public:
 	}
 
 	_str_t parameter(HTCONTEXT hc, HTTAG ht, _cstr_t pname, _u32 *sz) {
-		return xml_tag_parameter((_xml_context_t *)hc, (_ht_tag_t *)ht, pname, sz);
+		return (_str_t)xml_tag_parameter((_xml_context_t *)hc, (_ht_tag_t *)ht, pname, sz);
+	}
+
+	_str_t content(HTTAG ht, _u32 *sz) {
+		return (_str_t)xml_tag_content((_ht_tag_t *)ht, sz);
 	}
 };
 
