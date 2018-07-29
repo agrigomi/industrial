@@ -1,0 +1,13 @@
+#!/bin/bash
+while [[ $# -gt 0 ]]
+do
+	p="$1"
+	echo clean [$p]
+	if [ -f .fg/$p/build_$p.mk ]; then 
+		make --no-print-directory -s -f .fg/$p/build_$p.mk PROJECT=$p clean 
+	else 
+		make --no-print-directory -s -f .fg/build_project.mk PROJECT=$p clean 
+	fi 
+shift 
+done
+
