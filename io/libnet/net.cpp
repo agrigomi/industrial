@@ -98,6 +98,53 @@ public:
 		return r;
 	}
 
+	iSocketIO *create_multicast_sender(_str_t group, _u32 port) {
+		return create_udp_client(group, port);
+	}
+
+	iSocketIO *create_multicast_listener(_str_t group, _u32 port) {
+		iSocketIO *r = 0;
+		struct ip_mreq mreq;
+		_s32 sfd = socket(AF_INET, SOCK_DGRAM, 0);
+
+		if(sfd > 0) {
+			struct sockaddr_in *p_caddr = 0;
+			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
+
+			if(pcsio) {
+				_u32 opt = 1;
+				if(setsockopt(sfd, SOL_SOCKET,SO_REUSEADDR, (char*)&opt, sizeof(opt)) >= 0) {
+					if(mpi_heap)
+						p_caddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in));
+					if(p_caddr) {
+						memset(p_caddr, 0, sizeof(struct sockaddr_in));
+						p_caddr->sin_family = AF_INET;
+						p_caddr->sin_addr.s_addr = htonl(INADDR_ANY);
+						p_caddr->sin_port = htons((unsigned short)port);
+						if(bind(sfd, (struct sockaddr *)p_caddr, sizeof(struct sockaddr_in)) >= 0) {
+							mreq.imr_multiaddr.s_addr = inet_addr(group);
+							mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+							if (setsockopt(sfd, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *)&mreq, sizeof(mreq)) >= 0) {
+								pcsio->_init(0, p_caddr, sfd, SOCKET_IO_UDP);
+								r = pcsio;
+							}
+						}
+					}
+				}
+			}
+
+			if(!r) {
+				::close(sfd);
+				if(p_caddr && mpi_heap)
+					mpi_heap->free(p_caddr, sizeof(struct sockaddr_in));
+				if(pcsio)
+					_gpi_repo_->object_release(pcsio);
+			}
+		}
+
+		return r;
+	}
+
 	void close_socket(iSocketIO *p_sio) {
 		cSocketIO *pcsio = dynamic_cast<cSocketIO *>(p_sio);
 

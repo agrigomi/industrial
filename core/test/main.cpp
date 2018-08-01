@@ -41,11 +41,15 @@ _err_t main(int argc, char *argv[]) {
 
 		iNet *pi_net = (iNet*)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
 		if(pi_net) {
-			iSocketIO *sio = pi_net->create_udp_client("239.0.0.1", 9000);
+			iSocketIO *sio = pi_net->create_multicast_listener("239.0.0.1", 9000);
 			if(sio) {
 				int i = 10;
-				while(i--)
-					sio->write((char *)"---\n", 4);
+				char b[20]="";
+
+				while(i--) {
+					if(sio->read(b, 20))
+						printf(b);
+				}
 				pi_net->close_socket(sio);
 			}
 			pi_repo->object_release(pi_net);

@@ -27,6 +27,8 @@ public:
 	INTERFACE(iNet, I_NET);
 	virtual iSocketIO *create_udp_server(_u32 port)=0;
 	virtual iSocketIO *create_udp_client(_str_t dst_ip, _u32 port)=0;
+	virtual iSocketIO *create_multicast_sender(_str_t group, _u32 port)=0;
+	virtual iSocketIO *create_multicast_listener(_str_t group, _u32 port)=0;
 	virtual void close_socket(iSocketIO *p_sio)=0;
 	virtual iTCPServer *create_tcp_server(_u32 port)=0;
 	virtual iSocketIO *create_tcp_client(_str_t host, _u32 port)=0;
