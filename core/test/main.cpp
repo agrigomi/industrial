@@ -37,6 +37,19 @@ _err_t main(int argc, char *argv[]) {
 		pi_repo->extension_load("extht.so");
 		//pi_repo->extension_load("ext-1.so");
 		pi_repo->extension_load("extfs.so");
+		pi_repo->extension_load("extnet.so");
+
+		iNet *pi_net = (iNet*)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
+		if(pi_net) {
+			iSocketIO *sio = pi_net->create_udp_client("239.0.0.1", 9000);
+			if(sio) {
+				int i = 10;
+				while(i--)
+					sio->write((char *)"---\n", 4);
+				pi_net->close_socket(sio);
+			}
+			pi_repo->object_release(pi_net);
+		}
 
 		iFS *pi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
 		if(pi_fs) {
