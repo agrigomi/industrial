@@ -89,8 +89,10 @@ public:
 					p_caddr->sin_port = htons((unsigned short)port);
 					pcsio->_init(0, p_caddr, sfd, SOCKET_IO_UDP);
 					r = pcsio;
-				} else
+				} else {
 					::close(sfd);
+					_gpi_repo_->object_release(pcsio);
+				}
 			} else
 				::close(sfd);
 		}
@@ -122,6 +124,7 @@ public:
 						p_caddr->sin_addr.s_addr = htonl(INADDR_ANY);
 						p_caddr->sin_port = htons((unsigned short)port);
 						if(bind(sfd, (struct sockaddr *)p_caddr, sizeof(struct sockaddr_in)) >= 0) {
+							memset(&mreq, 0, sizeof(struct ip_mreq));
 							mreq.imr_multiaddr.s_addr = inet_addr(group);
 							mreq.imr_interface.s_addr = htonl(INADDR_ANY);
 							if (setsockopt(sfd, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *)&mreq, sizeof(mreq)) >= 0) {
@@ -135,10 +138,11 @@ public:
 
 			if(!r) {
 				::close(sfd);
-				if(p_caddr && mpi_heap)
-					mpi_heap->free(p_caddr, sizeof(struct sockaddr_in));
 				if(pcsio)
 					_gpi_repo_->object_release(pcsio);
+
+				if(p_caddr && mpi_heap)
+					mpi_heap->free(p_caddr, sizeof(struct sockaddr_in));
 			}
 		}
 
@@ -206,7 +210,7 @@ public:
 
 			if(!r) {
 				::close(sfd);
-				if(p_saddr)
+				if(p_saddr && mpi_heap)
 					mpi_heap->free(p_saddr, sizeof(struct sockaddr_in));
 			}
 		}
