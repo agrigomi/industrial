@@ -39,7 +39,7 @@ _err_t main(int argc, char *argv[]) {
 		pi_repo->extension_load("extfs.so");
 		pi_repo->extension_load("extnet.so");
 
-		iNet *pi_net = (iNet*)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
+/*		iNet *pi_net = (iNet*)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
 		if(pi_net) {
 			iSocketIO *sio = pi_net->create_multicast_listener("239.0.0.1", 9000);
 			if(sio) {
@@ -54,7 +54,7 @@ _err_t main(int argc, char *argv[]) {
 			}
 			pi_repo->object_release(pi_net);
 		}
-
+*/
 		iFS *pi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
 		if(pi_fs) {
 			iFileIO *pi_fio = pi_fs->open("test.xml", O_RDONLY);
@@ -68,11 +68,11 @@ _err_t main(int argc, char *argv[]) {
 						_u32 sz  = 0;
 
 						HTTAG c1 = pi_xml->select(hc, "/t1/c1", NULL, 0);
-						_str_t p1 = pi_xml->parameter(hc, c1, "p1", &sz);
+						if(c1)
+							_str_t p1 = pi_xml->parameter(hc, c1, "p1", &sz);
 						HTTAG j = pi_xml->select(hc, "/t1/c1/j", NULL, 0);
-						_str_t p = pi_xml->parameter(hc, j, "p", &sz);
-						_str_t p1c = pi_xml->content(c1, &sz);
-						_str_t jc = pi_xml->content(j, &sz);
+						if(j)
+							_str_t p = pi_xml->parameter(hc, j, "p", &sz);
 						asm("nop");
 						//...
 					}

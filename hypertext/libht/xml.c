@@ -388,11 +388,11 @@ _ht_tag_t *xml_select(_xml_context_t *p_xc,
 		if(xpath[i] == '/') {
 			if(tname) {
 				sz_tname = (xpath + i) - tname;
-				r = find_tag(p_xc, tname, sz_tname, r, index);
-				tname = NULL;
-				sz_tname = 0;
-				if(!r)
-					break;
+				if((r = find_tag(p_xc, tname, sz_tname, r, index))) {
+					tname = NULL;
+					sz_tname = 0;
+				} else
+					return r;
 			}
 		} else {
 			if(!tname)
