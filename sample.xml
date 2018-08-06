@@ -5,7 +5,7 @@
     <CommandLine>Examp1.EXE</CommandLine>  
     <Input>1</Input>  
     <Output>One</Output>  
-  </test>  
+  </Test>  
   <Test TestId="0002" TestType="CMD">  
     <Name>Find succeeding characters</Name>  
     <CommandLine>Examp2.EXE</CommandLine>  

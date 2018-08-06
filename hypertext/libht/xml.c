@@ -234,7 +234,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 			if(!(state & (COMMENT | IGNORE | ESCAPE)))
 				state ^= QUOTES;
 			state &= ~(SYMBOL | ESCAPE);
-		} else if(c == ' ') {
+		} else if(c == ' ' || c == '\t' || c == '\n') {
 			if(!(state & (QUOTES | STROPHE | COMMENT |IGNORE | ESCAPE))) {
 				if(state & SCOPE_OPEN) {
 					if(state & SYMBOL) {
