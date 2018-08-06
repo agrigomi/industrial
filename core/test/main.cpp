@@ -57,7 +57,7 @@ _err_t main(int argc, char *argv[]) {
 */
 		iFS *pi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
 		if(pi_fs) {
-			iFileIO *pi_fio = pi_fs->open("test.xml", O_RDONLY);
+			iFileIO *pi_fio = pi_fs->open("sample.xml", O_RDONLY);
 			if(pi_fio) {
 				iXML *pi_xml = (iXML *)pi_repo->object_by_iname(I_XML, RF_ORIGINAL);
 				if(pi_xml) {
@@ -67,12 +67,12 @@ _err_t main(int argc, char *argv[]) {
 					if(pi_xml->parse(hc, xml, xlen)) {
 						_u32 sz  = 0;
 
-						HTTAG c1 = pi_xml->select(hc, "/t1/c1", NULL, 0);
-						if(c1)
-							_str_t p1 = pi_xml->parameter(hc, c1, "p1", &sz);
-						HTTAG j = pi_xml->select(hc, "/t1/c1/j", NULL, 0);
-						if(j)
-							_str_t p = pi_xml->parameter(hc, j, "p", &sz);
+						HTTAG title = pi_xml->select(hc, "/Tests/Test/Name", NULL, 0);
+						if(title) {
+							//_str_t max_len = pi_xml->parameter(hc, title, "maxlength", &sz);
+							_str_t conent = pi_xml->content(title, &sz);
+							asm("nop");
+						}
 						asm("nop");
 						//...
 					}

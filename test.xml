@@ -1,7 +1,7 @@
 <t1>
 	<xx/>
 	<i p="v"/>
-	<?
+	<?test
 		 <t p='a'/>
 	?>
 	<c1 x="alabala" p1 = "v1" >
