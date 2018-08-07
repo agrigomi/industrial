@@ -291,7 +291,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 					}
 					state |= DASH;
 				}
-				state &= ~(SYMBOL | ESCAPE);
+				state &= ~(ESCAPE);
 			}
 		} else if(c == '?') {
 			if(!(state & (QUOTES | STROPHE | COMMENT | ESCAPE))) {

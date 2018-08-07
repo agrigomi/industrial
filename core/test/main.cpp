@@ -74,7 +74,7 @@ _err_t main(int argc, char *argv[]) {
 							asm("nop");
 						}
 */
-						HTTAG test = pi_xml->select(hc, "/t1/test", NULL, 0);
+						HTTAG test = pi_xml->select(hc, "/t-1/test", NULL, 0);
 						_str_t test_content = pi_xml->content(test, &sz);
 						asm("nop");
 						//...
