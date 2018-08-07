@@ -13,9 +13,10 @@
 #define EXCLAM		32	/* ! */
 #define DASH		64	/* - */
 #define COMMENT		128	/* <!-- */
-#define IGNORE		256	/* <? */
+#define IGNORE		256
 #define EQUAL		512	/* = */
 #define ESCAPE		1024	/* \ */
+#define PI		2048	/* <? */
 
 /* allocate memory for XML context */
 _xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free) {
@@ -134,9 +135,28 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 			if(!(state & (QUOTES | STROPHE | ESCAPE))) {
 				if(state & SCOPE_OPEN) {
 					if(state & COMMENT) {
-						if((state & DASH) && !(state & SYMBOL))
+						if((state & DASH) && !(state & SYMBOL)) {
 							state &= ~(COMMENT | DASH | SCOPE_OPEN);
+							ptr_tag_name = ptr_tag_params = NULL;
+							sz_tag_name = sz_tag_params = pos_scope_open = 0;
+						}
 					} else if((state & IGNORE) && _c == '?') {
+							if(state & PI) {
+								/* create processing instructions tag */
+								if((p_ctag = xml_create_tag(p_xc, p_parent_tag))) {
+									p_ctag->p_name = ptr_tag_name;
+									p_ctag->sz_name = sz_tag_name;
+									p_ctag->p_parameters = p_ctag->p_content = ptr_tag_params;
+									p_ctag->sz_parameters = p_ctag->sz_content = sz_tag_params;
+									p_ctag->sz_end_tag = 2;
+								} else {
+									r = XML_MEMORY_ERROR;
+									break;
+								}
+								state &= ~PI;
+							}
+							ptr_tag_name = ptr_tag_params = NULL;
+							sz_tag_name = sz_tag_params = pos_scope_open = 0;
 							state &= ~(IGNORE | SCOPE_OPEN);
 					} else {
 						if(!(state & (COMMENT | IGNORE | ESCAPE))) {
@@ -166,6 +186,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 											p_ctag->sz_name = sz_tag_name;
 											p_ctag->p_parameters = ptr_tag_params;
 											p_ctag->sz_parameters = sz_tag_params;
+											p_ctag->sz_end_tag = 2;
 										} else {
 											r = XML_MEMORY_ERROR;
 											break;
@@ -235,13 +256,15 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 				state ^= QUOTES;
 			state &= ~(SYMBOL | ESCAPE);
 		} else if(c == ' ' || c == '\t' || c == '\n') {
-			if(!(state & (QUOTES | STROPHE | COMMENT |IGNORE | ESCAPE))) {
+			if(!(state & (QUOTES | STROPHE | COMMENT | IGNORE | ESCAPE))) {
 				if(state & SCOPE_OPEN) {
 					if(state & SYMBOL) {
 						if(ptr_tag_name && !ptr_tag_params) {
 							ptr_tag_params = ht_ptr(p_xc->p_htc);
 							sz_tag_name = ht_symbols(p_xc->p_htc, (p_hc->p_content + pos), ptr_tag_name);
 							sz_tag_params = 0;
+							if(state & PI)
+								state |= IGNORE;
 						}
 					}
 				}
@@ -271,10 +294,15 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 				state &= ~(SYMBOL | ESCAPE);
 			}
 		} else if(c == '?') {
-			if(!(state & (QUOTES | STROPHE | COMMENT | IGNORE | ESCAPE))) {
-				if((state & SCOPE_OPEN) && _c == '<') {
-					if(!(state & (SYMBOL|DASH|EXCLAM|IGNORE)))
-						state |= IGNORE;
+			if(!(state & (QUOTES | STROPHE | COMMENT | ESCAPE))) {
+				if((state & SCOPE_OPEN)) {
+					if(_c == '<' && !(state & (SYMBOL | DASH | EXCLAM))) {
+						if(!(state & PI))
+							state |= PI;
+					} else {
+						if(ptr_tag_params && (state & PI))
+							sz_tag_params = ht_symbols(p_xc->p_htc, (p_hc->p_content + pos), ptr_tag_params);
+					}
 				}
 				state &= ~(SYMBOL | ESCAPE);
 			}
