@@ -9,10 +9,9 @@
 
 /* tag flags */
 #define	TF_ONELINE	(1<<0)
-#define TF_EMBEDDED	(1<<1)
+#define TF_PROCESSING	(1<<1)
 #define TF_SKIP		(1<<2)
-#define TF_HOOK_PARSE	(1<<8)
-#define TF_HOOK_EXPORT	(1<<9)
+#define TF_EMBEDDED	(1<<3)
 
 typedef int _xml_err_t;
 typedef struct ht_tag _ht_tag_t;
@@ -49,8 +48,8 @@ typedef struct {
 	_ht_context_t	*p_htc;		/* hypertext context */
 	_ht_tag_t	*p_root;	/* list of root tags */
 	_tag_def_t	**pp_tdef;	/* array of tag_definitions */
+	unsigned int	num_tdefs;	/* number of tag definitions */
 	unsigned long	err_pos;	/* error position */
-	unsigned int	num_tdef;	/* number of tag definitions */
 } _xml_context_t;
 
 #ifdef __cplusplus
@@ -72,11 +71,11 @@ unsigned char *xml_tag_parameter(_xml_context_t *,_ht_tag_t *p_tag,
 			const char *pname, unsigned int *sz);
 /* get tag content */
 unsigned char *xml_tag_content(_ht_tag_t *p_tag, unsigned int *sz);
-void xml_add_tdef_array(_xml_context_t *p_xc, /* XML context */
-			_tag_def_t *p_tdef_array /* array of tag definitions, terminated by empty struct. */
+void xml_add_tdef(_xml_context_t *p_xc, /* XML context */
+			_tag_def_t *p_tdef /* array of tag definitions */
 			);
-void xml_remove_tdef_array(_xml_context_t *p_xc, /* XML context */
-			_tag_def_t *p_tdef_array /* array of tag definitions, terminated by empty struct. */
+void xml_remove_tdef(_xml_context_t *p_xc, /* XML context */
+			_tag_def_t *p_tdef /* array of tag definitions. */
 			);
 /* destroy (deallocate) XML context */
 void xml_destroy_context(_xml_context_t *p_xc);

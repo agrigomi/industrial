@@ -3,6 +3,7 @@
 #include "xml.h"
 
 #define INITIAL_TAG_LIST	16
+#define INITIAL_TDEF_ARRAY	16
 
 /* state bitmask */
 #define SCOPE_OPEN	1	/* < */
@@ -38,33 +39,26 @@ _xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free) 
 }
 
 /* find tag definitian */
-/*static _tag_def_t *find_tdef(_xml_context_t *p_xc, unsigned long pos, unsigned int sz) {
+static _tag_def_t *find_tdef(_xml_context_t *p_xc, unsigned char *p_tname, unsigned int sz) {
 	_tag_def_t * r = NULL;
 
 	if(p_xc->pp_tdef) {
-		unsigned char *p_doc = p_xc->p_htc->ht_content.p_content;
-		unsigned long sz_doc = p_xc->p_htc->ht_content.sz_content;
+		unsigned int n = 0;
 
-		if((pos + sz)  < sz_doc) {
-			unsigned char *ptr = p_doc + pos;
-			unsigned int n = 0;
-
-			while(n < p_xc->num_tdef) {
-				if(p_xc->pp_tdef[n]) {
-					if(ht_compare(p_xc->p_htc, ptr,
-							(unsigned char *)p_xc->pp_tdef[n]->p_tag_name, sz) == 0) {
-						r = p_xc->pp_tdef[n];
-						break;
-					}
+		while(n < p_xc->num_tdefs) {
+			if(p_xc->pp_tdef[n]) {
+				if(ht_compare(p_xc->p_htc, p_tname,
+						(unsigned char *)p_xc->pp_tdef[n]->p_tag_name, sz) == 0) {
+					r = p_xc->pp_tdef[n];
+					break;
 				}
-				n++;
 			}
+			n++;
 		}
 	}
 
 	return r;
 }
-*/
 
 static _ht_tag_t *xml_create_tag(_xml_context_t *p_xc, _ht_tag_t *p_parent) {
 	_ht_tag_t *r = NULL;
@@ -575,8 +569,11 @@ static void xml_destroy_tag(_xml_context_t *p_xc, _ht_tag_t *p_tag) {
 void xml_destroy_context(_xml_context_t *p_xc) {
 	_ht_context_t *p_htc = p_xc->p_htc;
 
-	if(p_xc->p_root)
+	if(p_xc->p_root) /* release root tag */
 		xml_destroy_tag(p_xc, p_xc->p_root);
+
+	if(p_xc->pp_tdef) /* release tag definitions */
+		p_htc->pf_mem_free(p_xc->pp_tdef, p_xc->num_tdefs * sizeof(_tag_def_t *));
 
 	/* deallocate XML context */
 	p_htc->pf_mem_free(p_xc, sizeof(_xml_context_t));
@@ -584,3 +581,47 @@ void xml_destroy_context(_xml_context_t *p_xc) {
 	ht_destroy_context(p_htc);
 }
 
+void xml_add_tdef(_xml_context_t *p_xc, /* XML context */
+		_tag_def_t *p_tdef /* array of tag definitions */
+		) {
+	unsigned int i = 0;
+
+	for(; i < p_xc->num_tdefs; i++) {
+		if(p_xc->pp_tdef[i] == NULL)
+			break;
+	}
+
+	if(i == p_xc->num_tdefs) {
+		/* need to expand */
+		unsigned int new_blen = (INITIAL_TDEF_ARRAY + p_xc->num_tdefs) * sizeof(_tag_def_t *);
+		_tag_def_t **p_new = p_xc->p_htc->pf_mem_alloc(new_blen);
+
+		if(p_new) {
+			memset(p_new, 0, new_blen);
+			if(p_xc->pp_tdef) {
+				memcpy(p_new, p_xc->pp_tdef, p_xc->num_tdefs * sizeof(_tag_def_t *));
+				p_xc->p_htc->pf_mem_free(p_xc->pp_tdef, p_xc->num_tdefs * sizeof(_tag_def_t *));
+			}
+
+			p_xc->pp_tdef = p_new;
+			i = p_xc->num_tdefs;
+			p_xc->num_tdefs += INITIAL_TDEF_ARRAY;
+		} else
+			return;
+	}
+
+	p_xc->pp_tdef[i] = p_tdef;
+}
+
+void xml_remove_tdef(_xml_context_t *p_xc, /* XML context */
+			_tag_def_t *p_tdef /* array of tag definitions. */
+			) {
+	unsigned int i = 0;
+
+	for(; i < p_xc->num_tdefs; i++) {
+		if(p_xc->pp_tdef[i] == p_tdef) {
+			p_xc->pp_tdef[i] = NULL;
+			break;
+		}
+	}
+}
