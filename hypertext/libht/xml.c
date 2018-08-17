@@ -143,6 +143,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 									p_ctag->p_parameters = p_ctag->p_content = ptr_tag_params;
 									p_ctag->sz_parameters = p_ctag->sz_content = sz_tag_params;
 									p_ctag->sz_end_tag = 2;
+									p_ctag->p_tdef = find_tdef(p_xc, ptr_tag_name, sz_tag_name);
 								} else {
 									r = XML_MEMORY_ERROR;
 									break;
@@ -158,6 +159,9 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 								sz_tag_name = ht_symbols(p_xc->p_htc, (p_hc->p_content + pos), ptr_tag_name);
 							if(ptr_tag_params && !sz_tag_params)
 								sz_tag_params = ht_symbols(p_xc->p_htc, (p_hc->p_content + pos), ptr_tag_params);
+
+							_tag_def_t *p_tdef = find_tdef(p_xc, ptr_tag_name, sz_tag_name);
+							unsigned int tflags = (p_tdef) ? p_tdef->flags : 0;
 
 							if(state & SLASH) {
 								/* close tag */
@@ -181,6 +185,7 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 											p_ctag->p_parameters = ptr_tag_params;
 											p_ctag->sz_parameters = sz_tag_params;
 											p_ctag->sz_end_tag = 2;
+											p_ctag->p_tdef = p_tdef;
 										} else {
 											r = XML_MEMORY_ERROR;
 											break;
@@ -200,9 +205,12 @@ static _xml_err_t _xml_parse(_xml_context_t *p_xc, _ht_tag_t *p_parent_tag) {
 									p_ctag->p_content = ht_ptr(p_xc->p_htc);
 									p_ctag->p_parameters = ptr_tag_params;
 									p_ctag->sz_parameters = sz_tag_params;
+									p_ctag->p_tdef = p_tdef;
 
-									if((r = _xml_parse(p_xc, p_ctag)) != XML_OK)
-										break;
+									if(!(tflags & TF_ONELINE)) {
+										if((r = _xml_parse(p_xc, p_ctag)) != XML_OK)
+											break;
+									}
 								} else {
 									r = XML_MEMORY_ERROR;
 									break;
