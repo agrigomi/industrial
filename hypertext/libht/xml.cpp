@@ -67,6 +67,13 @@ public:
 	_str_t content(HTTAG ht, _u32 *sz) {
 		return (_str_t)xml_tag_content((_ht_tag_t *)ht, sz);
 	}
+
+	// Compare strins
+	_s32 compare(HTCONTEXT hc, _str_t str1, _str_t str2, _u32 size) {
+		_xml_context_t *p_xc = (_xml_context_t *)hc;
+
+		return ht_compare(p_xc->p_htc, (unsigned char *)str1, (unsigned char *)str2, size);
+	}
 };
 
 static cXML _g_xml_;

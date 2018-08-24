@@ -37,6 +37,12 @@ public:
 	virtual _str_t content(HTTAG, // tag handle (by select)
 			_u32 * // [Out] content size in symbols (not bytes)
 			)=0;
+	// Compare strins
+	virtual _s32 compare(HTCONTEXT,
+			_str_t, // string 1
+			_str_t, // string 2
+			_u32 // size
+			)=0;
 };
 
 class iXML: public iHT {
