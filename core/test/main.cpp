@@ -57,7 +57,7 @@ _err_t main(int argc, char *argv[]) {
 */
 		iFS *pi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
 		if(pi_fs) {
-			iFileIO *pi_fio = pi_fs->open("test.xml", O_RDONLY);
+			iFileIO *pi_fio = pi_fs->open("sample.xml", O_RDONLY);
 			if(pi_fio) {
 				iXML *pi_xml = (iXML *)pi_repo->object_by_iname(I_XML, RF_ORIGINAL);
 				if(pi_xml) {
@@ -66,19 +66,23 @@ _err_t main(int argc, char *argv[]) {
 					HTCONTEXT hc = pi_xml->create_context();
 					if(pi_xml->parse(hc, xml, xlen)) {
 						_u32 sz  = 0;
-/*
+
 						HTTAG title = pi_xml->select(hc, "/Tests/Test/Name", NULL, 0);
 						if(title) {
 							//_str_t max_len = pi_xml->parameter(hc, title, "maxlength", &sz);
 							_str_t conent = pi_xml->content(title, &sz);
 							asm("nop");
-						}
-*/
+						} else
+							pi_log->write(LMT_ERROR, "Tag not found");
+
+/*
 						HTTAG test = pi_xml->select(hc, "/t-1/test", NULL, 0);
 						_str_t test_content = pi_xml->content(test, &sz);
 						asm("nop");
 						//...
-					}
+*/						
+					} else
+						pi_log->write(LMT_ERROR, "XML parse error");
 					pi_xml->destroy_context(hc);
 					pi_repo->object_release(pi_xml);
 				}

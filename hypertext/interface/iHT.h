@@ -3,15 +3,14 @@
 
 #include "iBase.h"
 
-#define I_HT	"iHT"
 #define I_XML	"iXML"
 
 #define HTCONTEXT	void*
 #define HTTAG		void*
 
-class iHT:public iBase {
+class iXML:public iBase {
 public:
-	INTERFACE(iHT, I_HT);
+	INTERFACE(iXML, I_XML);
 	// Create parser context
 	virtual HTCONTEXT create_context(void)=0;
 	// destroy parser context
@@ -43,11 +42,6 @@ public:
 			_str_t, // string 2
 			_u32 // size
 			)=0;
-};
-
-class iXML: public iHT {
-public:
-	INTERFACE(iXML, I_XML);
 };
 
 #endif
