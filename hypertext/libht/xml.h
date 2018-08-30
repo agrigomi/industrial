@@ -69,6 +69,8 @@ _ht_tag_t *xml_select(_xml_context_t *p_xc,
 /* get parameter value */
 unsigned char *xml_tag_parameter(_xml_context_t *,_ht_tag_t *p_tag,
 			const char *pname, unsigned int *sz);
+/* get tag name */
+unsigned char *xml_tag_name(_ht_tag_t *p_tag, unsigned int *sz);
 /* get tag content */
 unsigned char *xml_tag_content(_ht_tag_t *p_tag, unsigned int *sz);
 void xml_add_tdef(_xml_context_t *p_xc, /* XML context */

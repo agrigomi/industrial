@@ -553,6 +553,12 @@ unsigned char *xml_tag_parameter(_xml_context_t *p_xc, _ht_tag_t *p_tag,
 	return r;
 }
 
+/* get tag name */
+unsigned char *xml_tag_name(_ht_tag_t *p_tag, unsigned int *sz) {
+	*sz = p_tag->sz_name;
+	return p_tag->p_name;
+}
+
 /* get tag content */
 unsigned char *xml_tag_content(_ht_tag_t *p_tag, unsigned int *sz) {
 	*sz = p_tag->sz_content;
