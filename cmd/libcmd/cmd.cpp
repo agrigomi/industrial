@@ -105,7 +105,7 @@ private:
 		_u32 arg_pos = INV_POS;
 		_u32 i = 0;
 
-		while(i < cmd_len + 1) {
+		while(i < cmd_len + 1 && r < MAX_ARGV) {
 			switch(cmd_line[i]) {
 				case '\'':
 					mpi_str->mem_cpy(cmd_line+i, cmd_line+i+1, cmd_len - i);
