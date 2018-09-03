@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <unistd.h>
 #include "iCmd.h"
 #include "iStr.h"
@@ -396,6 +397,10 @@ public:
 		if(p_opt) {
 			if(p_opt->opt_flags & OF_PRESENT)
 				r = p_opt->opt_value;
+
+			// check for environment variable
+			if(r && r[0] == '$')
+				r = getenv(&r[1]);
 		}
 
 		return r;
@@ -420,6 +425,10 @@ public:
 				}
 			}
 		}
+
+		// check for environment variable
+		if(r && r[0] == '$')
+			r = getenv(&r[1]);
 
 		return r;
 	}
