@@ -7,6 +7,7 @@
 #define I_HEAP	"iHeap"
 #define I_LLIST	"iLlist"
 #define I_RING_BUFFER "iRingBuffer"
+#define I_MAP	"iMap"
 
 class iHeap:public iBase {
 public:
@@ -24,6 +25,21 @@ public:
 	virtual void push(void *msg, _u16 sz)=0;
 	virtual void *pull(_u16 *psz)=0;
 	virtual void reset_pull(void)=0;
+};
+
+class iMap: public iBase {
+public:
+	INTERFACE(iMap, I_MAP);
+	virtual void init(_u32 capacity=256)=0;
+	virtual void uninit(void)=0;
+	virtual HMUTEX lock(HMUTEX hlock=0)=0;
+	virtual void unlock(HMUTEX hlock)=0;
+	virtual void *add(void *key, _u32 sz_key, void *data, _u32 sz_data, HMUTEX hlock=0)=0;
+	virtual void del(void *key, _u32 sz_key, HMUTEX hlock=0)=0;
+	virtual _u32 cnt(void)=0;
+	virtual void *get(void *key, _u32 sz_key, _u32 *sz_data, HMUTEX hlock=0)=0;
+	virtual void *get(_u32 idx, _u32 *sz_data, HMUTEX hlock=0)=0;
+	virtual void clr(void)=0;
 };
 
 #define LL_VECTOR	1

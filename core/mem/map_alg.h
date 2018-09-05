@@ -1,0 +1,35 @@
+#ifndef __MAP_ALG_H__
+#define __MAP_ALG_H__
+
+#include "dtype.h"
+
+#define HASH_SIZE	20
+
+typedef struct map_rec_hdr _map_rec_hdr_t;
+struct map_rec_hdr {
+	_u32 sz_rec; /* record size */
+	_u8 key[HASH_SIZE];
+	_map_rec_hdr_t *next; /* pointer to next record in case of collision */
+}__attribute__((packed));
+
+typedef void *_mem_alloc_t(_u32 size);
+typedef void _mem_free_t(void *ptr, _u32 size);
+
+typedef struct {
+	_u32 records;
+	_u32 colisions;
+	_u32 capacity;
+	_mem_alloc_t *p_mem_alloc;
+	_mem_free_t *p_mem_free;
+	_map_rec_hdr_t **pp_list;
+}_map_context_t;
+
+void map_init(_map_context_t *p_mcxt);
+void *map_add(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 sz_data);
+void *map_get(_map_context_t *p_mcxt, void *key, _u32 sz_key, _u32 *sz_data);
+void *map_enum(_map_context_t *p_mcxt, _u32 idx, _u32 *sz_data);
+void map_del(_map_context_t *p_mcxt, void *key, _u32 sz_key);
+_u32 map_cnt(_map_context_t *p_mcxt);
+void map_clr(_map_context_t *p_mcxt);
+
+#endif
