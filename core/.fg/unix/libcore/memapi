@@ -1,3 +1,5 @@
 core/mem/ll_alg.c
 core/mem/s2.c
 core/mem/rb_alg.c
+core/mem/sha1.c
+
