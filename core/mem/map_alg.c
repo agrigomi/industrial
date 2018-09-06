@@ -7,10 +7,8 @@ static _ulong hash(_u8 *key, _u32 sz) {
 	_u32 c, n=0;
 
 	while(n < sz) {
-		if((c = key[n]))
-			hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-		else
-			break;
+		c = key[n];
+		hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 		n++;
 	}
 
@@ -174,7 +172,7 @@ void map_del(_map_context_t *p_mcxt, void *key, _u32 sz_key) {
 			if(p_prev)
 				p_prev->next = p_rec->next;
 			else
-				p_mcxt->pp_list[idx] = NULL;
+				p_mcxt->pp_list[idx] = p_rec->next;
 			p_mcxt->pf_mem_free(p_rec, sizeof(_map_rec_hdr_t) + p_rec->sz_rec);
 			p_mcxt->records--;
 		}
