@@ -14,7 +14,7 @@ struct map_rec_hdr {
 
 typedef void *_mem_alloc_t(_u32 size);
 typedef void _mem_free_t(void *ptr, _u32 size);
-typedef void _hash_t(void *data, _u32 sz_data, _str_t result);
+typedef void _hash_t(void *data, _u32 sz_data, _u8 *result);
 
 typedef struct {
 	_u32 records;
