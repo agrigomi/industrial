@@ -22,7 +22,7 @@ public:
 			case OCTL_INIT: {
 				iRepository *pi_repo = (iRepository *)arg;
 
-				mpi_heap = (iHeap *)pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
+				mpi_heap = (iHeap *)pi_repo->object_by_iname(I_HEAP, RF_CLONE);
 				if(mpi_heap) {
 					r = true;
 				}
