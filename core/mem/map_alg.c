@@ -178,3 +178,36 @@ void map_del(_map_context_t *p_mcxt, void *key, _u32 sz_key) {
 		}
 	}
 }
+
+void map_clr(_map_context_t *p_mcxt) {
+	_u32 i = 0;
+
+	if(p_mcxt->pf_mem_free) {
+		while(i < p_mcxt->capacity) {
+			_map_rec_hdr_t *p_rec = p_mcxt->pp_list[i];
+
+			if(p_rec) {
+				_map_rec_hdr_t *p_next = NULL;
+
+				do {
+					p_next = p_rec->next;
+					p_mcxt->pf_mem_free(p_rec, sizeof(_map_rec_hdr_t) + p_rec->sz_rec);
+				} while((p_rec = p_next));
+
+				p_mcxt->pp_list[i] = NULL;
+			}
+
+			i++;
+		}
+
+		p_mcxt->records = p_mcxt->collisions = 0;
+	}
+}
+
+void map_destroy(_map_context_t *p_mcxt) {
+	map_clr(p_mcxt);
+	if(p_mcxt->records == 0) {
+		p_mcxt->pf_mem_free(p_mcxt->pp_list, p_mcxt->capacity * sizeof(_map_rec_hdr_t *));
+		p_mcxt->pp_list = NULL;
+	}
+}

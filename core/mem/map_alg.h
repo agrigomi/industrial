@@ -29,8 +29,8 @@ typedef struct {
 void map_init(_map_context_t *p_mcxt);
 void *map_add(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 sz_data);
 void *map_get(_map_context_t *p_mcxt, void *key, _u32 sz_key, _u32 *sz_data);
-void *map_enum(_map_context_t *p_mcxt, _u32 idx, _u32 *sz_data);
 void map_del(_map_context_t *p_mcxt, void *key, _u32 sz_key);
 void map_clr(_map_context_t *p_mcxt);
+void map_destroy(_map_context_t *p_mcxt);
 
 #endif

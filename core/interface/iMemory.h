@@ -38,8 +38,7 @@ public:
 	virtual void del(void *key, _u32 sz_key, HMUTEX hlock=0)=0;
 	virtual _u32 cnt(void)=0;
 	virtual void *get(void *key, _u32 sz_key, _u32 *sz_data, HMUTEX hlock=0)=0;
-	virtual void *get(_u32 idx, _u32 *sz_data, HMUTEX hlock=0)=0;
-	virtual void clr(void)=0;
+	virtual void clr(HMUTEX hlock=0)=0;
 };
 
 #define LL_VECTOR	1
