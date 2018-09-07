@@ -541,25 +541,27 @@ public:
 	void object_release(iBase *ptr) {
 		_object_info_t info;
 
-		ptr->object_info(&info);
-		_object_request_t req = {RQ_NAME|RQ_INTERFACE|RQ_VERSION,
-					info.cname, info.iname};
-		req.version.version = info.version.version;
-		bool unref = true;
-		_base_entry_t *bentry = find(&req, false);
+		if(ptr) {
+			ptr->object_info(&info);
+			_object_request_t req = {RQ_NAME|RQ_INTERFACE|RQ_VERSION,
+						info.cname, info.iname};
+			req.version.version = info.version.version;
+			bool unref = true;
+			_base_entry_t *bentry = find(&req, false);
 
-		if(bentry) {
-			if(ptr != bentry->pi_base) {
-				// cloning
-				_u8 *state = (_u8 *)ptr;
-				state += info.size+1;
+			if(bentry) {
+				if(ptr != bentry->pi_base) {
+					// cloning
+					_u8 *state = (_u8 *)ptr;
+					state += info.size+1;
 
-				if((unref = uninit_object(ptr, state, &bentry->ref_cnt, &info)))
-					remove_context(ptr);
+					if((unref = uninit_object(ptr, state, &bentry->ref_cnt, &info)))
+						remove_context(ptr);
+				}
+
+				if(bentry->ref_cnt && unref)
+					bentry->ref_cnt--;
 			}
-
-			if(bentry->ref_cnt && unref)
-				bentry->ref_cnt--;
 		}
 	}
 
