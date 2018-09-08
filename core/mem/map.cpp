@@ -3,7 +3,7 @@
 #include "sha1.h"
 #include "map_alg.h"
 
-#define INITIAL_CAPACITY	256
+#define INITIAL_CAPACITY	512
 
 static void *_alloc(_u32 size, void *udata);
 static void _free(void *ptr, _u32 size, void *udata);
