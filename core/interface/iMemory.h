@@ -30,7 +30,6 @@ public:
 class iMap: public iBase {
 public:
 	INTERFACE(iMap, I_MAP);
-	virtual void init(_u32 capacity=256)=0;
 	virtual void uninit(void)=0;
 	virtual HMUTEX lock(HMUTEX hlock=0)=0;
 	virtual void unlock(HMUTEX hlock)=0;

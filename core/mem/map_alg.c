@@ -18,7 +18,7 @@ static _ulong hash(_u8 *key, _u32 sz) {
 void map_init(_map_context_t *p_mcxt) {
 	if(p_mcxt->pf_mem_alloc && p_mcxt->capacity && !p_mcxt->pp_list) {
 		/* initial allocation of data array */
-		p_mcxt->pp_list = p_mcxt->pf_mem_alloc(p_mcxt->capacity * sizeof(_map_rec_hdr_t *));
+		p_mcxt->pp_list = p_mcxt->pf_mem_alloc(p_mcxt->capacity * sizeof(_map_rec_hdr_t *), p_mcxt->udata);
 		p_mcxt->records = p_mcxt->collisions = 0;
 	}
 }
@@ -55,7 +55,7 @@ static _bool remap(_map_context_t *p_mcxt) {
 
 	if(p_mcxt->pf_mem_alloc && p_mcxt->pf_mem_free && p_mcxt->capacity) {
 		_u32 new_capacity = p_mcxt->capacity * 2;
-		_map_rec_hdr_t **pp_new_map = p_mcxt->pf_mem_alloc(new_capacity * sizeof(_map_rec_hdr_t *));
+		_map_rec_hdr_t **pp_new_map = p_mcxt->pf_mem_alloc(new_capacity * sizeof(_map_rec_hdr_t *), p_mcxt->udata);
 		_u32 collisions = 0;
 
 		if(pp_new_map) {
@@ -77,7 +77,7 @@ static _bool remap(_map_context_t *p_mcxt) {
 				i++;
 			}
 
-			p_mcxt->pf_mem_free(p_mcxt->pp_list, p_mcxt->capacity * sizeof(_map_rec_hdr_t *));
+			p_mcxt->pf_mem_free(p_mcxt->pp_list, p_mcxt->capacity * sizeof(_map_rec_hdr_t *), p_mcxt->udata);
 			p_mcxt->pp_list = pp_new_map;
 			p_mcxt->capacity = new_capacity;
 			p_mcxt->collisions = collisions;
@@ -97,7 +97,7 @@ static _map_rec_hdr_t *get_record(_map_context_t *p_mcxt,
 	_map_rec_hdr_t *r = NULL;
 
 	if(p_mcxt->pf_hash)
-		p_mcxt->pf_hash((_u8 *)key, sz_key, hash_key);
+		p_mcxt->pf_hash((_u8 *)key, sz_key, hash_key, p_mcxt->udata);
 	else
 		memcpy(hash_key, key, (sz_key < HASH_SIZE) ? sz_key : HASH_SIZE);
 
@@ -139,7 +139,7 @@ void *map_add(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 s
 		r = (p_rec + 1);
 	else {
 		if(p_mcxt->pf_mem_alloc && p_mcxt->pf_mem_free) {
-			if((p_rec = p_mcxt->pf_mem_alloc(sizeof(_map_rec_hdr_t) + sz_data))) {
+			if((p_rec = p_mcxt->pf_mem_alloc(sizeof(_map_rec_hdr_t) + sz_data, p_mcxt->udata))) {
 				r = (p_rec + 1);
 				memcpy(r, data, sz_data);
 				memcpy(p_rec->key, hash_key, sizeof(p_rec->key));
@@ -151,7 +151,7 @@ void *map_add(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 s
 					if(p_mcxt->records >= p_mcxt->capacity)
 						remap(p_mcxt);
 				} else {
-					p_mcxt->pf_mem_free(p_rec, sizeof(_map_rec_hdr_t) + sz_data);
+					p_mcxt->pf_mem_free(p_rec, sizeof(_map_rec_hdr_t) + sz_data, p_mcxt->udata);
 					r = NULL;
 				}
 			}
@@ -173,7 +173,7 @@ void map_del(_map_context_t *p_mcxt, void *key, _u32 sz_key) {
 				p_prev->next = p_rec->next;
 			else
 				p_mcxt->pp_list[idx] = p_rec->next;
-			p_mcxt->pf_mem_free(p_rec, sizeof(_map_rec_hdr_t) + p_rec->sz_rec);
+			p_mcxt->pf_mem_free(p_rec, sizeof(_map_rec_hdr_t) + p_rec->sz_rec, p_mcxt->udata);
 			p_mcxt->records--;
 		}
 	}
@@ -191,7 +191,7 @@ void map_clr(_map_context_t *p_mcxt) {
 
 				do {
 					p_next = p_rec->next;
-					p_mcxt->pf_mem_free(p_rec, sizeof(_map_rec_hdr_t) + p_rec->sz_rec);
+					p_mcxt->pf_mem_free(p_rec, sizeof(_map_rec_hdr_t) + p_rec->sz_rec, p_mcxt->udata);
 				} while((p_rec = p_next));
 
 				p_mcxt->pp_list[i] = NULL;
@@ -207,7 +207,7 @@ void map_clr(_map_context_t *p_mcxt) {
 void map_destroy(_map_context_t *p_mcxt) {
 	map_clr(p_mcxt);
 	if(p_mcxt->records == 0) {
-		p_mcxt->pf_mem_free(p_mcxt->pp_list, p_mcxt->capacity * sizeof(_map_rec_hdr_t *));
+		p_mcxt->pf_mem_free(p_mcxt->pp_list, p_mcxt->capacity * sizeof(_map_rec_hdr_t *), p_mcxt->udata);
 		p_mcxt->pp_list = NULL;
 	}
 }

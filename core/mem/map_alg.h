@@ -12,9 +12,9 @@ struct map_rec_hdr {
 	_u8 key[HASH_SIZE];
 }__attribute__((packed));
 
-typedef void *_mem_alloc_t(_u32 size);
-typedef void _mem_free_t(void *ptr, _u32 size);
-typedef void _hash_t(void *data, _u32 sz_data, _u8 *result);
+typedef void *_mem_alloc_t(_u32 size, void *udata);
+typedef void _mem_free_t(void *ptr, _u32 size, void *udata);
+typedef void _hash_t(void *data, _u32 sz_data, _u8 *result, void *udata);
 
 typedef struct {
 	_u32 records;
@@ -24,13 +24,19 @@ typedef struct {
 	_mem_free_t *pf_mem_free;
 	_hash_t *pf_hash;
 	_map_rec_hdr_t **pp_list;
+	void *udata;
 }_map_context_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 void map_init(_map_context_t *p_mcxt);
 void *map_add(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 sz_data);
 void *map_get(_map_context_t *p_mcxt, void *key, _u32 sz_key, _u32 *sz_data);
 void map_del(_map_context_t *p_mcxt, void *key, _u32 sz_key);
 void map_clr(_map_context_t *p_mcxt);
 void map_destroy(_map_context_t *p_mcxt);
-
+#ifdef __cplusplus
+}
+#endif
 #endif
