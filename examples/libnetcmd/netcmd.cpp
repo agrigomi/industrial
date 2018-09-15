@@ -142,7 +142,11 @@ public:
 							_connection_t cnt = {true, pi_io};
 
 							pi_io->blocking(false); // non blocking I/O
-							mpi_list->add(&cnt, sizeof(_connection_t));
+							_connection_t *pcnt = (_connection_t *)mpi_list->add(&cnt, sizeof(_connection_t));
+							if(pcnt) {
+								_str_t msg = (_str_t)"!!! Welcome !!!\n";
+								pcnt->pi_io->write(msg, strlen(msg));
+							}
 							mpi_log->fwrite(LMT_INFO, "%sIncoming connection 0x%x",
 									NC_LOG_PREFIX, pi_io);
 						}
