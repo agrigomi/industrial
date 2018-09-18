@@ -243,8 +243,9 @@ void *map_enum_first(MAPENUM h) {
 	if(pe && pe->p_mcxt) {
 		if(pe->p_mcxt->records && pe->p_mcxt->pp_list) {
 			pe->aidx = pe->uidx = 0;
-			while(p_rec == NULL && pe->aidx < pe->p_mcxt->capacity) {
-				p_rec = pe->p_mcxt->pp_list[pe->aidx];
+			while(pe->aidx < pe->p_mcxt->capacity) {
+				if((p_rec = pe->p_mcxt->pp_list[pe->aidx]))
+					break;
 				pe->aidx++;
 			}
 
@@ -265,13 +266,13 @@ void *map_enum_next(MAPENUM h) {
 
 	if(pe && pe->p_mcxt && pe->p_crec && pe->p_mcxt->pp_list) {
 		if(pe->p_crec->next) {
-			r = pe->p_crec->next;
 			pe->p_crec = pe->p_crec->next;
+			r = (pe->p_crec + 1);
 			pe->uidx++;
 		} else {
-			while(p_rec == NULL && pe->aidx < pe->p_mcxt->records) {
-				p_rec = pe->p_mcxt->pp_list[pe->aidx];
+			while(p_rec == NULL && pe->aidx < pe->p_mcxt->capacity-1) {
 				pe->aidx++;
+				p_rec = pe->p_mcxt->pp_list[pe->aidx];
 			}
 
 			if(p_rec) {
