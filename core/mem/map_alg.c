@@ -211,3 +211,37 @@ void map_destroy(_map_context_t *p_mcxt) {
 		p_mcxt->pp_list = NULL;
 	}
 }
+
+typedef struct {
+	_map_context_t *p_mcxt;
+	_u32 aidx; /* array index */
+	_u32 uidx; /* user index */
+	_map_rec_hdr_t *p_crec; /* current record */
+} _map_enum_t;
+
+MAPENUM map_enum_open(_map_context_t *p_mcxt_) {
+	MAPENUM r = NULL;
+
+	/*...*/
+
+	return r;
+}
+
+void *map_enum_first(MAPENUM h) {
+	void *r = NULL;
+
+	/*...*/
+
+	return r;
+}
+
+void *map_enum_next(MAPENUM h) {
+	void *r = NULL;
+
+	/*...*/
+
+	return r;
+}
+
+void map_enum_close(MAPENUM h) {
+}

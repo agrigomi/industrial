@@ -27,6 +27,8 @@ typedef struct {
 	void *udata;
 }_map_context_t;
 
+#define MAPENUM	void*
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,6 +38,10 @@ void *map_get(_map_context_t *p_mcxt, void *key, _u32 sz_key, _u32 *sz_data);
 void map_del(_map_context_t *p_mcxt, void *key, _u32 sz_key);
 void map_clr(_map_context_t *p_mcxt);
 void map_destroy(_map_context_t *p_mcxt);
+MAPENUM map_enum_open(_map_context_t *p_mcxt_);
+void *map_enum_first(MAPENUM h);
+void *map_enum_next(MAPENUM h);
+void map_enum_close(MAPENUM h);
 #ifdef __cplusplus
 }
 #endif
