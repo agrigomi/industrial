@@ -219,29 +219,78 @@ typedef struct {
 	_map_rec_hdr_t *p_crec; /* current record */
 } _map_enum_t;
 
-MAPENUM map_enum_open(_map_context_t *p_mcxt_) {
+MAPENUM map_enum_open(_map_context_t *p_mcxt) {
 	MAPENUM r = NULL;
 
-	/*...*/
+	if(p_mcxt->pf_mem_alloc) {
+		_map_enum_t *pe = (_map_enum_t *)p_mcxt->pf_mem_alloc(sizeof(_map_enum_t), p_mcxt->udata);
+		if(pe) {
+			pe->p_mcxt = p_mcxt;
+			pe->aidx = pe->uidx = 0;
+			pe->p_crec = NULL;
+			r = pe;
+		}
+	}
 
 	return r;
 }
 
 void *map_enum_first(MAPENUM h) {
 	void *r = NULL;
+	_map_enum_t *pe = (_map_enum_t *)h;
+	_map_rec_hdr_t *p_rec = NULL;
 
-	/*...*/
+	if(pe && pe->p_mcxt) {
+		if(pe->p_mcxt->records && pe->p_mcxt->pp_list) {
+			pe->aidx = pe->uidx = 0;
+			while(p_rec == NULL && pe->aidx < pe->p_mcxt->capacity) {
+				p_rec = pe->p_mcxt->pp_list[pe->aidx];
+				pe->aidx++;
+			}
+
+			if(p_rec) {
+				pe->p_crec = p_rec;
+				r = (p_rec + 1);
+			}
+		}
+	}
 
 	return r;
 }
 
 void *map_enum_next(MAPENUM h) {
 	void *r = NULL;
+	_map_enum_t *pe = (_map_enum_t *)h;
+	_map_rec_hdr_t *p_rec = NULL;
 
-	/*...*/
+	if(pe && pe->p_mcxt && pe->p_crec && pe->p_mcxt->pp_list) {
+		if(pe->p_crec->next) {
+			r = pe->p_crec->next;
+			pe->p_crec = pe->p_crec->next;
+			pe->uidx++;
+		} else {
+			while(p_rec == NULL && pe->aidx < pe->p_mcxt->records) {
+				p_rec = pe->p_mcxt->pp_list[pe->aidx];
+				pe->aidx++;
+			}
+
+			if(p_rec) {
+				pe->p_crec = p_rec;
+				r = (p_rec + 1);
+				pe->uidx++;
+			}
+		}
+	}
 
 	return r;
 }
 
 void map_enum_close(MAPENUM h) {
+	_map_enum_t *pe = (_map_enum_t *)h;
+
+	if(pe && pe->p_mcxt) {
+		if(pe->p_mcxt->pf_mem_free)
+			pe->p_mcxt->pf_mem_free(pe, sizeof(_map_enum_t), pe->p_mcxt->udata);
+	}
 }
+
