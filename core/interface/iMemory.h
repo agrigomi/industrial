@@ -27,6 +27,8 @@ public:
 	virtual void reset_pull(void)=0;
 };
 
+typedef void*	_map_enum_t;
+
 class iMap: public iBase {
 public:
 	INTERFACE(iMap, I_MAP);
@@ -38,6 +40,12 @@ public:
 	virtual _u32 cnt(void)=0;
 	virtual void *get(void *key, _u32 sz_key, _u32 *sz_data, HMUTEX hlock=0)=0;
 	virtual void clr(HMUTEX hlock=0)=0;
+	virtual _map_enum_t enum_open(void)=0;
+	virtual void enum_close(_map_enum_t en)=0;
+	virtual void *enum_first(_map_enum_t en, _u32 *sz_data, HMUTEX hlock=0)=0;
+	virtual void *enum_next(_map_enum_t en, _u32 *sz_data, HMUTEX hlock=0)=0;
+	virtual void *enum_current(_map_enum_t en, _u32 *sz_data, HMUTEX hlock=0)=0;
+	virtual void enum_del(_map_enum_t en, HMUTEX hlock=0)=0;
 };
 
 #define LL_VECTOR	1

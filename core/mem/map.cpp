@@ -111,6 +111,51 @@ public:
 		map_clr(&map_cxt);
 		unlock(hm);
 	}
+
+	_map_enum_t enum_open(void) {
+		return map_enum_open(&map_cxt);
+	}
+
+	void enum_close(_map_enum_t en) {
+		map_enum_close(en);
+	}
+
+	void *enum_first(_map_enum_t en, _u32 *sz_data, HMUTEX hlock=0) {
+		void *r = 0;
+		HMUTEX hm = lock(hlock);
+
+		r = map_enum_first(en, sz_data);
+		unlock(hm);
+
+		return r;
+	}
+
+	void *enum_next(_map_enum_t en, _u32 *sz_data, HMUTEX hlock=0) {
+		void *r = 0;
+		HMUTEX hm = lock(hlock);
+
+		r = map_enum_next(en, sz_data);
+		unlock(hm);
+
+		return r;
+	}
+
+	void *enum_current(_map_enum_t en, _u32 *sz_data, HMUTEX hlock=0) {
+		void *r = 0;
+		HMUTEX hm = lock(hlock);
+
+		r = map_enum_current(en, sz_data);
+		unlock(hm);
+
+		return r;
+	}
+
+	void enum_del(_map_enum_t en, HMUTEX hlock=0) {
+		HMUTEX hm = lock(hlock);
+
+		map_enum_del(en);
+		unlock(hm);
+	}
 };
 
 static cMap _g_map_;

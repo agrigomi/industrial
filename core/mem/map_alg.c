@@ -235,7 +235,7 @@ MAPENUM map_enum_open(_map_context_t *p_mcxt) {
 	return r;
 }
 
-void *map_enum_first(MAPENUM h) {
+void *map_enum_first(MAPENUM h, _u32 *sz_data) {
 	void *r = NULL;
 	_map_enum_t *pe = (_map_enum_t *)h;
 	_map_rec_hdr_t *p_rec = NULL;
@@ -252,6 +252,7 @@ void *map_enum_first(MAPENUM h) {
 			if(p_rec) {
 				pe->p_crec = p_rec;
 				r = (p_rec + 1);
+				*sz_data = p_rec->sz_rec;
 			}
 		}
 	}
@@ -259,15 +260,16 @@ void *map_enum_first(MAPENUM h) {
 	return r;
 }
 
-void *map_enum_next(MAPENUM h) {
+void *map_enum_next(MAPENUM h, _u32 *sz_data) {
 	void *r = NULL;
 	_map_enum_t *pe = (_map_enum_t *)h;
 	_map_rec_hdr_t *p_rec = NULL;
 
-	if(pe && pe->p_mcxt && pe->p_crec && pe->p_mcxt->pp_list) {
-		if(pe->p_crec->next) {
+	if(pe && pe->p_mcxt && pe->p_mcxt->pp_list) {
+		if(pe->p_crec && pe->p_crec->next) {
 			pe->p_crec = pe->p_crec->next;
 			r = (pe->p_crec + 1);
+			*sz_data = pe->p_crec->sz_rec;
 			pe->uidx++;
 		} else {
 			while(p_rec == NULL && pe->aidx < pe->p_mcxt->capacity-1) {
@@ -278,12 +280,47 @@ void *map_enum_next(MAPENUM h) {
 			if(p_rec) {
 				pe->p_crec = p_rec;
 				r = (p_rec + 1);
+				*sz_data = p_rec->sz_rec;
 				pe->uidx++;
 			}
 		}
 	}
 
 	return r;
+}
+
+void *map_enum_current(MAPENUM h, _u32 *sz_data) {
+	void *r = NULL;
+	_map_enum_t *pe = (_map_enum_t *)h;
+
+	if(pe && pe->p_mcxt && pe->p_crec && pe->p_mcxt->pp_list)
+		r = (pe->p_crec + 1);
+
+	return r;
+}
+
+void map_enum_del(MAPENUM h) {
+	_map_enum_t *pe = (_map_enum_t *)h;
+	_map_rec_hdr_t *p_prev = NULL;
+	_map_rec_hdr_t *p_rec = NULL;
+
+	if(pe && pe->p_mcxt && pe->p_crec && pe->p_mcxt->pp_list) {
+		if((p_rec = pe->p_mcxt->pp_list[pe->aidx])) {
+			while(p_rec && p_rec != pe->p_crec) {
+				p_prev = p_rec;
+				p_rec = p_rec->next;
+			}
+
+			if(p_rec && p_rec == pe->p_crec && pe->p_mcxt->pf_mem_free) {
+				if(p_prev)
+					pe->p_crec = p_prev->next = p_rec->next;
+				else
+					pe->p_crec = pe->p_mcxt->pp_list[pe->aidx] = p_rec->next;
+
+				pe->p_mcxt->pf_mem_free(p_rec, p_rec->sz_rec + sizeof(_map_rec_hdr_t), pe->p_mcxt->udata);
+			}
+		}
+	}
 }
 
 void map_enum_close(MAPENUM h) {
