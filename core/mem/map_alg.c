@@ -318,6 +318,7 @@ void map_enum_del(MAPENUM h) {
 					pe->p_crec = pe->p_mcxt->pp_list[pe->aidx] = p_rec->next;
 
 				pe->p_mcxt->pf_mem_free(p_rec, p_rec->sz_rec + sizeof(_map_rec_hdr_t), pe->p_mcxt->udata);
+				pe->p_mcxt->records--;
 			}
 		}
 	}
