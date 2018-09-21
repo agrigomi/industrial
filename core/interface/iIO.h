@@ -10,7 +10,7 @@ class iIO: public iBase {
 public:
 	INTERFACE(iIO, I_IO);
 	virtual _u32 read(void *data, _u32 size)=0;
-	virtual _u32 write(void *data, _u32 size)=0;
+	virtual _u32 write(const void *data, _u32 size)=0;
 };
 
 class iStdIO: public iIO {

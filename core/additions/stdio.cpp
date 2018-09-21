@@ -28,7 +28,7 @@ public:
 		return r;
 	}
 
-	_u32 write(void *data, _u32 size) {
+	_u32 write(const void *data, _u32 size) {
 		_u32 r = 0;
 
 		if(::fwrite(data, size, 1, stdout) == 1)

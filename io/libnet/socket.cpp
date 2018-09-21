@@ -95,7 +95,7 @@ _u32 cSocketIO::read(void *data, _u32 size) {
 	return r;
 }
 
-_u32 cSocketIO::write(void *data, _u32 size) {
+_u32 cSocketIO::write(const void *data, _u32 size) {
 	_u32 r = 0;
 
 	if(m_socket) {

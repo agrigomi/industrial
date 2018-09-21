@@ -31,7 +31,7 @@ public:
 	BASE(cFileIO, FILE_IO_CLASS_NAME, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	_u32 read(void *data, _u32 size);
-	_u32 write(void *data, _u32 size);
+	_u32 write(const void *data, _u32 size);
 	_ulong seek(_ulong offset);
 	_ulong size(void);
 	void *map(_u32 prot=MPF_EXEC|MPF_READ|MPF_WRITE, _u32 flags=MF_SHARED);

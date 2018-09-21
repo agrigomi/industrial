@@ -29,7 +29,7 @@ _u32 cFileIO::read(void *data, _u32 size) {
 	return r;
 }
 
-_u32 cFileIO::write(void *data, _u32 size) {
+_u32 cFileIO::write(const void *data, _u32 size) {
 	_u32 r = 0;
 
 	if(m_fd > 0)

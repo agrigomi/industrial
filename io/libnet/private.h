@@ -34,7 +34,7 @@ public:
 	struct sockaddr_in *clientaddr(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	_u32 read(void *data, _u32 size);
-	_u32 write(void *data, _u32 size);
+	_u32 write(const void *data, _u32 size);
 	void blocking(bool mode); /* blocking or nonblocking IO */
 	bool alive(void);
 };

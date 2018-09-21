@@ -1,9 +1,9 @@
 #include <string.h>
 #include "iCmd.h"
 
-template <typename T> static void out(iIO *pi_io, T str) {
+static void out(iIO *pi_io, _cstr_t str) {
 	if(pi_io)
-		pi_io->write((_str_t)str, strlen(str));
+		pi_io->write(str, strlen(str));
 }
 
 static void hello_handler(iCmd *pi_cmd, // interface to command opbect
