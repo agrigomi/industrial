@@ -1,9 +1,9 @@
 #include <string.h>
 #include "iCmd.h"
 
-static void out(iIO *pi_io, _str_t str) {
+template <typename T> static void out(iIO *pi_io, T str) {
 	if(pi_io)
-		pi_io->write(str, strlen(str));
+		pi_io->write((_str_t)str, strlen(str));
 }
 
 static void hello_handler(iCmd *pi_cmd, // interface to command opbect
@@ -20,31 +20,31 @@ static void hello_handler(iCmd *pi_cmd, // interface to command opbect
 	_u32 arg_idx = 1;
 	_str_t arg = pi_cmd_host->argument(argc, argv, p_opt, arg_idx);
 
-	out(pi_io, (_str_t)"Hello !\n");
+	out(pi_io, "Hello !\n");
 	if(opt_s)
-		out(pi_io, (_str_t)"option 's' present\n");
+		out(pi_io, "option 's' present\n");
 	if(opt_1)
-		out(pi_io, (_str_t)"option 'opt-1' present\n");
+		out(pi_io, "option 'opt-1' present\n");
 	if(inp) {
-		out(pi_io, (_str_t)"value of 'inp' option is: ");
+		out(pi_io, "value of 'inp' option is: ");
 		out(pi_io, inp);
-		out(pi_io, (_str_t)"\n");
+		out(pi_io, "\n");
 	}
 	if(def) {
-		out(pi_io, (_str_t)"value of 'def' option is: ");
+		out(pi_io, "value of 'def' option is: ");
 		out(pi_io, def);
-		out(pi_io, (_str_t)"\n");
+		out(pi_io, "\n");
 	}
 
 	if(arg) {
-		out(pi_io, (_str_t)"arguments: ");
+		out(pi_io, "arguments: ");
 		while(arg) {
 			out(pi_io, arg);
 			arg_idx++;
 			if((arg = pi_cmd_host->argument(argc, argv, p_opt, arg_idx)))
-				out(pi_io, (_str_t)", ");
+				out(pi_io, ", ");
 		}
-		out(pi_io, (_str_t)"\n");
+		out(pi_io, "\n");
 	}
 }
 
