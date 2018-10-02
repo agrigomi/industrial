@@ -55,7 +55,7 @@ _err_t main(int argc, char *argv[]) {
 			pi_repo->object_release(pi_net);
 		}
 */
-		iFS *pi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
+		iFS *pi_fs = dynamic_cast<iFS*>(pi_repo->object_by_iname(I_FS, RF_ORIGINAL));
 		if(pi_fs) {
 			iFileIO *pi_fio = pi_fs->open("sample.xml", O_RDONLY);
 			if(pi_fio) {

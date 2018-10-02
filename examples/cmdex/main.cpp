@@ -40,8 +40,8 @@ _err_t main(int argc, char *argv[]) {
 
 	if(r == ERR_NONE) {
 		iRepository *pi_repo = get_repository();
-		iLog *pi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
-		gpi_stdio = (iStdIO *)pi_repo->object_by_iname(I_STD_IO, RF_ORIGINAL);
+		iLog *pi_log = dynamic_cast<iLog*>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
+		gpi_stdio = dynamic_cast<iStdIO*>(pi_repo->object_by_iname(I_STD_IO, RF_ORIGINAL));
 
 		if(pi_log)
 			pi_log->add_listener(log_listener);
@@ -82,7 +82,7 @@ _err_t main(int argc, char *argv[]) {
 			n++;
 		}
 
-		iCmdHost *pi_cmd_host = (iCmdHost *)pi_repo->object_by_iname(I_CMD_HOST, RF_ORIGINAL);
+		iCmdHost *pi_cmd_host = dynamic_cast<iCmdHost*>(pi_repo->object_by_iname(I_CMD_HOST, RF_ORIGINAL));
 
 		if(pi_cmd_host && gpi_stdio) {
 			_char_t buffer[1024]="";

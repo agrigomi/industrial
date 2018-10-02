@@ -3,7 +3,7 @@
 #include "iRepository.h"
 #include "iCmd.h"
 
-class cHelp;
+class cCmdHelp;
 
 #define OPT_FULL	"f" // full help including usage and options information
 
@@ -102,9 +102,9 @@ static _cmd_t _g_help_cmd_[] = {
 	{0,		0,		0,		0}
 };
 
-class cHelp: public iCmd {
+class cCmdHelp: public iCmd {
 public:
-	BASE(cHelp, "cHelp", RF_ORIGINAL, 1,0,0);
+	BASE(cCmdHelp, "cCmdHelp", RF_ORIGINAL, 1,0,0);
 
 	bool object_ctl(_u32 cmd, void *arg, ...) {
 		bool r = false;
@@ -127,4 +127,4 @@ public:
 	}
 };
 
-static cHelp _g_help_;
+static cCmdHelp _g_help_;
