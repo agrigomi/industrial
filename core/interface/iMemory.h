@@ -32,7 +32,6 @@ typedef void*	_map_enum_t;
 class iMap: public iBase {
 public:
 	INTERFACE(iMap, I_MAP);
-	virtual void uninit(void)=0;
 	virtual HMUTEX lock(HMUTEX hlock=0)=0;
 	virtual void unlock(HMUTEX hlock)=0;
 	virtual void *add(void *key, _u32 sz_key, void *data, _u32 sz_data, HMUTEX hlock=0)=0;
