@@ -5,8 +5,6 @@ project_defaults = $(PROJECT)/.fg/_config_
 project_config = $(PROJECT)/.fg/$(CONFIG)/_config_
 include $(project_config)
 
-#supress project PRE/POST build steps before include target config
-
 target_config=$(PROJECT)/.fg/$(CONFIG)/$(basename $(TARGET))/_config_
 -include $(target_config)
 
