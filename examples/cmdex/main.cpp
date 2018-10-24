@@ -86,11 +86,12 @@ _err_t main(int argc, char *argv[]) {
 
 		if(pi_cmd_host && gpi_stdio) {
 			_char_t buffer[1024]="";
-
+			_u32 n = 0;
 			for(;;) {
 				gpi_stdio->write((_str_t)"cmdex: ", 7);
-				if(gpi_stdio->reads(buffer, sizeof(buffer))) {
-					pi_cmd_host->exec(buffer, gpi_stdio);
+				if((n = gpi_stdio->reads(buffer, sizeof(buffer)))) {
+					if(n > 1)
+						pi_cmd_host->exec(buffer, gpi_stdio);
 				}
 			}
 		}

@@ -329,7 +329,7 @@ public:
 
 	void exec(_str_t cmd_line, iIO *pi_io) {
 		_str_t cmd=0;
-		_u32 cmd_len = mpi_str->str_len(cmd_line);
+		_u32 cmd_len = mpi_str->str_len(cmd_line)+1;
 
 		if(cmd_len > 1) {
 			cmd_len++;
