@@ -25,14 +25,18 @@ bool cSocketIO::object_ctl(_u32 cmd, void *arg, ...) {
 	return r;
 }
 
-void cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
+bool cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
 			struct sockaddr_in *p_caddr, // client addr
 			_s32 socket, _u8 mode) {
+	bool r = true;
+
 	m_socket = socket;
 	m_mode = mode;
 	mp_clientaddr = p_caddr;
 	mp_serveraddr = p_saddr;
 	m_alive = true;
+
+	return r;
 }
 
 struct sockaddr_in *cSocketIO::serveraddr(void) {
@@ -66,7 +70,7 @@ void cSocketIO::_close(void) {
 _u32 cSocketIO::read(void *data, _u32 size) {
 	_u32 r = 0;
 
-	if(m_socket) {
+	if(m_socket && m_alive && size) {
 		switch(m_mode) {
 			case SOCKET_IO_UDP: {
 				socklen_t addrlen = sizeof(struct sockaddr_in);
@@ -98,7 +102,7 @@ _u32 cSocketIO::read(void *data, _u32 size) {
 _u32 cSocketIO::write(const void *data, _u32 size) {
 	_u32 r = 0;
 
-	if(m_socket) {
+	if(m_socket && m_alive && size) {
 		switch(m_mode) {
 			case SOCKET_IO_UDP: {
 				_s32 _r = sendto(m_socket, data, size, 0,
@@ -106,11 +110,15 @@ _u32 cSocketIO::write(const void *data, _u32 size) {
 						sizeof(struct sockaddr_in));
 				if(_r > 0)
 					r = _r;
+				else
+					m_alive = false;
 			} break;
 			case SOCKET_IO_TCP: {
 				_s32 _r = ::write(m_socket, data, size);
 				if(_r > 0)
 					r = _r;
+				else
+					m_alive = false;
 			} break;
 		}
 	}

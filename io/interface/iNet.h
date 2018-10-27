@@ -14,10 +14,22 @@ public:
 	virtual bool alive(void)=0;
 };
 
+#define SSL_CERT_ANSI1		1
+#define SSL_CERT_PEM		2
+#define SSL_CERT_ANSI1_FILE	3
+#define SSL_CERT_PEM_FILE	4
+#define SSL_CERT_CHAIN_FILE	5
+#define SSL_PKEY_ANSI1		11
+#define SSL_PKEY_PEM		12
+#define SSL_PKEY_ANSI1_FILE	13
+#define SSL_PKEY_PEM_FILE	14
+
 class iTCPServer: public iBase {
 public:
 	INTERFACE(iTCPServer, I_TCP_SERVER);
 	virtual iSocketIO *listen(void)=0;
+	virtual bool enable_ssl(bool, _ulong options=0)=0;
+	virtual bool ssl_use(_str_t str, _u32 type)=0;
 	virtual void blocking(bool)=0; /* blocking or nonblocking IO */
 	virtual void close(iSocketIO *p_io)=0;
 };

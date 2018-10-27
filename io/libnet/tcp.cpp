@@ -32,6 +32,7 @@ void cTCPServer::_close(void) {
 	if(m_server_socket) {
 		::close(m_server_socket);
 		m_server_socket = 0;
+		destroy_ssl();
 	}
 }
 
@@ -44,6 +45,8 @@ bool cTCPServer::object_ctl(_u32 cmd, void *arg, ...) {
 			mpi_heap = (iHeap *)pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
 			memset(&m_serveraddr, 0, sizeof(struct sockaddr_in));
 			m_server_socket = 0;
+			m_use_ssl = false;
+			mp_sslcxt = 0;
 			r = true;
 		} break;
 		case OCTL_UNINIT: {
@@ -53,6 +56,54 @@ bool cTCPServer::object_ctl(_u32 cmd, void *arg, ...) {
 			r = true;
 		} break;
 	}
+
+	return r;
+}
+
+void cTCPServer::init_ssl(void) {
+	if(!mp_sslcxt) {
+		SSL_load_error_strings();
+		SSL_library_init();
+		OpenSSL_add_all_algorithms();
+		mp_sslcxt = SSL_CTX_new(SSLv23_server_method());
+	}
+}
+
+void cTCPServer::destroy_ssl(void) {
+	if(mp_sslcxt) {
+		SSL_CTX_free(mp_sslcxt);
+		mp_sslcxt = 0;
+		ERR_free_strings();
+		EVP_cleanup();
+	}
+}
+
+bool cTCPServer::enable_ssl(bool enable,  _ulong options) {
+	bool r = false;
+
+	if(enable) {
+		init_ssl();
+		if(mp_sslcxt) {
+			if(options)
+				SSL_CTX_set_options(mp_sslcxt, options);
+			r = true;
+			m_use_ssl = true;
+		}
+	} else {
+		destroy_ssl();
+		if(!mp_sslcxt) {
+			r = true;
+			m_use_ssl = false;
+		}
+	}
+
+	return r;
+}
+
+bool cTCPServer::ssl_use(_str_t str, _u32 type) {
+	bool r = false;
+
+	//...
 
 	return r;
 }
@@ -79,8 +130,13 @@ iSocketIO *cTCPServer::listen(void) {
 
 				cSocketIO *psio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
 				if(psio) {
-					psio->_init(0, p_caddr, connect_socket, SOCKET_IO_TCP);
-					r = psio;
+					if(psio->_init(0, p_caddr, connect_socket,
+							(m_use_ssl && mp_sslcxt) ? SOCKET_IO_SSL : SOCKET_IO_TCP))
+						r = psio;
+					else
+						/* we assume that socket I/O object should release memory and
+						 should close socket handle */
+						_gpi_repo_->object_release(psio);
 				} else {
 					mpi_heap->free(p_caddr, sizeof(struct sockaddr_in));
 					::close(connect_socket);
