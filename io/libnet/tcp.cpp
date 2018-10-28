@@ -100,10 +100,40 @@ bool cTCPServer::enable_ssl(bool enable,  _ulong options) {
 	return r;
 }
 
-bool cTCPServer::ssl_use(_str_t str, _u32 type) {
+bool cTCPServer::ssl_use(_cstr_t str, _u32 type) {
 	bool r = false;
+	_s32 s = 0;
 
-	//...
+	if(mp_sslcxt) {
+		switch(type) {
+			case SSL_CERT_ASN1:
+				s = SSL_CTX_use_certificate_ASN1(mp_sslcxt, strlen(str), (const unsigned char *)str);
+				break;
+			case SSL_CERT_PEM:
+				break;
+			case SSL_CERT_ASN1_FILE:
+				s = SSL_CTX_use_certificate_file(mp_sslcxt, str, SSL_FILETYPE_ASN1);
+				break;
+			case SSL_CERT_PEM_FILE:
+				s = SSL_CTX_use_certificate_file(mp_sslcxt, str, SSL_FILETYPE_PEM);
+				break;
+			case SSL_CERT_CHAIN_FILE:
+				s = SSL_CTX_use_certificate_chain_file(mp_sslcxt, str);
+				break;
+			case SSL_PKEY_ASN1:
+			case SSL_PKEY_PEM:
+				break;
+			case SSL_PKEY_ASN1_FILE:
+				s = SSL_CTX_use_PrivateKey_file(mp_sslcxt, str, SSL_FILETYPE_ASN1);
+				break;
+			case SSL_PKEY_PEM_FILE:
+				s = SSL_CTX_use_PrivateKey_file(mp_sslcxt, str, SSL_FILETYPE_PEM);
+				break;
+		}
+
+		if(s == 1)
+			r = true;
+	}
 
 	return r;
 }

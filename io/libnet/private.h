@@ -61,7 +61,7 @@ public:
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	bool enable_ssl(bool, _ulong options=0);
-	bool ssl_use(_str_t str, _u32 type);
+	bool ssl_use(_cstr_t str, _u32 type);
 	iSocketIO *listen(void);
 	void blocking(bool mode=true); /* blocking or nonblocking IO */
 	void close(iSocketIO *p_io);
