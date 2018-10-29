@@ -161,7 +161,8 @@ iSocketIO *cTCPServer::listen(void) {
 				cSocketIO *psio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
 				if(psio) {
 					if(psio->_init(0, p_caddr, connect_socket,
-							(m_use_ssl && mp_sslcxt) ? SOCKET_IO_SSL : SOCKET_IO_TCP))
+							(m_use_ssl && mp_sslcxt) ? SOCKET_IO_SSL : SOCKET_IO_TCP,
+							mp_sslcxt))
 						r = psio;
 					else
 						/* we assume that socket I/O object should release memory and

@@ -27,14 +27,23 @@ bool cSocketIO::object_ctl(_u32 cmd, void *arg, ...) {
 
 bool cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
 			struct sockaddr_in *p_caddr, // client addr
-			_s32 socket, _u8 mode) {
-	bool r = true;
+			_s32 socket, _u8 mode, SSL_CTX *p_ssl_cxt) {
+	bool r = false;
 
 	m_socket = socket;
 	m_mode = mode;
 	mp_clientaddr = p_caddr;
 	mp_serveraddr = p_saddr;
 	m_alive = true;
+
+	if(m_mode == SOCKET_IO_SSL && p_ssl_cxt) {
+		if((mp_cSSL = SSL_new(p_ssl_cxt))) {
+			SSL_set_fd(mp_cSSL, m_socket);
+			if(SSL_accept(mp_cSSL) > 0)
+				r = true;
+		}
+	} else
+		r = true;
 
 	return r;
 }
@@ -63,6 +72,8 @@ void cSocketIO::_close(void) {
 				mp_clientaddr = 0;
 			}
 			_gpi_repo_->object_release(pi_heap);
+			if(mp_cSSL)
+				SSL_free(mp_cSSL);
 		}
 	}
 }

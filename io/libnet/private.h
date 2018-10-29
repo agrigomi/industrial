@@ -28,12 +28,12 @@ private:
 	struct sockaddr_in *mp_serveraddr;
 	_u8 m_mode;
 	bool m_alive;
-
+	SSL *mp_cSSL;
 public:
 	BASE(cSocketIO, CLASS_NAME_SOCKET_IO, RF_CLONE, 1,0,0);
 	bool _init(struct sockaddr_in *p_saddr, // server addr
 		struct sockaddr_in *p_caddr, // client addr
-		_s32 socket, _u8 mode);
+		_s32 socket, _u8 mode, SSL_CTX *p_ssl_cxt=0);
 	void _close(void);
 	struct sockaddr_in *serveraddr(void);
 	struct sockaddr_in *clientaddr(void);
