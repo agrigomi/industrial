@@ -36,11 +36,17 @@ bool cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
 	mp_serveraddr = p_saddr;
 	m_alive = true;
 
-	if(m_mode == SOCKET_IO_SSL && p_ssl_cxt) {
+	if((m_mode == SOCKET_IO_SSL_SERVER || m_mode == SOCKET_IO_SSL_CLIENT) && p_ssl_cxt) {
 		if((mp_cSSL = SSL_new(p_ssl_cxt))) {
 			SSL_set_fd(mp_cSSL, m_socket);
-			if(SSL_accept(mp_cSSL) > 0)
-				r = true;
+			if(m_mode == SOCKET_IO_SSL_SERVER) {
+				if(SSL_accept(mp_cSSL) > 0)
+					r = true;
+			} else {
+				// SSL client
+				if(SSL_connect(mp_cSSL) > 0)
+					r = true;
+			}
 		}
 	} else
 		r = true;
@@ -104,6 +110,14 @@ _u32 cSocketIO::read(void *data, _u32 size) {
 						m_alive = false;
 				}
 			} break;
+			case SOCKET_IO_SSL_SERVER:
+			case SOCKET_IO_SSL_CLIENT: {
+				_u32 _r = SSL_read(mp_cSSL, data, size);
+				if(_r > 0)
+					r = _r;
+				else
+					m_alive = false;
+			} break;
 		}
 	}
 
@@ -126,6 +140,14 @@ _u32 cSocketIO::write(const void *data, _u32 size) {
 			} break;
 			case SOCKET_IO_TCP: {
 				_s32 _r = ::write(m_socket, data, size);
+				if(_r > 0)
+					r = _r;
+				else
+					m_alive = false;
+			} break;
+			case SOCKET_IO_SSL_SERVER:
+			case SOCKET_IO_SSL_CLIENT: {
+				_u32 _r = SSL_write(mp_cSSL, data, size);
 				if(_r > 0)
 					r = _r;
 				else

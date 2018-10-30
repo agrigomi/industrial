@@ -17,9 +17,10 @@
 #define CLASS_NAME_TCP_SERVER	"cTCPServer"
 
 // socket I/O mode
-#define SOCKET_IO_UDP	1
-#define SOCKET_IO_TCP	2
-#define SOCKET_IO_SSL	3
+#define SOCKET_IO_UDP		1
+#define SOCKET_IO_TCP		2
+#define SOCKET_IO_SSL_SERVER	3
+#define SOCKET_IO_SSL_CLIENT	4
 
 class cSocketIO: public iSocketIO {
 private:
