@@ -181,7 +181,7 @@ public:
 		return r;
 	}
 
-	iSocketIO *create_tcp_client(_str_t host, _u32 port) {
+	iSocketIO *create_tcp_client(_str_t host, _u32 port, SSL_CTX *ssl_context=NULL) {
 		iSocketIO *r = 0;
 		_s32 sfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -201,7 +201,10 @@ public:
 					if(connect(sfd, (struct sockaddr *)p_saddr, sizeof(struct sockaddr_in)) >= 0) {
 						cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
 						if(pcsio) {
-							pcsio->_init(p_saddr, 0, sfd, SOCKET_IO_TCP);
+							if(ssl_context)
+								pcsio->_init(p_saddr, 0, sfd, SOCKET_IO_SSL_CLIENT, ssl_context);
+							else
+								pcsio->_init(p_saddr, 0, sfd, SOCKET_IO_TCP);
 							r = pcsio;
 						}
 					}
