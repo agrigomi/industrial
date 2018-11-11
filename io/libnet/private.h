@@ -12,6 +12,7 @@
 
 #define CLASS_NAME_SOCKET_IO	"cSocketIO"
 #define CLASS_NAME_TCP_SERVER	"cTCPServer"
+#define CLASS_NAME_HTTP_SERVER	"cHttpServer"
 
 // socket I/O mode
 #define SOCKET_IO_UDP		1
@@ -63,6 +64,25 @@ public:
 	iSocketIO *listen(void);
 	void blocking(bool mode=true); /* blocking or nonblocking IO */
 	void close(iSocketIO *p_io);
+};
+
+class cHttpServer: public iHttpServer {
+private:
+	cTCPServer	*p_tcps;
+	volatile bool	m_is_init;
+	volatile bool	m_is_running;
+	volatile bool	m_is_stopped;
+
+	friend void http_server_thread(cHttpServer *pobj);
+
+public:
+	BASE(cHttpServer, CLASS_NAME_HTTP_SERVER, RF_CLONE | RF_TASK, 1,0,0);
+	bool _init(_u32 port);
+	void _close(void);
+	bool object_ctl(_u32 cmd, void *arg, ...);
+	void on_event(_u8 evt, _on_http_event_t *handler);
+	bool enable_ssl(bool, _ulong options=0);
+	bool ssl_use(_cstr_t str, _u32 type);
 };
 
 #endif

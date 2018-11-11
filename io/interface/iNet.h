@@ -9,6 +9,7 @@
 #define I_SOCKET_IO	"iSocketIO"
 #define I_NET		"iNet"
 #define I_TCP_SERVER	"iTCPServer"
+#define I_HTTP_SERVER	"iHttpServer"
 
 class iSocketIO: public iIO {
 public:
@@ -37,6 +38,21 @@ public:
 	virtual void close(iSocketIO *p_io)=0;
 };
 
+// HTTP event prototype
+typedef void _on_http_event_t(iSocketIO *pi_sio, _str_t req, _u32 sz);
+
+#define ON_HTTP_CONNECT		1
+#define ON_HTTP_DISCONNECT	2
+#define ON_HTTP_REQUEST		3
+
+class iHttpServer: public iBase {
+public:
+	INTERFACE(iHttpServer, I_HTTP_SERVER);
+	virtual void on_event(_u8 evt, _on_http_event_t *handler)=0;
+	virtual bool enable_ssl(bool, _ulong options=0)=0;
+	virtual bool ssl_use(_cstr_t str, _u32 type)=0;
+};
+
 class iNet: public iBase {
 public:
 	INTERFACE(iNet, I_NET);
@@ -47,6 +63,7 @@ public:
 	virtual void close_socket(iSocketIO *p_sio)=0;
 	virtual iTCPServer *create_tcp_server(_u32 port)=0;
 	virtual iSocketIO *create_tcp_client(_str_t host, _u32 port, SSL_CTX *ssl_context=NULL)=0;
+	virtual iHttpServer *create_http_server(_u32 port)=0;
 };
 
 #endif
