@@ -40,7 +40,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 		case OCTL_INIT: {
 			iRepository *pi_repo = (iRepository *)arg;
 
-			m_is_init = m_is_running = false;
+			m_is_init = m_is_running = m_use_ssl = false;
 			if((p_tcps = (cTCPServer *)pi_repo->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE)))
 				r = true;
 		} break;
@@ -72,8 +72,10 @@ void cHttpServer::on_event(_u8 evt, _on_http_event_t *handler) {
 bool cHttpServer::enable_ssl(bool enable, _ulong options) {
 	bool r = false;
 
-	if(m_is_init && p_tcps)
-		r = p_tcps->enable_ssl(enable, options);
+	if(m_is_init && p_tcps) {
+		if((r = p_tcps->enable_ssl(enable, options)))
+			m_use_ssl = enable;
+	}
 
 	return r;
 }
@@ -81,7 +83,7 @@ bool cHttpServer::enable_ssl(bool enable, _ulong options) {
 bool cHttpServer::ssl_use(_cstr_t str, _u32 type) {
 	bool r = false;
 
-	if(m_is_init && p_tcps)
+	if(m_is_init && m_use_ssl && p_tcps)
 		r = p_tcps->ssl_use(str, type);
 
 	return r;

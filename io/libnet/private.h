@@ -74,6 +74,7 @@ private:
 	volatile bool	m_is_init;
 	volatile bool	m_is_running;
 	volatile bool	m_is_stopped;
+	bool		m_use_ssl;
 
 	friend void http_server_thread(cHttpServer *pobj);
 
