@@ -45,8 +45,10 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 				r = true;
 		} break;
 		case OCTL_UNINIT: {
+			iRepository *pi_repo = (iRepository *)arg;
+
 			_close();
-			_gpi_repo_->object_release(p_tcps);
+			pi_repo->object_release(p_tcps);
 			p_tcps = 0;
 			r = true;
 		} break;

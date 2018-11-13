@@ -6,10 +6,11 @@
 #include <openssl/err.h>
 #include "iIO.h"
 
-#define I_SOCKET_IO	"iSocketIO"
-#define I_NET		"iNet"
-#define I_TCP_SERVER	"iTCPServer"
-#define I_HTTP_SERVER	"iHttpServer"
+#define I_SOCKET_IO		"iSocketIO"
+#define I_NET			"iNet"
+#define I_TCP_SERVER		"iTCPServer"
+#define I_HTTP_SERVER		"iHttpServer"
+#define I_HTTP_CONNECTION	"iHttpConnection"
 
 class iSocketIO: public iIO {
 public:
@@ -38,8 +39,18 @@ public:
 	virtual void close(iSocketIO *p_io)=0;
 };
 
+class iHttpConnection: public iBase {
+public:
+	INTERFACE(iHttpConnection, I_HTTP_CONNECTION);
+	// verify I/O
+	virtual bool alive(void)=0;
+	// copies value of http header variable into buffer
+	virtual bool copy_value(_cstr_t vname, _str_t buffer, _u32 sz_buffer)=0;
+	//...
+};
+
 // HTTP event prototype
-typedef void _on_http_event_t(iSocketIO *pi_sio, _str_t req, _u32 sz);
+typedef void _on_http_event_t(iHttpConnection *pi_httpc, _str_t req, _u32 sz);
 
 #define ON_HTTP_CONNECT		1
 #define ON_HTTP_DISCONNECT	2

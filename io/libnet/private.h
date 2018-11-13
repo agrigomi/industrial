@@ -10,9 +10,10 @@
 #include "iMemory.h"
 #include "iRepository.h"
 
-#define CLASS_NAME_SOCKET_IO	"cSocketIO"
-#define CLASS_NAME_TCP_SERVER	"cTCPServer"
-#define CLASS_NAME_HTTP_SERVER	"cHttpServer"
+#define CLASS_NAME_SOCKET_IO		"cSocketIO"
+#define CLASS_NAME_TCP_SERVER		"cTCPServer"
+#define CLASS_NAME_HTTP_SERVER		"cHttpServer"
+#define CLASS_NAME_HTTP_CONNECTION	"cHttpConnection"
 
 // socket I/O mode
 #define SOCKET_IO_UDP		1
@@ -83,6 +84,23 @@ public:
 	void on_event(_u8 evt, _on_http_event_t *handler);
 	bool enable_ssl(bool, _ulong options=0);
 	bool ssl_use(_cstr_t str, _u32 type);
+};
+
+#define MAX_HTTP_HEADER	4*1024 // 4K
+
+class cHttpConnection: public iHttpConnection {
+private:
+	cSocketIO	*mp_sio;
+	_u8		m_header[MAX_HTTP_HEADER];
+public:
+	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
+	bool object_ctl(_u32 cmd, void *arg, ...);
+	bool _init(cSocketIO *p_sio);
+	void _close(void);
+	bool alive(void);
+	// copies value of http header variable into buffer
+	bool copy_value(_cstr_t vname, _str_t buffer, _u32 sz_buffer);
+	//...
 };
 
 #endif
