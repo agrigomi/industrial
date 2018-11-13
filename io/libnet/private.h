@@ -9,6 +9,7 @@
 #include "iNet.h"
 #include "iMemory.h"
 #include "iRepository.h"
+#include "iStr.h"
 
 #define CLASS_NAME_SOCKET_IO		"cSocketIO"
 #define CLASS_NAME_TCP_SERVER		"cTCPServer"
@@ -91,6 +92,7 @@ public:
 class cHttpConnection: public iHttpConnection {
 private:
 	cSocketIO	*mp_sio;
+	iStr		*mpi_str;
 	_u8		m_header[MAX_HTTP_HEADER];
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);

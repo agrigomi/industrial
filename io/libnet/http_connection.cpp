@@ -4,13 +4,20 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
 
 	switch(cmd) {
-		case OCTL_INIT:
-			r = true;
-			break;
-		case OCTL_UNINIT:
+		case OCTL_INIT: {
+			iRepository *pi_repo = (iRepository *)arg;
+
+			mp_sio = NULL;
+			if((mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL)))
+				r = true;
+		} break;
+		case OCTL_UNINIT: {
+			iRepository *pi_repo = (iRepository *)arg;
+
+			pi_repo->object_release(mpi_str);
 			_close();
 			r = true;
-			break;
+		} break;
 	}
 
 	return r;
