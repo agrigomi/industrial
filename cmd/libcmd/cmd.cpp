@@ -55,6 +55,7 @@ private:
 		return r;
 	}
 
+	// adds a new command to command linked list
 	void add_command(iBase *pi_cmd) {
 		iCmd *pi_cmd_obj = dynamic_cast<iCmd *>(pi_cmd);
 
@@ -75,6 +76,7 @@ private:
 		}
 	}
 
+	// removes a command from linked list
 	void remove_command(iBase *pi_cmd) {
 		iCmd *pi_cmd_obj = dynamic_cast<iCmd *>(pi_cmd);
 
@@ -99,6 +101,7 @@ private:
 
 #define INV_POS  0xffffffff
 
+	// converts a command line string to list of arguments
 	_u32 parse_argv(_str_t cmd_line, _u32 cmd_len, _str_t argv[]) {
 		_u32 r = 0;
 		bool strophe = false;
@@ -406,7 +409,7 @@ public:
 		return r;
 	}
 
-	// retrive arguments
+	// retrieve arguments
 	_str_t argument(_u32 argc, _str_t argv[], _cmd_opt_t *p_opt_array, _u32 idx) {
 		_str_t r = 0;
 		_u32 arg_idx = 0;
