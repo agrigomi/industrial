@@ -90,7 +90,7 @@ public:
 	bool ssl_use(_cstr_t str, _u32 type);
 };
 
-#define MAX_HTTP_HEADER	4*1024 // 4K
+#define MAX_HTTP_HEADER	3*1024 // 3K
 
 class cHttpConnection: public iHttpConnection {
 private:
