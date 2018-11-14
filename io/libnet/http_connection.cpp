@@ -8,8 +8,10 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			iRepository *pi_repo = (iRepository *)arg;
 
 			mp_sio = NULL;
-			if((mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL)))
+			if((mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL))) {
+				mpi_str->mem_set(m_header, 0, sizeof(m_header));
 				r = true;
+			}
 		} break;
 		case OCTL_UNINIT: {
 			iRepository *pi_repo = (iRepository *)arg;
@@ -26,8 +28,11 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 bool cHttpConnection::_init(cSocketIO *p_sio) {
 	bool r = false;
 
-	if(p_sio && (r = p_sio->alive()))
+	if(p_sio && (r = p_sio->alive())) {
 		mp_sio = p_sio;
+		// use non blocking mode
+		mp_sio->blocking(false);
+	}
 
 	return r;
 }

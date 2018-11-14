@@ -9,6 +9,7 @@
 #include "iNet.h"
 #include "iMemory.h"
 #include "iRepository.h"
+#include "iLog.h"
 #include "iStr.h"
 
 #define CLASS_NAME_SOCKET_IO		"cSocketIO"
@@ -71,6 +72,7 @@ public:
 class cHttpServer: public iHttpServer {
 private:
 	cTCPServer	*p_tcps;
+	iLog		*mpi_log;
 	volatile bool	m_is_init;
 	volatile bool	m_is_running;
 	volatile bool	m_is_stopped;

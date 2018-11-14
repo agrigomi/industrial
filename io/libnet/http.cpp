@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include "iRepository.h"
 #include "iNet.h"
+#include "iTaskMaker.h"
 #include "private.h"
 
 bool cHttpServer::_init(_u32 port) {
@@ -41,6 +42,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			iRepository *pi_repo = (iRepository *)arg;
 
 			m_is_init = m_is_running = m_use_ssl = false;
+			mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
 			if((p_tcps = (cTCPServer *)pi_repo->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE)))
 				r = true;
 		} break;
@@ -49,6 +51,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 
 			_close();
 			pi_repo->object_release(p_tcps);
+			pi_repo->object_release(mpi_log);
 			p_tcps = 0;
 			r = true;
 		} break;
