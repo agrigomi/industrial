@@ -2,4 +2,5 @@ core/mem/heap.cpp
 core/mem/llist.cpp
 core/mem/rbuffer.cpp
 core/mem/map.cpp
+core/mem/bmap.cpp
 

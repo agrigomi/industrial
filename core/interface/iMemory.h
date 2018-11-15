@@ -4,10 +4,11 @@
 #include "iBase.h"
 #include "iSync.h"
 
-#define I_HEAP	"iHeap"
-#define I_LLIST	"iLlist"
-#define I_RING_BUFFER "iRingBuffer"
-#define I_MAP	"iMap"
+#define I_HEAP		"iHeap"
+#define I_LLIST		"iLlist"
+#define I_RING_BUFFER 	"iRingBuffer"
+#define I_MAP		"iMap"
+#define I_BUFFER_MAP	"iBufferMap"
 
 class iHeap:public iBase {
 public:
@@ -106,6 +107,28 @@ public:
 
 	// queue mode specific (last-->first-->seccond ...)
 	virtual void roll(HMUTEX hlock=0)=0;
+};
+
+// buffer I/O operations
+#define BIO_READ	1
+#define BIO_WRITE	2
+
+typedef void*	HBUFFER;
+typedef _u32 _buffer_io_t(_u8 op, void *buffer, _u32 size, void *udata);
+
+class iBufferMap: public iBase {
+public:
+	INTERFACE(iBufferMap, I_BUFFER_MAP);
+	virtual void init(_u32 buffer_size, _buffer_io_t *pcb_bio)=0;
+	virtual void uninit(void)=0;
+	virtual HBUFFER alloc(void *udata=0)=0;
+	virtual void free(HBUFFER)=0;
+	virtual void *ptr(HBUFFER)=0;
+	virtual void dirty(HBUFFER)=0;
+	virtual void *get_udata(HBUFFER)=0;
+	virtual void set_udata(HBUFFER, void *)=0;
+	virtual void reset(HBUFFER=0)=0;
+	virtual void flush(HBUFFER=0)=0;
 };
 
 #endif
