@@ -9,7 +9,6 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 
 			mp_sio = NULL;
 			if((mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL))) {
-				mpi_str->mem_set(m_header, 0, sizeof(m_header));
 				r = true;
 			}
 		} break;

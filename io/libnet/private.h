@@ -90,13 +90,10 @@ public:
 	bool ssl_use(_cstr_t str, _u32 type);
 };
 
-#define MAX_HTTP_HEADER	3*1024 // 3K
-
 class cHttpConnection: public iHttpConnection {
 private:
 	cSocketIO	*mp_sio;
 	iStr		*mpi_str;
-	_u8		m_header[MAX_HTTP_HEADER];
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
