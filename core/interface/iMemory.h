@@ -110,8 +110,10 @@ public:
 };
 
 // buffer I/O operations
-#define BIO_READ	1
-#define BIO_WRITE	2
+#define BIO_INIT	1
+#define BIO_READ	2
+#define BIO_WRITE	3
+#define BIO_UNINIT	4
 
 typedef void*	HBUFFER;
 typedef _u32 _buffer_io_t(_u8 op, void *buffer, _u32 size, void *udata);
