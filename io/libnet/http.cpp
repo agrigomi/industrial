@@ -1,3 +1,4 @@
+#include <string.h>
 #include <unistd.h>
 #include "iRepository.h"
 #include "iNet.h"
@@ -34,6 +35,19 @@ void http_server_thread(cHttpServer *pobj) {
 	pobj->m_is_stopped = true;
 }
 
+
+_u32 buffer_io(_u8 op, void *ptr, _u32 size, void *udata) {
+	_u32 r = 0;
+
+	switch(op) {
+		case BIO_INIT:
+			memset(ptr, 0, size);
+			break;
+	}
+
+	return r;
+}
+
 bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
 
@@ -43,8 +57,12 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 
 			m_is_init = m_is_running = m_use_ssl = false;
 			mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
-			if((p_tcps = (cTCPServer *)pi_repo->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE)))
+			p_tcps = (cTCPServer *)pi_repo->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE);
+			mpi_bmap = (iBufferMap *)pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE);
+			if(p_tcps && mpi_bmap) {
+				mpi_bmap->init(8192, buffer_io);
 				r = true;
+			}
 		} break;
 		case OCTL_UNINIT: {
 			iRepository *pi_repo = (iRepository *)arg;
@@ -52,6 +70,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			_close();
 			pi_repo->object_release(p_tcps);
 			pi_repo->object_release(mpi_log);
+			pi_repo->object_release(mpi_bmap);
 			p_tcps = 0;
 			r = true;
 		} break;

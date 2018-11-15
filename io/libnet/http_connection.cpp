@@ -8,6 +8,8 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			iRepository *pi_repo = (iRepository *)arg;
 
 			mp_sio = NULL;
+			hb_http_hdr = 0;
+			mpi_bmap = 0;
 			if((mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL))) {
 				r = true;
 			}
@@ -24,11 +26,13 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	return r;
 }
 
-bool cHttpConnection::_init(cSocketIO *p_sio) {
+bool cHttpConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap) {
 	bool r = false;
 
 	if(p_sio && (r = p_sio->alive())) {
 		mp_sio = p_sio;
+		mpi_bmap = pi_bmap;
+		hb_http_hdr = mpi_bmap->alloc(this);
 		// use non blocking mode
 		mp_sio->blocking(false);
 	}

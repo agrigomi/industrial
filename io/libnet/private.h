@@ -73,6 +73,7 @@ class cHttpServer: public iHttpServer {
 private:
 	cTCPServer	*p_tcps;
 	iLog		*mpi_log;
+	iBufferMap	*mpi_bmap;
 	volatile bool	m_is_init;
 	volatile bool	m_is_running;
 	volatile bool	m_is_stopped;
@@ -94,10 +95,12 @@ class cHttpConnection: public iHttpConnection {
 private:
 	cSocketIO	*mp_sio;
 	iStr		*mpi_str;
+	HBUFFER		hb_http_hdr;
+	iBufferMap	*mpi_bmap;
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
-	bool _init(cSocketIO *p_sio);
+	bool _init(cSocketIO *p_sio, iBufferMap *pi_bmap);
 	void _close(void);
 	bool alive(void);
 	// copies value of http header variable into buffer

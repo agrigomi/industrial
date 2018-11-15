@@ -115,8 +115,10 @@ _u32 cSocketIO::read(void *data, _u32 size) {
 				_u32 _r = SSL_read(mp_cSSL, data, size);
 				if(_r > 0)
 					r = _r;
-				else
-					m_alive = false;
+				else {
+					if(SSL_get_error(mp_cSSL, _r) == SSL_ERROR_ZERO_RETURN)
+						m_alive = false;
+				}
 			} break;
 		}
 	}
@@ -150,8 +152,10 @@ _u32 cSocketIO::write(const void *data, _u32 size) {
 				_u32 _r = SSL_write(mp_cSSL, data, size);
 				if(_r > 0)
 					r = _r;
-				else
-					m_alive = false;
+				else {
+					if(SSL_get_error(mp_cSSL, _r) == SSL_ERROR_ZERO_RETURN)
+						m_alive = false;
+				}
 			} break;
 		}
 	}
