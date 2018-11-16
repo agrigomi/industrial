@@ -94,6 +94,7 @@ public:
 
 typedef struct {
 	cHttpConnection *p_httpc;
+	_u8 state;
 }_http_connection_t;
 
 
@@ -118,6 +119,7 @@ private:
 	bool stop_worker(void);
 	_http_connection_t *add_connection(void);
 	_http_connection_t *get_connection(void);
+	void free_connection(_http_connection_t *rec);
 	void remove_connection(_http_connection_t *rec);
 	void remove_all_connections(void);
 
