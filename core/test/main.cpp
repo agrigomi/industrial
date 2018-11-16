@@ -53,22 +53,14 @@ _err_t main(int argc, char *argv[]) {
 			b2 = pi_bmap->alloc();
 		}
 */
-/*		iNet *pi_net = (iNet*)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
+		iNet *pi_net = (iNet*)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
 		if(pi_net) {
-			iSocketIO *sio = pi_net->create_multicast_listener("239.0.0.1", 9000);
-			if(sio) {
-				int i = 10;
-				char b[20]="";
-
-				while(i--) {
-					if(sio->read(b, 20))
-						printf(b);
-				}
-				pi_net->close_socket(sio);
-			}
+			iHttpServer *pi_http = pi_net->create_http_server(8080);
+			while(1)
+				usleep(10000);
 			pi_repo->object_release(pi_net);
 		}
-*/
+
 		iFS *pi_fs = dynamic_cast<iFS*>(pi_repo->object_by_iname(I_FS, RF_ORIGINAL));
 		if(pi_fs) {
 			iFileIO *pi_fio = pi_fs->open("test.xml", O_RDONLY);
