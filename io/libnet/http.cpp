@@ -2,8 +2,10 @@
 #include <unistd.h>
 #include "iRepository.h"
 #include "iNet.h"
-#include "iTaskMaker.h"
 #include "private.h"
+
+#define CFREE	0 // column for pending connections
+#define CBUSY	1 // column for busy connections
 
 bool cHttpServer::_init(_u32 port) {
 	bool r = false;
@@ -35,6 +37,21 @@ void http_server_thread(cHttpServer *pobj) {
 	pobj->m_is_stopped = true;
 }
 
+void *http_worker_thread(void *udata) {
+	void *r = 0;
+	cHttpServer *p_https = (cHttpServer *)udata;
+
+	volatile _u32 num = p_https->m_active_workers++;
+	p_https->m_num_workers = p_https->m_active_workers;
+
+	while(num < p_https->m_active_workers) {
+		//...
+	}
+
+	p_https->m_num_workers = p_https->m_active_workers;
+
+	return r;
+}
 
 _u32 buffer_io(_u8 op, void *ptr, _u32 size, void *udata) {
 	_u32 r = 0;
@@ -56,21 +73,31 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			iRepository *pi_repo = (iRepository *)arg;
 
 			m_is_init = m_is_running = m_use_ssl = false;
+			m_num_workers = m_active_workers = 0;
 			mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
 			p_tcps = (cTCPServer *)pi_repo->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE);
 			mpi_bmap = (iBufferMap *)pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE);
-			if(p_tcps && mpi_bmap) {
+			mpi_tmaker = (iTaskMaker *)pi_repo->object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
+			mpi_list = (iLlist *)pi_repo->object_by_iname(I_LLIST, RF_CLONE);
+			if(p_tcps && mpi_bmap && mpi_tmaker && mpi_list) {
 				mpi_bmap->init(8192, buffer_io);
+				mpi_list->init(LL_RING, 2);
 				r = true;
 			}
 		} break;
 		case OCTL_UNINIT: {
 			iRepository *pi_repo = (iRepository *)arg;
 
+			// stop all workers
+			m_active_workers = 0;
+			while(m_num_workers)
+				usleep(10000);
+
 			_close();
 			pi_repo->object_release(p_tcps);
 			pi_repo->object_release(mpi_log);
 			pi_repo->object_release(mpi_bmap);
+			pi_repo->object_release(mpi_list);
 			p_tcps = 0;
 			r = true;
 		} break;
@@ -89,6 +116,31 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 
 void cHttpServer::on_event(_u8 evt, _on_http_event_t *handler) {
 	//...
+}
+
+bool cHttpServer::start_worker(void) {
+	bool r = false;
+	HTASK ht = 0;
+
+	if((ht = mpi_tmaker->start(http_worker_thread, this))) {
+		mpi_tmaker->set_name(ht, "http worker");
+		r = true;
+	}
+
+	return r;
+}
+
+bool cHttpServer::stop_worker(void) {
+	bool r = false;
+
+	if(m_num_workers) {
+		m_active_workers--;
+		while(m_active_workers != m_num_workers)
+			usleep(10000);
+		r = true;
+	}
+
+	return r;
 }
 
 bool cHttpServer::enable_ssl(bool enable, _ulong options) {

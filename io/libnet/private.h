@@ -9,6 +9,7 @@
 #include "iNet.h"
 #include "iMemory.h"
 #include "iRepository.h"
+#include "iTaskMaker.h"
 #include "iLog.h"
 #include "iStr.h"
 
@@ -74,13 +75,20 @@ private:
 	cTCPServer	*p_tcps;
 	iLog		*mpi_log;
 	iBufferMap	*mpi_bmap;
+	iTaskMaker	*mpi_tmaker;
+	iLlist		*mpi_list;
 	volatile bool	m_is_init;
 	volatile bool	m_is_running;
 	volatile bool	m_is_stopped;
 	bool		m_use_ssl;
+	volatile _u32	m_num_workers;
+	volatile _u32 	m_active_workers;
 
 	friend void http_server_thread(cHttpServer *pobj);
+	friend void *http_worker_thread(void *);
 
+	bool start_worker(void);
+	bool stop_worker(void);
 public:
 	BASE(cHttpServer, CLASS_NAME_HTTP_SERVER, RF_CLONE | RF_TASK, 1,0,0);
 	bool _init(_u32 port);
@@ -97,6 +105,7 @@ private:
 	iStr		*mpi_str;
 	HBUFFER		hb_http_hdr;
 	iBufferMap	*mpi_bmap;
+
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
