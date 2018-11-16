@@ -92,8 +92,10 @@ private:
 					r = false;
 			}
 		} else if(task->proc) {
-			if(pthread_cancel(task->thread) == ERR_NONE)
+			if(pthread_cancel(task->thread) == ERR_NONE) {
+				remove_task(task);
 				r = true;
+			}
 		}
 
 		return r;
@@ -181,10 +183,9 @@ public:
 		_task_t *task = validate_handle(h);
 
 		if(task) {
-			if(task->state & TS_RUNNING) {
-				if((r = stop_task(task)))
-					remove_task(task);
-			} else {
+			if(task->state & TS_RUNNING)
+				r = stop_task(task);
+			else {
 				remove_task(task);
 				r = true;
 			}
