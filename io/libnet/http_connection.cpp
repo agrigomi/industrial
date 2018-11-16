@@ -16,9 +16,10 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 		} break;
 		case OCTL_UNINIT: {
 			iRepository *pi_repo = (iRepository *)arg;
-
-			pi_repo->object_release(mpi_str);
 			_close();
+			if(hb_http_hdr && mpi_bmap)
+				mpi_bmap->free(hb_http_hdr);
+			pi_repo->object_release(mpi_str);
 			r = true;
 		} break;
 	}
