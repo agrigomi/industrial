@@ -38,7 +38,20 @@ _err_t main(int argc, char *argv[]) {
 		//pi_repo->extension_load("ext-1.so");
 		pi_repo->extension_load("extfs.so");
 		pi_repo->extension_load("extnet.so");
-
+/*
+		iBufferMap *pi_bmap = dynamic_cast<iBufferMap *>(pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE));
+		if(pi_bmap) {
+			pi_bmap->init(8192, NULL);
+			HBUFFER b1 = pi_bmap->alloc();
+			pi_bmap->free(b1);
+			b1 = pi_bmap->alloc();
+			HBUFFER b2 = pi_bmap->alloc();
+			pi_bmap->free(b1);
+			pi_bmap->free(b2);
+			b1 = pi_bmap->alloc();
+			b2 = pi_bmap->alloc();
+		}
+*/
 /*		iNet *pi_net = (iNet*)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
 		if(pi_net) {
 			iSocketIO *sio = pi_net->create_multicast_listener("239.0.0.1", 9000);
@@ -70,6 +83,7 @@ _err_t main(int argc, char *argv[]) {
 						HTTAG test = pi_xml->select(hc, "/t-1/test", NULL, 0);
 						if(test) {
 							_str_t test_content = pi_xml->content(test, &sz);
+							fwrite(test_content, sz, 1, stdout);
 							asm("nop");
 						} else
 							pi_log->write(LMT_ERROR, "XML: No tag 't-1/test' found\n");
