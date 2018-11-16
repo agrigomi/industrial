@@ -86,10 +86,10 @@ public:
 			uninit_llist(BBUSY, hm);
 			uninit_llist(BDIRTY, hm);
 
-			mpi_list->unlock(hm);
-
 			m_bsize = 0;
 			m_pcb_bio = 0;
+
+			mpi_list->unlock(hm);
 		}
 	}
 
