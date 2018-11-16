@@ -121,6 +121,7 @@ private:
 	_http_connection_t *get_connection(void);
 	void free_connection(_http_connection_t *rec);
 	void remove_connection(_http_connection_t *rec);
+	void clear_column(_u8 col, HMUTEX hlock);
 	void remove_all_connections(void);
 
 public:

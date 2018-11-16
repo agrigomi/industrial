@@ -168,7 +168,7 @@ _http_connection_t *cHttpServer::add_connection(void) {
 
 			HMUTEX hm = mpi_list->lock();
 			mpi_list->col(CFREE, hm);
-			r = (_http_connection_t *)mpi_list->add(&rec, sizeof(_http_connection_t));
+			r = (_http_connection_t *)mpi_list->add(&rec, sizeof(_http_connection_t), hm);
 			mpi_list->unlock(hm);
 		}
 	}
@@ -218,23 +218,23 @@ void cHttpServer::remove_connection(_http_connection_t *rec) {
 	mpi_list->unlock(hm);
 }
 
-void cHttpServer::remove_all_connections(void) {
-	_http_connection_t *rec = 0;
-	HMUTEX hm = mpi_list->lock();
+void cHttpServer::clear_column(_u8 col, HMUTEX hlock) {
 	_u32 sz = 0;
+	_http_connection_t *rec = 0;
 
-	mpi_list->col(CFREE, hm);
-	while((rec = (_http_connection_t *)mpi_list->first(&sz, hm))) {
+	mpi_list->col(col, hlock);
+	while((rec = (_http_connection_t *)mpi_list->first(&sz, hlock))) {
 		p_tcps->close(dynamic_cast<iSocketIO *>(rec->p_httpc->get_socket_io()));
 		_gpi_repo_->object_release(rec->p_httpc);
-		mpi_list->del(hm);
+		mpi_list->del(hlock);
 	}
-	mpi_list->col(CBUSY, hm);
-	while((rec = (_http_connection_t *)mpi_list->first(&sz, hm))) {
-		p_tcps->close(dynamic_cast<iSocketIO *>(rec->p_httpc->get_socket_io()));
-		_gpi_repo_->object_release(rec->p_httpc);
-		mpi_list->del(hm);
-	}
+}
+
+void cHttpServer::remove_all_connections(void) {
+	HMUTEX hm = mpi_list->lock();
+
+	clear_column(CFREE, hm);
+	clear_column(CBUSY, hm);
 
 	mpi_list->unlock(hm);
 }
