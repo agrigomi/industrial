@@ -52,8 +52,8 @@ static _s2_t *s2_entry(_s2_context_t *p_scxt, _u32 sz) {
 	return r;
 }
 
-#define S2_PATTERN	(_u64)0xcacacacacacacaca
-#define S2_PATTERN2	(_u64)0xdadadadadadadada
+#define S2_PATTERN	(_u64)0x31caca6bcacacafe
+#define S2_PATTERN2	(_u64)0x42dada7cdadadafd
 
 _u8 s2_init(_s2_context_t *p_scxt) {
 	_u8 r = 0;
