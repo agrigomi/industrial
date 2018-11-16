@@ -29,17 +29,7 @@ void http_server_thread(cHttpServer *pobj) {
 
 	while(pobj->m_is_running) {
 		if(pobj->m_is_init) {
-			cSocketIO *p_sio = dynamic_cast<cSocketIO *>(pobj->p_tcps->listen());
-
-			if(p_sio) {
-				_http_connection_t rec;
-
-				rec.p_httpc = (cHttpConnection *)_gpi_repo_->object_by_cname(CLASS_NAME_HTTP_CONNECTION, RF_CLONE);
-				if(rec.p_httpc) {
-					rec.p_httpc->_init(p_sio, pobj->mpi_bmap);
-					pobj->mpi_list->add(&rec, sizeof(_http_connection_t));
-				}
-			}
+			pobj->add_connection();
 		} else
 			usleep(10000);
 	}
@@ -60,18 +50,8 @@ void *http_worker_thread(void *udata) {
 		if(rec) {
 			if(rec->p_httpc->alive()) {
 				//...
-			} else {
-				// remove connection
-				HMUTEX hm = p_https->mpi_list->lock();
-
-				if(p_https->mpi_list->sel(rec, hm)) {
-					p_https->p_tcps->close(dynamic_cast<iSocketIO *>(rec->p_httpc->get_socket_io()));
-					_gpi_repo_->object_release(rec->p_httpc);
-					p_https->mpi_list->del(hm);
-				}
-
-				p_https->mpi_list->unlock(hm);
-			}
+			} else
+				p_https->remove_connection(rec);
 		} else
 			usleep(10000);
 	}
@@ -121,6 +101,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			while(m_num_workers)
 				usleep(10000);
 
+			remove_all_connections();
 			_close();
 			pi_repo->object_release(p_tcps);
 			pi_repo->object_release(mpi_log);
@@ -171,6 +152,23 @@ bool cHttpServer::stop_worker(void) {
 	return r;
 }
 
+_http_connection_t *cHttpServer::add_connection(void) {
+	_http_connection_t *r = 0;
+	cSocketIO *p_sio = dynamic_cast<cSocketIO *>(p_tcps->listen());
+
+	if(p_sio) {
+		_http_connection_t rec;
+
+		rec.p_httpc = (cHttpConnection *)_gpi_repo_->object_by_cname(CLASS_NAME_HTTP_CONNECTION, RF_CLONE);
+		if(rec.p_httpc) {
+			rec.p_httpc->_init(p_sio, mpi_bmap);
+			r = (_http_connection_t *)mpi_list->add(&rec, sizeof(_http_connection_t));
+		}
+	}
+
+	return r;
+}
+
 _http_connection_t *cHttpServer::get_connection(void) {
 	HMUTEX hm = mpi_list->lock();
 	_u32 sz = 0;
@@ -182,6 +180,32 @@ _http_connection_t *cHttpServer::get_connection(void) {
 	mpi_list->unlock(hm);
 
 	return rec;
+}
+
+void cHttpServer::remove_connection(_http_connection_t *rec) {
+	HMUTEX hm = mpi_list->lock();
+
+	if(mpi_list->sel(rec, hm)) {
+		p_tcps->close(dynamic_cast<iSocketIO *>(rec->p_httpc->get_socket_io()));
+		_gpi_repo_->object_release(rec->p_httpc);
+		mpi_list->del(hm);
+	}
+
+	mpi_list->unlock(hm);
+}
+
+void cHttpServer::remove_all_connections(void) {
+	_http_connection_t *rec = 0;
+	HMUTEX hm = mpi_list->lock();
+	_u32 sz = 0;
+
+	while((rec = (_http_connection_t *)mpi_list->first(&sz, hm))) {
+		p_tcps->close(dynamic_cast<iSocketIO *>(rec->p_httpc->get_socket_io()));
+		_gpi_repo_->object_release(rec->p_httpc);
+		mpi_list->del(hm);
+	}
+
+	mpi_list->unlock(hm);
 }
 
 bool cHttpServer::enable_ssl(bool enable, _ulong options) {

@@ -116,7 +116,10 @@ private:
 
 	bool start_worker(void);
 	bool stop_worker(void);
+	_http_connection_t *add_connection(void);
 	_http_connection_t *get_connection(void);
+	void remove_connection(_http_connection_t *rec);
+	void remove_all_connections(void);
 
 public:
 	BASE(cHttpServer, CLASS_NAME_HTTP_SERVER, RF_CLONE | RF_TASK, 1,0,0);
