@@ -38,6 +38,7 @@ _err_t main(int argc, char *argv[]) {
 		//pi_repo->extension_load("ext-1.so");
 		pi_repo->extension_load("extfs.so");
 		pi_repo->extension_load("extnet.so");
+
 /*
 		iBufferMap *pi_bmap = dynamic_cast<iBufferMap *>(pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE));
 		if(pi_bmap) {
