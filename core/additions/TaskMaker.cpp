@@ -234,6 +234,8 @@ public:
 	}
 };
 
+static cTaskMaker _g_task_maker_;
+
 static void *starter(_task_t *task) {
 	void *r = 0;
 
@@ -247,10 +249,10 @@ static void *starter(_task_t *task) {
 
 	task->state &= ~TS_RUNNING;
 	task->state |= TS_STOPPED;
+	_g_task_maker_.remove_task(task);
 
 	pthread_exit(0);
 
 	return r;
 }
 
-static cTaskMaker _g_task_maker_;
