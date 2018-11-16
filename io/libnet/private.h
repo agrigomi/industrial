@@ -70,6 +70,33 @@ public:
 	void close(iSocketIO *p_io);
 };
 
+class cHttpConnection: public iHttpConnection {
+private:
+	cSocketIO	*mp_sio;
+	iStr		*mpi_str;
+	HBUFFER		hb_http_hdr;
+	iBufferMap	*mpi_bmap;
+
+public:
+	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
+	bool object_ctl(_u32 cmd, void *arg, ...);
+	bool _init(cSocketIO *p_sio, iBufferMap *pi_bmap);
+	void _close(void);
+	bool alive(void);
+	cSocketIO *get_socket_io(void) {
+		return mp_sio;
+	}
+	// copies value of http header variable into buffer
+	bool copy_value(_cstr_t vname, _str_t buffer, _u32 sz_buffer);
+	//...
+};
+
+
+typedef struct {
+	cHttpConnection *p_httpc;
+}_http_connection_t;
+
+
 class cHttpServer: public iHttpServer {
 private:
 	cTCPServer	*p_tcps;
@@ -89,6 +116,8 @@ private:
 
 	bool start_worker(void);
 	bool stop_worker(void);
+	_http_connection_t *get_connection(void);
+
 public:
 	BASE(cHttpServer, CLASS_NAME_HTTP_SERVER, RF_CLONE | RF_TASK, 1,0,0);
 	bool _init(_u32 port);
@@ -97,24 +126,6 @@ public:
 	void on_event(_u8 evt, _on_http_event_t *handler);
 	bool enable_ssl(bool, _ulong options=0);
 	bool ssl_use(_cstr_t str, _u32 type);
-};
-
-class cHttpConnection: public iHttpConnection {
-private:
-	cSocketIO	*mp_sio;
-	iStr		*mpi_str;
-	HBUFFER		hb_http_hdr;
-	iBufferMap	*mpi_bmap;
-
-public:
-	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
-	bool object_ctl(_u32 cmd, void *arg, ...);
-	bool _init(cSocketIO *p_sio, iBufferMap *pi_bmap);
-	void _close(void);
-	bool alive(void);
-	// copies value of http header variable into buffer
-	bool copy_value(_cstr_t vname, _str_t buffer, _u32 sz_buffer);
-	//...
 };
 
 #endif
