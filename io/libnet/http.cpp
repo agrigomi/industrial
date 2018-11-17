@@ -110,6 +110,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			pi_repo->object_release(p_tcps);
 			pi_repo->object_release(mpi_log);
 			pi_repo->object_release(mpi_bmap);
+			pi_repo->object_release(mpi_tmaker);
 			pi_repo->object_release(mpi_list);
 			p_tcps = 0;
 			r = true;
@@ -179,8 +180,8 @@ _http_connection_t *cHttpServer::add_connection(void) {
 			nbhttpc = mpi_list->cnt(hm);
 			mpi_list->unlock(hm);
 
-			// create worker
 			if((m_num_workers - nbhttpc) < nfhttpc)
+				// create worker
 				start_worker();
 		}
 	}
