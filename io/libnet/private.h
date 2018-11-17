@@ -111,6 +111,7 @@ private:
 	bool		m_use_ssl;
 	volatile _u32	m_num_workers;
 	volatile _u32 	m_active_workers;
+	volatile _u32	m_busy_workers;
 
 	friend void http_server_thread(cHttpServer *pobj);
 	friend void *http_worker_thread(void *);

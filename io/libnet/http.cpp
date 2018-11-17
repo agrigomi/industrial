@@ -49,9 +49,12 @@ void *http_worker_thread(void *udata) {
 
 		if(rec) {
 			if(rec->p_httpc->alive()) {
+				p_https->m_busy_workers++;
+
 				//...
 
 				p_https->free_connection(rec);
+				p_https->m_busy_workers--;
 			} else
 				p_https->remove_connection(rec);
 		} else
@@ -83,7 +86,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			iRepository *pi_repo = (iRepository *)arg;
 
 			m_is_init = m_is_running = m_use_ssl = false;
-			m_num_workers = m_active_workers = 0;
+			m_num_workers = m_active_workers = m_busy_workers = 0;
 			mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
 			p_tcps = (cTCPServer *)pi_repo->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE);
 			mpi_bmap = (iBufferMap *)pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE);
@@ -163,13 +166,20 @@ _http_connection_t *cHttpServer::add_connection(void) {
 
 		rec.p_httpc = (cHttpConnection *)_gpi_repo_->object_by_cname(CLASS_NAME_HTTP_CONNECTION, RF_CLONE);
 		if(rec.p_httpc) {
+			_u32 nhttpc = 0;
+
 			rec.state = CFREE;
 			rec.p_httpc->_init(p_sio, mpi_bmap);
 
 			HMUTEX hm = mpi_list->lock();
 			mpi_list->col(CFREE, hm);
 			r = (_http_connection_t *)mpi_list->add(&rec, sizeof(_http_connection_t), hm);
+			nhttpc = mpi_list->cnt(hm);
 			mpi_list->unlock(hm);
+
+			// create worker
+			if(nhttpc && ((m_num_workers - m_busy_workers) < nhttpc))
+				start_worker();
 		}
 	}
 
