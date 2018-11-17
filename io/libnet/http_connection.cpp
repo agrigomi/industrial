@@ -16,6 +16,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 		} break;
 		case OCTL_UNINIT: {
 			iRepository *pi_repo = (iRepository *)arg;
+
 			_close();
 			if(hb_http_hdr && mpi_bmap)
 				mpi_bmap->free(hb_http_hdr);
@@ -30,7 +31,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 bool cHttpConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap) {
 	bool r = false;
 
-	if(p_sio && (r = p_sio->alive())) {
+	if(!mp_sio && p_sio && (r = p_sio->alive())) {
 		mp_sio = p_sio;
 		mpi_bmap = pi_bmap;
 		hb_http_hdr = mpi_bmap->alloc(this);
@@ -42,8 +43,10 @@ bool cHttpConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap) {
 }
 
 void cHttpConnection::_close(void) {
-	if(mp_sio)
+	if(mp_sio) {
 		mp_sio->_close();
+		mp_sio = 0;
+	}
 }
 
 bool cHttpConnection::alive(void) {
