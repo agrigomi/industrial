@@ -60,7 +60,7 @@ void *http_worker_thread(void *udata) {
 			usleep(10000);
 	}
 
-	p_https->m_num_workers = p_https->m_active_workers;
+	p_https->m_num_workers--;
 
 	return r;
 }
