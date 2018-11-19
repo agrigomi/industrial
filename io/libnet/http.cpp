@@ -55,9 +55,9 @@ void *http_worker_thread(void *udata) {
 				//...
 				p_https->free_connection(rec);
 				usleep(10000);
-			} else {
+			} else
 				p_https->remove_connection(rec);
-			}
+
 			nempty = NEMPTY;
 		} else {
 			if(nempty) {
