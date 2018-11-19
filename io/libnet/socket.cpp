@@ -177,4 +177,34 @@ bool cSocketIO::alive(void) {
 	return m_alive;
 }
 
+_u32 cSocketIO::peer_ip(void) {
+	_u32 r = 0;
+
+	if(m_socket) {
+		struct sockaddr_storage addr;
+		struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+		socklen_t _len = sizeof addr;
+
+		getpeername(m_socket, (struct sockaddr*)&addr, &_len);
+		r = s->sin_addr.s_addr;
+	}
+
+	return r;
+}
+
+bool cSocketIO::peer_ip(_str_t strip, _u32 len) {
+	bool r = false;
+
+	if(m_socket) {
+		struct sockaddr_storage addr;
+		struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+		socklen_t _len = sizeof addr;
+
+		getpeername(m_socket, (struct sockaddr*)&addr, &_len);
+		inet_ntop(AF_INET, &s->sin_addr, strip, len);
+	}
+
+	return r;
+}
+
 static cSocketIO _g_socket_io_;

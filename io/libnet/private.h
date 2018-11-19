@@ -45,6 +45,8 @@ public:
 	_u32 write(const void *data, _u32 size);
 	void blocking(bool mode); /* blocking or nonblocking IO */
 	bool alive(void);
+	_u32 peer_ip(void);
+	bool peer_ip(_str_t strip, _u32 len);
 };
 
 class cTCPServer: public iTCPServer {
@@ -86,6 +88,8 @@ public:
 	cSocketIO *get_socket_io(void) {
 		return mp_sio;
 	}
+	_u32 peer_ip(void);
+	bool peer_ip(_str_t strip, _u32 len);
 	//...
 };
 

@@ -17,6 +17,8 @@ public:
 	INTERFACE(iSocketIO, I_SOCKET_IO);
 	virtual void blocking(bool)=0; /* blocking or nonblocking IO */
 	virtual bool alive(void)=0;
+	virtual _u32 peer_ip(void)=0;
+	virtual bool peer_ip(_str_t strip, _u32 len)=0;
 };
 
 #define SSL_CERT_ASN1		1
@@ -44,6 +46,8 @@ public:
 	INTERFACE(iHttpConnection, I_HTTP_CONNECTION);
 	// verify I/O
 	virtual bool alive(void)=0;
+	virtual bool peer_ip(_str_t strip, _u32 len)=0;
+	virtual _u32 peer_ip(void)=0;
 	//...
 };
 

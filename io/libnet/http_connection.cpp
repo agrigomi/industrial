@@ -58,4 +58,21 @@ bool cHttpConnection::alive(void) {
 	return r;
 }
 
+_u32 cHttpConnection::peer_ip(void) {
+	_u32 r = 0;
+
+	if(mp_sio)
+		r = mp_sio->peer_ip();
+
+	return r;
+}
+
+bool cHttpConnection::peer_ip(_str_t strip, _u32 len) {
+	bool r = false;
+
+	if(mp_sio)
+		r = mp_sio->peer_ip(strip, len);
+
+	return r;
+}
 static cHttpConnection _g_httpc_;

@@ -54,7 +54,6 @@ void *http_worker_thread(void *udata) {
 			if(rec->p_httpc->alive()) {
 				//...
 				p_https->free_connection(rec);
-				usleep(10000);
 			} else
 				p_https->remove_connection(rec);
 
@@ -71,7 +70,6 @@ void *http_worker_thread(void *udata) {
 	}
 
 	p_https->m_num_workers--;
-
 
 	return r;
 }
