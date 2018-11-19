@@ -37,11 +37,14 @@ void http_server_thread(cHttpServer *pobj) {
 	pobj->m_is_stopped = true;
 }
 
+#define NEMPTY	500
+
 void *http_worker_thread(void *udata) {
 	void *r = 0;
 	cHttpServer *p_https = (cHttpServer *)udata;
-
 	volatile _u32 num = p_https->m_active_workers++;
+	_u32 nempty = NEMPTY;
+
 	p_https->m_num_workers = p_https->m_active_workers;
 
 	while(num < p_https->m_active_workers) {
@@ -49,18 +52,26 @@ void *http_worker_thread(void *udata) {
 
 		if(rec) {
 			if(rec->p_httpc->alive()) {
-
 				//...
-				usleep(1000);
-
 				p_https->free_connection(rec);
-			} else
+				usleep(10000);
+			} else {
 				p_https->remove_connection(rec);
-		} else
-			usleep(10000);
+			}
+			nempty = NEMPTY;
+		} else {
+			if(nempty) {
+				nempty--;
+				usleep(10000);
+			} else {
+				p_https->m_active_workers--;
+				nempty = NEMPTY;
+			}
+		}
 	}
 
 	p_https->m_num_workers--;
+
 
 	return r;
 }
