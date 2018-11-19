@@ -86,8 +86,6 @@ public:
 	cSocketIO *get_socket_io(void) {
 		return mp_sio;
 	}
-	// copies value of http header variable into buffer
-	bool copy_value(_cstr_t vname, _str_t buffer, _u32 sz_buffer);
 	//...
 };
 

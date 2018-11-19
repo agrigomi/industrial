@@ -44,8 +44,6 @@ public:
 	INTERFACE(iHttpConnection, I_HTTP_CONNECTION);
 	// verify I/O
 	virtual bool alive(void)=0;
-	// copies value of http header variable into buffer
-	virtual bool copy_value(_cstr_t vname, _str_t buffer, _u32 sz_buffer)=0;
 	//...
 };
 

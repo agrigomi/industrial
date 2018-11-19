@@ -58,13 +58,4 @@ bool cHttpConnection::alive(void) {
 	return r;
 }
 
-// copies value of http header variable into buffer
-bool cHttpConnection::copy_value(_cstr_t vname, _str_t buffer, _u32 sz_buffer) {
-	bool r = false;
-
-	//...
-
-	return r;
-}
-
 static cHttpConnection _g_httpc_;
