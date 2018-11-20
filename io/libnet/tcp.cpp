@@ -16,13 +16,12 @@ bool cTCPServer::_init(_u32 port) {
 		if(bind(m_server_socket, (struct sockaddr *)&m_serveraddr, sizeof(m_serveraddr)) >= 0) {
 			if(::listen(m_server_socket, 10) >= 0)
 				r = true;
-			else
-				::close(m_server_socket);
-		} else
-			::close(m_server_socket);
+		}
 
-		if(!r)
+		if(!r) {
+			::close(m_server_socket);
 			m_server_socket = 0;
+		}
 	}
 
 	return r;
