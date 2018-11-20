@@ -34,9 +34,11 @@ bool cHttpConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap) {
 	if(!mp_sio && p_sio && (r = p_sio->alive())) {
 		mp_sio = p_sio;
 		mpi_bmap = pi_bmap;
-		hb_http_hdr = mpi_bmap->alloc(this);
-		// use non blocking mode
-		mp_sio->blocking(false);
+		if((hb_http_hdr = mpi_bmap->alloc(this)))
+			// use non blocking mode
+			mp_sio->blocking(false);
+		else
+			r = false;
 	}
 
 	return r;

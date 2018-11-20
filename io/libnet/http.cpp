@@ -52,12 +52,14 @@ void *http_worker_thread(void *udata) {
 
 		if(rec) {
 			if(rec->p_httpc->alive()) {
+				/////// DEBUG //////
 				iSocketIO *psio = rec->p_httpc->get_socket_io();
 				_char_t lb[1024]="";
 
 				_u32 n = psio->read(lb, sizeof(lb));
 				if(n)
 					printf("%s", lb);
+				///////////////////
 				//...
 				p_https->free_connection(rec);
 			} else
@@ -185,19 +187,25 @@ _http_connection_t *cHttpServer::add_connection(void) {
 			_u32 nbhttpc = 0;
 
 			rec.state = CFREE;
-			rec.p_httpc->_init(p_sio, mpi_bmap);
+			if(rec.p_httpc->_init(p_sio, mpi_bmap)) {
+				HMUTEX hm = mpi_list->lock();
+				mpi_list->col(CFREE, hm);
+				if((r = (_http_connection_t *)mpi_list->add(&rec, sizeof(_http_connection_t), hm))) {
+					nfhttpc = mpi_list->cnt(hm);
+					mpi_list->col(CBUSY, hm);
+					nbhttpc = mpi_list->cnt(hm);
+				}
+				mpi_list->unlock(hm);
+				if((m_num_workers - nbhttpc) < nfhttpc)
+					// create worker
+					start_worker();
+			}
+		}
 
-			HMUTEX hm = mpi_list->lock();
-			mpi_list->col(CFREE, hm);
-			r = (_http_connection_t *)mpi_list->add(&rec, sizeof(_http_connection_t), hm);
-			nfhttpc = mpi_list->cnt(hm);
-			mpi_list->col(CBUSY, hm);
-			nbhttpc = mpi_list->cnt(hm);
-			mpi_list->unlock(hm);
-
-			if((m_num_workers - nbhttpc) < nfhttpc)
-				// create worker
-				start_worker();
+		if(!r) {
+			p_tcps->close(p_sio);
+			if(rec.p_httpc)
+				_gpi_repo_->object_release(rec.p_httpc);
 		}
 	}
 
