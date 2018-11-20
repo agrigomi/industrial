@@ -27,8 +27,8 @@
 class cSocketIO: public iSocketIO {
 private:
 	_s32 m_socket;
-	struct sockaddr_in *mp_clientaddr;
-	struct sockaddr_in *mp_serveraddr;
+	struct sockaddr_in m_clientaddr;
+	struct sockaddr_in m_serveraddr;
 	_u8 m_mode;
 	bool m_alive;
 	SSL *mp_cSSL;

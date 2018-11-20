@@ -13,7 +13,8 @@ bool cSocketIO::object_ctl(_u32 cmd, void *arg, ...) {
 	switch(cmd) {
 		case OCTL_INIT:
 			m_socket = 0;
-			mp_clientaddr = mp_serveraddr = 0;
+			memset(&m_serveraddr, 0, sizeof(struct sockaddr_in));
+			memset(&m_clientaddr, 0, sizeof(struct sockaddr_in));
 			r = true;
 			break;
 		case OCTL_UNINIT:
@@ -32,9 +33,12 @@ bool cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
 
 	m_socket = socket;
 	m_mode = mode;
-	mp_clientaddr = p_caddr;
-	mp_serveraddr = p_saddr;
 	m_alive = true;
+
+	if(p_saddr)
+		memcpy(&m_serveraddr, p_saddr, sizeof(struct sockaddr_in));
+	if(p_caddr)
+		memcpy(&m_clientaddr, p_caddr, sizeof(struct sockaddr_in));
 
 	if((m_mode == SOCKET_IO_SSL_SERVER || m_mode == SOCKET_IO_SSL_CLIENT) && p_ssl_cxt) {
 		if((mp_cSSL = SSL_new(p_ssl_cxt))) {
@@ -55,11 +59,11 @@ bool cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
 }
 
 struct sockaddr_in *cSocketIO::serveraddr(void) {
-	return mp_serveraddr;
+	return &m_serveraddr;
 }
 
 struct sockaddr_in *cSocketIO::clientaddr(void) {
-	return mp_clientaddr;
+	return &m_clientaddr;
 }
 
 void cSocketIO::_close(void) {
@@ -67,20 +71,8 @@ void cSocketIO::_close(void) {
 		close(m_socket);
 		m_socket = 0;
 
-		iHeap *pi_heap = (iHeap *)_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL);
-		if(pi_heap) {
-			if(mp_serveraddr) {
-				pi_heap->free(mp_serveraddr, sizeof(struct sockaddr_in));
-				mp_serveraddr = 0;
-			}
-			if(mp_clientaddr) {
-				pi_heap->free(mp_clientaddr, sizeof(struct sockaddr_in));
-				mp_clientaddr = 0;
-			}
-			_gpi_repo_->object_release(pi_heap);
-			if(mp_cSSL)
-				SSL_free(mp_cSSL);
-		}
+		if(mp_cSSL)
+			SSL_free(mp_cSSL);
 	}
 }
 
@@ -90,10 +82,10 @@ _u32 cSocketIO::read(void *data, _u32 size) {
 	if(m_socket && m_alive && size) {
 		switch(m_mode) {
 			case SOCKET_IO_UDP: {
-				socklen_t addrlen = sizeof(struct sockaddr_in);
+				socklen_t addrlen = sizeof(struct sockaddr);
 				_s32 _r = recvfrom(m_socket, data, size, 0,
-						(struct sockaddr *)mp_clientaddr,
-						(mp_clientaddr)?&addrlen:0);
+						(struct sockaddr *)&m_clientaddr,
+						&addrlen);
 				if(_r > 0)
 					r = _r;
 				else {
@@ -133,8 +125,8 @@ _u32 cSocketIO::write(const void *data, _u32 size) {
 		switch(m_mode) {
 			case SOCKET_IO_UDP: {
 				_s32 _r = sendto(m_socket, data, size, 0,
-						(struct sockaddr *)mp_clientaddr,
-						sizeof(struct sockaddr_in));
+						(struct sockaddr *)&m_clientaddr,
+						sizeof(struct sockaddr));
 				if(_r > 0)
 					r = _r;
 				else

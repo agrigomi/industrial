@@ -9,7 +9,6 @@ IMPLEMENT_BASE_ARRAY("net", 10)
 
 class cNet: public iNet {
 private:
-	iHeap	*mpi_heap;
 	_s32	m_optval;
 public:
 	BASE(cNet, "cNet", RF_ORIGINAL, 1,0,0);
@@ -19,13 +18,9 @@ public:
 
 		switch(cmd) {
 			case OCTL_INIT: {
-				iRepository *pi_repo = (iRepository *)arg;
-				mpi_heap = (iHeap *)pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
 				r = true;
 			} break;
 			case OCTL_UNINIT: {
-				iRepository *pi_repo = (iRepository *)arg;
-				pi_repo->object_release(mpi_heap);
 				r = true;
 			} break;
 		}
@@ -41,27 +36,21 @@ public:
 			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
 			if(pcsio) {
 				m_optval = 1;
-				struct sockaddr_in *p_saddr = 0;
-				struct sockaddr_in *p_caddr = 0;
+				struct sockaddr_in saddr;
+				struct sockaddr_in caddr;
 
-				if(mpi_heap) {
-					if((p_saddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in))))
-						memset(p_saddr, 0, sizeof(struct sockaddr_in));
-					if((p_caddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in))))
-						memset(p_caddr, 0, sizeof(struct sockaddr_in));
-				}
+				memset(&saddr, 0, sizeof(struct sockaddr_in));
+				memset(&caddr, 0, sizeof(struct sockaddr_in));
 
 				setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&m_optval, sizeof(m_optval));
-				p_saddr->sin_family = AF_INET;
-				p_saddr->sin_addr.s_addr = htonl(INADDR_ANY);
-				p_saddr->sin_port = htons((unsigned short)port);
-				if(bind(sfd, (struct sockaddr *)p_saddr, sizeof(struct sockaddr_in)) >=0) {
-					pcsio->_init(p_saddr, p_caddr, sfd, SOCKET_IO_UDP);
+				saddr.sin_family = AF_INET;
+				saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+				saddr.sin_port = htons((unsigned short)port);
+				if(bind(sfd, (struct sockaddr*)&saddr, sizeof(struct sockaddr_in)) >=0) {
+					pcsio->_init(&saddr, &caddr, sfd, SOCKET_IO_UDP);
 					r = pcsio;
 				} else {
 					::close(sfd);
-					mpi_heap->free(p_saddr, sizeof(struct sockaddr_in));
-					mpi_heap->free(p_caddr, sizeof(struct sockaddr_in));
 					_gpi_repo_->object_release(pcsio);
 				}
 			} else
@@ -78,21 +67,14 @@ public:
 		if(sfd > 0) {
 			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
 			if(pcsio) {
-				struct sockaddr_in *p_caddr = 0;
+				struct sockaddr_in caddr;
 
-				if(mpi_heap)
-					p_caddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in));
-				if(p_caddr) {
-					memset(p_caddr, 0, sizeof(struct sockaddr_in));
-					p_caddr->sin_family = AF_INET;
-					p_caddr->sin_addr.s_addr = inet_addr(dst_ip);
-					p_caddr->sin_port = htons((unsigned short)port);
-					pcsio->_init(0, p_caddr, sfd, SOCKET_IO_UDP);
-					r = pcsio;
-				} else {
-					::close(sfd);
-					_gpi_repo_->object_release(pcsio);
-				}
+				memset(&caddr, 0, sizeof(struct sockaddr_in));
+				caddr.sin_family = AF_INET;
+				caddr.sin_addr.s_addr = inet_addr(dst_ip);
+				caddr.sin_port = htons((unsigned short)port);
+				pcsio->_init(0, &caddr, sfd, SOCKET_IO_UDP);
+				r = pcsio;
 			} else
 				::close(sfd);
 		}
@@ -110,27 +92,23 @@ public:
 		_s32 sfd = socket(AF_INET, SOCK_DGRAM, 0);
 
 		if(sfd > 0) {
-			struct sockaddr_in *p_caddr = 0;
+			struct sockaddr_in caddr;
 			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
 
 			if(pcsio) {
 				_u32 opt = 1;
 				if(setsockopt(sfd, SOL_SOCKET,SO_REUSEADDR, (char*)&opt, sizeof(opt)) >= 0) {
-					if(mpi_heap)
-						p_caddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in));
-					if(p_caddr) {
-						memset(p_caddr, 0, sizeof(struct sockaddr_in));
-						p_caddr->sin_family = AF_INET;
-						p_caddr->sin_addr.s_addr = htonl(INADDR_ANY);
-						p_caddr->sin_port = htons((unsigned short)port);
-						if(bind(sfd, (struct sockaddr *)p_caddr, sizeof(struct sockaddr_in)) >= 0) {
-							memset(&mreq, 0, sizeof(struct ip_mreq));
-							mreq.imr_multiaddr.s_addr = inet_addr(group);
-							mreq.imr_interface.s_addr = htonl(INADDR_ANY);
-							if (setsockopt(sfd, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *)&mreq, sizeof(mreq)) >= 0) {
-								pcsio->_init(0, p_caddr, sfd, SOCKET_IO_UDP);
-								r = pcsio;
-							}
+					memset(&caddr, 0, sizeof(struct sockaddr_in));
+					caddr.sin_family = AF_INET;
+					caddr.sin_addr.s_addr = htonl(INADDR_ANY);
+					caddr.sin_port = htons((unsigned short)port);
+					if(bind(sfd,  (struct sockaddr*)&caddr, sizeof(struct sockaddr_in)) >= 0) {
+						memset(&mreq, 0, sizeof(struct ip_mreq));
+						mreq.imr_multiaddr.s_addr = inet_addr(group);
+						mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+						if (setsockopt(sfd, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *)&mreq, sizeof(mreq)) >= 0) {
+							pcsio->_init(0, &caddr, sfd, SOCKET_IO_UDP);
+							r = pcsio;
 						}
 					}
 				}
@@ -140,9 +118,6 @@ public:
 				::close(sfd);
 				if(pcsio)
 					_gpi_repo_->object_release(pcsio);
-
-				if(p_caddr && mpi_heap)
-					mpi_heap->free(p_caddr, sizeof(struct sockaddr_in));
 			}
 		}
 
@@ -153,16 +128,7 @@ public:
 		cSocketIO *pcsio = dynamic_cast<cSocketIO *>(p_sio);
 
 		if(pcsio) {
-			struct sockaddr_in *p_saddr = pcsio->serveraddr();
-			struct sockaddr_in *p_caddr = pcsio->clientaddr();
-
 			pcsio->_close();
-
-			if(p_saddr)
-				mpi_heap->free(p_saddr, sizeof(struct sockaddr_in));
-			if(p_caddr)
-				mpi_heap->free(p_caddr, sizeof(struct sockaddr_in));
-
 			_gpi_repo_->object_release(p_sio);
 		}
 	}
@@ -187,35 +153,28 @@ public:
 
 		if(sfd > 0) {
 			struct hostent *server;
-			struct sockaddr_in *p_saddr = 0;
+			struct sockaddr_in saddr;
 
 			server = gethostbyname(host);
 			if(server) {
-				if(mpi_heap)
-					p_saddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in));
-				if(p_saddr) {
-					memset(p_saddr, 0, sizeof(struct sockaddr_in));
-					p_saddr->sin_family = AF_INET;
-					p_saddr->sin_addr = *((struct in_addr *)server->h_addr);
-					p_saddr->sin_port = htons(port);
-					if(connect(sfd, (struct sockaddr *)p_saddr, sizeof(struct sockaddr_in)) >= 0) {
-						cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
-						if(pcsio) {
-							if(ssl_context)
-								pcsio->_init(p_saddr, 0, sfd, SOCKET_IO_SSL_CLIENT, ssl_context);
-							else
-								pcsio->_init(p_saddr, 0, sfd, SOCKET_IO_TCP);
-							r = pcsio;
-						}
+				memset(&saddr, 0, sizeof(struct sockaddr_in));
+				saddr.sin_family = AF_INET;
+				saddr.sin_addr = *((struct in_addr *)server->h_addr);
+				saddr.sin_port = htons(port);
+				if(connect(sfd, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in)) >= 0) {
+					cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
+					if(pcsio) {
+						if(ssl_context)
+							pcsio->_init(&saddr, 0, sfd, SOCKET_IO_SSL_CLIENT, ssl_context);
+						else
+							pcsio->_init(&saddr, 0, sfd, SOCKET_IO_TCP);
+						r = pcsio;
 					}
 				}
 			}
 
-			if(!r) {
+			if(!r)
 				::close(sfd);
-				if(p_saddr && mpi_heap)
-					mpi_heap->free(p_saddr, sizeof(struct sockaddr_in));
-			}
 		}
 
 		return r;

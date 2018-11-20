@@ -150,28 +150,15 @@ iSocketIO *cTCPServer::listen(void) {
 		_s32 connect_socket = accept(m_server_socket, (struct sockaddr *)&caddr, &addrlen);
 
 		if(connect_socket > 0) {
-			struct sockaddr_in *p_caddr = 0;
-
-			if(mpi_heap)
-				p_caddr = (struct sockaddr_in *)mpi_heap->alloc(sizeof(struct sockaddr_in));
-
-			if(p_caddr) {
-				memcpy(p_caddr, &caddr, sizeof(struct sockaddr_in));
-
-				cSocketIO *psio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
-				if(psio) {
-					if(psio->_init(0, p_caddr, connect_socket,
-							(m_use_ssl && mp_sslcxt) ? SOCKET_IO_SSL_SERVER : SOCKET_IO_TCP,
-							mp_sslcxt))
-						r = psio;
-					else
-						/* we assume that socket I/O object should release memory and
-						 should close socket handle */
-						_gpi_repo_->object_release(psio);
-				} else {
-					mpi_heap->free(p_caddr, sizeof(struct sockaddr_in));
-					::close(connect_socket);
-				}
+			cSocketIO *psio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
+			if(psio) {
+				if(psio->_init(0, &caddr, connect_socket,
+						(m_use_ssl && mp_sslcxt) ? SOCKET_IO_SSL_SERVER : SOCKET_IO_TCP,
+						mp_sslcxt))
+					r = psio;
+				else
+					/* we assume that socket I/O object should close socket handle */
+					_gpi_repo_->object_release(psio);
 			} else
 				::close(connect_socket);
 		}
