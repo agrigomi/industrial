@@ -37,7 +37,7 @@ void http_server_thread(cHttpServer *pobj) {
 	pobj->m_is_stopped = true;
 }
 
-#define NEMPTY	500
+#define NEMPTY	300
 
 void *http_worker_thread(void *udata) {
 	void *r = 0;
@@ -52,6 +52,12 @@ void *http_worker_thread(void *udata) {
 
 		if(rec) {
 			if(rec->p_httpc->alive()) {
+				iSocketIO *psio = rec->p_httpc->get_socket_io();
+				_char_t lb[1024]="";
+
+				_u32 n = psio->read(lb, sizeof(lb));
+				if(n)
+					printf("%s", lb);
 				//...
 				p_https->free_connection(rec);
 			} else
