@@ -27,6 +27,10 @@ void http_server_thread(cHttpServer *pobj) {
 	pobj->m_is_running = true;
 	pobj->m_is_stopped = false;
 
+	HTASK ht = pobj->mpi_tmaker->handle(pobj);
+	if(ht)
+		pobj->mpi_tmaker->set_name(ht, "http server");
+
 	while(pobj->m_is_running) {
 		if(pobj->m_is_init) {
 			pobj->add_connection();
