@@ -76,7 +76,6 @@ class cHttpConnection: public iHttpConnection {
 private:
 	cSocketIO	*mp_sio;
 	iStr		*mpi_str;
-	HBUFFER		hb_http_hdr;
 	iBufferMap	*mpi_bmap;
 
 public:
