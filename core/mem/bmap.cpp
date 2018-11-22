@@ -174,6 +174,10 @@ public:
 		return b->udata;
 	}
 
+	_u32 get_size(void) {
+		return m_bsize;
+	}
+
 	void set_udata(HBUFFER hb, void *udata) {
 		_buffer_t *b = (_buffer_t *)hb;
 		b->udata = udata;
