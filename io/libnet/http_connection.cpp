@@ -14,6 +14,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_req_len = 0;
 			m_res_buffer = 0;
 			m_res_len = 0;
+			m_res_offset = 0;
 			if((mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL))) {
 				r = true;
 			}

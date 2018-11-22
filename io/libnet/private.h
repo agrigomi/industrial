@@ -74,13 +74,12 @@ public:
 
 // state bitmap for HttpConnection
 #define HTTPC_REQ_PENDING	(1<<0)
-#define HTTPC_REQ_ACCEPT	(1<<1)
-#define HTTPC_REQ_PARSE_PENDING	(1<<2)
-#define HTTPC_REQ_PARSED	(1<<3)
-#define HTTPC_RES_PENDING	(1<<4)
-#define HTTPC_RES_END		(1<<5)
-#define HTTPC_RES_SEND_PENDING	(1<<6)
-#define HTTPC_RES_SENT		(1<<7)
+#define HTTPC_REQ_RECEIVE	(1<<1)
+#define HTTPC_REQ_END		(1<<2)
+#define HTTPC_RES_PENDING	(1<<3)
+#define HTTPC_RES_END		(1<<4)
+#define HTTPC_RES_SENDING	(1<<5)
+#define HTTPC_RES_SENT		(1<<6)
 
 class cHttpConnection: public iHttpConnection {
 private:
@@ -91,6 +90,7 @@ private:
 	HBUFFER		m_res_buffer;
 	_u32		m_req_len;
 	_u32		m_res_len;
+	_u32		m_res_offset;
 	_u16		m_state;
 	_ulong		m_udata;
 
