@@ -72,11 +72,27 @@ public:
 	void close(iSocketIO *p_io);
 };
 
+// state bitmap for HttpConnection
+#define HTTPC_REQ_PENDING	(1<<0)
+#define HTTPC_REQ_ACCEPT	(1<<1)
+#define HTTPC_REQ_PARSE_PENDING	(1<<2)
+#define HTTPC_REQ_PARSED	(1<<3)
+#define HTTPC_RES_PENDING	(1<<4)
+#define HTTPC_RES_END		(1<<5)
+#define HTTPC_RES_SEND_PENDING	(1<<6)
+#define HTTPC_RES_SENT		(1<<7)
+
 class cHttpConnection: public iHttpConnection {
 private:
 	cSocketIO	*mp_sio;
 	iStr		*mpi_str;
 	iBufferMap	*mpi_bmap;
+	HBUFFER		m_req_buffer;
+	HBUFFER		m_res_buffer;
+	_u32		m_req_len;
+	_u32		m_res_len;
+	_u16		m_state;
+	_ulong		m_udata;
 
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
@@ -87,11 +103,19 @@ public:
 	cSocketIO *get_socket_io(void) {
 		return mp_sio;
 	}
+	_u16 get_status(void) {
+		return m_state;
+	}
 	_u32 peer_ip(void);
 	bool peer_ip(_str_t strip, _u32 len);
+	void set_udata(_ulong udata) {
+		m_udata = udata;
+	}
+	_ulong get_udata(void) {
+		return m_udata;
+	}
 	//...
 };
-
 
 typedef struct {
 	cHttpConnection *p_httpc;

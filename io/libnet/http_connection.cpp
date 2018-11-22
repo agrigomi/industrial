@@ -9,6 +9,11 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 
 			mp_sio = NULL;
 			mpi_bmap = 0;
+			m_state = 0;
+			m_req_buffer = 0;
+			m_req_len = 0;
+			m_res_buffer = 0;
+			m_res_len = 0;
 			if((mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL))) {
 				r = true;
 			}
@@ -42,6 +47,14 @@ void cHttpConnection::_close(void) {
 	if(mp_sio) {
 		mp_sio->_close();
 		mp_sio = 0;
+		if(m_req_buffer) {
+			mpi_bmap->free(m_req_buffer);
+			m_req_buffer = 0;
+		}
+		if(m_res_buffer) {
+			mpi_bmap->free(m_res_buffer);
+			m_res_buffer = 0;
+		}
 	}
 }
 
@@ -71,4 +84,5 @@ bool cHttpConnection::peer_ip(_str_t strip, _u32 len) {
 
 	return r;
 }
+
 static cHttpConnection _g_httpc_;

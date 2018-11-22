@@ -48,11 +48,13 @@ public:
 	virtual bool alive(void)=0;
 	virtual bool peer_ip(_str_t strip, _u32 len)=0;
 	virtual _u32 peer_ip(void)=0;
+	virtual void set_udata(_ulong)=0;
+	virtual _ulong get_udata(void)=0;
 	//...
 };
 
 // HTTP event prototype
-typedef void _on_http_event_t(iHttpConnection *pi_httpc, _str_t req, _u32 sz);
+typedef void _on_http_event_t(iHttpConnection *pi_httpc);
 
 #define ON_HTTP_CONNECT		1
 #define ON_HTTP_DISCONNECT	2
