@@ -119,33 +119,35 @@ bool cHttpConnection::complete_request(void) {
 	return r;
 }
 
-void cHttpConnection::read_request(void) {
+_u32 cHttpConnection::read_request(void) {
+	_u32 r = 0;
+
 	if(!m_req_buffer)
 		m_req_buffer = mpi_bmap->alloc();
 
 	if(m_req_buffer) {
 		void *buffer = mpi_bmap->ptr(m_req_buffer);
 		_u32 sz = mpi_bmap->get_size() - m_req_len;
-		_u32 nb = mp_sio->read(buffer, sz);
+		_u32 r = mp_sio->read(buffer, sz);
 
-		if(nb)
-			m_req_len += nb;
-		else {
-			if(complete_request()) {
-				m_state &= ~HTTPC_REQ_PENDING;
-				m_state |= HTTPC_REQ_END;
-			}
+		if(r) {
+			m_req_len += r;
+			m_state = HTTPC_REQ_PENDING;
 		}
 	}
+
+	return r;
 }
 
 void cHttpConnection::process(void) {
 	if(!m_state)
 		m_state |= HTTPC_REQ_PENDING;
-	else if(m_state & HTTPC_REQ_PENDING)
-		read_request();
-	else if((m_state & HTTPC_REQ_END) && !(m_state & HTTPC_RES_PENDING))
-		m_state |= HTTPC_RES_PENDING;
+	else if(m_state & HTTPC_REQ_PENDING) {
+		if(!read_request() && alive()) {
+			if(complete_request())
+				m_state |= HTTPC_RES_PENDING;
+		}
+	}
 }
 
 static cHttpConnection _g_httpc_;

@@ -73,6 +73,7 @@ void *http_worker_thread(void *udata) {
 				//...
 
 				p_https->free_connection(rec);
+				usleep(10000);
 			} else {
 				if(p_https->mp_on_disconnect)
 					// call on_disconnect handler

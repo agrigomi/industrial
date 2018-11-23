@@ -98,7 +98,7 @@ private:
 	_u16		m_state;
 	_ulong		m_udata;
 
-	void read_request(void);
+	_u32 read_request(void);
 	bool complete_request(void);
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
