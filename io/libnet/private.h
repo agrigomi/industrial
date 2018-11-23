@@ -74,12 +74,15 @@ public:
 
 // state bitmap for HttpConnection
 #define HTTPC_REQ_PENDING	(1<<0)
-#define HTTPC_REQ_RECEIVE	(1<<1)
-#define HTTPC_REQ_END		(1<<2)
-#define HTTPC_RES_PENDING	(1<<3)
-#define HTTPC_RES_END		(1<<4)
-#define HTTPC_RES_SENDING	(1<<5)
-#define HTTPC_RES_SENT		(1<<6)
+#define HTTPC_REQ_HEADER	(1<<1)
+#define HTTPC_REQ_BODY		(1<<2)
+#define HTTPC_REQ_END		(1<<3)
+#define HTTPC_RES_PENDING	(1<<4)
+#define HTTPC_RES_HEADER	(1<<5)
+#define HTTPC_RES_BODY		(1<<6)
+#define HTTPC_RES_END		(1<<7)
+#define HTTPC_RES_SENDING	(1<<8)
+#define HTTPC_RES_SENT		(1<<9)
 
 class cHttpConnection: public iHttpConnection {
 private:
@@ -89,11 +92,14 @@ private:
 	HBUFFER		m_req_buffer;
 	HBUFFER		m_res_buffer;
 	_u32		m_req_len;
+	_u32		m_req_hdr_len;
 	_u32		m_res_len;
 	_u32		m_res_offset;
 	_u16		m_state;
 	_ulong		m_udata;
 
+	void read_request(void);
+	bool complete_request(void);
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
@@ -114,6 +120,9 @@ public:
 	_ulong get_udata(void) {
 		return m_udata;
 	}
+	_str_t req_header(_u32 *);
+	_str_t req_body(_u32 *);
+	void process(void);
 	//...
 };
 
@@ -125,17 +134,20 @@ typedef struct {
 
 class cHttpServer: public iHttpServer {
 private:
-	cTCPServer	*p_tcps;
-	iLog		*mpi_log;
-	iBufferMap	*mpi_bmap;
-	iTaskMaker	*mpi_tmaker;
-	iLlist		*mpi_list;
-	volatile bool	m_is_init;
-	volatile bool	m_is_running;
-	volatile bool	m_is_stopped;
-	bool		m_use_ssl;
-	volatile _u32	m_num_workers;
-	volatile _u32 	m_active_workers;
+	cTCPServer		*p_tcps;
+	iLog			*mpi_log;
+	iBufferMap		*mpi_bmap;
+	iTaskMaker		*mpi_tmaker;
+	iLlist			*mpi_list;
+	volatile bool		m_is_init;
+	volatile bool		m_is_running;
+	volatile bool		m_is_stopped;
+	bool			m_use_ssl;
+	volatile _u32		m_num_workers;
+	volatile _u32 		m_active_workers;
+	_on_http_event_t	*mp_on_connect;
+	_on_http_event_t	*mp_on_request;
+	_on_http_event_t	*mp_on_disconnect;
 
 	friend void http_server_thread(cHttpServer *pobj);
 	friend void *http_worker_thread(void *);

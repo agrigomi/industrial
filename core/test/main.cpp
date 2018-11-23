@@ -25,6 +25,26 @@ void log_listener(_u8 lmt, _str_t msg) {
 	printf("[%c] %s\n", pref, msg);
 }
 
+void on_connect(iHttpConnection *pi_httpc) {
+	printf("on_connect: 0x%p\n", pi_httpc);
+}
+void on_request(iHttpConnection *pi_httpc) {
+	_u32 sz = 0;
+
+	if(pi_httpc->get_udata() == 0) {
+		printf("on_request: 0x%p\n", pi_httpc);
+		_str_t txt = pi_httpc->req_header(&sz);
+		if(txt)
+			printf("%s", txt);
+		usleep(10000);
+		pi_httpc->set_udata(1);
+	}
+}
+void on_disconnect(iHttpConnection *pi_httpc) {
+	printf("on_disconnect: 0x%p\n", pi_httpc);
+}
+
+
 _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
 	if(r == ERR_NONE) {
@@ -56,9 +76,15 @@ _err_t main(int argc, char *argv[]) {
 		iNet *pi_net = (iNet*)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
 		if(pi_net) {
 			iHttpServer *pi_http = pi_net->create_http_server(8080);
-			while(1)
-				usleep(10000);
-			pi_repo->object_release(pi_net);
+			if(pi_http) {
+				pi_http->on_event(ON_HTTP_CONNECT, on_connect);
+				pi_http->on_event(ON_HTTP_REQUEST, on_request);
+				pi_http->on_event(ON_HTTP_DISCONNECT, on_disconnect);
+
+				while(1)
+					usleep(10000);
+				pi_repo->object_release(pi_net);
+			}
 		}
 
 		iFS *pi_fs = dynamic_cast<iFS*>(pi_repo->object_by_iname(I_FS, RF_ORIGINAL));

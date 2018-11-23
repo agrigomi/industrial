@@ -50,6 +50,8 @@ public:
 	virtual _u32 peer_ip(void)=0;
 	virtual void set_udata(_ulong)=0;
 	virtual _ulong get_udata(void)=0;
+	virtual _str_t req_header(_u32 *)=0;
+	virtual _str_t req_body(_u32 *)=0;
 	//...
 };
 
@@ -57,8 +59,8 @@ public:
 typedef void _on_http_event_t(iHttpConnection *pi_httpc);
 
 #define ON_HTTP_CONNECT		1
-#define ON_HTTP_DISCONNECT	2
-#define ON_HTTP_REQUEST		3
+#define ON_HTTP_REQUEST		2
+#define ON_HTTP_DISCONNECT	3
 
 class iHttpServer: public iBase {
 public:
