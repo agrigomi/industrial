@@ -71,8 +71,10 @@ private:
 	HTASK start_task(_task_t *task) {
 		HTASK r = 0;
 
-		if(pthread_create(&task->thread, 0, (_task_proc_t *)starter, task) == ERR_NONE)
+		if(pthread_create(&task->thread, 0, (_task_proc_t *)starter, task) == ERR_NONE) {
 			r = task;
+			usleep(1);
+		}
 
 		return r;
 	}
@@ -152,8 +154,10 @@ public:
 			r = start_task(t);
 		} else {
 			_task_t *task = (_task_t *)r;
-			if(!(task->state & TS_RUNNING))
+			if(!(task->state & TS_RUNNING)) {
 				pthread_create(&task->thread, 0, (_task_proc_t *)starter, task);
+				usleep(1);
+			}
 		}
 
 		return r;
