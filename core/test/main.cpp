@@ -13,75 +13,53 @@
 
 IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
-void log_listener(_u8 lmt, _str_t msg) {
-	_char_t pref = '-';
-
-	switch(lmt) {
-		case LMT_TEXT: pref = 'T'; break;
-		case LMT_INFO: pref = 'I'; break;
-		case LMT_ERROR: pref = 'E'; break;
-		case LMT_WARNING: pref = 'W';break;
-	}
-	printf("[%c] %s\n", pref, msg);
-}
-
-void on_connect(iHttpConnection *pi_httpc) {
-	printf("on_connect: 0x%p\n", pi_httpc);
-}
-void on_request(iHttpConnection *pi_httpc) {
-	_u32 sz = 0;
-
-	if(pi_httpc->get_udata() == 0) {
-		printf("on_request: 0x%p\n", pi_httpc);
-		_str_t txt = pi_httpc->req_header(&sz);
-		if(txt)
-			printf("%s", txt);
-		usleep(10000);
-		pi_httpc->set_udata(1);
-	}
-}
-void on_disconnect(iHttpConnection *pi_httpc) {
-	printf("on_disconnect: 0x%p\n", pi_httpc);
-}
-
-
 _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
 	if(r == ERR_NONE) {
 		iRepository *pi_repo = get_repository();
-		iLog *pi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
+		iLog *pi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
 
-		pi_log->add_listener(log_listener);
+		//pi_log->add_listener(log_listener);
+		pi_log->add_listener([](_u8 lmt, _str_t msg) {
+			_char_t pref = '-';
+
+			switch(lmt) {
+				case LMT_TEXT: pref = 'T'; break;
+				case LMT_INFO: pref = 'I'; break;
+				case LMT_ERROR: pref = 'E'; break;
+				case LMT_WARNING: pref = 'W';break;
+			}
+			printf("[%c] %s\n", pref, msg);
+		});
 
 		pi_repo->extension_dir("./bin/deploy/unix");
 		pi_repo->extension_load("extht.so");
-		//pi_repo->extension_load("ext-1.so");
 		pi_repo->extension_load("extfs.so");
 		pi_repo->extension_load("extnet.so");
 
-/*
-		iBufferMap *pi_bmap = dynamic_cast<iBufferMap *>(pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE));
-		if(pi_bmap) {
-			pi_bmap->init(8192, NULL);
-			HBUFFER b1 = pi_bmap->alloc();
-			pi_bmap->free(b1);
-			b1 = pi_bmap->alloc();
-			HBUFFER b2 = pi_bmap->alloc();
-			pi_bmap->free(b1);
-			pi_bmap->free(b2);
-			b1 = pi_bmap->alloc();
-			b2 = pi_bmap->alloc();
-		}
-*/
-		iNet *pi_net = (iNet*)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
+		iNet *pi_net = dynamic_cast<iNet*>(pi_repo->object_by_iname(I_NET, RF_ORIGINAL));
 		if(pi_net) {
 			iHttpServer *pi_http = pi_net->create_http_server(8080);
 			if(pi_http) {
-				pi_http->on_event(ON_HTTP_CONNECT, on_connect);
-				pi_http->on_event(ON_HTTP_REQUEST, on_request);
-				pi_http->on_event(ON_HTTP_DISCONNECT, on_disconnect);
+				pi_http->on_event(ON_HTTP_CONNECT, [](iHttpConnection *pi_httpc) {
+					printf("on_connect: 0x%p\n", pi_httpc);
+				});
+				pi_http->on_event(ON_HTTP_REQUEST, [](iHttpConnection *pi_httpc) {
+					_u32 sz = 0;
 
-				while(1)
+					if(pi_httpc->get_udata() == 0) {
+						printf("on_request: 0x%p\n", pi_httpc);
+						_str_t txt = pi_httpc->req_header(&sz);
+						if(txt)
+							printf("%s", txt);
+						pi_httpc->set_udata(1);
+					}
+				});
+				pi_http->on_event(ON_HTTP_DISCONNECT, [](iHttpConnection *pi_httpc) {
+					printf("on_disconnect: 0x%p\n", pi_httpc);
+				});
+
+				while(pi_http->is_running())
 					usleep(10000);
 				pi_repo->object_release(pi_net);
 			}
@@ -103,10 +81,8 @@ _err_t main(int argc, char *argv[]) {
 						if(test) {
 							_str_t test_content = pi_xml->content(test, &sz);
 							fwrite(test_content, sz, 1, stdout);
-							asm("nop");
 						} else
 							pi_log->write(LMT_ERROR, "XML: No tag 't-1/test' found\n");
-						//...
 
 					} else
 						pi_log->write(LMT_ERROR, "XML parse error");
