@@ -149,9 +149,9 @@ private:
 	_on_http_event_t	*mp_on_request;
 	_on_http_event_t	*mp_on_disconnect;
 
-	friend void http_server_thread(cHttpServer *pobj);
 	friend void *http_worker_thread(void *);
 
+	void http_server_thread(void);
 	bool start_worker(void);
 	bool stop_worker(void);
 	_http_connection_t *add_connection(void);
@@ -169,6 +169,9 @@ public:
 	void on_event(_u8 evt, _on_http_event_t *handler);
 	bool enable_ssl(bool, _ulong options=0);
 	bool ssl_use(_cstr_t str, _u32 type);
+	bool is_running(void) {
+		return m_is_running;
+	}
 };
 
 #endif

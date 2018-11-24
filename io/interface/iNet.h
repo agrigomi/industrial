@@ -68,6 +68,7 @@ public:
 	virtual void on_event(_u8 evt, _on_http_event_t *handler)=0;
 	virtual bool enable_ssl(bool, _ulong options=0)=0;
 	virtual bool ssl_use(_cstr_t str, _u32 type)=0;
+	virtual bool is_running(void)=0;
 };
 
 class iNet: public iBase {

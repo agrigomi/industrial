@@ -23,29 +23,29 @@ void cHttpServer::_close(void) {
 	}
 }
 
-void http_server_thread(cHttpServer *pobj) {
-	pobj->m_is_running = true;
-	pobj->m_is_stopped = false;
+void cHttpServer::http_server_thread(void) {
+	m_is_running = true;
+	m_is_stopped = false;
 
-	HTASK ht = pobj->mpi_tmaker->handle(pobj);
+	HTASK ht = mpi_tmaker->handle(this);
 	if(ht)
-		pobj->mpi_tmaker->set_name(ht, "http server");
+		mpi_tmaker->set_name(ht, "http server");
 
-	while(pobj->m_is_running) {
-		if(pobj->m_is_init) {
-			pobj->add_connection();
+	while(m_is_running) {
+		if(m_is_init) {
+			add_connection();
 		} else
 			usleep(10000);
 	}
 
-	pobj->m_is_stopped = true;
+	m_is_stopped = true;
 }
 
 #define NEMPTY	300
 
 void *http_worker_thread(void *udata) {
 	void *r = 0;
-	cHttpServer *p_https = (cHttpServer *)udata;
+	cHttpServer *p_https = static_cast<cHttpServer *>(udata);
 	volatile _u32 num = p_https->m_active_workers++;
 	_u32 nempty = NEMPTY;
 
@@ -73,7 +73,6 @@ void *http_worker_thread(void *udata) {
 				//...
 
 				p_https->free_connection(rec);
-				usleep(10000);
 			} else {
 				if(p_https->mp_on_disconnect)
 					// call on_disconnect handler
@@ -150,7 +149,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			r = true;
 		} break;
 		case OCTL_START:
-			http_server_thread(this);
+			http_server_thread();
 			break;
 		case OCTL_STOP:
 			m_is_running = false;

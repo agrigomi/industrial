@@ -91,7 +91,7 @@ _str_t cHttpConnection::req_header(_u32 *psz) {
 
 	if(mp_sio && m_req_buffer) {
 		r = (_str_t)mpi_bmap->ptr(m_req_buffer);
-		*psz = m_req_len;
+		*psz = m_req_hdr_len;
 	}
 
 	return r;
