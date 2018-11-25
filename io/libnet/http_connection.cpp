@@ -132,7 +132,8 @@ _u32 cHttpConnection::read_request(void) {
 
 		if(r) {
 			m_req_len += r;
-			m_state = HTTPC_REQ_PENDING;
+			if(!(m_state & (HTTPC_RES_HEADER | HTTPC_RES_BODY | HTTPC_RES_END)))
+				m_state = HTTPC_REQ_PENDING;
 		}
 	}
 
@@ -144,8 +145,10 @@ void cHttpConnection::process(void) {
 		m_state |= HTTPC_REQ_PENDING;
 	else if(m_state & HTTPC_REQ_PENDING) {
 		if(!read_request() && alive()) {
-			if(complete_request())
-				m_state |= HTTPC_RES_PENDING;
+			if(!(m_state & (HTTPC_RES_HEADER | HTTPC_RES_BODY | HTTPC_RES_END))) {
+				if(complete_request())
+					m_state |= HTTPC_RES_PENDING;
+			}
 		}
 	}
 }
