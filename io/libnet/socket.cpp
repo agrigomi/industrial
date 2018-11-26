@@ -68,11 +68,12 @@ struct sockaddr_in *cSocketIO::clientaddr(void) {
 
 void cSocketIO::_close(void) {
 	if(m_socket) {
-		close(m_socket);
-		m_socket = 0;
+		if(::close(m_socket) >= 0) {
+			m_socket = 0;
 
-		if(mp_cSSL)
-			SSL_free(mp_cSSL);
+			if(mp_cSSL)
+				SSL_free(mp_cSSL);
+		}
 	}
 }
 

@@ -90,11 +90,9 @@ private:
 	iStr		*mpi_str;
 	iBufferMap	*mpi_bmap;
 	HBUFFER		m_req_buffer;
-	HBUFFER		m_res_buffer;
 	_u32		m_req_len;
 	_u32		m_req_hdr_len;
 	_u32		m_res_len;
-	_u32		m_res_offset;
 	_u16		m_state;
 	_u32		m_content_len;
 	_u32		m_content_sent;

@@ -41,7 +41,7 @@ void cHttpServer::http_server_thread(void) {
 	m_is_stopped = true;
 }
 
-#define NEMPTY	300
+#define NEMPTY	500
 
 void *http_worker_thread(void *udata) {
 	void *r = 0;
@@ -66,23 +66,18 @@ void *http_worker_thread(void *udata) {
 					if(p_https->mp_on_request)
 						// call on_request handler
 						p_https->mp_on_request(rec->p_httpc);
-				} else if((cstate & HTTPC_RES_HEADER) && !(cstate & (HTTPC_RES_BODY | HTTPC_RES_END))) {
+				} else if((cstate & (HTTPC_RES_HEADER | HTTPC_RES_BODY)) && !(cstate & HTTPC_RES_END)) {
 					if(p_https->mp_on_continue)
 						// call on_continue handler
 						p_https->mp_on_continue(rec->p_httpc);
 				}
 
-				if(cstate & HTTPC_RES_END) {
-					if(p_https->mp_on_disconnect) {
-						usleep(10000);
-						// call on_disconnect handler
-						p_https->mp_on_disconnect(rec->p_httpc);
-						p_https->remove_connection(rec);
-					}
-				} else {
+				if(!(cstate & HTTPC_RES_SENT))
 					rec->p_httpc->process();
-					p_https->free_connection(rec);
-				}
+				else
+					rec->p_httpc->close();
+
+				p_https->free_connection(rec);
 			} else {
 				if(p_https->mp_on_disconnect)
 					// call on_disconnect handler

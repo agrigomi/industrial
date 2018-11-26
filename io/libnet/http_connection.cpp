@@ -12,9 +12,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_state = 0;
 			m_req_buffer = 0;
 			m_req_len = 0;
-			m_res_buffer = 0;
 			m_res_len = 0;
-			m_res_offset = 0;
 			m_content_len = 0;
 			m_content_sent = 0;
 			if((mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL))) {
@@ -53,10 +51,6 @@ void cHttpConnection::close(void) {
 		if(m_req_buffer) {
 			mpi_bmap->free(m_req_buffer);
 			m_req_buffer = 0;
-		}
-		if(m_res_buffer) {
-			mpi_bmap->free(m_res_buffer);
-			m_res_buffer = 0;
 		}
 	}
 }
@@ -130,7 +124,7 @@ _u32 cHttpConnection::read_request(void) {
 	if(m_req_buffer) {
 		void *buffer = mpi_bmap->ptr(m_req_buffer);
 		_u32 sz = mpi_bmap->get_size() - m_req_len;
-		_u32 r = mp_sio->read(buffer, sz);
+		_u32 r = mp_sio->read(((_str_t)buffer) + m_req_len, sz);
 
 		if(r) {
 			m_req_len += r;
@@ -150,6 +144,11 @@ void cHttpConnection::process(void) {
 			if(!(m_state & (HTTPC_RES_HEADER | HTTPC_RES_BODY | HTTPC_RES_END))) {
 				if(complete_request())
 					m_state |= HTTPC_RES_PENDING;
+			} else if(m_state & HTTPC_RES_END) {
+				if(m_content_sent >= m_content_len)
+					m_state |= HTTPC_RES_SENT;
+				else
+					m_state &= ~HTTPC_RES_END;
 			}
 		}
 	}
@@ -190,11 +189,13 @@ _u32 cHttpConnection::response(_str_t body, // remainder part of response body
 	_u32 r = 0;
 
 	if(mp_sio && alive() && body && sz_body && (m_content_sent < m_content_len)) {
-		r = mp_sio->write(body, sz_body);
-		m_content_sent += r;
-		m_state |= HTTPC_RES_BODY;
-		if(m_content_sent >= m_content_len)
+		m_state |= HTTPC_RES_SENDING;
+		if((m_content_sent + sz_body) >= m_content_len)
 			m_state |= HTTPC_RES_END;
+		if((r = mp_sio->write(body, sz_body)) > 0) {
+			m_state |= HTTPC_RES_BODY;
+			m_content_sent += r;
+		}
 	}
 
 	return r;
