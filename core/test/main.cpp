@@ -13,6 +13,19 @@
 
 IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
+_cstr_t g_hdr = "var1: alabala\r\nvar2: haha\r\n";
+_cstr_t g_body= "<!DOCTYPE HTML>\
+<html>\
+<head>\
+   <title>HelloWorld</title>\
+</head>\
+<body>\
+      <h1>Hello World</h1>\
+ </body>\
+ </html>\
+";
+
+
 _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
 	if(r == ERR_NONE) {
@@ -42,21 +55,23 @@ _err_t main(int argc, char *argv[]) {
 			iHttpServer *pi_http = pi_net->create_http_server(8080);
 			if(pi_http) {
 				pi_http->on_event(ON_HTTP_CONNECT, [](iHttpConnection *pi_httpc) {
-					printf("on_connect: 0x%p\n", pi_httpc);
+					printf("on_connect: %p\n", pi_httpc);
 				});
 				pi_http->on_event(ON_HTTP_REQUEST, [](iHttpConnection *pi_httpc) {
 					_u32 sz = 0;
 
-					if(pi_httpc->get_udata() == 0) {
-						printf("on_request: 0x%p\n", pi_httpc);
-						_str_t txt = pi_httpc->req_header(&sz);
-						if(txt)
-							printf("%s", txt);
-						pi_httpc->set_udata(1);
-					}
+					printf("on_request: %p\n", pi_httpc);
+					_str_t txt = pi_httpc->req_header(&sz);
+					if(txt)
+						printf("%s", txt);
+					pi_httpc->response(HTTPRC_OK, (_str_t)g_hdr, 0, strlen(g_body));
+				});
+				pi_http->on_event(ON_HTTP_CONTINUE, [](iHttpConnection *pi_httpc) {
+					printf("on_continue: %p\n", pi_httpc);
+					pi_httpc->response((_str_t)g_body, strlen(g_body));
 				});
 				pi_http->on_event(ON_HTTP_DISCONNECT, [](iHttpConnection *pi_httpc) {
-					printf("on_disconnect: 0x%p\n", pi_httpc);
+					printf("on_disconnect: %p\n", pi_httpc);
 				});
 
 				while(pi_http->is_running())

@@ -96,6 +96,8 @@ private:
 	_u32		m_res_len;
 	_u32		m_res_offset;
 	_u16		m_state;
+	_u32		m_content_len;
+	_u32		m_content_sent;
 	_ulong		m_udata;
 
 	_u32 read_request(void);
@@ -104,7 +106,7 @@ public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	bool _init(cSocketIO *p_sio, iBufferMap *pi_bmap);
-	void _close(void);
+	void close(void);
 	bool alive(void);
 	cSocketIO *get_socket_io(void) {
 		return mp_sio;
@@ -123,7 +125,19 @@ public:
 	_str_t req_header(_u32 *);
 	_str_t req_body(_u32 *);
 	void process(void);
-	//...
+	_u32 response(_u16 rc, // response code
+			_str_t hdr, // response header
+			_str_t body, // response body
+			// Size of response body.
+			// If zero, string length should be taken.
+			// If it's greater than body lenght, ON_HTTP_RES_CONTINUE
+			//  should be happen
+			_u32 sz_body=0
+			);
+	_u32 response(_str_t body, // remainder part of response body
+			_u32 sz_body=0 // size of response body
+			);
+	_u32 remainder(void);
 };
 
 typedef struct {
@@ -147,6 +161,7 @@ private:
 	volatile _u32 		m_active_workers;
 	_on_http_event_t	*mp_on_connect;
 	_on_http_event_t	*mp_on_request;
+	_on_http_event_t	*mp_on_continue;
 	_on_http_event_t	*mp_on_disconnect;
 
 	friend void *http_worker_thread(void *);

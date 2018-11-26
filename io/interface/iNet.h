@@ -41,26 +41,69 @@ public:
 	virtual void close(iSocketIO *p_io)=0;
 };
 
+// HTTP response code
+#define HTTPRC_CONTINUE			100 // Continue
+#define HTTPRC_SWP			101 // Switching Protocols
+#define HTTPRC_OK			200 // OK
+#define HTTPRC_CREATED			201 // Created
+#define HTTPRC_ACCEPTED			202 // Accepted
+#define HTTPRC_NON_AUTH			203 // Non-Authoritative Information
+#define HTTPRC_NO_CONTENT		204
+#define HTTPRC_RESET_CONTENT		205 // Reset Content
+#define HTTPRC_PART_CONTENT		206 // Partial Content
+#define HTTPRC_MULTICHOICES		300 // Multiple Choices
+#define HTTPRC_MOVED_PERMANENTLY	301 // Moved Permanently
+#define HTTPRC_FOUND			302
+#define HTTPRC_SEE_OTHER		303
+#define HTTPRC_NOT_MODIFIED		304 // Content not modified
+#define HTTPRC_USE_PROXY		305 // Use proxy
+#define HTTPRC_TEMP_REDIRECT		307 // Temporary redirect
+#define HTTPRC_BAD_REQUEST		400
+
 class iHttpConnection: public iBase {
 public:
 	INTERFACE(iHttpConnection, I_HTTP_CONNECTION);
 	// verify I/O
 	virtual bool alive(void)=0;
+	// close connection
+	virtual void close(void)=0;
+	// get peer IP in string format
 	virtual bool peer_ip(_str_t strip, _u32 len)=0;
+	// get peer IP in integer format
 	virtual _u32 peer_ip(void)=0;
+	// set user data
 	virtual void set_udata(_ulong)=0;
+	// get user data
 	virtual _ulong get_udata(void)=0;
+	// get request header
 	virtual _str_t req_header(_u32 *)=0;
+	// get request body
 	virtual _str_t req_body(_u32 *)=0;
-	//...
+	// start of response
+	virtual _u32 response(_u16 rc, // response code
+				_str_t hdr, // response header
+				_str_t body, // response body
+				// Size of response body.
+				// If zero, string length should be taken.
+				// If it's greater than body lenght, ON_HTTP_RES_CONTINUE
+				//  should be happen
+				_u32 sz_body=0
+				)=0;
+	// continue of response
+	virtual _u32 response(_str_t body, // remainder part of response body
+				_u32 sz_body=0 // size of response body (if zero, string length should be taken)
+				)=0;
+	// get size of response remainder pard
+	virtual _u32 remainder(void)=0;
 };
 
 // HTTP event prototype
 typedef void _on_http_event_t(iHttpConnection *pi_httpc);
 
 #define ON_HTTP_CONNECT		1
-#define ON_HTTP_REQUEST		2
-#define ON_HTTP_DISCONNECT	3
+#define ON_HTTP_REQUEST		2 // request ready (awaiting for response)
+#define ON_HTTP_CONTINUE	3 // response continue
+#define ON_HTTP_DISCONNECT	4
 
 class iHttpServer: public iBase {
 public:

@@ -62,17 +62,27 @@ void *http_worker_thread(void *udata) {
 					if(p_https->mp_on_connect)
 						// call on_connect handler
 						p_https->mp_on_connect(rec->p_httpc);
-				} else if(cstate & HTTPC_RES_PENDING) {
+				} else if((cstate & HTTPC_RES_PENDING) && !(cstate & (HTTPC_RES_HEADER | HTTPC_RES_BODY | HTTPC_RES_END))) {
 					if(p_https->mp_on_request)
 						// call on_request handler
 						p_https->mp_on_request(rec->p_httpc);
+				} else if((cstate & HTTPC_RES_HEADER) && !(cstate & (HTTPC_RES_BODY | HTTPC_RES_END))) {
+					if(p_https->mp_on_continue)
+						// call on_continue handler
+						p_https->mp_on_continue(rec->p_httpc);
 				}
 
-				rec->p_httpc->process();
-
-				//...
-
-				p_https->free_connection(rec);
+				if(cstate & HTTPC_RES_END) {
+					if(p_https->mp_on_disconnect) {
+						usleep(10000);
+						// call on_disconnect handler
+						p_https->mp_on_disconnect(rec->p_httpc);
+						p_https->remove_connection(rec);
+					}
+				} else {
+					rec->p_httpc->process();
+					p_https->free_connection(rec);
+				}
 			} else {
 				if(p_https->mp_on_disconnect)
 					// call on_disconnect handler
@@ -118,7 +128,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 
 			m_is_init = m_is_running = m_use_ssl = false;
 			m_num_workers = m_active_workers = 0;
-			mp_on_connect = mp_on_request = mp_on_disconnect = 0;
+			mp_on_connect = mp_on_request = mp_on_continue = mp_on_disconnect = 0;
 			mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
 			p_tcps = (cTCPServer *)pi_repo->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE);
 			mpi_bmap = (iBufferMap *)pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE);
@@ -168,6 +178,9 @@ void cHttpServer::on_event(_u8 evt, _on_http_event_t *handler) {
 			break;
 		case ON_HTTP_REQUEST:
 			mp_on_request = handler;
+			break;
+		case ON_HTTP_CONTINUE:
+			mp_on_continue = handler;
 			break;
 		case ON_HTTP_DISCONNECT:
 			mp_on_disconnect = handler;
