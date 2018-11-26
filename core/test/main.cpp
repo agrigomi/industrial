@@ -67,10 +67,10 @@ _err_t main(int argc, char *argv[]) {
 					pi_httpc->response(HTTPRC_OK, (_str_t)g_hdr, 0, strlen(g_body));
 				});
 				pi_http->on_event(ON_HTTP_CONTINUE, [](iHttpConnection *pi_httpc) {
-					//printf("on_continue: %p\n", pi_httpc);
-					_u32 offset = pi_httpc->remainder();
-					//pi_httpc->response((_str_t)g_body, strlen(g_body));
-					pi_httpc->response((_str_t)g_body+offset, 1);
+					printf("on_continue: %p\n", pi_httpc);
+					//_u32 offset = pi_httpc->remainder();
+					pi_httpc->response((_str_t)g_body, strlen(g_body));
+					//pi_httpc->response((_str_t)g_body+offset, 1);
 				});
 				pi_http->on_event(ON_HTTP_DISCONNECT, [](iHttpConnection *pi_httpc) {
 					printf("on_disconnect: %p\n", pi_httpc);

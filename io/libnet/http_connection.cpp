@@ -118,18 +118,20 @@ bool cHttpConnection::complete_request(void) {
 _u32 cHttpConnection::read_request(void) {
 	_u32 r = 0;
 
-	if(!m_req_buffer)
-		m_req_buffer = mpi_bmap->alloc();
+	if(alive()) {
+		if(!m_req_buffer)
+			m_req_buffer = mpi_bmap->alloc();
 
-	if(m_req_buffer) {
-		void *buffer = mpi_bmap->ptr(m_req_buffer);
-		_u32 sz = mpi_bmap->get_size() - m_req_len;
-		_u32 r = mp_sio->read(((_str_t)buffer) + m_req_len, sz);
+		if(m_req_buffer) {
+			void *buffer = mpi_bmap->ptr(m_req_buffer);
+			_u32 sz = mpi_bmap->get_size() - m_req_len;
+			_u32 r = mp_sio->read(((_str_t)buffer) + m_req_len, sz);
 
-		if(r) {
-			m_req_len += r;
-			if(!(m_state & (HTTPC_RES_HEADER | HTTPC_RES_BODY | HTTPC_RES_END)))
-				m_state = HTTPC_REQ_PENDING;
+			if(r) {
+				m_req_len += r;
+				if(!(m_state & (HTTPC_RES_HEADER | HTTPC_RES_BODY | HTTPC_RES_END)))
+					m_state = HTTPC_REQ_PENDING;
+			}
 		}
 	}
 
@@ -166,7 +168,7 @@ _u32 cHttpConnection::response(_u16 rc, // response code
 	_u32 r = 0;
 	_char_t lb[128]="";
 
-	if(mp_sio && alive()) {
+	if(alive()) {
 		_u32 body_len = (body) ? mpi_str->str_len(body) : 0;
 		_u32 sz = snprintf(lb, sizeof(lb), "HTTP/1.1 %d %s\r\n", rc, "...");
 
@@ -188,7 +190,7 @@ _u32 cHttpConnection::response(_str_t body, // remainder part of response body
 				) {
 	_u32 r = 0;
 
-	if(mp_sio && alive() && body && sz_body && (m_content_sent < m_content_len)) {
+	if(alive() && body && sz_body && (m_content_sent < m_content_len)) {
 		m_state |= HTTPC_RES_SENDING;
 		if((m_content_sent + sz_body) >= m_content_len)
 			m_state |= HTTPC_RES_END;
