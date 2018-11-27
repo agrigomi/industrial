@@ -120,6 +120,7 @@ public:
 				)=0;
 	// get size of response remainder pard
 	virtual _u32 remainder(void)=0;
+	virtual _u32 receive(void *buffer, _u32 size)=0;
 };
 
 // HTTP event prototype

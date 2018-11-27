@@ -288,4 +288,13 @@ _u32 cHttpConnection::remainder(void) {
 	return m_content_len - (m_content_sent < m_content_len) ? m_content_sent : 0;
 }
 
+_u32 cHttpConnection::receive(void *buffer, _u32 size) {
+	_u32 r = 0;
+
+	if(alive())
+		r = mp_sio->read(buffer, size);
+
+	return r;
+}
+
 static cHttpConnection _g_httpc_;

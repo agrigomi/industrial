@@ -14,7 +14,7 @@
 IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
 _cstr_t g_hdr = "var1: alabala\r\nvar2: haha\r\n";
-_cstr_t g_body= "<!DOCTYPE HTML>\
+/*_cstr_t g_body= "<!DOCTYPE HTML>\
 <html>\
 <head>\
    <title>HelloWorld</title>\
@@ -24,7 +24,13 @@ _cstr_t g_body= "<!DOCTYPE HTML>\
  </body>\
  </html>\
 \r\n";
+*/
 
+_cstr_t g_body = "<form action=\"upload_file\" method=\"post\" enctype=\"multipart/form-data\">\
+    Select image to upload:\
+        <input type=\"file\" name=\"fileToUpload\" id=\"fileToUpload\">\
+	    <input type=\"submit\" value=\"Upload Image\" name=\"submit\">\
+	    </form>";
 
 _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
@@ -64,7 +70,18 @@ _err_t main(int argc, char *argv[]) {
 					_str_t txt = pi_httpc->req_header(&sz);
 					if(txt)
 						printf("%s", txt);
-					pi_httpc->response(HTTPRC_OK, (_str_t)g_hdr, (_str_t)g_body, strlen(g_body));
+					if(memcmp(txt, "GET", 3) == 0)
+						pi_httpc->response(HTTPRC_OK, (_str_t)g_hdr, (_str_t)g_body, strlen(g_body));
+					else if(memcmp(txt, "POST", 4) == 0) {
+						_char_t lb[32];
+						_u32 r = 0;
+
+						printf("Start receiving >>>>>>>\n");
+						while((r = pi_httpc->receive(lb, sizeof(lb))))
+							fwrite(lb, r, 1, stdout);
+						printf("<<<<<<< End receiving.\n");
+						pi_httpc->response(HTTPRC_OK, (_str_t)g_hdr, (_str_t)g_body, strlen(g_body));
+					}
 				});
 				pi_http->on_event(ON_HTTP_CONTINUE, [](iHttpConnection *pi_httpc) {
 					printf("on_continue: %p\n", pi_httpc);

@@ -138,6 +138,7 @@ public:
 			_u32 sz_body // size of response body
 			);
 	_u32 remainder(void);
+	_u32 receive(void *buffer, _u32 size);
 };
 
 typedef struct {
