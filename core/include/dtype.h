@@ -11,6 +11,7 @@ typedef unsigned char		_u8;
 typedef char			_s8;
 typedef char*			_str_t;
 typedef char			_char_t;
+typedef unsigned char		_uchar_t;
 typedef const char* 		_cstr_t;
 typedef unsigned long		_ulong;
 typedef signed long		_slong;
