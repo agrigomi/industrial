@@ -104,16 +104,19 @@ public:
 	// start of response
 	virtual _u32 response(_u16 rc, // response code
 				_str_t hdr, // response header
-				_str_t body, // response body
-				// Size of response body.
-				// If zero, string length should be taken.
-				// If it's greater than body lenght, ON_HTTP_RES_CONTINUE
-				//  should be happen
-				_u32 sz_body=0
+				_str_t content, //response content
+				/*
+				 Size of response content.
+				 If zero, string length should be taken.
+				 This parameter will be stored in response header as
+				   Content-Length.
+				 If it's greater than string len of content parameter,
+				  ON_HTTP_RES_CONTINUE should be happen */
+				_u32 content_len=0
 				)=0;
 	// continue of response
-	virtual _u32 response(_str_t body, // remainder part of response body
-				_u32 sz_body=0 // size of response body (if zero, string length should be taken)
+	virtual _u32 response(_str_t content, // remainder part of response content
+				_u32 size // size of response content
 				)=0;
 	// get size of response remainder pard
 	virtual _u32 remainder(void)=0;

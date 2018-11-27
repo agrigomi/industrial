@@ -135,7 +135,7 @@ public:
 			_u32 sz_body=0
 			);
 	_u32 response(_str_t body, // remainder part of response body
-			_u32 sz_body=0 // size of response body
+			_u32 sz_body // size of response body
 			);
 	_u32 remainder(void);
 };
