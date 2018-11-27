@@ -30,7 +30,7 @@ public:
 				iRepository *pi_repo = (iRepository *)arg;
 
 				mpi_mutex = (iMutex *)pi_repo->object_by_iname(I_MUTEX, RF_CLONE);
-				mpi_heap = (iHeap *)pi_repo->object_by_iname(I_HEAP, RF_CLONE);
+				mpi_heap = (iHeap *)pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
 
 				map_cxt.records = map_cxt.collisions = 0;
 				map_cxt.capacity = INITIAL_CAPACITY;
