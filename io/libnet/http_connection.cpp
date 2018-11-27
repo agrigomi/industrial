@@ -1,5 +1,53 @@
 #include "private.h"
 
+typedef struct {
+	_u16 	rc;
+	_cstr_t	text;
+}_http_resp_text_t;
+
+static _http_resp_text_t _g_http_resp_text[] = {
+	{HTTPRC_CONTINUE,		"Continue"},
+	{HTTPRC_SWITCHING_PROTOCOL,	"Switching Protocols"},
+	{HTTPRC_OK,			"OK"},
+	{HTTPRC_CREATED,		"Created"},
+	{HTTPRC_ACCEPTED,		"Accepted"},
+	{HTTPRC_NON_AUTH,		"Non-Authoritative Information"},
+	{HTTPRC_NO_CONTENT,		"No Content"},
+	{HTTPRC_RESET_CONTENT,		"Reset Content"},
+	{HTTPRC_PART_CONTENT,		"Partial Content"},
+	{HTTPRC_MULTICHOICES,		"Multiple Choices"},
+	{HTTPRC_MOVED_PERMANENTLY,	"Moved Permanently"},
+	{HTTPRC_FOUND,			"Found"},
+	{HTTPRC_SEE_OTHER,		"See Other"},
+	{HTTPRC_NOT_MODIFIED,		"Not Modified"},
+	{HTTPRC_USE_PROXY,		"Use proxy"},
+	{HTTPRC_TEMP_REDIRECT,		"Temporary redirect"},
+	{HTTPRC_BAD_REQUEST,		"Bad Request"},
+	{HTTPRC_UNAUTHORIZED,		"Unauthorized"},
+	{HTTPRC_PAYMENT_REQUIRED,	"Payment Required"},
+	{HTTPRC_FORBIDDEN,		"Forbidden"},
+	{HTTPRC_NOT_FOUND,		"Not Found"},
+	{HTTPRC_METHOD_NOT_ALLOWED,	"Method Not Allowed"},
+	{HTTPRC_NOT_ACCEPTABLE,		"Not Acceptable"},
+	{HTTPRC_PROXY_AUTH_REQUIRED,	"Proxy Authentication Required"},
+	{HTTPRC_REQUEST_TIMEOUT,	"Request Time-out"},
+	{HTTPRC_CONFLICT,		"Conflict"},
+	{HTTPRC_GONE,			"Gone"},
+	{HTTPRC_LENGTH_REQUIRED,	"Length Required"},
+	{HTTPRC_PRECONDITION_FAILED,	"Precondition Failed"},
+	{HTTPRC_REQ_ENTITY_TOO_LARGE,	"Request Entity Too Large"},
+	{HTTPRC_REQ_URI_TOO_LARGE,	"Request-URI Too Large"},
+	{HTTPRC_UNSUPPORTED_MEDIA_TYPE,	"Unsupported Media Type"},
+	{HTTPRC_EXPECTATION_FAILED,	"Expectation Failed"},
+	{HTTPRC_INTERNAL_SERVER_ERROR,	"Internal Server Error"},
+	{HTTPRC_NOT_IMPLEMENTED,	"Not Implemented"},
+	{HTTPRC_BAD_GATEWAY,		"Bad Gateway"},
+	{HTTPRC_SERVICE_UNAVAILABLE,	"Service Unavailable"},
+	{HTTPRC_GATEWAY_TIMEOUT,	"Gateway Time-out"},
+	{HTTPRC_VERSION_NOT_SUPPORTED,	"HTTP Version not supported"},
+	{0,				NULL}
+};
+
 bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
 
@@ -156,6 +204,21 @@ void cHttpConnection::process(void) {
 	}
 }
 
+_cstr_t cHttpConnection::get_rc_text(_u16 rc) {
+	_cstr_t r = "...";
+	_u32 n = 0;
+
+	while(_g_http_resp_text[n].rc) {
+		if(rc == _g_http_resp_text[n].rc) {
+			r = _g_http_resp_text[n].text;
+			break;
+		}
+		n++;
+	}
+
+	return r;
+}
+
 _u32 cHttpConnection::response(_u16 rc, // response code
 				_str_t hdr, // response header
 				_str_t body, // response body
@@ -170,7 +233,7 @@ _u32 cHttpConnection::response(_u16 rc, // response code
 
 	if(alive()) {
 		_u32 body_len = (body) ? mpi_str->str_len(body) : 0;
-		_u32 sz = snprintf(lb, sizeof(lb), "HTTP/1.1 %d %s\r\n", rc, "...");
+		_u32 sz = snprintf(lb, sizeof(lb), "HTTP/1.1 %d %s\r\n", rc, get_rc_text(rc));
 
 		m_content_len = (sz_body) ? sz_body : body_len;
 		r = mp_sio->write(lb, sz);

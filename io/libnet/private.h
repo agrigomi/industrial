@@ -100,6 +100,7 @@ private:
 
 	_u32 read_request(void);
 	bool complete_request(void);
+	_cstr_t get_rc_text(_u16 rc);
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
