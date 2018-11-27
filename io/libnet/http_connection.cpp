@@ -1,4 +1,5 @@
 #include "private.h"
+#include "time.h"
 
 typedef struct {
 	_u16 	rc;
@@ -177,8 +178,9 @@ _u32 cHttpConnection::read_request(void) {
 
 			if(r) {
 				m_req_len += r;
-				if(!(m_state & (HTTPC_RES_HEADER | HTTPC_RES_BODY | HTTPC_RES_END)))
-					m_state = HTTPC_REQ_PENDING;
+				if(m_req_len == mpi_bmap->get_size())
+					m_state |= HTTPC_REQ_OVERFLOW;
+				m_state &= ~HTTPC_REQ_END;
 			}
 		}
 	}
@@ -191,10 +193,15 @@ void cHttpConnection::process(void) {
 		m_state |= HTTPC_REQ_PENDING;
 	else if(m_state & HTTPC_REQ_PENDING) {
 		if(!read_request() && alive()) {
-			if(!(m_state & (HTTPC_RES_HEADER | HTTPC_RES_BODY | HTTPC_RES_END))) {
+			if(!(m_state & (HTTPC_REQ_END | HTTPC_RES_HEADER |
+					HTTPC_RES_BODY | HTTPC_RES_END))) {
 				if(complete_request())
-					m_state |= HTTPC_RES_PENDING;
-			} else if(m_state & HTTPC_RES_END) {
+					m_state |= HTTPC_REQ_END;
+			} else if((m_state & HTTPC_REQ_END) &&
+					!(m_state & (HTTPC_RES_HEADER |
+						HTTPC_RES_BODY | HTTPC_RES_END)))
+				m_state |= HTTPC_RES_PENDING;
+			else if(m_state & HTTPC_RES_END) {
 				if(m_content_sent >= m_content_len)
 					m_state |= HTTPC_RES_SENT;
 				else
@@ -229,18 +236,29 @@ _u32 cHttpConnection::response(_u16 rc, // response code
 				_u32 sz_body
 			) {
 	_u32 r = 0;
-	_char_t lb[128]="";
+	_char_t lb[256]="";
 
 	if(alive()) {
-		_u32 body_len = (body) ? mpi_str->str_len(body) : 0;
+		// Protocol
 		_u32 sz = snprintf(lb, sizeof(lb), "HTTP/1.1 %d %s\r\n", rc, get_rc_text(rc));
 
+		// Date
+		time_t _time = time(NULL);
+		tm *_tm = gmtime(&_time);
+		sz += strftime(lb + sz, sizeof(lb) - sz, "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", _tm);
+
+		// Content-Length
+		_u32 body_len = (body) ? mpi_str->str_len(body) : 0;
 		m_content_len = (sz_body) ? sz_body : body_len;
+		sz += snprintf(lb + sz, sizeof(lb) - sz, "Content-Length: %u\r\n", m_content_len);
+
+		// Send first part of header
 		r = mp_sio->write(lb, sz);
-		sz = snprintf(lb, sizeof(lb), "Content-Length: %u\r\n", m_content_len);
-		r += mp_sio->write(lb, sz);
+
+		// Send Header
 		r += mp_sio->write(hdr, mpi_str->str_len(hdr));
 		r += mp_sio->write("\r\n", 2);
+
 		m_state |= HTTPC_RES_HEADER;
 		r += response(body, body_len);
 	}

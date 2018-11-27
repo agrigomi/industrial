@@ -62,7 +62,8 @@ void *http_worker_thread(void *udata) {
 					if(p_https->mp_on_connect)
 						// call on_connect handler
 						p_https->mp_on_connect(rec->p_httpc);
-				} else if((cstate & HTTPC_RES_PENDING) && !(cstate & (HTTPC_RES_HEADER | HTTPC_RES_BODY | HTTPC_RES_END))) {
+				} else if((cstate & (HTTPC_RES_PENDING | HTTPC_REQ_END | HTTPC_REQ_OVERFLOW)) &&
+							!(cstate & (HTTPC_RES_HEADER | HTTPC_RES_BODY | HTTPC_RES_END))) {
 					if(p_https->mp_on_request)
 						// call on_request handler
 						p_https->mp_on_request(rec->p_httpc);

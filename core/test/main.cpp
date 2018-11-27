@@ -64,11 +64,12 @@ _err_t main(int argc, char *argv[]) {
 					_str_t txt = pi_httpc->req_header(&sz);
 					if(txt)
 						printf("%s", txt);
-					pi_httpc->response(HTTPRC_OK, (_str_t)g_hdr, 0, strlen(g_body));
+					pi_httpc->response(HTTPRC_OK, (_str_t)g_hdr, (_str_t)g_body, strlen(g_body));
 				});
 				pi_http->on_event(ON_HTTP_CONTINUE, [](iHttpConnection *pi_httpc) {
 					printf("on_continue: %p\n", pi_httpc);
 					pi_httpc->response((_str_t)g_body, strlen(g_body));
+					//pi_httpc->response((_str_t)g_body + pi_httpc->remainder(), 1);
 				});
 				pi_http->on_event(ON_HTTP_DISCONNECT, [](iHttpConnection *pi_httpc) {
 					printf("on_disconnect: %p\n", pi_httpc);

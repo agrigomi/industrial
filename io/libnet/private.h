@@ -77,12 +77,13 @@ public:
 #define HTTPC_REQ_HEADER	(1<<1)
 #define HTTPC_REQ_BODY		(1<<2)
 #define HTTPC_REQ_END		(1<<3)
-#define HTTPC_RES_PENDING	(1<<4)
-#define HTTPC_RES_HEADER	(1<<5)
-#define HTTPC_RES_BODY		(1<<6)
-#define HTTPC_RES_END		(1<<7)
-#define HTTPC_RES_SENDING	(1<<8)
-#define HTTPC_RES_SENT		(1<<9)
+#define HTTPC_REQ_OVERFLOW	(1<<4)
+#define HTTPC_RES_PENDING	(1<<5)
+#define HTTPC_RES_HEADER	(1<<6)
+#define HTTPC_RES_BODY		(1<<7)
+#define HTTPC_RES_END		(1<<8)
+#define HTTPC_RES_SENDING	(1<<9)
+#define HTTPC_RES_SENT		(1<<10)
 
 class cHttpConnection: public iHttpConnection {
 private:
