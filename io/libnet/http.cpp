@@ -56,33 +56,10 @@ void *http_worker_thread(void *udata) {
 
 		if(rec) {
 			if(rec->p_httpc->alive()) {
-				_u16 cstate = rec->p_httpc->get_status();
-
-				if(!cstate) {
-					if(p_https->mp_on_connect)
-						// call on_connect handler
-						p_https->mp_on_connect(rec->p_httpc);
-				} else if((cstate & (HTTPC_RES_PENDING | HTTPC_REQ_END | HTTPC_REQ_OVERFLOW)) &&
-							!(cstate & (HTTPC_RES_HEADER | HTTPC_RES_BODY | HTTPC_RES_END))) {
-					if(p_https->mp_on_request)
-						// call on_request handler
-						p_https->mp_on_request(rec->p_httpc);
-				} else if((cstate & (HTTPC_RES_HEADER | HTTPC_RES_BODY)) && !(cstate & HTTPC_RES_END)) {
-					if(p_https->mp_on_continue)
-						// call on_continue handler
-						p_https->mp_on_continue(rec->p_httpc);
-				}
-
-				if(!(cstate & HTTPC_RES_SENT))
-					rec->p_httpc->process();
-				else
-					rec->p_httpc->close();
-
+				//...
 				p_https->free_connection(rec);
 			} else {
-				if(p_https->mp_on_disconnect)
-					// call on_disconnect handler
-					p_https->mp_on_disconnect(rec->p_httpc);
+				p_https->call_event_handler(HTTP_ON_DISCONNECT, rec->p_httpc);
 				p_https->remove_connection(rec);
 			}
 
@@ -124,7 +101,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 
 			m_is_init = m_is_running = m_use_ssl = false;
 			m_num_workers = m_active_workers = 0;
-			mp_on_connect = mp_on_request = mp_on_continue = mp_on_disconnect = 0;
+			memset(m_event, 0, sizeof(m_event));
 			mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
 			p_tcps = (cTCPServer *)pi_repo->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE);
 			mpi_bmap = (iBufferMap *)pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE);
@@ -167,20 +144,17 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 	return r;
 }
 
-void cHttpServer::on_event(_u8 evt, _on_http_event_t *handler) {
-	switch(evt) {
-		case ON_HTTP_CONNECT:
-			mp_on_connect = handler;
-			break;
-		case ON_HTTP_REQUEST:
-			mp_on_request = handler;
-			break;
-		case ON_HTTP_CONTINUE:
-			mp_on_continue = handler;
-			break;
-		case ON_HTTP_DISCONNECT:
-			mp_on_disconnect = handler;
-			break;
+void cHttpServer::on_event(_u8 evt, _on_http_event_t *handler, void *udata) {
+	if(evt < HTTP_MAX_EVENTS) {
+		m_event[evt].pf_handler = handler;
+		m_event[evt].udata = udata;
+	}
+}
+
+void cHttpServer::call_event_handler(_u8 evt, iHttpConnection *pi_httpc) {
+	if(evt < HTTP_MAX_EVENTS && pi_httpc) {
+		if(m_event[evt].pf_handler)
+			m_event[evt].pf_handler(pi_httpc, m_event[evt].udata);
 	}
 }
 

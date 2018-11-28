@@ -60,35 +60,25 @@ _err_t main(int argc, char *argv[]) {
 		if(pi_net) {
 			iHttpServer *pi_http = pi_net->create_http_server(8080);
 			if(pi_http) {
-				pi_http->on_event(ON_HTTP_CONNECT, [](iHttpConnection *pi_httpc) {
+				pi_http->on_event(HTTP_ON_CONNECT, [](iHttpConnection *pi_httpc, void *udata) {
 					printf("on_connect: %p\n", pi_httpc);
 				});
-				pi_http->on_event(ON_HTTP_REQUEST, [](iHttpConnection *pi_httpc) {
-					_u32 sz = 0;
-
-					printf("on_request: %p\n", pi_httpc);
-					_str_t txt = pi_httpc->req_header(&sz);
-					if(txt)
-						printf("%s", txt);
-					if(memcmp(txt, "GET", 3) == 0)
-						pi_httpc->response(HTTPRC_OK, (_str_t)g_hdr, (_str_t)g_body, strlen(g_body));
-					else if(memcmp(txt, "POST", 4) == 0) {
-						_char_t lb[32];
-						_u32 r = 0;
-
-						printf("Start receiving >>>>>>>\n");
-						while((r = pi_httpc->receive(lb, sizeof(lb))))
-							fwrite(lb, r, 1, stdout);
-						printf("<<<<<<< End receiving.\n");
-						pi_httpc->response(HTTPRC_OK, (_str_t)g_hdr, (_str_t)g_body, strlen(g_body));
-					}
+				pi_http->on_event(HTTP_ON_GET, [](iHttpConnection *pi_httpc, void *udata) {
+					printf("on_get: %p\n", pi_httpc);
 				});
-				pi_http->on_event(ON_HTTP_CONTINUE, [](iHttpConnection *pi_httpc) {
-					printf("on_continue: %p\n", pi_httpc);
-					pi_httpc->response((_str_t)g_body, strlen(g_body));
-					//pi_httpc->response((_str_t)g_body + pi_httpc->remainder(), 1);
+				pi_http->on_event(HTTP_ON_POST, [](iHttpConnection *pi_httpc, void *udata) {
+					printf("on_post: %p\n", pi_httpc);
 				});
-				pi_http->on_event(ON_HTTP_DISCONNECT, [](iHttpConnection *pi_httpc) {
+				pi_http->on_event(HTTP_ON_REQ_DATA, [](iHttpConnection *pi_httpc, void *udata) {
+					printf("on_request_data: %p\n", pi_httpc);
+				});
+				pi_http->on_event(HTTP_ON_RES_DATA, [](iHttpConnection *pi_httpc, void *udata) {
+					printf("on_response_data: %p\n", pi_httpc);
+				});
+				pi_http->on_event(HTTP_ON_ERROR, [](iHttpConnection *pi_httpc, void *udata) {
+					printf("on_error: %p\n", pi_httpc);
+				});
+				pi_http->on_event(HTTP_ON_DISCONNECT, [](iHttpConnection *pi_httpc, void *udata) {
 					printf("on_disconnect: %p\n", pi_httpc);
 				});
 

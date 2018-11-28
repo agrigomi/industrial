@@ -72,47 +72,36 @@ public:
 	void close(iSocketIO *p_io);
 };
 
-// state bitmap for HttpConnection
-#define HTTPC_REQ_PENDING	(1<<0)
-#define HTTPC_REQ_HEADER	(1<<1)
-#define HTTPC_REQ_BODY		(1<<2)
-#define HTTPC_REQ_END		(1<<3)
-#define HTTPC_REQ_OVERFLOW	(1<<4)
-#define HTTPC_RES_PENDING	(1<<5)
-#define HTTPC_RES_HEADER	(1<<6)
-#define HTTPC_RES_BODY		(1<<7)
-#define HTTPC_RES_END		(1<<8)
-#define HTTPC_RES_SENDING	(1<<9)
-#define HTTPC_RES_SENT		(1<<10)
-
 class cHttpConnection: public iHttpConnection {
 private:
 	cSocketIO	*mp_sio;
 	iStr		*mpi_str;
 	iBufferMap	*mpi_bmap;
-	HBUFFER		m_req_buffer;
-	_u32		m_req_len;
-	_u32		m_req_hdr_len;
-	_u32		m_res_len;
-	_u16		m_state;
+	iMap		*mpi_map;  // request variables container
+	HBUFFER		m_ibuffer; // input buffer
+	HBUFFER		m_oheader; // output header
+	HBUFFER		m_obuffer; // output buffer
+	_u32 		m_ibuffer_offset;
+	_u32		m_oheader_offset;
+	_u32		m_obuffer_offset;
+	_u32		m_obuffer_sent;
 	_u32		m_content_len;
 	_u32		m_content_sent;
+	_u16		m_state;
 	_ulong		m_udata;
 
-	_u32 read_request(void);
-	bool complete_request(void);
 	_cstr_t get_rc_text(_u16 rc);
+	bool complete_req_header(void);
+	bool parse_req_header(void);
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	bool _init(cSocketIO *p_sio, iBufferMap *pi_bmap);
 	void close(void);
 	bool alive(void);
+	_u8 process(void);
 	cSocketIO *get_socket_io(void) {
 		return mp_sio;
-	}
-	_u16 get_status(void) {
-		return m_state;
 	}
 	_u32 peer_ip(void);
 	bool peer_ip(_str_t strip, _u32 len);
@@ -122,23 +111,24 @@ public:
 	_ulong get_udata(void) {
 		return m_udata;
 	}
-	_str_t req_header(_u32 *);
-	_str_t req_body(_u32 *);
-	void process(void);
-	_u32 response(_u16 rc, // response code
-			_str_t hdr, // response header
-			_str_t body, // response body
-			// Size of response body.
-			// If zero, string length should be taken.
-			// If it's greater than body lenght, ON_HTTP_RES_CONTINUE
-			//  should be happen
-			_u32 sz_body=0
-			);
-	_u32 response(_str_t body, // remainder part of response body
-			_u32 sz_body // size of response body
-			);
-	_u32 remainder(void);
-	_u32 receive(void *buffer, _u32 size);
+	// get request method
+	_u8 req_method(void);
+	// retuen request URI
+	_str_t req_uri(void);
+	// get request variable
+	_str_t req_var(_cstr_t name);
+	// get request data
+	_u8 *req_data(_u32 *size);
+	// set variable in response header
+	bool res_var(_str_t name, _str_t value);
+	// set response code
+	bool res_code(_u16 httprc);
+	// set Content-Length variable
+	bool res_content_len(_u32 content_len);
+	// return remainder pard of response data in bytes (ContentLength - Sent)
+	_u32 res_remainder(void);
+	// write response
+	_u32 res_write(_u8 *data, _u32 size);
 };
 
 typedef struct {
@@ -146,6 +136,12 @@ typedef struct {
 	_u8 state;
 }_http_connection_t;
 
+typedef struct {
+	_on_http_event_t	*pf_handler;
+	void			*udata;
+}_http_event_t;
+
+#define HTTP_MAX_EVENTS	10
 
 class cHttpServer: public iHttpServer {
 private:
@@ -160,10 +156,7 @@ private:
 	bool			m_use_ssl;
 	volatile _u32		m_num_workers;
 	volatile _u32 		m_active_workers;
-	_on_http_event_t	*mp_on_connect;
-	_on_http_event_t	*mp_on_request;
-	_on_http_event_t	*mp_on_continue;
-	_on_http_event_t	*mp_on_disconnect;
+	_http_event_t		m_event[HTTP_MAX_EVENTS];
 
 	friend void *http_worker_thread(void *);
 
@@ -176,13 +169,13 @@ private:
 	void remove_connection(_http_connection_t *rec);
 	void clear_column(_u8 col, HMUTEX hlock);
 	void remove_all_connections(void);
-
+	void call_event_handler(_u8 evt, iHttpConnection *pi_httpc);
 public:
 	BASE(cHttpServer, CLASS_NAME_HTTP_SERVER, RF_CLONE | RF_TASK, 1,0,0);
 	bool _init(_u32 port);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
-	void on_event(_u8 evt, _on_http_event_t *handler);
+	void on_event(_u8 evt, _on_http_event_t *handler, void *udata=NULL);
 	bool enable_ssl(bool, _ulong options=0);
 	bool ssl_use(_cstr_t str, _u32 type);
 	bool is_running(void) {

@@ -82,6 +82,10 @@ public:
 #define HTTPRC_GATEWAY_TIMEOUT		504 // Gateway Time-out
 #define HTTPRC_VERSION_NOT_SUPPORTED	505 // HTTP Version not supported
 
+// request method
+#define REQ_METHOD_GET	1
+#define REQ_METHID_POST	2
+
 class iHttpConnection: public iBase {
 public:
 	INTERFACE(iHttpConnection, I_HTTP_CONNECTION);
@@ -97,44 +101,42 @@ public:
 	virtual void set_udata(_ulong)=0;
 	// get user data
 	virtual _ulong get_udata(void)=0;
-	// get request header
-	virtual _str_t req_header(_u32 *)=0;
-	// get request body
-	virtual _str_t req_body(_u32 *)=0;
-	// start of response
-	virtual _u32 response(_u16 rc, // response code
-				_str_t hdr, // response header
-				_str_t content, //response content
-				/*
-				 Size of response content.
-				 If zero, string length should be taken.
-				 This parameter will be stored in response header as
-				   Content-Length.
-				 If it's greater than string len of content parameter,
-				  ON_HTTP_RES_CONTINUE should be happen */
-				_u32 content_len=0
-				)=0;
-	// continue of response
-	virtual _u32 response(_str_t content, // remainder part of response content
-				_u32 size // size of response content
-				)=0;
-	// get size of response remainder pard
-	virtual _u32 remainder(void)=0;
-	virtual _u32 receive(void *buffer, _u32 size)=0;
+	// get request method
+	virtual _u8 req_method(void)=0;
+	// retuen request URI
+	virtual _str_t req_uri(void)=0;
+	// get request variable
+	virtual _str_t req_var(_cstr_t name)=0;
+	// get request data
+	virtual _u8 *req_data(_u32 *size)=0;
+	// set variable in response header
+	virtual bool res_var(_str_t name, _str_t value)=0;
+	// set response code
+	virtual bool res_code(_u16 httprc)=0;
+	// set Content-Length variable
+	virtual bool res_content_len(_u32 content_len)=0;
+	// return remainder pard of response data in bytes (ContentLength - Sent)
+	virtual _u32 res_remainder(void)=0;
+	// write response
+	virtual _u32 res_write(_u8 *data, _u32 size)=0;
 };
 
 // HTTP event prototype
-typedef void _on_http_event_t(iHttpConnection *pi_httpc);
+typedef void _on_http_event_t(iHttpConnection *, void *);
 
-#define ON_HTTP_CONNECT		1
-#define ON_HTTP_REQUEST		2 // request ready (awaiting for response)
-#define ON_HTTP_CONTINUE	3 // response continue
-#define ON_HTTP_DISCONNECT	4
+// http events
+#define HTTP_ON_CONNECT		1
+#define HTTP_ON_GET		2
+#define HTTP_ON_POST		3
+#define HTTP_ON_REQ_DATA	4
+#define HTTP_ON_RES_DATA	5
+#define HTTP_ON_ERROR		6
+#define HTTP_ON_DISCONNECT	7
 
 class iHttpServer: public iBase {
 public:
 	INTERFACE(iHttpServer, I_HTTP_SERVER);
-	virtual void on_event(_u8 evt, _on_http_event_t *handler)=0;
+	virtual void on_event(_u8 evt, _on_http_event_t *handler, void *udata=NULL)=0;
 	virtual bool enable_ssl(bool, _ulong options=0)=0;
 	virtual bool ssl_use(_cstr_t str, _u32 type)=0;
 	virtual bool is_running(void)=0;
