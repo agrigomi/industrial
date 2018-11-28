@@ -85,6 +85,7 @@ private:
 	_u32		m_oheader_offset;
 	_u32		m_obuffer_offset;
 	_u32		m_obuffer_sent;
+	_u32		m_header_len;
 	_u32		m_content_len;
 	_u32		m_content_sent;
 	_u16		m_response_code;
@@ -93,8 +94,10 @@ private:
 
 	_cstr_t get_rc_text(_u16 rc);
 	_u8 complete_req_header(void);
-	bool add_req_variable(_str_t name, _str_t value);
+	bool add_req_variable(_str_t name, _str_t value, _u32 sz_value=0);
 	_u8 parse_req_header(void);
+	_u32 parse_request_line(_str_t req, _u32 sz_max);
+	_u32 parse_var_line(_str_t var, _u32 sz_max);
 	_u32 receive(void);
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);

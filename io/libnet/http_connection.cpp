@@ -60,6 +60,10 @@ static _http_resp_text_t _g_http_resp_text[] = {
 	{0,				NULL}
 };
 
+#define VAR_REQ_METHOD		(_str_t)"Method"
+#define VAR_REQ_URI		(_str_t)"URI"
+#define VAR_REQ_PROTOCOL	(_str_t)"Protocol"
+
 bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
 
@@ -75,6 +79,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_response_code = 0;
 			m_content_len = 0;
 			m_content_sent = 0;
+			m_header_len = 0;
 			m_udata = 0;
 			mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
 			mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
@@ -196,8 +201,11 @@ _u8 cHttpConnection::complete_req_header(void) {
 		if(m_ibuffer_offset < sz) {
 			_str_t ptr = (_str_t)mpi_bmap->ptr(m_ibuffer);
 
-			if(mpi_str->find_string(ptr, (_str_t)"\r\n\r\n") != -1)
+			if((m_header_len = mpi_str->find_string(ptr, (_str_t)"\r\n\r\n") != -1)) {
 				r = HTTPC_PARSE_HEADER;
+				m_header_len += 4;
+			} else
+				m_header_len = 0;
 		} else {
 			m_response_code = HTTPRC_REQ_ENTITY_TOO_LARGE;
 			r = HTTPC_SEND_HEADER;
@@ -207,77 +215,79 @@ _u8 cHttpConnection::complete_req_header(void) {
 	return r;
 }
 
-bool cHttpConnection::add_req_variable(_str_t name, _str_t value) {
+bool cHttpConnection::add_req_variable(_str_t name, _str_t value, _u32 sz_value) {
 	bool r = false;
 
-	if(mpi_map->add(name, mpi_str->str_len(name), value, mpi_str->str_len(value)))
+	if(mpi_map->add(name, mpi_str->str_len(name),
+			value,
+			(sz_value) ? sz_value : mpi_str->str_len(value)))
 		r = true;
+
+	return r;
+}
+
+_u32 cHttpConnection::parse_request_line(_str_t req, _u32 sz_max) {
+	_u32 r = 0;
+	_char_t c = 0;
+	_char_t _c = 0;
+	_str_t fld[4] = {req, 0, 0, 0};
+	_u32 fld_sz[4] = {0, 0, 0, 0};
+
+	for(_u32 i=0, n=0; r < sz_max && i < 3; r++) {
+		c = req[r];
+
+		switch(c) {
+			case ' ':
+				if(c != _c) {
+					fld_sz[i] = n;
+					n = 0;
+					i++;
+					fld[i] = req + r;
+				}
+				break;
+			case '\r':
+				fld_sz[i] = n;
+				n = 0;
+				break;
+			case '\n':
+				break;
+			default:
+				n++;
+				break;
+		}
+
+		_c = c;
+	}
+
+	return r;
+}
+
+_u32 cHttpConnection::parse_var_line(_str_t var, _u32 sz_max) {
+	_u32 r = 0;
+
+	//...
 
 	return r;
 }
 
 _u8 cHttpConnection::parse_req_header(void) {
 	_u8 r = HTTPC_RECEIVE_CONTENT;
-	_u16 state = 0;
-	_char_t var[128]="";
-	_char_t val[128]="";
-	_char_t method[16]="";
-	_char_t uri[256]="";
-	_char_t protocol[16]="";
-	_u32 method_idx=0, uri_idx=0, protocol_idx=0,var_idx=0, val_idx=0;
-
-#define _METHOD		(1<<0)
-#define _URI		(1<<1)
-#define _PROTOCOL	(1<<2)
-#define _VAR		(1<<3)
-#define _VAL		(1<<4)
-#define _CR		(1<<5)
-#define _LF		(1<<6)
-#define _SPC		(1<<7)
-#define _SYMBOL		(1<<8)
 
 	if(m_ibuffer && m_ibuffer_offset) {
-		_str_t ptr = (_str_t)mpi_bmap->ptr(m_ibuffer);
-		_char_t _c = 0;
+		_str_t hdr = (_str_t)mpi_bmap->ptr(m_ibuffer);
+		_u32 offset = parse_request_line(hdr, m_header_len);
 
-		state = _METHOD;
-		for(_u32 i = 0; i < m_ibuffer_offset; i++) {
-			_char_t c = ptr[i];
+		while(offset && offset < m_header_len) {
+			_u32 n = parse_var_line(hdr + offset, m_header_len - offset);
+			if(n)
+				offset += n;
+			else
+				offset = 0;
+		}
 
-			if(c == ' ') {
-				if(!(state & _SPC)) {
-					if(state & _METHOD) {
-						state &= ~_METHOD;
-						state |= _URI;
-					} else if(state & _URI) {
-						state &= ~_URI;
-						state |= _PROTOCOL;
-					} else if(state & _PROTOCOL) {
-						state &= ~_PROTOCOL;
-						state |= _VAR;
-					}
-					state |= _SPC;
-					state &= ~(_SYMBOL|_CR|_LF);
-				}
-			} else if(c == ':') {
-			} else if(c == '\r') {
-			} else if(c == '\n') {
-			} else {
-				if((state & _METHOD) && method_idx < sizeof(method))
-					method[method_idx++] = c;
-				else if((state & _URI) && uri_idx < sizeof(uri))
-					uri[uri_idx++] = c;
-				else if((state & _PROTOCOL) && protocol_idx < sizeof(protocol))
-					protocol[protocol_idx++] = c;
-				else if((state & _VAR) && var_idx < sizeof(var))
-					var[var_idx++] = c;
-				else if((state & _VAL) && val_idx < sizeof(val))
-					val[val_idx++] = c;
-
-				state |= _SYMBOL;
-			}
-
-			_c = c;
+		if(offset != m_header_len) {
+			r = HTTPC_SEND_HEADER;
+			m_response_code = HTTPRC_BAD_REQUEST;
 		}
 	}
 
