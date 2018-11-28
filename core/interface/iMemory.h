@@ -128,7 +128,7 @@ public:
 	virtual void *ptr(HBUFFER)=0;
 	virtual void dirty(HBUFFER)=0;
 	virtual void *get_udata(HBUFFER)=0;
-	virtual _u32 get_size(void)=0;
+	virtual _u32 size(void)=0;
 	virtual void set_udata(HBUFFER, void *)=0;
 	virtual void reset(HBUFFER=0)=0;
 	virtual void flush(HBUFFER=0)=0;

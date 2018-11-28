@@ -174,7 +174,7 @@ public:
 		return b->udata;
 	}
 
-	_u32 get_size(void) {
+	_u32 size(void) {
 		return m_bsize;
 	}
 
