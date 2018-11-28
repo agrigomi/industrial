@@ -83,8 +83,14 @@ public:
 #define HTTPRC_VERSION_NOT_SUPPORTED	505 // HTTP Version not supported
 
 // request method
-#define REQ_METHOD_GET	1
-#define REQ_METHID_POST	2
+#define HTTP_METHOD_GET		1
+#define HTTP_METHOD_HEAD	2
+#define HTTP_METHID_POST	3
+#define HTTP_METHOD_PUT		4
+#define HTTP_METHOD_DELETE	5
+#define HTTP_METHOD_CONNECT	6
+#define HTTP_METHOD_OPTIONS	7
+#define HTTP_METHOD_TRACE	8
 
 class iHttpConnection: public iBase {
 public:
@@ -125,13 +131,12 @@ public:
 typedef void _on_http_event_t(iHttpConnection *, void *);
 
 // http events
-#define HTTP_ON_CONNECT		1
-#define HTTP_ON_GET		2
-#define HTTP_ON_POST		3
-#define HTTP_ON_REQ_DATA	4
-#define HTTP_ON_RES_DATA	5
-#define HTTP_ON_ERROR		6
-#define HTTP_ON_DISCONNECT	7
+#define HTTP_ON_OPEN		1
+#define HTTP_ON_REQUEST		2
+#define HTTP_ON_REQUEST_DATA	3
+#define HTTP_ON_RESPONSE_DATA	4
+#define HTTP_ON_ERROR		5
+#define HTTP_ON_CLOSE		6
 
 class iHttpServer: public iBase {
 public:

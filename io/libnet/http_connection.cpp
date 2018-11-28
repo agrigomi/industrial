@@ -5,6 +5,7 @@
 enum httpc_state {
 	HTTPC_RECEIVE_HEADER =	1,
 	HTTPC_COMPLETE_HEADER,
+	HTTPC_RECEIVE_CONTENT,
 	HTTPC_SEND_HEADER,
 	HTTPC_SEND_CONTENT,
 	HTTPC_CLOSE
@@ -70,6 +71,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_state = 0;
 			m_ibuffer = m_oheader = m_obuffer = 0;
 			m_ibuffer_offset = m_oheader_offset = m_obuffer_offset = m_obuffer_sent = 0;
+			m_response_code = 0;
 			m_content_len = 0;
 			m_content_sent = 0;
 			m_udata = 0;
@@ -166,9 +168,26 @@ _cstr_t cHttpConnection::get_rc_text(_u16 rc) {
 	return r;
 }
 
+_u32 cHttpConnection::receive(void) {
+	_u32 r = 0;
+
+	if(alive()) {
+		if(!m_ibuffer)
+			m_ibuffer = mpi_bmap->alloc();
+
+		if(m_ibuffer) {
+			_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_ibuffer);
+			_u32 sz_buffer = mpi_bmap->size();
+
+			r = mp_sio->read(ptr + m_ibuffer_offset, sz_buffer - m_ibuffer_offset);
+		}
+	}
+
+	return r;
+}
+
 _u32 cHttpConnection::res_remainder(void) {
 	return m_content_len - (m_content_sent < m_content_len) ? m_content_sent : 0;
 }
-
 
 static cHttpConnection _g_httpc_;

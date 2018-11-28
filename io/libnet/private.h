@@ -87,12 +87,14 @@ private:
 	_u32		m_obuffer_sent;
 	_u32		m_content_len;
 	_u32		m_content_sent;
+	_u16		m_response_code;
 	_u16		m_state;
 	_ulong		m_udata;
 
 	_cstr_t get_rc_text(_u16 rc);
 	bool complete_req_header(void);
 	bool parse_req_header(void);
+	_u32 receive(void);
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
@@ -169,7 +171,7 @@ private:
 	void remove_connection(_http_connection_t *rec);
 	void clear_column(_u8 col, HMUTEX hlock);
 	void remove_all_connections(void);
-	void call_event_handler(_u8 evt, iHttpConnection *pi_httpc);
+	bool call_event_handler(_u8 evt, iHttpConnection *pi_httpc);
 public:
 	BASE(cHttpServer, CLASS_NAME_HTTP_SERVER, RF_CLONE | RF_TASK, 1,0,0);
 	bool _init(_u32 port);
