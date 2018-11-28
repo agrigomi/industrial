@@ -5,6 +5,7 @@
 enum httpc_state {
 	HTTPC_RECEIVE_HEADER =	1,
 	HTTPC_COMPLETE_HEADER,
+	HTTPC_PARSE_HEADER,
 	HTTPC_RECEIVE_CONTENT,
 	HTTPC_SEND_HEADER,
 	HTTPC_SEND_CONTENT,
@@ -180,6 +181,103 @@ _u32 cHttpConnection::receive(void) {
 			_u32 sz_buffer = mpi_bmap->size();
 
 			r = mp_sio->read(ptr + m_ibuffer_offset, sz_buffer - m_ibuffer_offset);
+			m_ibuffer_offset += r;
+		}
+	}
+
+	return r;
+}
+
+_u8 cHttpConnection::complete_req_header(void) {
+	_u8 r = HTTPC_RECEIVE_HEADER;
+	_u32 sz = mpi_bmap->size();
+
+	if(m_ibuffer && m_ibuffer_offset) {
+		if(m_ibuffer_offset < sz) {
+			_str_t ptr = (_str_t)mpi_bmap->ptr(m_ibuffer);
+
+			if(mpi_str->find_string(ptr, (_str_t)"\r\n\r\n") != -1)
+				r = HTTPC_PARSE_HEADER;
+		} else {
+			m_response_code = HTTPRC_REQ_ENTITY_TOO_LARGE;
+			r = HTTPC_SEND_HEADER;
+		}
+	}
+
+	return r;
+}
+
+bool cHttpConnection::add_req_variable(_str_t name, _str_t value) {
+	bool r = false;
+
+	if(mpi_map->add(name, mpi_str->str_len(name), value, mpi_str->str_len(value)))
+		r = true;
+
+	return r;
+}
+
+_u8 cHttpConnection::parse_req_header(void) {
+	_u8 r = HTTPC_RECEIVE_CONTENT;
+	_u16 state = 0;
+	_char_t var[128]="";
+	_char_t val[128]="";
+	_char_t method[16]="";
+	_char_t uri[256]="";
+	_char_t protocol[16]="";
+	_u32 method_idx=0, uri_idx=0, protocol_idx=0,var_idx=0, val_idx=0;
+
+#define _METHOD		(1<<0)
+#define _URI		(1<<1)
+#define _PROTOCOL	(1<<2)
+#define _VAR		(1<<3)
+#define _VAL		(1<<4)
+#define _CR		(1<<5)
+#define _LF		(1<<6)
+#define _SPC		(1<<7)
+#define _SYMBOL		(1<<8)
+
+	if(m_ibuffer && m_ibuffer_offset) {
+		_str_t ptr = (_str_t)mpi_bmap->ptr(m_ibuffer);
+		_char_t _c = 0;
+
+		state = _METHOD;
+		for(_u32 i = 0; i < m_ibuffer_offset; i++) {
+			_char_t c = ptr[i];
+
+			if(c == ' ') {
+				if(!(state & _SPC)) {
+					if(state & _METHOD) {
+						state &= ~_METHOD;
+						state |= _URI;
+					} else if(state & _URI) {
+						state &= ~_URI;
+						state |= _PROTOCOL;
+					} else if(state & _PROTOCOL) {
+						state &= ~_PROTOCOL;
+						state |= _VAR;
+					}
+					state |= _SPC;
+					state &= ~(_SYMBOL|_CR|_LF);
+				}
+			} else if(c == ':') {
+			} else if(c == '\r') {
+			} else if(c == '\n') {
+			} else {
+				if((state & _METHOD) && method_idx < sizeof(method))
+					method[method_idx++] = c;
+				else if((state & _URI) && uri_idx < sizeof(uri))
+					uri[uri_idx++] = c;
+				else if((state & _PROTOCOL) && protocol_idx < sizeof(protocol))
+					protocol[protocol_idx++] = c;
+				else if((state & _VAR) && var_idx < sizeof(var))
+					var[var_idx++] = c;
+				else if((state & _VAL) && val_idx < sizeof(val))
+					val[val_idx++] = c;
+
+				state |= _SYMBOL;
+			}
+
+			_c = c;
 		}
 	}
 

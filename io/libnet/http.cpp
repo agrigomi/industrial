@@ -58,8 +58,7 @@ void *http_worker_thread(void *udata) {
 			if(rec->p_httpc->alive()) {
 				_u8 evt = rec->p_httpc->process();
 
-				if(!p_https->call_event_handler(evt, rec->p_httpc))
-					rec->p_httpc->res_code(HTTPRC_NOT_IMPLEMENTED);
+				p_https->call_event_handler(evt, rec->p_httpc);
 				if(evt == HTTP_ON_CLOSE)
 					rec->p_httpc->close();
 				p_https->free_connection(rec);

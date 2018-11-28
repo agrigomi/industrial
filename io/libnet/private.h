@@ -92,8 +92,9 @@ private:
 	_ulong		m_udata;
 
 	_cstr_t get_rc_text(_u16 rc);
-	bool complete_req_header(void);
-	bool parse_req_header(void);
+	_u8 complete_req_header(void);
+	bool add_req_variable(_str_t name, _str_t value);
+	_u8 parse_req_header(void);
 	_u32 receive(void);
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
