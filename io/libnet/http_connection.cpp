@@ -1,3 +1,4 @@
+#include <string.h>
 #include "private.h"
 #include "time.h"
 
@@ -241,8 +242,6 @@ _u32 cHttpConnection::parse_request_line(_str_t req, _u32 sz_max) {
 				if(c != _c) {
 					fld_sz[i] = n;
 					n = 0;
-					i++;
-					fld[i] = req + r;
 				}
 				break;
 			case '\r':
@@ -250,14 +249,28 @@ _u32 cHttpConnection::parse_request_line(_str_t req, _u32 sz_max) {
 				n = 0;
 				break;
 			case '\n':
+				if(_c == '\r')
+					i = 3;
 				break;
 			default:
-				n++;
+				if(_c == ' ') {
+					i++;
+					fld[i] = req + r;
+					n = 0;
+				} else
+					n++;
 				break;
 		}
 
 		_c = c;
 	}
+
+	if(fld[0] && fld_sz[0])
+		mpi_map->add(VAR_REQ_METHOD, strlen(VAR_REQ_METHOD), fld[0], fld_sz[0]);
+	if(fld[1] && fld_sz[1])
+		mpi_map->add(VAR_REQ_URI, strlen(VAR_REQ_URI), fld[1], fld_sz[1]);
+	if(fld[2] && fld_sz[2])
+		mpi_map->add(VAR_REQ_PROTOCOL, strlen(VAR_REQ_PROTOCOL), fld[2], fld_sz[2]);
 
 	return r;
 }
@@ -296,6 +309,78 @@ _u8 cHttpConnection::parse_req_header(void) {
 
 _u32 cHttpConnection::res_remainder(void) {
 	return m_content_len - (m_content_sent < m_content_len) ? m_content_sent : 0;
+}
+
+_u8 cHttpConnection::process(void) {
+	_u8 r = 0;
+
+	//...
+
+	return r;
+}
+
+_u32 cHttpConnection::res_write(_u8 *data, _u32 size) {
+	_u32 r = 0;
+
+	//...
+
+	return r;
+}
+
+_u8 cHttpConnection::req_method(void) {
+	_u8 r = 0;
+
+	//...
+
+	return r;
+}
+
+_str_t cHttpConnection::req_uri(void) {
+	_str_t r = 0;
+
+	//...
+
+	return r;
+}
+
+_str_t cHttpConnection::req_var(_cstr_t name) {
+	_str_t r = 0;
+
+	//...
+
+	return r;
+}
+
+_u8 *cHttpConnection::req_data(_u32 *size) {
+	_u8 *r = 0;
+
+	//...
+
+	return r;
+}
+
+bool cHttpConnection::res_var(_str_t name, _str_t value) {
+	bool r = false;
+
+	//...
+
+	return r;
+}
+
+bool cHttpConnection::res_code(_u16 httprc) {
+	bool r = false;
+
+	//...
+
+	return r;
+}
+
+bool cHttpConnection::res_content_len(_u32 content_len) {
+	bool r = false;
+
+	//...
+
+	return r;
 }
 
 static cHttpConnection _g_httpc_;

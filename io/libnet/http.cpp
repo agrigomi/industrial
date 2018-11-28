@@ -59,8 +59,6 @@ void *http_worker_thread(void *udata) {
 				_u8 evt = rec->p_httpc->process();
 
 				p_https->call_event_handler(evt, rec->p_httpc);
-				if(evt == HTTP_ON_CLOSE)
-					rec->p_httpc->close();
 				p_https->free_connection(rec);
 			} else {
 				p_https->call_event_handler(HTTP_ON_CLOSE, rec->p_httpc);
