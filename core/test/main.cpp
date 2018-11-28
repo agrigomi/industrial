@@ -60,26 +60,23 @@ _err_t main(int argc, char *argv[]) {
 		if(pi_net) {
 			iHttpServer *pi_http = pi_net->create_http_server(8080);
 			if(pi_http) {
-				pi_http->on_event(HTTP_ON_CONNECT, [](iHttpConnection *pi_httpc, void *udata) {
-					printf("on_connect: %p\n", pi_httpc);
+				pi_http->on_event(HTTP_ON_OPEN, [](iHttpConnection *pi_httpc, void *udata) {
+					printf("on_open: %p\n", pi_httpc);
 				});
-				pi_http->on_event(HTTP_ON_GET, [](iHttpConnection *pi_httpc, void *udata) {
-					printf("on_get: %p\n", pi_httpc);
+				pi_http->on_event(HTTP_ON_REQUEST, [](iHttpConnection *pi_httpc, void *udata) {
+					printf("on_request: %p\n", pi_httpc);
 				});
-				pi_http->on_event(HTTP_ON_POST, [](iHttpConnection *pi_httpc, void *udata) {
-					printf("on_post: %p\n", pi_httpc);
-				});
-				pi_http->on_event(HTTP_ON_REQ_DATA, [](iHttpConnection *pi_httpc, void *udata) {
+				pi_http->on_event(HTTP_ON_REQUEST_DATA, [](iHttpConnection *pi_httpc, void *udata) {
 					printf("on_request_data: %p\n", pi_httpc);
 				});
-				pi_http->on_event(HTTP_ON_RES_DATA, [](iHttpConnection *pi_httpc, void *udata) {
+				pi_http->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpConnection *pi_httpc, void *udata) {
 					printf("on_response_data: %p\n", pi_httpc);
 				});
 				pi_http->on_event(HTTP_ON_ERROR, [](iHttpConnection *pi_httpc, void *udata) {
 					printf("on_error: %p\n", pi_httpc);
 				});
-				pi_http->on_event(HTTP_ON_DISCONNECT, [](iHttpConnection *pi_httpc, void *udata) {
-					printf("on_disconnect: %p\n", pi_httpc);
+				pi_http->on_event(HTTP_ON_CLOSE, [](iHttpConnection *pi_httpc, void *udata) {
+					printf("on_close: %p\n", pi_httpc);
 				});
 
 				while(pi_http->is_running())
