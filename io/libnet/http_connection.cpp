@@ -356,7 +356,26 @@ _u32 cHttpConnection::res_remainder(void) {
 _u8 cHttpConnection::process(void) {
 	_u8 r = 0;
 
-	//...
+	switch(m_state) {
+		case 0:
+			r = HTTP_ON_OPEN;
+			m_state = HTTPC_RECEIVE_HEADER;
+			break;
+		case HTTPC_RECEIVE_HEADER:
+			break;
+		case HTTPC_COMPLETE_HEADER:
+			break;
+		case HTTPC_PARSE_HEADER:
+			break;
+		case HTTPC_RECEIVE_CONTENT:
+			break;
+		case HTTPC_SEND_HEADER:
+			break;
+		case HTTPC_SEND_CONTENT:
+			break;
+		case HTTPC_CLOSE:
+			break;
+	}
 
 	return r;
 }
