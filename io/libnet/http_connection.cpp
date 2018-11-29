@@ -201,10 +201,11 @@ _u8 cHttpConnection::complete_req_header(void) {
 	if(m_ibuffer && m_ibuffer_offset) {
 		if(m_ibuffer_offset < sz) {
 			_str_t ptr = (_str_t)mpi_bmap->ptr(m_ibuffer);
+			_s32 hl = 0;
 
-			if((m_header_len = mpi_str->find_string(ptr, (_str_t)"\r\n\r\n") != -1)) {
+			if((hl = mpi_str->find_string(ptr, (_str_t)"\r\n\r\n") != -1)) {
 				r = HTTPC_PARSE_HEADER;
-				m_header_len += 4;
+				m_header_len = hl + 4;
 			} else
 				m_header_len = 0;
 		} else {
