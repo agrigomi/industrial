@@ -27,10 +27,10 @@ _cstr_t g_hdr = "var1: alabala\r\nvar2: haha\r\n";
 */
 
 _cstr_t g_body = "<form action=\"upload_file\" method=\"post\" enctype=\"multipart/form-data\">\
-    Select image to upload:\
-        <input type=\"file\" name=\"fileToUpload\" id=\"fileToUpload\">\
-	    <input type=\"submit\" value=\"Upload Image\" name=\"submit\">\
-	    </form>";
+Select image to upload:\
+<input type=\"file\" name=\"fileToUpload\" id=\"fileToUpload\">\
+<input type=\"submit\" value=\"Upload Image\" name=\"submit\">\
+</form>";
 
 _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);

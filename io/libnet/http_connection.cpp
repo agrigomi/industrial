@@ -383,7 +383,19 @@ _u8 cHttpConnection::process(void) {
 _u32 cHttpConnection::res_write(_u8 *data, _u32 size) {
 	_u32 r = 0;
 
-	//...
+	if(!m_obuffer)
+		m_obuffer = mpi_bmap->alloc();
+
+	if(m_obuffer) {
+		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_obuffer);
+		_u32 bsz = mpi_bmap->size();
+		_u32 brem = bsz - m_obuffer_offset;
+
+		if((r = (size < brem ) ? size : brem)) {
+			mpi_str->mem_cpy(ptr + m_obuffer_offset, data, r);
+			m_obuffer_offset += r;
+		}
+	}
 
 	return r;
 }

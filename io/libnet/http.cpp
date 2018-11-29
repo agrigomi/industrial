@@ -82,6 +82,7 @@ void *http_worker_thread(void *udata) {
 	return r;
 }
 
+// bufferMap callback
 _u32 buffer_io(_u8 op, void *ptr, _u32 size, void *udata) {
 	_u32 r = 0;
 
