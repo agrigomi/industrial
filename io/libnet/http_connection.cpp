@@ -256,7 +256,7 @@ _u32 cHttpConnection::parse_request_line(_str_t req, _u32 sz_max) {
 				if(_c == ' ') {
 					i++;
 					fld[i] = req + r;
-					n = 0;
+					n = 1;
 				} else
 					n++;
 				break;
@@ -265,20 +265,64 @@ _u32 cHttpConnection::parse_request_line(_str_t req, _u32 sz_max) {
 		_c = c;
 	}
 
-	if(fld[0] && fld_sz[0])
-		mpi_map->add(VAR_REQ_METHOD, strlen(VAR_REQ_METHOD), fld[0], fld_sz[0]);
-	if(fld[1] && fld_sz[1])
-		mpi_map->add(VAR_REQ_URI, strlen(VAR_REQ_URI), fld[1], fld_sz[1]);
-	if(fld[2] && fld_sz[2])
-		mpi_map->add(VAR_REQ_PROTOCOL, strlen(VAR_REQ_PROTOCOL), fld[2], fld_sz[2]);
+	if(fld[0] && fld_sz[0] && fld_sz[0] < sz_max)
+		add_req_variable(VAR_REQ_METHOD, fld[0], fld_sz[0]);
+	if(fld[1] && fld_sz[1] && fld_sz[1] < sz_max)
+		add_req_variable(VAR_REQ_URI, fld[1], fld_sz[1]);
+	if(fld[2] && fld_sz[2] && fld_sz[2] < sz_max)
+		add_req_variable(VAR_REQ_PROTOCOL, fld[2], fld_sz[2]);
 
 	return r;
 }
 
 _u32 cHttpConnection::parse_var_line(_str_t var, _u32 sz_max) {
 	_u32 r = 0;
+	_str_t fld[3] = {var, 0, 0};
+	_u32 fld_sz[3] = {0, 0, 0};
+	_char_t c = 0;
+	_char_t _c = 0;
+	bool val = false;
 
-	//...
+	for(_u32 i=0, n=0; r < sz_max && i < 2; r++) {
+		c = var[r];
+
+		switch(c) {
+			case ' ':
+				if(_c != ':' && i)
+					n++;
+				break;
+			case ':':
+				if(!i) {
+					fld_sz[i] = n;
+					n = 0;
+					i++;
+				} else
+					n++;
+				break;
+			case '\r':
+				if(i)
+					fld_sz[i] = n;
+				break;
+			case '\n':
+				if(_c == '\r')
+					i = 2;
+				break;
+			default:
+				if(!val && i && _c == ' ') {
+					fld[i] = var + r;
+					val = true;
+					n = 1;
+				} else
+					n++;
+				break;
+		}
+
+		_c = c;
+	}
+
+	if(fld[0] && fld_sz[0] && fld[1] && fld_sz[1] &&
+			fld_sz[0] < sz_max && fld_sz[1] < sz_max)
+		mpi_map->add(fld[0], fld_sz[0], fld[1], fld_sz[1]);
 
 	return r;
 }
@@ -292,10 +336,7 @@ _u8 cHttpConnection::parse_req_header(void) {
 
 		while(offset && offset < m_header_len) {
 			_u32 n = parse_var_line(hdr + offset, m_header_len - offset);
-			if(n)
-				offset += n;
-			else
-				offset = 0;
+			offset = (n) ? (offset + n) : 0;
 		}
 
 		if(offset != m_header_len) {
