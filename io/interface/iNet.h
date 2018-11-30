@@ -117,6 +117,8 @@ public:
 	virtual _u8 *req_data(_u32 *size)=0;
 	// set variable in response header
 	virtual bool res_var(_str_t name, _str_t value)=0;
+	// get error code
+	virtual _u16 error_code(void)=0;
 	// set response code
 	virtual bool res_code(_u16 httprc)=0;
 	// set Content-Length variable

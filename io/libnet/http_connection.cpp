@@ -78,6 +78,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_ibuffer = m_oheader = m_obuffer = 0;
 			m_ibuffer_offset = m_oheader_offset = m_obuffer_offset = m_obuffer_sent = 0;
 			m_response_code = 0;
+			m_error_code = 0;
 			m_content_len = 0;
 			m_content_sent = 0;
 			m_header_len = 0;
@@ -209,7 +210,7 @@ _u8 cHttpConnection::complete_req_header(void) {
 			} else
 				m_header_len = 0;
 		} else {
-			m_response_code = HTTPRC_REQ_ENTITY_TOO_LARGE;
+			m_error_code = HTTPRC_REQ_ENTITY_TOO_LARGE;
 			r = HTTPC_SEND_HEADER;
 		}
 	}
@@ -342,7 +343,7 @@ _u8 cHttpConnection::parse_req_header(void) {
 
 		if(offset != m_header_len) {
 			r = HTTPC_SEND_HEADER;
-			m_response_code = HTTPRC_BAD_REQUEST;
+			m_error_code = HTTPRC_BAD_REQUEST;
 		}
 	}
 
@@ -351,6 +352,16 @@ _u8 cHttpConnection::parse_req_header(void) {
 
 _u32 cHttpConnection::res_remainder(void) {
 	return m_content_len - (m_content_sent < m_content_len) ? m_content_sent : 0;
+}
+
+void cHttpConnection::clear_ibuffer(void) {
+	if(m_ibuffer) {
+		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_ibuffer);
+		_u32 sz = mpi_bmap->size();
+
+		memset(ptr, 0, sz);
+		m_ibuffer_offset = 0;
+	}
 }
 
 _u8 cHttpConnection::process(void) {
@@ -362,18 +373,44 @@ _u8 cHttpConnection::process(void) {
 			m_state = HTTPC_RECEIVE_HEADER;
 			break;
 		case HTTPC_RECEIVE_HEADER:
+			if(!receive()) {
+				if(alive())
+					m_state = HTTPC_COMPLETE_HEADER;
+				else {
+					m_error_code = HTTPRC_GONE;
+					m_state = HTTPC_CLOSE;
+					r = HTTP_ON_ERROR;
+				}
+			}
 			break;
 		case HTTPC_COMPLETE_HEADER:
+			m_state = complete_req_header();
+			if(m_error_code)
+				r = HTTP_ON_ERROR;
+			else
+				r = HTTP_ON_REQUEST;
 			break;
 		case HTTPC_PARSE_HEADER:
+			m_state = parse_req_header();
+			if(m_error_code)
+				r = HTTP_ON_ERROR;
 			break;
 		case HTTPC_RECEIVE_CONTENT:
+			clear_ibuffer();
+			if(receive())
+				r = HTTP_ON_REQUEST_DATA;
+			else {
+				if(alive())
+					m_state = HTTPC_SEND_HEADER;
+			}
 			break;
 		case HTTPC_SEND_HEADER:
 			break;
 		case HTTPC_SEND_CONTENT:
 			break;
 		case HTTPC_CLOSE:
+			close();
+			r = HTTP_ON_CLOSE;
 			break;
 	}
 
@@ -427,7 +464,10 @@ _str_t cHttpConnection::req_var(_cstr_t name) {
 _u8 *cHttpConnection::req_data(_u32 *size) {
 	_u8 *r = 0;
 
-	//...
+	if(m_ibuffer) {
+		r = (_u8 *)mpi_bmap->ptr(m_ibuffer);
+		*size = m_ibuffer_offset;
+	}
 
 	return r;
 }
