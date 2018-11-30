@@ -405,6 +405,13 @@ _u8 cHttpConnection::process(void) {
 			}
 			break;
 		case HTTPC_SEND_HEADER:
+			clear_ibuffer();
+			if(receive()) {
+				r = HTTP_ON_REQUEST_DATA;
+				m_state = HTTPC_RECEIVE_CONTENT;
+			} else {
+				// send header ...
+			}
 			break;
 		case HTTPC_SEND_CONTENT:
 			break;
