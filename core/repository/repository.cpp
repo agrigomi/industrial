@@ -246,8 +246,11 @@ private:
 				}
 
 				notify(flags, pi);
-			} else
+			} else {
 				pi->object_ctl(OCTL_UNINIT, this);
+				LOG(LMT_ERROR, "REPOSITORY: Unable to init object(iname='%s'; cname='%s')",
+						info->iname, info->cname);
+			}
 		} else
 			r = true;
 
