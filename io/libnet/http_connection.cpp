@@ -61,6 +61,23 @@ static _http_resp_text_t _g_http_resp_text[] = {
 	{0,				NULL}
 };
 
+typedef struct {
+	_u8 	im;
+	_cstr_t	sm;
+}_http_method_map;
+
+static _http_method_map _g_method_map[] = {
+	{HTTP_METHOD_GET,	"GET"},
+	{HTTP_METHOD_HEAD,	"HEAD"},
+	{HTTP_METHID_POST,	"POST"},
+	{HTTP_METHOD_PUT,	"PUT"},
+	{HTTP_METHOD_DELETE,	"DELETE"},
+	{HTTP_METHOD_CONNECT,	"CONNECT"},
+	{HTTP_METHOD_OPTIONS,	"OPTIONS"},
+	{HTTP_METHOD_TRACE,	"TRACE"},
+	{0,			NULL}
+};
+
 #define VAR_REQ_METHOD		(_str_t)"Method"
 #define VAR_REQ_URI		(_str_t)"URI"
 #define VAR_REQ_PROTOCOL	(_str_t)"Protocol"
@@ -402,6 +419,8 @@ _u8 cHttpConnection::process(void) {
 			else {
 				if(alive())
 					m_state = HTTPC_SEND_HEADER;
+				else
+					m_state = HTTPC_CLOSE;
 			}
 			break;
 		case HTTPC_SEND_HEADER:
@@ -410,7 +429,10 @@ _u8 cHttpConnection::process(void) {
 				r = HTTP_ON_REQUEST_DATA;
 				m_state = HTTPC_RECEIVE_CONTENT;
 			} else {
-				// send header ...
+				if(alive()) {
+					// send header ...
+				} else
+					m_state = HTTPC_CLOSE;
 			}
 			break;
 		case HTTPC_SEND_CONTENT:
@@ -446,26 +468,32 @@ _u32 cHttpConnection::res_write(_u8 *data, _u32 size) {
 
 _u8 cHttpConnection::req_method(void) {
 	_u8 r = 0;
+	_str_t sm = req_var(VAR_REQ_METHOD);
 
-	//...
+	if(sm) {
+		_u32 n = 0;
+
+		while(_g_method_map[n].sm) {
+			if(strcmp(sm, _g_method_map[n].sm) == 0) {
+				r = _g_method_map[n].im;
+				break;
+			}
+
+			n++;
+		}
+	}
 
 	return r;
 }
 
 _str_t cHttpConnection::req_uri(void) {
-	_str_t r = 0;
-
-	//...
-
-	return r;
+	return req_var(VAR_REQ_URI);
 }
 
 _str_t cHttpConnection::req_var(_cstr_t name) {
-	_str_t r = 0;
-
-	//...
-
-	return r;
+	_u32 sz = 0;
+	_str_t vn = (_str_t)name;
+	return (_str_t)mpi_map->get(vn, strlen(vn), &sz);
 }
 
 _u8 *cHttpConnection::req_data(_u32 *size) {
@@ -479,28 +507,33 @@ _u8 *cHttpConnection::req_data(_u32 *size) {
 	return r;
 }
 
-bool cHttpConnection::res_var(_str_t name, _str_t value) {
+bool cHttpConnection::res_var(_cstr_t name, _str_t value) {
 	bool r = false;
 
-	//...
+	if(!m_oheader)
+		m_oheader = mpi_bmap->alloc();
+	if(m_oheader) {
+		_char_t *ptr = (_char_t *)mpi_bmap->ptr(m_oheader);
+		_u32 sz = mpi_bmap->size();
+		_u32 rem = sz - m_oheader_offset;
 
-	return r;
-}
+		if(rem) {
+			_u32 n = snprintf(ptr, rem, "%s: %s\r\n", name, value);
 
-bool cHttpConnection::res_code(_u16 httprc) {
-	bool r = false;
-
-	//...
+			m_oheader_offset += n;
+			r = true;
+		}
+	}
 
 	return r;
 }
 
 bool cHttpConnection::res_content_len(_u32 content_len) {
-	bool r = false;
+	_char_t cl[32]="";
 
-	//...
-
-	return r;
+	sprintf(cl, "%u", content_len);
+	m_content_len = content_len;
+	return res_var("Content-Length", cl);
 }
 
 static cHttpConnection _g_httpc_;

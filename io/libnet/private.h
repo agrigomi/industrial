@@ -128,13 +128,15 @@ public:
 	// get request data
 	_u8 *req_data(_u32 *size);
 	// set variable in response header
-	bool res_var(_str_t name, _str_t value);
+	bool res_var(_cstr_t name, _str_t value);
 	// get error code
 	_u16 error_code(void) {
 		return m_error_code;
 	}
 	// set response code
-	bool res_code(_u16 httprc);
+	void res_code(_u16 httprc) {
+		m_response_code = httprc;
+	}
 	// set Content-Length variable
 	bool res_content_len(_u32 content_len);
 	// return remainder pard of response data in bytes (ContentLength - Sent)
