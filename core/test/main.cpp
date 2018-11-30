@@ -26,7 +26,8 @@ _cstr_t g_hdr = "var1: alabala\r\nvar2: haha\r\n";
 \r\n";
 */
 
-_cstr_t g_body = "<form action=\"upload_file\" method=\"post\" enctype=\"multipart/form-data\">\
+_cstr_t g_body = "<!DOCTYPE HTML>\
+<form action=\"upload_file\" method=\"post\" enctype=\"multipart/form-data\">\
 Select image to upload:\
 <input type=\"file\" name=\"fileToUpload\" id=\"fileToUpload\">\
 <input type=\"submit\" value=\"Upload Image\" name=\"submit\">\
