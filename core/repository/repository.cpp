@@ -3,7 +3,14 @@
 #include "iRepository.h"
 #include "iMemory.h"
 #include "iTaskMaker.h"
+#include "iLog.h"
 #include "private.h"
+
+#define LOG(lmt, fmt, ...) {\
+	iLog *pi_log = get_log();\
+	if(pi_log) \
+		pi_log->fwrite(lmt, fmt, __VA_ARGS__); \
+}
 
 typedef struct {
 	iBase	*monitored;
@@ -18,6 +25,7 @@ private:
 	iLlist *mpi_ext_list; // extensions list
 	iLlist *mpi_notify_list;
 	iTaskMaker *mpi_tmaker;
+	iLog   *mpi_log;
 	_cstr_t	m_ext_dir;
 
 	iRepoExtension *get_extension(_cstr_t file, _cstr_t alias) {
@@ -462,6 +470,10 @@ private:
 		}
 	}
 
+	iLog *get_log(void) {
+		return (mpi_log) ? mpi_log : (mpi_log = (iLog *)object_by_iname(I_LOG, RF_ORIGINAL));
+	}
+
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 1, 0, 0);
 
@@ -533,7 +545,8 @@ public:
 					}
 				}
 			}
-		}
+		} else
+			LOG(LMT_ERROR, "REPOSITORY: Unable to find object(iname='%s'; cname='%s')", req->iname, req->cname);
 
 		return r;
 	}
@@ -684,6 +697,7 @@ public:
 				mpi_ext_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE);
 				mpi_tmaker = (iTaskMaker*)object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
 				mpi_notify_list = (iLlist *)object_by_iname(I_LLIST, RF_CLONE);
+				mpi_log = 0;
 				if(mpi_cxt_list && mpi_ext_list && mpi_tmaker && mpi_notify_list) {
 					mpi_ext_list->init(LL_VECTOR, 1);
 					mpi_notify_list->init(LL_VECTOR, 1);
