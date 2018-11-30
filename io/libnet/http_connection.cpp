@@ -97,6 +97,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_response_code = 0;
 			m_error_code = 0;
 			m_content_len = 0;
+			m_oheader_sent = 0;
 			m_content_sent = 0;
 			m_header_len = 0;
 			m_udata = 0;
@@ -381,6 +382,30 @@ void cHttpConnection::clear_ibuffer(void) {
 	}
 }
 
+_u32 cHttpConnection::send_header(void) {
+	_u32 r = 0;
+
+	if(m_oheader_offset && m_response_code) {
+		_char_t rs[128]="";
+
+		// send first line
+		_u32 n = snprintf(rs, sizeof(rs), "HTTP/1.1 %u %s\r\n",
+				m_response_code, get_rc_text(m_response_code));
+		mp_sio->write(rs, n);
+
+		// send header
+		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_oheader);
+
+		r = mp_sio->write(ptr, m_oheader_offset);
+
+		// send header end
+		mp_sio->write("\r\n", 2);
+		m_oheader_sent = r;
+	}
+
+	return r;
+}
+
 _u8 cHttpConnection::process(void) {
 	_u8 r = 0;
 
@@ -430,7 +455,13 @@ _u8 cHttpConnection::process(void) {
 				m_state = HTTPC_RECEIVE_CONTENT;
 			} else {
 				if(alive()) {
-					// send header ...
+					if(send_header() == m_oheader_offset)
+						m_state = HTTPC_SEND_CONTENT;
+					else {
+						m_error_code = HTTPRC_INTERNAL_SERVER_ERROR;
+						r = HTTP_ON_ERROR;
+						m_state = HTTPC_CLOSE;
+					}
 				} else
 					m_state = HTTPC_CLOSE;
 			}

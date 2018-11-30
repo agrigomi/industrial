@@ -85,6 +85,7 @@ private:
 	_u32		m_oheader_offset;
 	_u32		m_obuffer_offset;
 	_u32		m_obuffer_sent;
+	_u32		m_oheader_sent;
 	_u32		m_header_len;
 	_u32		m_content_len;
 	_u32		m_content_sent;
@@ -101,6 +102,7 @@ private:
 	_u32 parse_var_line(_str_t var, _u32 sz_max);
 	_u32 receive(void);
 	void clear_ibuffer(void);
+	_u32 send_header(void);
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
