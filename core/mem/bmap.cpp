@@ -136,42 +136,58 @@ public:
 
 	void free(HBUFFER hb) {
 		_buffer_t *b = (_buffer_t *)hb;
-		HMUTEX hm = mpi_list->lock();
 
-		if(m_bsize) {
-			if(b->state == BDIRTY) {
+		if(b) {
+			HMUTEX hm = mpi_list->lock();
+
+			if(m_bsize) {
+				if(b->state == BDIRTY) {
+					if(m_pcb_bio)
+						m_pcb_bio(BIO_WRITE, b->ptr, m_bsize, b->udata);
+				}
 				if(m_pcb_bio)
-					m_pcb_bio(BIO_WRITE, b->ptr, m_bsize, b->udata);
+					m_pcb_bio(BIO_UNINIT, b->ptr, m_bsize, b->udata);
+				if(mpi_list->mov(b, BFREE, hm))
+					b->state = BFREE;
 			}
-			if(m_pcb_bio)
-				m_pcb_bio(BIO_UNINIT, b->ptr, m_bsize, b->udata);
-			if(mpi_list->mov(b, BFREE, hm))
-				b->state = BFREE;
-		}
 
-		mpi_list->unlock(hm);
+			mpi_list->unlock(hm);
+		}
 	}
 
 	void *ptr(HBUFFER hb) {
+		void *r = NULL;
 		_buffer_t *b = (_buffer_t *)hb;
-		return b->ptr;
+
+		if(b)
+			r = b->ptr;
+
+		return r;
 	}
 
 	void dirty(HBUFFER hb) {
 		_buffer_t *b = (_buffer_t *)hb;
-		HMUTEX hm = mpi_list->lock();
 
-		if(m_bsize) {
-			if(mpi_list->mov(b, BDIRTY, hm))
-				b->state = BDIRTY;
+		if(b) {
+			HMUTEX hm = mpi_list->lock();
+
+			if(m_bsize) {
+				if(mpi_list->mov(b, BDIRTY, hm))
+					b->state = BDIRTY;
+			}
+
+			mpi_list->unlock(hm);
 		}
-
-		mpi_list->unlock(hm);
 	}
 
 	void *get_udata(HBUFFER hb) {
+		void *r = NULL;
 		_buffer_t *b = (_buffer_t *)hb;
-		return b->udata;
+
+		if(b)
+			r = b->udata;
+
+		return r;
 	}
 
 	_u32 size(void) {
@@ -180,7 +196,9 @@ public:
 
 	void set_udata(HBUFFER hb, void *udata) {
 		_buffer_t *b = (_buffer_t *)hb;
-		b->udata = udata;
+
+		if(b)
+			b->udata = udata;
 	}
 
 	void reset(HBUFFER hb=0) {
