@@ -13,19 +13,6 @@
 
 IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
-_cstr_t g_hdr = "var1: alabala\r\nvar2: haha\r\n";
-/*_cstr_t g_body= "<!DOCTYPE HTML>\
-<html>\
-<head>\
-   <title>HelloWorld</title>\
-</head>\
-<body>\
-      <h1>Hello World</h1>\
- </body>\
- </html>\
-\r\n";
-*/
-
 _cstr_t g_body = "<!DOCTYPE HTML>\
 <form action=\"upload_file\" method=\"post\" enctype=\"multipart/form-data\">\
 Select image to upload:\
@@ -62,22 +49,42 @@ _err_t main(int argc, char *argv[]) {
 			iHttpServer *pi_http = pi_net->create_http_server(8080);
 			if(pi_http) {
 				pi_http->on_event(HTTP_ON_OPEN, [](iHttpConnection *pi_httpc, void *udata) {
-					printf("on_open: %p\n", pi_httpc);
+					printf(">>> on_open: %p\n", pi_httpc);
 				});
 				pi_http->on_event(HTTP_ON_REQUEST, [](iHttpConnection *pi_httpc, void *udata) {
-					printf("on_request: %p\n", pi_httpc);
+					_u8 method = pi_httpc->req_method();
+					pi_httpc->res_code(HTTPRC_OK);
+					pi_httpc->res_content_len(strlen(g_body));
+
+					if(method == HTTP_METHOD_GET) {
+						printf(">>> on_request(GET '%s') %p\n", pi_httpc->req_uri(), pi_httpc);
+						pi_httpc->res_write((_u8 *)g_body, strlen(g_body));
+					} else if(method == HTTP_METHOD_POST) {
+						_u32 sz = 0;
+						printf(">>> on_request(POST '%s') %p\n", pi_httpc->req_uri(), pi_httpc);
+						_str_t ptr = (_str_t)pi_httpc->req_data(&sz);
+						if(sz)
+							fwrite(ptr, sz, 1, stdout);
+
+						pi_httpc->res_write((_u8 *)g_body, strlen(g_body));
+					}
 				});
 				pi_http->on_event(HTTP_ON_REQUEST_DATA, [](iHttpConnection *pi_httpc, void *udata) {
-					printf("on_request_data: %p\n", pi_httpc);
+					_u32 sz=0;
+
+					printf(">>> on_request_data: %p\n", pi_httpc);
+					_u8 *ptr = pi_httpc->req_data(&sz);
+					if(ptr && sz)
+						fwrite(ptr, sz, 1, stdout);
 				});
 				pi_http->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpConnection *pi_httpc, void *udata) {
-					printf("on_response_data: %p\n", pi_httpc);
+					printf(">>> on_response_data: %p\n", pi_httpc);
 				});
 				pi_http->on_event(HTTP_ON_ERROR, [](iHttpConnection *pi_httpc, void *udata) {
-					printf("on_error: %p\n", pi_httpc);
+					printf(">>> on_error(%d): %p\n", pi_httpc->error_code(), pi_httpc);
 				});
 				pi_http->on_event(HTTP_ON_CLOSE, [](iHttpConnection *pi_httpc, void *udata) {
-					printf("on_close: %p\n", pi_httpc);
+					printf(">>> on_close: %p\n", pi_httpc);
 				});
 
 				while(pi_http->is_running())

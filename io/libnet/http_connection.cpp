@@ -69,7 +69,7 @@ typedef struct {
 static _http_method_map _g_method_map[] = {
 	{HTTP_METHOD_GET,	"GET"},
 	{HTTP_METHOD_HEAD,	"HEAD"},
-	{HTTP_METHID_POST,	"POST"},
+	{HTTP_METHOD_POST,	"POST"},
 	{HTTP_METHOD_PUT,	"PUT"},
 	{HTTP_METHOD_DELETE,	"DELETE"},
 	{HTTP_METHOD_CONNECT,	"CONNECT"},
@@ -213,24 +213,21 @@ _u32 cHttpConnection::receive(void) {
 	return r;
 }
 
-_u8 cHttpConnection::complete_req_header(void) {
-	_u8 r = HTTPC_RECEIVE_HEADER;
-	_u32 sz = mpi_bmap->size();
+bool cHttpConnection::complete_req_header(void) {
+	bool r = false;
 
-	if(m_ibuffer && m_ibuffer_offset) {
-		if(m_ibuffer_offset < sz) {
-			_str_t ptr = (_str_t)mpi_bmap->ptr(m_ibuffer);
-			_s32 hl = 0;
+	if(m_ibuffer_offset) {
+		_u32 sz = mpi_bmap->size();
 
-			if((hl = mpi_str->find_string(ptr, (_str_t)"\r\n\r\n") != -1)) {
-				r = HTTPC_PARSE_HEADER;
-				m_header_len = hl + 4;
-			} else
-				m_header_len = 0;
-		} else {
-			m_response_code = m_error_code = HTTPRC_REQ_ENTITY_TOO_LARGE;
-			r = HTTPC_SEND_HEADER;
-		}
+		_str_t ptr = (_str_t)mpi_bmap->ptr(m_ibuffer);
+		_s32 hl = 0;
+
+		// !!! dangerous !!!
+		if((hl = mpi_str->find_string(ptr, (_str_t)"\r\n\r\n")) != -1) {
+			r = true;
+			m_header_len = hl + 4;
+		} else
+			m_header_len = 0;
 	}
 
 	return r;
@@ -347,8 +344,8 @@ _u32 cHttpConnection::parse_var_line(_str_t var, _u32 sz_max) {
 	return r;
 }
 
-_u8 cHttpConnection::parse_req_header(void) {
-	_u8 r = HTTPC_RECEIVE_CONTENT;
+bool cHttpConnection::parse_req_header(void) {
+	bool r = false;
 
 	if(m_ibuffer && m_ibuffer_offset) {
 		_str_t hdr = (_str_t)mpi_bmap->ptr(m_ibuffer);
@@ -359,9 +356,16 @@ _u8 cHttpConnection::parse_req_header(void) {
 			offset = (n) ? (offset + n) : 0;
 		}
 
-		if(offset != m_header_len) {
-			r = HTTPC_SEND_HEADER;
-			m_error_code = HTTPRC_BAD_REQUEST;
+		if(offset == m_header_len) {
+			r = true;
+			if(m_ibuffer_offset > m_header_len) {
+				// have request data
+				mpi_str->mem_cpy(hdr, hdr + m_header_len, m_ibuffer_offset - m_header_len);
+				m_ibuffer_offset -= m_header_len;
+			} else
+				m_ibuffer_offset = 0;
+
+			m_header_len = 0;
 		}
 	}
 
@@ -414,6 +418,19 @@ _u32 cHttpConnection::send_header(void) {
 	return r;
 }
 
+_u32 cHttpConnection::send_content(void) {
+	_u32 r = 0;
+
+	if(m_content_len && m_content_sent < m_content_len) {
+		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_obuffer);
+
+		m_content_sent += mp_sio->write(ptr, m_content_len);
+		//...
+	}
+
+	return r;
+}
+
 _u8 cHttpConnection::process(void) {
 	_u8 r = 0;
 
@@ -434,16 +451,19 @@ _u8 cHttpConnection::process(void) {
 			}
 			break;
 		case HTTPC_COMPLETE_HEADER:
-			m_state = complete_req_header();
-			if(m_error_code)
-				r = HTTP_ON_ERROR;
+			if(complete_req_header())
+				m_state = HTTPC_PARSE_HEADER;
 			else
-				r = HTTP_ON_REQUEST;
+				m_state = HTTPC_RECEIVE_HEADER;
 			break;
 		case HTTPC_PARSE_HEADER:
-			m_state = parse_req_header();
-			if(m_error_code)
+			if(parse_req_header()) {
+				r = HTTP_ON_REQUEST;
+				m_state = HTTPC_RECEIVE_CONTENT;
+			} else {
 				r = HTTP_ON_ERROR;
+				m_state = HTTPC_CLOSE;
+			}
 			break;
 		case HTTPC_RECEIVE_CONTENT:
 			clear_ibuffer();
@@ -458,10 +478,7 @@ _u8 cHttpConnection::process(void) {
 			break;
 		case HTTPC_SEND_HEADER:
 			clear_ibuffer();
-			if(receive()) {
-				r = HTTP_ON_REQUEST_DATA;
-				m_state = HTTPC_RECEIVE_CONTENT;
-			} else {
+			if(!receive()) {
 				if(alive() && m_response_code) {
 					send_header();
 					if(m_oheader_sent == m_oheader_offset)
@@ -471,10 +488,21 @@ _u8 cHttpConnection::process(void) {
 			}
 			break;
 		case HTTPC_SEND_CONTENT:
+			clear_ibuffer();
+			if(receive())
+				r = HTTP_ON_REQUEST_DATA;
+			else {
+				if(alive()) {
+					send_content();
+					if(m_content_len <= m_content_sent)
+						m_state = HTTPC_CLOSE;
+					//...
+				} else
+					m_state = HTTPC_CLOSE;
+			}
 			break;
 		case HTTPC_CLOSE:
 			close();
-			r = HTTP_ON_CLOSE;
 			break;
 	}
 

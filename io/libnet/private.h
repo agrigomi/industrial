@@ -95,14 +95,16 @@ private:
 	_ulong		m_udata;
 
 	_cstr_t get_rc_text(_u16 rc);
-	_u8 complete_req_header(void);
+	bool complete_req_header(void);
 	bool add_req_variable(_str_t name, _str_t value, _u32 sz_value=0);
-	_u8 parse_req_header(void);
+	bool parse_req_header(void);
 	_u32 parse_request_line(_str_t req, _u32 sz_max);
 	_u32 parse_var_line(_str_t var, _u32 sz_max);
 	_u32 receive(void);
 	void clear_ibuffer(void);
 	_u32 send_header(void);
+	_u32 send_content(void);
+
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);

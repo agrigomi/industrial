@@ -85,7 +85,7 @@ public:
 // request method
 #define HTTP_METHOD_GET		1
 #define HTTP_METHOD_HEAD	2
-#define HTTP_METHID_POST	3
+#define HTTP_METHOD_POST	3
 #define HTTP_METHOD_PUT		4
 #define HTTP_METHOD_DELETE	5
 #define HTTP_METHOD_CONNECT	6
