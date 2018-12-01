@@ -501,7 +501,8 @@ _u8 cHttpConnection::process(void) {
 						m_state = HTTPC_SEND_CONTENT;
 				} else
 					m_state = HTTPC_CLOSE;
-			}
+			} else
+				r = HTTP_ON_REQUEST_DATA;
 			break;
 		case HTTPC_SEND_CONTENT:
 			clear_ibuffer();
