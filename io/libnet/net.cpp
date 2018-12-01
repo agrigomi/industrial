@@ -60,7 +60,7 @@ public:
 		return r;
 	}
 
-	iSocketIO *create_udp_client(_str_t dst_ip, _u32 port) {
+	iSocketIO *create_udp_client(_cstr_t dst_ip, _u32 port) {
 		iSocketIO *r = 0;
 		_s32 sfd = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -82,11 +82,11 @@ public:
 		return r;
 	}
 
-	iSocketIO *create_multicast_sender(_str_t group, _u32 port) {
+	iSocketIO *create_multicast_sender(_cstr_t group, _u32 port) {
 		return create_udp_client(group, port);
 	}
 
-	iSocketIO *create_multicast_listener(_str_t group, _u32 port) {
+	iSocketIO *create_multicast_listener(_cstr_t group, _u32 port) {
 		iSocketIO *r = 0;
 		struct ip_mreq mreq;
 		_s32 sfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -147,7 +147,7 @@ public:
 		return r;
 	}
 
-	iSocketIO *create_tcp_client(_str_t host, _u32 port, SSL_CTX *ssl_context=NULL) {
+	iSocketIO *create_tcp_client(_cstr_t host, _u32 port, SSL_CTX *ssl_context=NULL) {
 		iSocketIO *r = 0;
 		_s32 sfd = socket(AF_INET, SOCK_STREAM, 0);
 

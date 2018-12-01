@@ -55,14 +55,15 @@ _err_t main(int argc, char *argv[]) {
 					_u8 method = pi_httpc->req_method();
 					pi_httpc->res_code(HTTPRC_OK);
 					pi_httpc->res_content_len(strlen(g_body));
+					pi_httpc->res_var("var1", "alabala");
 
 					if(method == HTTP_METHOD_GET) {
 						printf(">>> on_request(GET '%s') %p\n", pi_httpc->req_uri(), pi_httpc);
 						pi_httpc->res_write((_u8 *)g_body, strlen(g_body));
 					} else if(method == HTTP_METHOD_POST) {
 						_u32 sz = 0;
-						printf(">>> on_request(POST '%s') %p\n", pi_httpc->req_uri(), pi_httpc);
 						_str_t ptr = (_str_t)pi_httpc->req_data(&sz);
+						printf(">>> on_request(POST '%s' [%u bytes]) %p\n", pi_httpc->req_uri(), sz, pi_httpc);
 						if(sz)
 							fwrite(ptr, sz, 1, stdout);
 
@@ -71,9 +72,9 @@ _err_t main(int argc, char *argv[]) {
 				});
 				pi_http->on_event(HTTP_ON_REQUEST_DATA, [](iHttpConnection *pi_httpc, void *udata) {
 					_u32 sz=0;
-
-					printf(">>> on_request_data: %p\n", pi_httpc);
 					_u8 *ptr = pi_httpc->req_data(&sz);
+
+					printf(">>> on_request_data(%u bytes): %p\n", sz, pi_httpc);
 					if(ptr && sz)
 						fwrite(ptr, sz, 1, stdout);
 				});

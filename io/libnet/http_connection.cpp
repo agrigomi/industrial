@@ -227,7 +227,7 @@ bool cHttpConnection::complete_req_header(void) {
 			_s32 hl = 0;
 
 			// !!! dangerous !!!
-			if((hl = mpi_str->find_string(ptr, (_str_t)"\r\n\r\n")) != -1) {
+			if((hl = mpi_str->nfind_string(ptr, sz, "\r\n\r\n")) != -1) {
 				r = true;
 				m_header_len = hl + 4;
 			} else
@@ -589,7 +589,7 @@ _u8 *cHttpConnection::req_data(_u32 *size) {
 	return r;
 }
 
-bool cHttpConnection::res_var(_cstr_t name, _str_t value) {
+bool cHttpConnection::res_var(_cstr_t name, _cstr_t value) {
 	bool r = false;
 
 	if(!m_oheader)
@@ -602,7 +602,7 @@ bool cHttpConnection::res_var(_cstr_t name, _str_t value) {
 			_u32 rem = sz - m_oheader_offset;
 
 			if(rem) {
-				_u32 n = snprintf(ptr, rem, "%s: %s\r\n", name, value);
+				_u32 n = snprintf(ptr + m_oheader_offset, rem, "%s: %s\r\n", name, value);
 
 				m_oheader_offset += n;
 				r = true;

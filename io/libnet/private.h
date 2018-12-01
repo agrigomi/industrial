@@ -132,7 +132,7 @@ public:
 	// get request data
 	_u8 *req_data(_u32 *size);
 	// set variable in response header
-	bool res_var(_cstr_t name, _str_t value);
+	bool res_var(_cstr_t name, _cstr_t value);
 	// get error code
 	_u16 error_code(void) {
 		return m_error_code;

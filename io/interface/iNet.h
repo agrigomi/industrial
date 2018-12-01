@@ -116,7 +116,7 @@ public:
 	// get request data
 	virtual _u8 *req_data(_u32 *size)=0;
 	// set variable in response header
-	virtual bool res_var(_cstr_t name, _str_t value)=0;
+	virtual bool res_var(_cstr_t name, _cstr_t value)=0;
 	// get error code
 	virtual _u16 error_code(void)=0;
 	// set response code
@@ -153,12 +153,12 @@ class iNet: public iBase {
 public:
 	INTERFACE(iNet, I_NET);
 	virtual iSocketIO *create_udp_server(_u32 port)=0;
-	virtual iSocketIO *create_udp_client(_str_t dst_ip, _u32 port)=0;
-	virtual iSocketIO *create_multicast_sender(_str_t group, _u32 port)=0;
-	virtual iSocketIO *create_multicast_listener(_str_t group, _u32 port)=0;
+	virtual iSocketIO *create_udp_client(_cstr_t dst_ip, _u32 port)=0;
+	virtual iSocketIO *create_multicast_sender(_cstr_t group, _u32 port)=0;
+	virtual iSocketIO *create_multicast_listener(_cstr_t group, _u32 port)=0;
 	virtual void close_socket(iSocketIO *p_sio)=0;
 	virtual iTCPServer *create_tcp_server(_u32 port)=0;
-	virtual iSocketIO *create_tcp_client(_str_t host, _u32 port, SSL_CTX *ssl_context=NULL)=0;
+	virtual iSocketIO *create_tcp_client(_cstr_t host, _u32 port, SSL_CTX *ssl_context=NULL)=0;
 	virtual iHttpServer *create_http_server(_u32 port)=0;
 };
 
