@@ -228,7 +228,7 @@ _u8 cHttpConnection::complete_req_header(void) {
 			} else
 				m_header_len = 0;
 		} else {
-			m_error_code = HTTPRC_REQ_ENTITY_TOO_LARGE;
+			m_response_code = m_error_code = HTTPRC_REQ_ENTITY_TOO_LARGE;
 			r = HTTPC_SEND_HEADER;
 		}
 	}
