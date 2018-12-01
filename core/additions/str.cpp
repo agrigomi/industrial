@@ -32,19 +32,19 @@ public:
 		_mem_set(ptr, pattern, sz);
 	}
 
-	_u32 str_len(_str_t str) {
+	_u32 str_len(_cstr_t str) {
 		return _str_len(str);
 	}
 
-	_s32 str_cmp(_str_t str1, _str_t str2) {
+	_s32 str_cmp(_cstr_t str1, _cstr_t str2) {
 		return _str_cmp(str1, str2);
 	}
 
-	_s32 str_ncmp(_str_t str1, _str_t str2, _u32 sz) {
+	_s32 str_ncmp(_cstr_t str1, _cstr_t str2, _u32 sz) {
 		return _str_ncmp(str1, str2, sz);
 	}
 
-	_u32 str_cpy(_str_t dst, _str_t src, _u32 sz_max) {
+	_u32 str_cpy(_str_t dst, _cstr_t src, _u32 sz_max) {
 		return _str_cpy(dst, src,sz_max);
 	}
 
@@ -62,15 +62,19 @@ public:
 		return i;
 	}
 
-	_s32 find_string(_str_t str1,_str_t str2) {
+	_s32 find_string(_cstr_t str1,_cstr_t str2) {
 		return _find_string(str1, str2);
+	}
+
+	_s32 nfind_string(_str_t text, _u32 text_sz, _cstr_t sub_str) {
+		return _nfind_string(text, text_sz, sub_str);
 	}
 
 	_str_t toupper(_str_t s) {
 		return _toupper(s);
 	}
 
-	_u32 str2i(_str_t str, _s32 sz) {
+	_u32 str2i(_cstr_t str, _s32 sz) {
 		return _str2i(str, sz);
 	}
 
@@ -86,15 +90,15 @@ public:
 		_clrspc(str);
 	}
 
-	_u8 div_str(_str_t str,_str_t p1,_u32 sz_p1,_str_t p2,_u32 sz_p2,_cstr_t div) {
+	_u8 div_str(_cstr_t str,_str_t p1,_u32 sz_p1,_str_t p2,_u32 sz_p2,_cstr_t div) {
 		return _div_str(str, p1, sz_p1, p2, sz_p2, div);
 	}
 
-	_u8 div_str_ex(_str_t str, _str_t p1, _u32 sz_p1, _str_t p2, _u32 sz_p2, _cstr_t div, _s8 start_ex, _s8 stop_ex) {
+	_u8 div_str_ex(_cstr_t str, _str_t p1, _u32 sz_p1, _str_t p2, _u32 sz_p2, _cstr_t div, _s8 start_ex, _s8 stop_ex) {
 		return _div_str_ex(str, p1, sz_p1, p2, sz_p2, div, start_ex, stop_ex);
 	}
 
-	_u32 wildcmp(_str_t string,_str_t wild) {
+	_u32 wildcmp(_cstr_t string, _cstr_t wild) {
 		return _wildcmp(string, wild);
 	}
 

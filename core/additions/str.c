@@ -82,7 +82,7 @@ void _mem_set(void *_ptr, _u8 pattern, _u32 sz) {
 	}
 }
 
-_u32 _str_len(_str_t str) {
+_u32 _str_len(_cstr_t str) {
 	_u32 i = 0;
 
 	while(*(str+i))
@@ -91,7 +91,7 @@ _u32 _str_len(_str_t str) {
 	return i;
 }
 
-_s32 _str_cmp(_str_t str1, _str_t str2) {
+_s32 _str_cmp(_cstr_t str1, _cstr_t str2) {
 	_s32 i = 0;
 
 	while(str1[i] && str2[i] && str1[i] == str2[i])
@@ -100,7 +100,7 @@ _s32 _str_cmp(_str_t str1, _str_t str2) {
 	return str1[i] - str2[i];
 }
 
-_s32 _str_ncmp(_str_t str1, _str_t str2, _u32 sz) {
+_s32 _str_ncmp(_cstr_t str1, _cstr_t str2, _u32 sz) {
 	_s32 r = 0;
 	_u32 i = 0;
 	_u32 _sz = sz;
@@ -117,7 +117,7 @@ _s32 _str_ncmp(_str_t str1, _str_t str2, _u32 sz) {
 	return r;
 }
 
-_u32 _str_cpy(_str_t dst, _str_t src, _u32 sz_max) {
+_u32 _str_cpy(_str_t dst, _cstr_t src, _u32 sz_max) {
 	_u32 _sz = sz_max;
 	_u32 i = 0;
 
@@ -137,7 +137,7 @@ _u32 _str_cpy(_str_t dst, _str_t src, _u32 sz_max) {
 
 #define SPACE_CHAR ' '
 
-_s32 _find_string(_str_t str1,_str_t str2) {
+_s32 _find_string(_cstr_t str1, _cstr_t str2) {
 	_u32 i,l,l1;
 
 	l = (_u32)_str_len(str2);
@@ -156,6 +156,25 @@ _s32 _find_string(_str_t str1,_str_t str2) {
 	}
 
 	return INVALID_STRING_POSITION;
+}
+
+_s32 _nfind_string(_str_t text, _u32 text_sz, _cstr_t sub_str) {
+	_s32 r = -1;
+
+	_u32 l = (_u32)_str_len(sub_str);
+	if(l <= text_sz) {
+		_u32 i = 0;
+		while(i < (text_sz - l)) {
+			if(_mem_cmp((text + i), (void *)sub_str, l) == 0) {
+				r = i;
+				break;
+			}
+
+			i++;
+		}
+	}
+
+	return r;
 }
 
 void _trim_left(_str_t str) {
@@ -192,7 +211,7 @@ void _clrspc(_str_t str) {
 	_trim_left(str);
 }
 
-static _u32 check_str1(_str_t str1,_str_t str2) {
+static _u32 check_str1(_cstr_t str1, _cstr_t str2) {
 	_u32  i,j,l1,l2;
 
 	l1 = (_u32)_str_len(str1);
@@ -208,10 +227,10 @@ static _u32 check_str1(_str_t str1,_str_t str2) {
 	return INVALID_STRING_POSITION;
 }
 
-_u8  _div_str(_str_t str,_str_t p1,_u32 sz_p1,_str_t p2,_u32 sz_p2,_cstr_t div) {
+_u8  _div_str(_cstr_t str,_str_t p1,_u32 sz_p1,_str_t p2,_u32 sz_p2,_cstr_t div) {
 	_u32  i;
 
-	i = check_str1(str,(_str_t)div);
+	i = check_str1(str, (_str_t)div);
 	if(i != INVALID_STRING_POSITION) {
 		_mem_cpy((_u8 *)p1,(_u8 *)str,((_u32)i<sz_p1)?(_u32)i:sz_p1);
 		p1[((_u32)i<sz_p1)?(_u32)i:sz_p1] = 0;
@@ -226,7 +245,7 @@ _u8  _div_str(_str_t str,_str_t p1,_u32 sz_p1,_str_t p2,_u32 sz_p2,_cstr_t div) 
 	return 0;
 }
 
-_u8 _div_str_ex(_str_t str, _str_t p1, _u32 sz_p1, _str_t p2, _u32 sz_p2, _cstr_t div, _s8 start_ex, _s8 stop_ex) {
+_u8 _div_str_ex(_cstr_t str, _str_t p1, _u32 sz_p1, _str_t p2, _u32 sz_p2, _cstr_t div, _s8 start_ex, _s8 stop_ex) {
 	_u32 ex_count=0;
 	_u32 i,j,l1,l2;
 
@@ -269,9 +288,9 @@ _u8 _div_str_ex(_str_t str, _str_t p1, _u32 sz_p1, _str_t p2, _u32 sz_p2, _cstr_
 	return 0;
 }
 
-_u32 _wildcmp(_str_t string,_str_t wild) {
-	_str_t cp=0;
-	_str_t mp=0;
+_u32 _wildcmp(_cstr_t string, _cstr_t wild) {
+	_cstr_t cp=0;
+	_cstr_t mp=0;
 
 	while ((*string) && (*wild != '*')) {
 		if ((*wild != *string) && (*wild != '?')) {
@@ -323,7 +342,7 @@ _str_t _strrev(_str_t str) {
 	return str;
 }
 
-_u32 _str2i(_str_t str, _s32 sz) {
+_u32 _str2i(_cstr_t str, _s32 sz) {
 	_u32 r = 0;
 	_s8 _sz = sz-1;
 	_u32 m = 1;
