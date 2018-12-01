@@ -205,8 +205,10 @@ _u32 cHttpConnection::receive(void) {
 			_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_ibuffer);
 			_u32 sz_buffer = mpi_bmap->size();
 
-			r = mp_sio->read(ptr + m_ibuffer_offset, sz_buffer - m_ibuffer_offset);
-			m_ibuffer_offset += r;
+			if(ptr) {
+				r = mp_sio->read(ptr + m_ibuffer_offset, sz_buffer - m_ibuffer_offset);
+				m_ibuffer_offset += r;
+			}
 		}
 	}
 
@@ -220,14 +222,17 @@ bool cHttpConnection::complete_req_header(void) {
 		_u32 sz = mpi_bmap->size();
 
 		_str_t ptr = (_str_t)mpi_bmap->ptr(m_ibuffer);
-		_s32 hl = 0;
 
-		// !!! dangerous !!!
-		if((hl = mpi_str->find_string(ptr, (_str_t)"\r\n\r\n")) != -1) {
-			r = true;
-			m_header_len = hl + 4;
-		} else
-			m_header_len = 0;
+		if(ptr) {
+			_s32 hl = 0;
+
+			// !!! dangerous !!!
+			if((hl = mpi_str->find_string(ptr, (_str_t)"\r\n\r\n")) != -1) {
+				r = true;
+				m_header_len = hl + 4;
+			} else
+				m_header_len = 0;
+		}
 	}
 
 	return r;
@@ -349,23 +354,26 @@ bool cHttpConnection::parse_req_header(void) {
 
 	if(m_ibuffer && m_ibuffer_offset) {
 		_str_t hdr = (_str_t)mpi_bmap->ptr(m_ibuffer);
-		_u32 offset = parse_request_line(hdr, m_header_len);
 
-		while(offset && offset < m_header_len) {
-			_u32 n = parse_var_line(hdr + offset, m_header_len - offset);
-			offset = (n) ? (offset + n) : 0;
-		}
+		if(hdr) {
+			_u32 offset = parse_request_line(hdr, m_header_len);
 
-		if(offset == m_header_len) {
-			r = true;
-			if(m_ibuffer_offset > m_header_len) {
-				// have request data
-				mpi_str->mem_cpy(hdr, hdr + m_header_len, m_ibuffer_offset - m_header_len);
-				m_ibuffer_offset -= m_header_len;
-			} else
-				m_ibuffer_offset = 0;
+			while(offset && offset < m_header_len) {
+				_u32 n = parse_var_line(hdr + offset, m_header_len - offset);
+				offset = (n) ? (offset + n) : 0;
+			}
 
-			m_header_len = 0;
+			if(offset == m_header_len) {
+				r = true;
+				if(m_ibuffer_offset > m_header_len) {
+					// have request data
+					mpi_str->mem_cpy(hdr, hdr + m_header_len, m_ibuffer_offset - m_header_len);
+					m_ibuffer_offset -= m_header_len;
+				} else
+					m_ibuffer_offset = 0;
+
+				m_header_len = 0;
+			}
 		}
 	}
 
@@ -379,10 +387,13 @@ _u32 cHttpConnection::res_remainder(void) {
 void cHttpConnection::clear_ibuffer(void) {
 	if(m_ibuffer) {
 		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_ibuffer);
-		_u32 sz = mpi_bmap->size();
 
-		memset(ptr, 0, sz);
-		m_ibuffer_offset = 0;
+		if(ptr) {
+			_u32 sz = mpi_bmap->size();
+
+			memset(ptr, 0, sz);
+			m_ibuffer_offset = 0;
+		}
 	}
 }
 
@@ -403,9 +414,11 @@ _u32 cHttpConnection::send_header(void) {
 			// send header
 			_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_oheader);
 
-			r = mp_sio->write(ptr + m_oheader_sent,
-					m_oheader_offset - m_oheader_sent);
-			m_oheader_sent += r;
+			if(ptr) {
+				r = mp_sio->write(ptr + m_oheader_sent,
+						m_oheader_offset - m_oheader_sent);
+				m_oheader_sent += r;
+			}
 		}
 
 		if(m_oheader_sent == m_oheader_offset) {
@@ -424,8 +437,10 @@ _u32 cHttpConnection::send_content(void) {
 	if(m_content_len && m_content_sent < m_content_len) {
 		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_obuffer);
 
-		m_content_sent += mp_sio->write(ptr, m_content_len);
-		//...
+		if(ptr) {
+			m_content_sent += mp_sio->write(ptr, m_content_len);
+			//...
+		}
 	}
 
 	return r;
@@ -462,6 +477,7 @@ _u8 cHttpConnection::process(void) {
 				m_state = HTTPC_RECEIVE_CONTENT;
 			} else {
 				r = HTTP_ON_ERROR;
+				m_error_code = HTTPRC_BAD_REQUEST;
 				m_state = HTTPC_CLOSE;
 			}
 			break;
@@ -517,12 +533,15 @@ _u32 cHttpConnection::res_write(_u8 *data, _u32 size) {
 
 	if(m_obuffer) {
 		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_obuffer);
-		_u32 bsz = mpi_bmap->size();
-		_u32 brem = bsz - m_obuffer_offset;
 
-		if((r = (size < brem ) ? size : brem)) {
-			mpi_str->mem_cpy(ptr + m_obuffer_offset, data, r);
-			m_obuffer_offset += r;
+		if(ptr) {
+			_u32 bsz = mpi_bmap->size();
+			_u32 brem = bsz - m_obuffer_offset;
+
+			if((r = (size < brem ) ? size : brem)) {
+				mpi_str->mem_cpy(ptr + m_obuffer_offset, data, r);
+				m_obuffer_offset += r;
+			}
 		}
 	}
 
@@ -563,8 +582,8 @@ _u8 *cHttpConnection::req_data(_u32 *size) {
 	_u8 *r = 0;
 
 	if(m_ibuffer) {
-		r = (_u8 *)mpi_bmap->ptr(m_ibuffer);
-		*size = m_ibuffer_offset;
+		if((r = (_u8 *)mpi_bmap->ptr(m_ibuffer)))
+			*size = m_ibuffer_offset;
 	}
 
 	return r;
@@ -577,14 +596,17 @@ bool cHttpConnection::res_var(_cstr_t name, _str_t value) {
 		m_oheader = mpi_bmap->alloc();
 	if(m_oheader) {
 		_char_t *ptr = (_char_t *)mpi_bmap->ptr(m_oheader);
-		_u32 sz = mpi_bmap->size();
-		_u32 rem = sz - m_oheader_offset;
 
-		if(rem) {
-			_u32 n = snprintf(ptr, rem, "%s: %s\r\n", name, value);
+		if(ptr) {
+			_u32 sz = mpi_bmap->size();
+			_u32 rem = sz - m_oheader_offset;
 
-			m_oheader_offset += n;
-			r = true;
+			if(rem) {
+				_u32 n = snprintf(ptr, rem, "%s: %s\r\n", name, value);
+
+				m_oheader_offset += n;
+				r = true;
+			}
 		}
 	}
 
