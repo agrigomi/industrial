@@ -384,19 +384,22 @@ void cHttpConnection::clear_ibuffer(void) {
 
 _u32 cHttpConnection::send_header(void) {
 	_u32 r = 0;
+	_char_t rs[128]="";
 
-	if(m_oheader_offset && m_response_code) {
-		_char_t rs[128]="";
-
+	if(m_response_code) {
 		// send first line
 		_u32 n = snprintf(rs, sizeof(rs), "HTTP/1.1 %u %s\r\n",
 				m_response_code, get_rc_text(m_response_code));
 		mp_sio->write(rs, n);
 
-		// send header
-		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_oheader);
+		if(m_oheader_offset) {
+			// send header
+			_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_oheader);
 
-		r = mp_sio->write(ptr, m_oheader_offset);
+			r = mp_sio->write(ptr + m_oheader_sent,
+					m_oheader_offset - m_oheader_sent);
+			m_oheader_sent += r;
+		}
 
 		// send header end
 		mp_sio->write("\r\n", 2);
@@ -454,7 +457,7 @@ _u8 cHttpConnection::process(void) {
 				r = HTTP_ON_REQUEST_DATA;
 				m_state = HTTPC_RECEIVE_CONTENT;
 			} else {
-				if(alive()) {
+				if(alive() && m_response_code) {
 					if(send_header() == m_oheader_offset)
 						m_state = HTTPC_SEND_CONTENT;
 					else {
