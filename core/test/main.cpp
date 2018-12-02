@@ -53,14 +53,22 @@ _err_t main(int argc, char *argv[]) {
 				});
 				pi_http->on_event(HTTP_ON_REQUEST, [](iHttpConnection *pi_httpc, void *udata) {
 					_u8 method = pi_httpc->req_method();
-					pi_httpc->res_code(HTTPRC_OK);
-					pi_httpc->res_content_len(strlen(g_body));
 					pi_httpc->res_var("var1", "alabala");
 
 					if(method == HTTP_METHOD_GET) {
 						printf(">>> on_request(GET '%s') %p\n", pi_httpc->req_uri(), pi_httpc);
 						printf("User-Agent: '%s'\n", pi_httpc->req_var("User-Agent"));
-						pi_httpc->res_write((_u8 *)g_body, strlen(g_body));
+
+						if(strcmp(pi_httpc->req_uri(), "/home") == 0) {
+							pi_httpc->res_code(HTTPRC_OK);
+							pi_httpc->res_content_len(strlen(g_body));
+							pi_httpc->res_write((_u8 *)g_body, strlen(g_body));
+						} else {
+							pi_httpc->res_code(HTTPRC_NOT_FOUND);
+							//_cstr_t r = "<!DOCTYPE HTML><body><p>Requested URI, Not found (404)</p></body>";
+							//pi_httpc->res_content_len(strlen(r));
+							//pi_httpc->res_write((_u8*)r, strlen(r));
+						}
 					} else if(method == HTTP_METHOD_POST) {
 						_u32 sz = 0;
 						_str_t ptr = (_str_t)pi_httpc->req_data(&sz);
@@ -68,6 +76,8 @@ _err_t main(int argc, char *argv[]) {
 						if(sz)
 							fwrite(ptr, sz, 1, stdout);
 
+						pi_httpc->res_code(HTTPRC_OK);
+						pi_httpc->res_content_len(strlen(g_body));
 						pi_httpc->res_write((_u8 *)g_body, strlen(g_body));
 					}
 				});

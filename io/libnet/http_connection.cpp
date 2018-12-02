@@ -93,7 +93,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			mpi_bmap = NULL;
 			m_state = 0;
 			m_ibuffer = m_oheader = m_obuffer = 0;
-			m_ibuffer_offset = m_oheader_offset = m_obuffer_offset = m_obuffer_sent = 0;
+			m_ibuffer_offset = m_oheader_offset = m_obuffer_offset = 0;
 			m_response_code = 0;
 			m_error_code = 0;
 			m_content_len = 0;
@@ -436,10 +436,13 @@ _u32 cHttpConnection::send_content(void) {
 
 	if(m_content_len && m_content_sent < m_content_len) {
 		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_obuffer);
-
-		if(ptr) {
-			m_content_sent += mp_sio->write(ptr, m_content_len);
-			//...
+		if(ptr && m_obuffer_offset) {
+			if((r = mp_sio->write(ptr, m_obuffer_offset))) {
+				// folding of output buffer
+				mpi_str->mem_cpy(ptr, ptr + r, m_obuffer_offset - r);
+				m_obuffer_offset -= r;
+				m_content_sent += r;
+			}
 		}
 	}
 
@@ -511,9 +514,10 @@ _u8 cHttpConnection::process(void) {
 			else {
 				if(alive()) {
 					send_content();
-					if(m_content_len <= m_content_sent)
+					if(m_content_sent < m_content_len)
+						r = HTTP_ON_RESPONSE_DATA;
+					else
 						m_state = HTTPC_CLOSE;
-					//...
 				} else
 					m_state = HTTPC_CLOSE;
 			}
