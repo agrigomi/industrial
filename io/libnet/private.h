@@ -86,7 +86,9 @@ private:
 	_u32		m_obuffer_offset;
 	_u32		m_oheader_sent;
 	_u32		m_header_len;
-	_u32		m_content_len;
+	_u32		m_res_content_len;
+	_u32		m_req_content_len;
+	_u32		m_req_content_rcv;
 	_u32		m_content_sent;
 	_u16		m_error_code;
 	_u16		m_response_code;
@@ -103,6 +105,7 @@ private:
 	void clear_ibuffer(void);
 	_u32 send_header(void);
 	_u32 send_content(void);
+	_u32 receive_content(void);
 
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
@@ -142,6 +145,10 @@ public:
 	}
 	// set Content-Length variable
 	bool res_content_len(_u32 content_len);
+	// returns the content length of  request
+	_u32 req_content_len(void) {
+		return m_req_content_len;
+	}
 	// return remainder pard of response data in bytes (ContentLength - Sent)
 	_u32 res_remainder(void);
 	// write response

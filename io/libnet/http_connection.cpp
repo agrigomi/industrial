@@ -96,7 +96,9 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_ibuffer_offset = m_oheader_offset = m_obuffer_offset = 0;
 			m_response_code = 0;
 			m_error_code = 0;
-			m_content_len = 0;
+			m_res_content_len = 0;
+			m_req_content_len = 0;
+			m_req_content_rcv = 0;
 			m_oheader_sent = 0;
 			m_content_sent = 0;
 			m_header_len = 0;
@@ -373,6 +375,11 @@ bool cHttpConnection::parse_req_header(void) {
 					m_ibuffer_offset = 0;
 
 				m_header_len = 0;
+
+				_str_t cl = req_var("Content-Length");
+				if(cl)
+					m_req_content_len = atoi(cl);
+				m_req_content_rcv = m_ibuffer_offset;
 			}
 		}
 	}
@@ -381,7 +388,7 @@ bool cHttpConnection::parse_req_header(void) {
 }
 
 _u32 cHttpConnection::res_remainder(void) {
-	return m_content_len - (m_content_sent < m_content_len) ? m_content_sent : 0;
+	return m_res_content_len - (m_content_sent < m_res_content_len) ? m_content_sent : 0;
 }
 
 void cHttpConnection::clear_ibuffer(void) {
@@ -431,10 +438,18 @@ _u32 cHttpConnection::send_header(void) {
 	return r;
 }
 
+_u32 cHttpConnection::receive_content(void) {
+	_u32 r = receive();
+
+	m_req_content_rcv += r;
+
+	return r;
+}
+
 _u32 cHttpConnection::send_content(void) {
 	_u32 r = 0;
 
-	if(m_content_len && m_content_sent < m_content_len) {
+	if(m_res_content_len && m_content_sent < m_res_content_len) {
 		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_obuffer);
 		if(ptr && m_obuffer_offset) {
 			if((r = mp_sio->write(ptr, m_obuffer_offset))) {
@@ -486,18 +501,19 @@ _u8 cHttpConnection::process(void) {
 			break;
 		case HTTPC_RECEIVE_CONTENT:
 			clear_ibuffer();
-			if(receive())
+			if(receive_content())
 				r = HTTP_ON_REQUEST_DATA;
 			else {
-				if(alive())
-					m_state = HTTPC_SEND_HEADER;
-				else
+				if(alive()) {
+					if(m_req_content_rcv >= m_req_content_len)
+						m_state = HTTPC_SEND_HEADER;
+				} else
 					m_state = HTTPC_CLOSE;
 			}
 			break;
 		case HTTPC_SEND_HEADER:
 			clear_ibuffer();
-			if(!receive()) {
+			if(!receive_content()) {
 				if(alive() && m_response_code) {
 					send_header();
 					if(m_oheader_sent == m_oheader_offset)
@@ -509,12 +525,12 @@ _u8 cHttpConnection::process(void) {
 			break;
 		case HTTPC_SEND_CONTENT:
 			clear_ibuffer();
-			if(receive())
+			if(receive_content())
 				r = HTTP_ON_REQUEST_DATA;
 			else {
 				if(alive()) {
 					send_content();
-					if(m_content_sent < m_content_len)
+					if(m_content_sent < m_res_content_len)
 						r = HTTP_ON_RESPONSE_DATA;
 					else
 						m_state = HTTPC_CLOSE;
@@ -622,7 +638,7 @@ bool cHttpConnection::res_content_len(_u32 content_len) {
 	_char_t cl[32]="";
 
 	sprintf(cl, "%u", content_len);
-	m_content_len = content_len;
+	m_res_content_len = content_len;
 	return res_var("Content-Length", cl);
 }
 
