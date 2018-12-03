@@ -99,10 +99,12 @@ _err_t main(int argc, char *argv[]) {
 					printf(">>> on_close: %p\n", pi_httpc);
 				});
 
-				while(pi_http->is_running())
-					usleep(10000);
-				pi_repo->object_release(pi_net);
+				while(getchar() != 'q');
+				//while(pi_http->is_running())
+				//	usleep(10000);
+				pi_repo->object_release(pi_http);
 			}
+			pi_repo->object_release(pi_net);
 		}
 
 		iFS *pi_fs = dynamic_cast<iFS*>(pi_repo->object_by_iname(I_FS, RF_ORIGINAL));

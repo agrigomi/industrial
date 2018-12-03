@@ -10,8 +10,10 @@
 bool cHttpServer::_init(_u32 port) {
 	bool r = false;
 
-	if(p_tcps && !m_is_init)
+	if(p_tcps && !m_is_init) {
 		m_is_init = r = p_tcps->_init(port);
+		p_tcps->blocking(false);
+	}
 
 	return r;
 }
@@ -32,10 +34,9 @@ void cHttpServer::http_server_thread(void) {
 		mpi_tmaker->set_name(ht, "http server");
 
 	while(m_is_running) {
-		if(m_is_init) {
+		if(m_is_init)
 			add_connection();
-		} else
-			usleep(10000);
+		usleep(10000);
 	}
 
 	m_is_stopped = true;
