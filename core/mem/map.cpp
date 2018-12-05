@@ -5,10 +5,6 @@
 
 #define INITIAL_CAPACITY	512
 
-static void *_alloc(_u32 size, void *udata);
-static void _free(void *ptr, _u32 size, void *udata);
-static void _hash(void *data, _u32 sz_data, _u8 *result, void *udata);
-
 class cMap: public iMap {
 private:
 	iHeap *mpi_heap;
@@ -16,9 +12,29 @@ private:
 	_map_context_t map_cxt;
 	SHA1Context sha1_cxt;
 
-	friend void _free(void *ptr, _u32 size, void *udata);
-	friend void *_alloc(_u32 size, void *udata);
-	friend void _hash(void *data, _u32 sz_data, _u8 *result, void *udata);
+	static void *_alloc(_u32 size, void *udata) {
+		void *r = 0;
+		cMap *pobj = (cMap *)udata;
+		if(pobj)
+			r = pobj->mpi_heap->alloc(size);
+		return r;
+	}
+
+	static void _free(void *ptr, _u32 size, void *udata) {
+		cMap *pobj = (cMap *)udata;
+		if(pobj)
+			pobj->mpi_heap->free(ptr, size);
+	}
+
+	static void _hash(void *data, _u32 sz_data, _u8 *result, void *udata) {
+		cMap *pobj = (cMap *)udata;
+		if(pobj) {
+			SHA1Reset(&(pobj->sha1_cxt));
+			SHA1Input(&(pobj->sha1_cxt), (_u8 *)data, sz_data);
+			SHA1Result(&(pobj->sha1_cxt), result);
+		}
+	}
+
 public:
 	BASE(cMap, "cMap", RF_CLONE, 1,0,0);
 
@@ -160,25 +176,3 @@ public:
 
 static cMap _g_map_;
 
-static void *_alloc(_u32 size, void *udata) {
-	void *r = 0;
-	cMap *pobj = (cMap *)udata;
-	if(pobj)
-		r = pobj->mpi_heap->alloc(size);
-	return r;
-}
-
-static void _free(void *ptr, _u32 size, void *udata) {
-	cMap *pobj = (cMap *)udata;
-	if(pobj)
-		pobj->mpi_heap->free(ptr, size);
-}
-
-static void _hash(void *data, _u32 sz_data, _u8 *result, void *udata) {
-	cMap *pobj = (cMap *)udata;
-	if(pobj) {
-		SHA1Reset(&(_g_map_.sha1_cxt));
-		SHA1Input(&(_g_map_.sha1_cxt), (_u8 *)data, sz_data);
-		SHA1Result(&(_g_map_.sha1_cxt), result);
-	}
-}
