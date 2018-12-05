@@ -582,16 +582,12 @@ public:
 	}
 
 	iBase *object_by_cname(_cstr_t name, _rf_t rf) {
-		_object_request_t req;
-		req.cname = name;
-		req.flags = RQ_NAME;
+		_object_request_t req = {RQ_NAME, name, NULL};
 		return object_request(&req, rf);
 	}
 
 	iBase *object_by_iname(_cstr_t name, _rf_t rf) {
-		_object_request_t req;
-		req.iname = name;
-		req.flags = RQ_INTERFACE;
+		_object_request_t req = {RQ_INTERFACE, NULL, name};
 		return object_request(&req, rf);
 	}
 
