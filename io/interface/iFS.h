@@ -54,6 +54,11 @@ public:
 	virtual void close_dir(iDir *)=0;
 	virtual bool access(_cstr_t path, _u32 mode)=0;
 	virtual bool remove(_cstr_t path)=0;
+	virtual _ulong size(_cstr_t path)=0;
+	virtual time_t access_time(_cstr_t path)=0;
+	virtual time_t modify_time(_cstr_t path)=0;
+	virtual uid_t user_id(_cstr_t path)=0;
+	virtual gid_t group_id(_cstr_t path)=0;
 };
 
 #endif

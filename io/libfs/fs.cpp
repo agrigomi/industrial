@@ -89,6 +89,56 @@ public:
 
 		return r;
 	}
+
+	_ulong size(_cstr_t path) {
+		_ulong r = 0;
+		struct stat st;
+
+		if(stat(path, &st) == 0)
+			r = st.st_size;
+
+		return r;
+	}
+
+	time_t access_time(_cstr_t path) {
+		time_t r = 0;
+		struct stat st;
+
+		if(stat(path, &st) == 0)
+			r = st.st_atime;
+
+		return r;
+	}
+
+	time_t modify_time(_cstr_t path) {
+		time_t r = 0;
+		struct stat st;
+
+		if(stat(path, &st) == 0)
+			r = st.st_mtime;
+
+		return r;
+	}
+
+	uid_t user_id(_cstr_t path) {
+		uid_t r = 0;
+		struct stat st;
+
+		if(stat(path, &st) == 0)
+			r = st.st_uid;
+
+		return r;
+	}
+
+	gid_t group_id(_cstr_t path) {
+		gid_t r = 0;
+		struct stat st;
+
+		if(stat(path, &st) == 0)
+			r = st.st_gid;
+
+		return r;
+	}
 };
 
 static cFS _g_fs_;
