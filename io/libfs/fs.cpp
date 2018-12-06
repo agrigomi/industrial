@@ -64,6 +64,10 @@ public:
 		return r;
 	}
 
+	bool mk_dir(_cstr_t path, _u32 mode=0x644) {
+		return (mkdir(path, mode) == 0) ? true : false;
+	}
+
 	void close_dir(iDir *pi) {
 		cDir *pc_dir = dynamic_cast<cDir*>(pi);
 		if(pc_dir) {
