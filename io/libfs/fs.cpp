@@ -24,7 +24,7 @@ public:
 		return r;
 	}
 
-	iFileIO *open(_cstr_t path, _u32 flags, _u32 mode) {
+	iFileIO *open(_cstr_t path, _u32 flags, _u32 mode=0x644) {
 		iFileIO *r = 0;
 
 		_s32 fd = ::open(path, flags, mode);
@@ -76,7 +76,7 @@ public:
 		}
 	}
 
-	bool access(_cstr_t path, _u32 mode) {
+	bool access(_cstr_t path, _u32 mode=F_OK) {
 		bool r = false;
 
 		if(access(path, mode) == 0)

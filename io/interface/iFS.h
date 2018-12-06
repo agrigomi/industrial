@@ -48,12 +48,12 @@ public:
 class iFS: public iBase {
 public:
 	INTERFACE(iFS, I_FS);
-	virtual iFileIO *open(_cstr_t path, _u32 flags, _u32 mode=0x640)=0;
+	virtual iFileIO *open(_cstr_t path, _u32 flags, _u32 mode=0x644)=0;
 	virtual void close(iFileIO *)=0;
 	virtual iDir *open_dir(_cstr_t path)=0;
 	virtual bool mk_dir(_cstr_t path, _u32 mode=0x644)=0;
 	virtual void close_dir(iDir *)=0;
-	virtual bool access(_cstr_t path, _u32 mode)=0;
+	virtual bool access(_cstr_t path, _u32 mode=F_OK)=0;
 	virtual bool remove(_cstr_t path)=0;
 	virtual _ulong size(_cstr_t path)=0;
 	virtual time_t access_time(_cstr_t path)=0;
