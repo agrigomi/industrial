@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <time.h>
 #include "iIO.h"
 
 #define I_FILE_IO	"iFileIO"
@@ -31,6 +32,10 @@ public:
 	virtual void unmap(void)=0;
 	virtual void sync(void)=0;
 	virtual bool truncate(_ulong len)=0;
+	virtual time_t access_time(void)=0; // last access timestamp
+	virtual time_t modify_time(void)=0; // ladst modification timestamp
+	virtual uid_t user_id(void)=0;
+	virtual gid_t group_id(void)=0;
 };
 
 class iDir: public iBase {

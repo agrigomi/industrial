@@ -39,6 +39,10 @@ public:
 	void sync(void);
 	bool truncate(_ulong len);
 	void _close(void);
+	time_t access_time(void); // last access timestamp
+	time_t modify_time(void); // ladst modification timestamp
+	uid_t user_id(void);
+	gid_t group_id(void);
 };
 
 #endif

@@ -49,12 +49,10 @@ _ulong cFileIO::size(void) {
 	_ulong r = 0;
 
 	if(m_fd > 0) {
-		// get current position
-		_ulong _r = lseek(m_fd, 0, SEEK_CUR);
-		// get file len
-		r = lseek(m_fd, 0, SEEK_END);
-		// restore opsition
-		lseek(m_fd, _r, SEEK_SET);
+		struct stat st;
+
+		if(fstat(m_fd, &st) == 0)
+			r = st.st_size;
 	}
 
 	return r;
@@ -72,8 +70,10 @@ void *cFileIO::map(_u32 prot, _u32 flags) {
 	void *r = 0;
 
 	if(m_fd > 0) {
-		if((m_map_len = size()))
-			r = m_map_addr = mmap(0, m_map_len, prot, flags, m_fd, 0);
+		if(!(r = m_map_addr)) {
+			if((m_map_len = size()))
+				r = m_map_addr = mmap(0, m_map_len, prot, flags, m_fd, 0);
+		}
 	}
 
 	return r;
@@ -99,6 +99,54 @@ bool cFileIO::truncate(_ulong len) {
 	if(m_fd > 0) {
 		if(ftruncate(m_fd, len) != -1)
 			r = true;
+	}
+
+	return r;
+}
+
+time_t cFileIO::access_time(void) {// last access timestamp
+	struct stat st;
+	time_t r = 0;
+
+	if(m_fd > 0) {
+		if(fstat(m_fd, &st) == 0)
+			r = st.st_atime;
+	}
+
+	return r;
+}
+
+time_t cFileIO::modify_time(void) { // ladst modification timestamp
+	struct stat st;
+	time_t r = 0;
+
+	if(m_fd > 0) {
+		if(fstat(m_fd, &st) == 0)
+			r = st.st_mtime;
+	}
+
+	return r;
+}
+
+uid_t cFileIO::user_id(void) {
+	struct stat st;
+	uid_t r = 0;
+
+	if(m_fd > 0) {
+		if(fstat(m_fd, &st) == 0)
+			r = st.st_uid;
+	}
+
+	return r;
+}
+
+gid_t cFileIO::group_id(void) {
+	struct stat st;
+	gid_t r = 0;
+
+	if(m_fd > 0) {
+		if(fstat(m_fd, &st) == 0)
+			r = st.st_gid;
 	}
 
 	return r;
