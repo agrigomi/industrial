@@ -196,7 +196,7 @@ private:
 	bool call_event_handler(_u8 evt, iHttpConnection *pi_httpc);
 public:
 	BASE(cHttpServer, CLASS_NAME_HTTP_SERVER, RF_CLONE | RF_TASK, 1,0,0);
-	bool _init(_u32 port);
+	bool _init(_u32 port, _u32 buffer_size=8192);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	void on_event(_u8 evt, _on_http_event_t *handler, void *udata=NULL);

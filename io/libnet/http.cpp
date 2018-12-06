@@ -7,10 +7,24 @@
 #define CFREE	0 // column for pending connections
 #define CBUSY	1 // column for busy connections
 
-bool cHttpServer::_init(_u32 port) {
+// bufferMap callback
+_u32 buffer_io(_u8 op, void *ptr, _u32 size, void *udata) {
+	_u32 r = 0;
+
+	switch(op) {
+		case BIO_INIT:
+			memset(ptr, 0, size);
+			break;
+	}
+
+	return r;
+}
+
+bool cHttpServer::_init(_u32 port, _u32 buffer_size) {
 	bool r = false;
 
 	if(p_tcps && !m_is_init) {
+		mpi_bmap->init(buffer_size, buffer_io);
 		m_is_init = r = p_tcps->_init(port);
 		p_tcps->blocking(false);
 	}
@@ -83,19 +97,6 @@ void *http_worker_thread(void *udata) {
 	return r;
 }
 
-// bufferMap callback
-_u32 buffer_io(_u8 op, void *ptr, _u32 size, void *udata) {
-	_u32 r = 0;
-
-	switch(op) {
-		case BIO_INIT:
-			memset(ptr, 0, size);
-			break;
-	}
-
-	return r;
-}
-
 bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
 
@@ -112,7 +113,6 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			mpi_tmaker = (iTaskMaker *)pi_repo->object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
 			mpi_list = (iLlist *)pi_repo->object_by_iname(I_LLIST, RF_CLONE);
 			if(p_tcps && mpi_bmap && mpi_tmaker && mpi_list) {
-				mpi_bmap->init(8192, buffer_io);
 				mpi_list->init(LL_VECTOR, 2);
 				r = true;
 			}
