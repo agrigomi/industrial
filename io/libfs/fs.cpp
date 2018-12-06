@@ -24,10 +24,26 @@ public:
 		return r;
 	}
 
-	iFileIO *open(_cstr_t path, _u32 flags, _u32 mode=0x644) {
+	iFileIO *create(_cstr_t path, _u32 flags=O_RDWR|O_TRUNC|O_CREAT, _u32 mode=S_IRWXU) {
 		iFileIO *r = 0;
 
 		_s32 fd = ::open(path, flags, mode);
+		if(fd > 0) {
+			cFileIO *_r = (cFileIO *)_gpi_repo_->object_by_cname(FILE_IO_CLASS_NAME, RF_CLONE);
+			if(_r) {
+				_r->m_fd = fd;
+				r = _r;
+			} else
+				::close(fd);
+		}
+
+		return r;
+	}
+
+	iFileIO *open(_cstr_t path, _u32 flags=O_RDWR) {
+		iFileIO *r = 0;
+
+		_s32 fd = ::open(path, flags);
 		if(fd > 0) {
 			cFileIO *_r = (cFileIO *)_gpi_repo_->object_by_cname(FILE_IO_CLASS_NAME, RF_CLONE);
 			if(_r) {
@@ -64,7 +80,7 @@ public:
 		return r;
 	}
 
-	bool mk_dir(_cstr_t path, _u32 mode=0x644) {
+	bool mk_dir(_cstr_t path, _u32 mode=S_IRWXU) {
 		return (mkdir(path, mode) == 0) ? true : false;
 	}
 
@@ -76,11 +92,20 @@ public:
 		}
 	}
 
-	bool access(_cstr_t path, _u32 mode=F_OK) {
-		bool r = false;
+	bool access(_cstr_t path, _u32 mode=F_OK) {bool r = false;
 
 		if(access(path, mode) == 0)
 			r = true;
+
+		return r;
+	}
+
+	mode_t mode(_cstr_t path) {
+		mode_t r = 0;
+		struct stat st;
+
+		if(stat(path, &st) == 0)
+			r = st.st_mode;
 
 		return r;
 	}
@@ -140,6 +165,29 @@ public:
 
 		if(stat(path, &st) == 0)
 			r = st.st_gid;
+
+		return r;
+	}
+
+	bool copy(_cstr_t src, _cstr_t dst) {
+		bool r = false;
+		iFileIO *pi_src = open(src, O_RDONLY);
+
+		if(pi_src) {
+			iFileIO *pi_dst = create(dst, O_CREAT|O_RDWR|O_TRUNC, pi_src->mode());
+			if(pi_dst) {
+				void *src_ptr = pi_src->map(MPF_READ);
+
+				if(src_ptr) {
+					pi_dst->write(src_ptr, pi_src->size());
+					r = true;
+				}
+
+				close(pi_dst);
+			}
+
+			close(pi_src);
+		}
 
 		return r;
 	}

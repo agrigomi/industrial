@@ -37,6 +37,7 @@ public:
 	void *map(_u32 prot=MPF_EXEC|MPF_READ|MPF_WRITE, _u32 flags=MF_SHARED);
 	void unmap(void);
 	void sync(void);
+	mode_t mode(void);
 	bool truncate(_ulong len);
 	void _close(void);
 	time_t access_time(void); // last access timestamp

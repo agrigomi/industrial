@@ -93,6 +93,18 @@ void cFileIO::sync(void) {
 		fsync(m_fd);
 }
 
+mode_t cFileIO::mode(void) {
+	mode_t r = 0;
+	struct stat st;
+
+	if(m_fd > 0) {
+		if(fstat(m_fd, &st) == 0)
+			r = st.st_mode;
+	}
+
+	return r;
+}
+
 bool cFileIO::truncate(_ulong len) {
 	bool r = false;
 
