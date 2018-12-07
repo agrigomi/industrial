@@ -141,12 +141,28 @@ public:
 		return r;
 	}
 
-	bool init(_cstr_t path) {
+	bool make_cache_dir(_cstr_t path, _cstr_t dir) {
 		bool r = false;
 
-		if((_u32)snprintf(m_cache_path, sizeof(m_cache_path), "%s/%s", path, I_FILE_CACHE) < sizeof(m_cache_path)) {
+		if((_u32)snprintf(m_cache_path, sizeof(m_cache_path), "%s/%s",
+				path, dir) < sizeof(m_cache_path)) {
 			if(!(r = mpi_fs->access(m_cache_path)))
 				r = mpi_fs->mk_dir(m_cache_path);
+		}
+
+		return r;
+	}
+
+	bool init(_cstr_t path) {
+		bool r = make_cache_dir(path, I_FILE_CACHE);
+
+		if(r) {
+			_char_t sbase[MAX_FCACHE_PATH]="";
+			_char_t saddr[32]="";
+
+			snprintf(sbase, sizeof(sbase), "%s", m_cache_path);
+			snprintf(saddr, sizeof(saddr), "%lu", (_ulong)this);
+			r = make_cache_dir(sbase, saddr);
 		}
 
 		return r;
