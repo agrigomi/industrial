@@ -90,20 +90,20 @@ public:
 			mpi_mutex->unlock(hlock);
 	}
 
-	void *add(void *key, _u32 sz_key, void *data, _u32 sz_data, HMUTEX hlock=0) {
+	void *add(const void *key, _u32 sz_key, const void *data, _u32 sz_data, HMUTEX hlock=0) {
 		void *r = 0;
 		HMUTEX hm = lock(hlock);
 
-		r = map_add(&map_cxt, key, sz_key, data, sz_data);
+		r = map_add(&map_cxt, (void *)key, sz_key, (void *)data, sz_data);
 		unlock(hm);
 
 		return r;
 	}
 
-	void del(void *key, _u32 sz_key, HMUTEX hlock=0) {
+	void del(const void *key, _u32 sz_key, HMUTEX hlock=0) {
 		HMUTEX hm = lock(hlock);
 
-		map_del(&map_cxt, key, sz_key);
+		map_del(&map_cxt, (void *)key, sz_key);
 		unlock(hm);
 	}
 
@@ -111,11 +111,11 @@ public:
 		return map_cxt.records;
 	}
 
-	void *get(void *key, _u32 sz_key, _u32 *sz_data, HMUTEX hlock=0) {
+	void *get(const void *key, _u32 sz_key, _u32 *sz_data, HMUTEX hlock=0) {
 		void *r = 0;
 		HMUTEX hm = lock(hlock);
 
-		r = map_get(&map_cxt, key, sz_key, sz_data);
+		r = map_get(&map_cxt, (void *)key, sz_key, sz_data);
 		unlock(hm);
 
 		return r;

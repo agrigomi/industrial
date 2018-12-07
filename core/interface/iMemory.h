@@ -35,10 +35,10 @@ public:
 	INTERFACE(iMap, I_MAP);
 	virtual HMUTEX lock(HMUTEX hlock=0)=0;
 	virtual void unlock(HMUTEX hlock)=0;
-	virtual void *add(void *key, _u32 sz_key, void *data, _u32 sz_data, HMUTEX hlock=0)=0;
-	virtual void del(void *key, _u32 sz_key, HMUTEX hlock=0)=0;
+	virtual void *add(const void *key, _u32 sz_key, const void *data, _u32 sz_data, HMUTEX hlock=0)=0;
+	virtual void del(const void *key, _u32 sz_key, HMUTEX hlock=0)=0;
 	virtual _u32 cnt(void)=0;
-	virtual void *get(void *key, _u32 sz_key, _u32 *sz_data, HMUTEX hlock=0)=0;
+	virtual void *get(const void *key, _u32 sz_key, _u32 *sz_data, HMUTEX hlock=0)=0;
 	virtual void clr(HMUTEX hlock=0)=0;
 	virtual _map_enum_t enum_open(void)=0;
 	virtual void enum_close(_map_enum_t en)=0;
