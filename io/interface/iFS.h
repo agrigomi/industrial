@@ -57,6 +57,7 @@ public:
 	virtual HFCACHE open(_cstr_t path)=0;
 	virtual void *ptr(HFCACHE hfc, _ulong *size)=0;
 	virtual void close(HFCACHE hfc)=0;
+	virtual void remove(HFCACHE hfc)=0;
 };
 
 class iFS: public iBase {

@@ -10,10 +10,11 @@ typedef struct { // file cache entry
 	iFileIO		*pi_fio; // file IO
 	std::mutex 	mutex;	// native mutex
 	_u32		refc; // reference counter
-	_uchar_t	sha_fname[SHA_DIGEST_LENGTH*2+1]; // sha1 of file path
+	_char_t		sha_fname[SHA_DIGEST_LENGTH*2+1]; // sha1 of file path
 	void		*ptr; // pointer to file content
 	_ulong		size; // file size
 	time_t		mtime; // last modification time of original file
+	bool		remove;
 }_fce_t;
 
 #define MAX_FCACHE_PATH	512
@@ -24,7 +25,7 @@ private:
 	iFS	*mpi_fs;
 	_char_t	m_cache_path[MAX_FCACHE_PATH];
 
-	void hash(_cstr_t path, _uchar_t sha_out[SHA_DIGEST_LENGTH*2+1]) {
+	void hash(_cstr_t path, _char_t sha_out[SHA_DIGEST_LENGTH*2+1]) {
 		SHA_CTX ctx;
 		_uchar_t hb[SHA_DIGEST_LENGTH];
 
@@ -39,10 +40,10 @@ private:
 	bool update_cache(_cstr_t path, _fce_t *pfce) {
 		bool r = false;
 
-		hash(path, pfce->sha_fname); // make cache file name
-
-		if(pfce->pi_fio)
+		if(pfce->pi_fio) {
 			mpi_fs->close(pfce->pi_fio);
+			pfce->pi_fio = NULL;
+		}
 
 		_char_t cache_path[MAX_FCACHE_PATH*2]="";
 
@@ -53,6 +54,7 @@ private:
 				pfce->ptr = pfce->pi_fio->map();
 				pfce->size = pfce->pi_fio->size();
 				pfce->mtime = mpi_fs->modify_time(path);
+				pfce->remove = false;
 				r = true;
 			}
 		}
@@ -68,12 +70,13 @@ private:
 		if(mpi_map) {
 			HMUTEX hm = mpi_map->lock();
 
-			if(!(r = (_fce_t *)mpi_map->get(path, strlen(path), &sz, hm))) {
-				// create new entry
-				fce.pi_fio = NULL;
+			fce.pi_fio = NULL;
+			hash(path, fce.sha_fname); // make cache file name
 
+			if(!(r = (_fce_t *)mpi_map->get(fce.sha_fname, strlen(fce.sha_fname), &sz, hm))) {
+				// create new entry
 				if(update_cache(path, &fce))
-					r = (_fce_t *)mpi_map->add(path, strlen(path), &fce, sizeof(_fce_t), hm);
+					r = (_fce_t *)mpi_map->add(fce.sha_fname, strlen(fce.sha_fname), &fce, sizeof(_fce_t), hm);
 			}
 
 			mpi_map->unlock(hm);
@@ -87,6 +90,23 @@ private:
 
 		snprintf(cache_path, sizeof(cache_path), "%s/%s", m_cache_path, pfce->sha_fname);
 		mpi_fs->remove(cache_path);
+	}
+
+	void remove_cache(_fce_t *pfce) {
+		if(pfce->remove && pfce->refc == 0) {
+			HMUTEX hm = mpi_map->lock();
+
+			pfce->mutex.lock();
+			if(pfce->pi_fio) {
+				mpi_fs->close(pfce->pi_fio);
+				pfce->pi_fio = NULL;
+			}
+			pfce->mutex.unlock();
+			mpi_map->del(pfce->sha_fname, strlen(pfce->sha_fname), hm);
+			remove_cache_file(pfce);
+
+			mpi_map->unlock(hm);
+		}
 	}
 
 	void close_cache(void) {
@@ -210,6 +230,14 @@ public:
 		if(pfce->refc)
 			pfce->refc--;
 		pfce->mutex.unlock();
+		remove_cache(pfce);
+	}
+
+	void remove(HFCACHE hfc) {
+		_fce_t *pfce = (_fce_t *)hfc;
+
+		pfce->remove = true;
+		remove_cache(pfce);
 	}
 };
 
