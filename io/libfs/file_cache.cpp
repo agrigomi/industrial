@@ -51,7 +51,7 @@ private:
 		if(mpi_fs->copy(path, (_cstr_t)cache_path)) {
 			if((pfce->pi_fio = mpi_fs->open(cache_path))) {
 				pfce->refc = 0;
-				pfce->ptr = pfce->pi_fio->map();
+				pfce->ptr = NULL;
 				pfce->size = pfce->pi_fio->size();
 				pfce->mtime = mpi_fs->modify_time(path);
 				pfce->remove = false;
@@ -100,6 +100,7 @@ private:
 			if(pfce->pi_fio) {
 				mpi_fs->close(pfce->pi_fio);
 				pfce->pi_fio = NULL;
+				pfce->ptr = NULL;
 			}
 			pfce->mutex.unlock();
 			mpi_map->del(pfce->sha_fname, strlen(pfce->sha_fname), hm);
@@ -118,8 +119,10 @@ private:
 			_fce_t *pfce = (_fce_t *)mpi_map->enum_first(me, &sz, hm);
 
 			while(pfce) {
-				if(pfce->pi_fio)
+				if(pfce->pi_fio) {
 					mpi_fs->close(pfce->pi_fio);
+					pfce->pi_fio = NULL;
+				}
 				pfce->ptr = NULL;
 				pfce->size = 0;
 				remove_cache_file(pfce);
@@ -216,8 +219,12 @@ public:
 		_fce_t *pfce = (_fce_t *)hfc;
 
 		pfce->mutex.lock();
-		*size = pfce->size;
-		r = pfce->ptr;
+		if(pfce->pi_fio) {
+			if(!pfce->ptr)
+				pfce->ptr = pfce->pi_fio->map();
+			*size = pfce->size;
+			r = pfce->ptr;
+		}
 		pfce->mutex.unlock();
 
 		return r;
@@ -229,6 +236,14 @@ public:
 		pfce->mutex.lock();
 		if(pfce->refc)
 			pfce->refc--;
+		if(!pfce->refc) {
+			if(pfce->pi_fio) {
+				if(pfce->ptr) {
+					pfce->pi_fio->unmap();
+					pfce->ptr = NULL;
+				}
+			}
+		}
 		pfce->mutex.unlock();
 		remove_cache(pfce);
 	}
