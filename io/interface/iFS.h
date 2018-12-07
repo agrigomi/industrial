@@ -12,6 +12,7 @@
 #define I_FILE_IO	"iFileIO"
 #define I_FS		"iFS"
 #define I_DIR		"iDir"
+#define I_FILE_CACHE	"iFileCache"
 
 // mapping protection flags
 #define MPF_EXEC	0x4
@@ -44,6 +45,18 @@ public:
 	INTERFACE(iDir, I_DIR);
 	virtual bool first(_str_t *fname, _u8 *type)=0;
 	virtual bool next(_str_t *fname, _u8 *type)=0;
+};
+
+#define HFCACHE	void*
+
+class iFileCache: public iBase {
+public:
+	INTERFACE(iFileCache, I_FILE_CACHE);
+	// Initialize cache with path to cache folder
+	virtual bool init(_cstr_t path)=0;
+	virtual HFCACHE open(_cstr_t path)=0;
+	virtual void *ptr(HFCACHE hfc, _ulong *size)=0;
+	virtual void close(HFCACHE hfc)=0;
 };
 
 class iFS: public iBase {

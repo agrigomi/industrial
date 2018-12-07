@@ -3,7 +3,7 @@
 #include "private.h"
 #include "startup.h"
 
-IMPLEMENT_BASE_ARRAY("fs", 3);
+IMPLEMENT_BASE_ARRAY("fs", 10);
 
 class cFS: public iFS {
 public:
@@ -92,9 +92,10 @@ public:
 		}
 	}
 
-	bool access(_cstr_t path, _u32 mode=F_OK) {bool r = false;
+	bool access(_cstr_t path, _u32 mode=F_OK) {
+		bool r = false;
 
-		if(access(path, mode) == 0)
+		if(::access(path, mode) == 0)
 			r = true;
 
 		return r;

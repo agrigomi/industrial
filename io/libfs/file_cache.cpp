@@ -1,0 +1,200 @@
+#include <stdio.h>
+#include <string.h>
+#include <openssl/sha.h>
+#include <mutex>
+#include "iFS.h"
+#include "iMemory.h"
+#include "iRepository.h"
+
+typedef struct { // file cache entry
+	iFileIO		*pi_fio; // file IO
+	std::mutex 	mutex;	// native mutex
+	_u32		refc; // reference counter
+	_uchar_t	sha_fname[SHA_DIGEST_LENGTH*2+1]; // sha1 of file path
+	void		*ptr; // pointer to file content
+	_ulong		size; // file size
+	time_t		mtime; // last modification time of original file
+}_fce_t;
+
+#define MAX_FCACHE_PATH	512
+
+class cFileCache: public iFileCache {
+private:
+	iMap	*mpi_map;
+	iFS	*mpi_fs;
+	_char_t	m_cache_path[MAX_FCACHE_PATH];
+
+	void hash(_cstr_t path, _uchar_t sha_out[SHA_DIGEST_LENGTH*2+1]) {
+		SHA_CTX ctx;
+		_uchar_t hb[SHA_DIGEST_LENGTH];
+
+		SHA1_Init(&ctx);
+		SHA1_Update(&ctx, path, strlen(path));
+		SHA1_Final(hb, &ctx);
+
+		for(_u32 i = 0, j = 0; i < SHA_DIGEST_LENGTH; i++)
+			j += sprintf((char *)(sha_out+j), "%02X", hb[i]);
+	}
+
+	bool update_cache(_cstr_t path, _fce_t *pfce) {
+		bool r = false;
+
+		hash(path, pfce->sha_fname); // make cache file name
+
+		if(pfce->pi_fio)
+			mpi_fs->close(pfce->pi_fio);
+
+		_char_t cache_path[MAX_FCACHE_PATH*2]="";
+
+		snprintf(cache_path, sizeof(cache_path), "%s/%s", m_cache_path, pfce->sha_fname);
+		if(mpi_fs->copy(path, (_cstr_t)cache_path)) {
+			if((pfce->pi_fio = mpi_fs->open(cache_path))) {
+				pfce->refc = 0;
+				pfce->ptr = pfce->pi_fio->map();
+				pfce->size = pfce->pi_fio->size();
+				pfce->mtime = mpi_fs->modify_time(path);
+				r = true;
+			}
+		}
+
+		return r;
+	}
+
+	_fce_t *add_to_map(_cstr_t path) {
+		_fce_t *r = 0;
+		_fce_t fce;
+		_u32 sz;
+
+		if(mpi_map) {
+			HMUTEX hm = mpi_map->lock();
+
+			if(!(r = (_fce_t *)mpi_map->get(path, strlen(path), &sz, hm))) {
+				// create new entry
+				fce.pi_fio = NULL;
+
+				if(update_cache(path, &fce))
+					r = (_fce_t *)mpi_map->add(path, strlen(path), &fce, sizeof(_fce_t), hm);
+			}
+
+			mpi_map->unlock(hm);
+		}
+
+		return r;
+	}
+
+	void remove_cache_file(_fce_t *pfce) {
+		_char_t cache_path[MAX_FCACHE_PATH*2]="";
+
+		snprintf(cache_path, sizeof(cache_path), "%s/%s", m_cache_path, pfce->sha_fname);
+		mpi_fs->remove(cache_path);
+	}
+
+	void close_cache(void) {
+		HMUTEX hm = mpi_map->lock();
+		_map_enum_t me = mpi_map->enum_open();
+
+		if(me) {
+			_u32 sz = 0;
+			_fce_t *pfce = (_fce_t *)mpi_map->enum_first(me, &sz, hm);
+
+			while(pfce) {
+				if(pfce->pi_fio)
+					mpi_fs->close(pfce->pi_fio);
+				pfce->ptr = NULL;
+				pfce->size = 0;
+				remove_cache_file(pfce);
+				pfce = (_fce_t *)mpi_map->enum_next(me, &sz, hm);
+			}
+
+			mpi_map->enum_close(me);
+		}
+
+		mpi_map->unlock(hm);
+	}
+
+public:
+	BASE(cFileCache, "cFileCache", RF_CLONE, 1,0,0);
+
+	bool object_ctl(_u32 cmd, void *arg, ...) {
+		bool r = false;
+
+		switch(cmd) {
+			case OCTL_INIT: {
+				iRepository *pi_repo = (iRepository *)arg;
+
+				mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
+				mpi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
+
+				if(mpi_map)
+					r = true;
+			} break;
+			case OCTL_UNINIT: {
+				iRepository *pi_repo = (iRepository *)arg;
+
+				close_cache();
+				pi_repo->object_release(mpi_map);
+				pi_repo->object_release(mpi_fs);
+				r = true;
+			} break;
+		}
+
+		return r;
+	}
+
+	bool init(_cstr_t path) {
+		bool r = false;
+
+		if((_u32)snprintf(m_cache_path, sizeof(m_cache_path), "%s/%s", path, I_FILE_CACHE) < sizeof(m_cache_path)) {
+			if(!(r = mpi_fs->access(m_cache_path)))
+				r = mpi_fs->mk_dir(m_cache_path);
+		}
+
+		return r;
+	}
+
+	HFCACHE open(_cstr_t path) {
+		HFCACHE r = 0;
+		time_t mtime = mpi_fs->modify_time(path);
+		_fce_t *pfce = add_to_map(path);
+		bool success = true;
+
+		if(pfce) {
+			pfce->mutex.lock();
+			if(mtime > pfce->mtime) {
+				if(pfce->refc == 0)
+					success = update_cache(path, pfce);
+			}
+
+			if(success) {
+				r = pfce;
+				pfce->refc++;
+			}
+			pfce->mutex.unlock();
+		}
+
+		return r;
+	}
+
+	void *ptr(HFCACHE hfc, _ulong *size) {
+		void *r = 0;
+		_fce_t *pfce = (_fce_t *)hfc;
+
+		pfce->mutex.lock();
+		*size = pfce->size;
+		r = pfce->ptr;
+		pfce->mutex.unlock();
+
+		return r;
+	}
+
+	void close(HFCACHE hfc) {
+		_fce_t *pfce = (_fce_t *)hfc;
+
+		pfce->mutex.lock();
+		if(pfce->refc)
+			pfce->refc--;
+		pfce->mutex.unlock();
+	}
+};
+
+static cFileCache _g_file_cache_;
