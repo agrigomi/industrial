@@ -43,7 +43,24 @@ _err_t main(int argc, char *argv[]) {
 		pi_repo->extension_load("extht.so");
 		pi_repo->extension_load("extfs.so");
 		pi_repo->extension_load("extnet.so");
+/*
+		iFileCache *pifsc = (iFileCache *)pi_repo->object_by_iname(I_FILE_CACHE, RF_CLONE);
+		if(pifsc) {
+			_ulong sz=0;
 
+			pifsc->init("/tmp");
+			HFCACHE h1 = pifsc->open("./LICENSE");
+			HFCACHE h2 = pifsc->open("README.md");
+
+			_str_t p1 = (_str_t)pifsc->ptr(h1, &sz);
+			fwrite(p1, sz, 1, stdout);
+
+			pifsc->close(h1);
+			pifsc->close(h2);
+
+			pi_repo->object_release(pifsc);
+		}
+*/
 		iNet *pi_net = dynamic_cast<iNet*>(pi_repo->object_by_iname(I_NET, RF_ORIGINAL));
 		if(pi_net) {
 			iHttpServer *pi_http = pi_net->create_http_server(8080);

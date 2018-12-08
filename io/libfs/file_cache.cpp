@@ -155,6 +155,7 @@ public:
 				iRepository *pi_repo = (iRepository *)arg;
 
 				close_cache();
+				mpi_fs->rm_dir(m_cache_path);
 				pi_repo->object_release(mpi_map);
 				pi_repo->object_release(mpi_fs);
 				r = true;

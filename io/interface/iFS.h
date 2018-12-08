@@ -68,6 +68,7 @@ public:
 	virtual void close(iFileIO *)=0;
 	virtual iDir *open_dir(_cstr_t path)=0;
 	virtual bool mk_dir(_cstr_t path, _u32 mode=S_IRWXU)=0;
+	virtual bool rm_dir(_cstr_t path)=0;
 	virtual void close_dir(iDir *)=0;
 	virtual bool access(_cstr_t path, _u32 mode=F_OK)=0;
 	virtual mode_t mode(_cstr_t path)=0;

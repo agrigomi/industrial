@@ -84,6 +84,10 @@ public:
 		return (mkdir(path, mode) == 0) ? true : false;
 	}
 
+	bool rm_dir(_cstr_t path) {
+		return (rmdir(path) == 0) ? true : false;
+	}
+
 	void close_dir(iDir *pi) {
 		cDir *pc_dir = dynamic_cast<cDir*>(pi);
 		if(pc_dir) {
