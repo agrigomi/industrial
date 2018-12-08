@@ -1,3 +1,4 @@
+#include <string.h>
 #include "iHttpHost.h"
 #include "iRepository.h"
 #include "iNet.h"
@@ -9,7 +10,6 @@
 class cHttpHost: public iHttpHost {
 private:
 	iNet		*mpi_net;
-	iHttpServer	*mpi_http;
 	iFileCache	*mpi_fcache;
 	iLog		*mpi_log;
 	//...
@@ -32,7 +32,6 @@ public:
 
 				mpi_net = NULL;
 				mpi_fcache = NULL;
-				mpi_http = NULL;
 
 				pi_repo->monitoring_add(NULL, I_NET, NULL, this);
 				pi_repo->monitoring_add(NULL, I_FS, NULL, this);
@@ -44,7 +43,6 @@ public:
 			case OCTL_UNINIT: {
 				iRepository *pi_repo = (iRepository *)arg;
 
-				release_object(pi_repo, (iBase **)&mpi_http);
 				release_object(pi_repo, (iBase **)&mpi_net);
 				release_object(pi_repo, (iBase **)&mpi_fcache);
 				release_object(pi_repo, (iBase **)&mpi_log);
