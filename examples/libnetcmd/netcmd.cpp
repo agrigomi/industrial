@@ -173,7 +173,7 @@ public:
 								_u32 len = p_cnt->pi_io->read(buffer, sizeof(buffer));
 
 								if(len) {
-									if(mpi_cmd_host) {
+									if(mpi_cmd_host && len > 1) {
 										// needed to unlock
 										mpi_list->unlock(hml);
 										mpi_mutex->unlock(hm);
