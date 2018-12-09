@@ -102,7 +102,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_oheader_sent = 0;
 			m_content_sent = 0;
 			m_header_len = 0;
-			m_udata = 0;
+			memset(m_udata, 0, sizeof(m_udata));
 			mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
 			mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
 			if(mpi_str && mpi_map)

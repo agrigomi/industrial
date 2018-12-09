@@ -104,9 +104,9 @@ public:
 	// get peer IP in integer format
 	virtual _u32 peer_ip(void)=0;
 	// set user data
-	virtual void set_udata(_ulong)=0;
+	virtual void set_udata(_ulong, _u8 index=0)=0;
 	// get user data
-	virtual _ulong get_udata(void)=0;
+	virtual _ulong get_udata(_u8 index=0)=0;
 	// get request method
 	virtual _u8 req_method(void)=0;
 	// retuen request URI

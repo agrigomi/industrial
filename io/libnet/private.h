@@ -72,6 +72,8 @@ public:
 	void close(iSocketIO *p_io);
 };
 
+#define HTTPC_MAX_UDATA_INDEX	8
+
 class cHttpConnection: public iHttpConnection {
 private:
 	cSocketIO	*mp_sio;
@@ -93,7 +95,7 @@ private:
 	_u16		m_error_code;
 	_u16		m_response_code;
 	_u16		m_state;
-	_ulong		m_udata;
+	_ulong		m_udata[HTTPC_MAX_UDATA_INDEX];
 
 	_cstr_t get_rc_text(_u16 rc);
 	bool complete_req_header(void);
@@ -119,11 +121,16 @@ public:
 	}
 	_u32 peer_ip(void);
 	bool peer_ip(_str_t strip, _u32 len);
-	void set_udata(_ulong udata) {
-		m_udata = udata;
+	void set_udata(_ulong udata, _u8 index=0) {
+		if(index < HTTPC_MAX_UDATA_INDEX)
+			m_udata[index] = udata;
 	}
-	_ulong get_udata(void) {
-		return m_udata;
+	_ulong get_udata(_u8 index=0) {
+		_ulong r = 0;
+
+		if(index < HTTPC_MAX_UDATA_INDEX)
+			r = m_udata[index];
+		return r;
 	}
 	// get request method
 	_u8 req_method(void);
