@@ -152,6 +152,14 @@ public:
 	}
 	// set Content-Length variable
 	bool res_content_len(_u32 content_len);
+	// return content len of response
+	_u32 res_content_len(void) {
+		return m_res_content_len;
+	}
+	// return nimber of sent bytes for response content
+	_u32 res_content_sent(void) {
+		return m_content_sent;
+	}
 	// returns the content length of  request
 	_u32 req_content_len(void) {
 		return m_req_content_len;

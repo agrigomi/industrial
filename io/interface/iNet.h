@@ -123,6 +123,10 @@ public:
 	virtual void res_code(_u16 httprc)=0;
 	// set Content-Length variable
 	virtual bool res_content_len(_u32 content_len)=0;
+	// return content len of response
+	virtual _u32 res_content_len(void)=0;
+	// return nimber of sent bytes for response content
+	virtual _u32 res_content_sent(void)=0;
 	// returns the content length of  request
 	virtual _u32 req_content_len(void)=0;
 	// return remainder pard of response data in bytes (ContentLength - Sent)
