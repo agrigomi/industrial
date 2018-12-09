@@ -4,6 +4,7 @@
 #include "iNet.h"
 #include "iFS.h"
 #include "iLog.h"
+#include "iMemory.h"
 
 #define DEFAULT_HTTP_PORT	8080
 
@@ -12,7 +13,7 @@ private:
 	iNet		*mpi_net;
 	iFileCache	*mpi_fcache;
 	iLog		*mpi_log;
-	//...
+	iMap		*mpi_map;
 
 	void release_object(iRepository *pi_repo, iBase **pp_obj) {
 		if(*pp_obj) {
@@ -37,7 +38,8 @@ public:
 				pi_repo->monitoring_add(NULL, I_FS, NULL, this);
 
 				mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
-				if(mpi_log)
+				mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
+				if(mpi_log && mpi_map)
 					r = true;
 			} break;
 			case OCTL_UNINIT: {
@@ -45,6 +47,7 @@ public:
 
 				release_object(pi_repo, (iBase **)&mpi_net);
 				release_object(pi_repo, (iBase **)&mpi_fcache);
+				release_object(pi_repo, (iBase **)&mpi_map);
 				release_object(pi_repo, (iBase **)&mpi_log);
 				r = true;
 			} break;
@@ -63,6 +66,16 @@ public:
 					}
 				}
 			} break;
+		}
+
+		return r;
+	}
+
+	bool create_http_server(_cstr_t name, _u32 port, _cstr_t doc_root) {
+		bool r = false;
+
+		if(mpi_net) {
+			//...
 		}
 
 		return r;
