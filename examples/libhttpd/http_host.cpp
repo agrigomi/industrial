@@ -7,6 +7,15 @@
 #include "iMemory.h"
 
 #define DEFAULT_HTTP_PORT	8080
+#define MAX_SERVER_NAME		32
+#define MAX_DOC_ROOT		256
+
+typedef struct { // server record
+	_char_t		name[MAX_SERVER_NAME];
+	_u32		port;
+	_char_t		doc_root[MAX_DOC_ROOT];
+	iHttpServer	*pi_http_server;
+}_server_t;
 
 class cHttpHost: public iHttpHost {
 private:
