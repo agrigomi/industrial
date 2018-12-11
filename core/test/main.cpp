@@ -63,7 +63,7 @@ _err_t main(int argc, char *argv[]) {
 */
 		iNet *pi_net = dynamic_cast<iNet*>(pi_repo->object_by_iname(I_NET, RF_ORIGINAL));
 		if(pi_net) {
-			iHttpServer *pi_http = pi_net->create_http_server(8080);
+			iHttpServer *pi_http = pi_net->create_http_server(8081);
 			if(pi_http) {
 				pi_http->on_event(HTTP_ON_OPEN, [](iHttpConnection *pi_httpc, void *udata) {
 					printf(">>> on_open: %p\n", pi_httpc);
@@ -73,10 +73,10 @@ _err_t main(int argc, char *argv[]) {
 					pi_httpc->res_var("var1", "alabala");
 
 					if(method == HTTP_METHOD_GET) {
-						printf(">>> on_request(GET '%s') %p\n", pi_httpc->req_uri(), pi_httpc);
+						printf(">>> on_request(GET '%s') %p\n", pi_httpc->req_url(), pi_httpc);
 						printf("User-Agent: '%s'\n", pi_httpc->req_var("User-Agent"));
 
-						if(strcmp(pi_httpc->req_uri(), "/home") == 0) {
+						if(strcmp(pi_httpc->req_url(), "/home") == 0) {
 							pi_httpc->res_code(HTTPRC_OK);
 							pi_httpc->res_content_len(strlen(g_body));
 							pi_httpc->res_write((_u8 *)g_body, strlen(g_body));
@@ -89,7 +89,7 @@ _err_t main(int argc, char *argv[]) {
 					} else if(method == HTTP_METHOD_POST) {
 						_u32 sz = 0;
 						_str_t ptr = (_str_t)pi_httpc->req_data(&sz);
-						printf(">>> on_request(POST '%s' [%u bytes]) %p\n", pi_httpc->req_uri(), sz, pi_httpc);
+						printf(">>> on_request(POST '%s' [%u bytes]) %p\n", pi_httpc->req_url(), sz, pi_httpc);
 						if(sz)
 							fwrite(ptr, sz, 1, stdout);
 

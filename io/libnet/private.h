@@ -103,7 +103,7 @@ private:
 	bool parse_req_header(void);
 	_u32 parse_request_line(_str_t req, _u32 sz_max);
 	_u32 parse_var_line(_str_t var, _u32 sz_max);
-	_u32 parse_uri(_str_t uri, _u32 sz_max);
+	_u32 parse_url(_str_t url, _u32 sz_max);
 	_u32 receive(void);
 	void clear_ibuffer(void);
 	_u32 send_header(void);
@@ -136,7 +136,7 @@ public:
 	// get request method
 	_u8 req_method(void);
 	// retuen request URI
-	_str_t req_uri(void);
+	_str_t req_url(void);
 	// get request variable
 	_str_t req_var(_cstr_t name);
 	// get request data

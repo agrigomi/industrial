@@ -110,7 +110,7 @@ public:
 	// get request method
 	virtual _u8 req_method(void)=0;
 	// retuen request URI
-	virtual _str_t req_uri(void)=0;
+	virtual _str_t req_url(void)=0;
 	// get request variable
 	virtual _str_t req_var(_cstr_t name)=0;
 	// get request data

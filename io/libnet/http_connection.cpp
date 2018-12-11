@@ -80,7 +80,7 @@ static _http_method_map _g_method_map[] = {
 };
 
 #define VAR_REQ_METHOD		(_str_t)"req-Method"
-#define VAR_REQ_URI		(_str_t)"req-URI"
+#define VAR_REQ_URL		(_str_t)"req-URL"
 #define VAR_REQ_PROTOCOL	(_str_t)"req-Protocol"
 
 bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
@@ -252,17 +252,17 @@ bool cHttpConnection::add_req_variable(_str_t name, _str_t value, _u32 sz_value)
 	return r;
 }
 
-_u32 cHttpConnection::parse_uri(_str_t uri, _u32 sz_max) {
+_u32 cHttpConnection::parse_url(_str_t url, _u32 sz_max) {
 	_u32 r = 0;
-	HBUFFER hburi = mpi_bmap->alloc();
+	HBUFFER hburl = mpi_bmap->alloc();
 
-	if(hburi) {
-		_str_t decoded = (_str_t)mpi_bmap->ptr(hburi);
-		_u32 sz_decoded = UrlDecode((_cstr_t)uri, decoded, mpi_bmap->size());
+	if(hburl) {
+		_str_t decoded = (_str_t)mpi_bmap->ptr(hburl);
+		_u32 sz_decoded = UrlDecode((_cstr_t)url, decoded, mpi_bmap->size());
 
 		//...
 
-		mpi_bmap->free(hburi);
+		mpi_bmap->free(hburl);
 	}
 
 	return r;
@@ -309,7 +309,7 @@ _u32 cHttpConnection::parse_request_line(_str_t req, _u32 sz_max) {
 	if(fld[0] && fld_sz[0] && fld_sz[0] < sz_max)
 		add_req_variable(VAR_REQ_METHOD, fld[0], fld_sz[0]);
 	if(fld[1] && fld_sz[1] && fld_sz[1] < sz_max)
-		parse_uri(fld[1], fld_sz[1]);
+		parse_url(fld[1], fld_sz[1]);
 	if(fld[2] && fld_sz[2] && fld_sz[2] < sz_max)
 		add_req_variable(VAR_REQ_PROTOCOL, fld[2], fld_sz[2]);
 
@@ -606,8 +606,8 @@ _u8 cHttpConnection::req_method(void) {
 	return r;
 }
 
-_str_t cHttpConnection::req_uri(void) {
-	return req_var(VAR_REQ_URI);
+_str_t cHttpConnection::req_url(void) {
+	return req_var(VAR_REQ_URL);
 }
 
 _str_t cHttpConnection::req_var(_cstr_t name) {

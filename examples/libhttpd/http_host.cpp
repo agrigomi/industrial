@@ -38,11 +38,11 @@ private:
 		p_srv->pi_http_server->on_event(HTTP_ON_REQUEST, [](iHttpConnection *pi_httpc, void *udata) {
 			_server_t *p_srv = (_server_t *)udata;
 			_u8 method = pi_httpc->req_method();
-			_str_t uri = pi_httpc->req_uri();
+			_str_t url = pi_httpc->req_url();
 			_char_t doc[1024]="";
 
-			if((strlen(uri) + strlen(p_srv->doc_root) < sizeof(doc)-1)) {
-				snprintf(doc, sizeof(doc), "%s/%s", p_srv->doc_root, uri);
+			if((strlen(url) + strlen(p_srv->doc_root) < sizeof(doc)-1)) {
+				snprintf(doc, sizeof(doc), "%s/%s", p_srv->doc_root, url);
 
 				if(method == HTTP_METHOD_GET) {
 					if(p_srv->p_http_host->mpi_fcache) {
