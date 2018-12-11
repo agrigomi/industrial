@@ -1,6 +1,7 @@
 #include <string.h>
 #include "private.h"
 #include "time.h"
+#include "url-codec.h"
 
 // http connection status
 enum httpc_state {
@@ -78,9 +79,9 @@ static _http_method_map _g_method_map[] = {
 	{0,			NULL}
 };
 
-#define VAR_REQ_METHOD		(_str_t)"Method"
-#define VAR_REQ_URI		(_str_t)"URI"
-#define VAR_REQ_PROTOCOL	(_str_t)"Protocol"
+#define VAR_REQ_METHOD		(_str_t)"req-Method"
+#define VAR_REQ_URI		(_str_t)"req-URI"
+#define VAR_REQ_PROTOCOL	(_str_t)"req-Protocol"
 
 bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
@@ -251,6 +252,22 @@ bool cHttpConnection::add_req_variable(_str_t name, _str_t value, _u32 sz_value)
 	return r;
 }
 
+_u32 cHttpConnection::parse_uri(_str_t uri, _u32 sz_max) {
+	_u32 r = 0;
+	HBUFFER hburi = mpi_bmap->alloc();
+
+	if(hburi) {
+		_str_t decoded = (_str_t)mpi_bmap->ptr(hburi);
+		_u32 sz_decoded = UrlDecode((_cstr_t)uri, decoded, mpi_bmap->size());
+
+		//...
+
+		mpi_bmap->free(hburi);
+	}
+
+	return r;
+}
+
 _u32 cHttpConnection::parse_request_line(_str_t req, _u32 sz_max) {
 	_u32 r = 0;
 	_char_t c = 0;
@@ -292,7 +309,7 @@ _u32 cHttpConnection::parse_request_line(_str_t req, _u32 sz_max) {
 	if(fld[0] && fld_sz[0] && fld_sz[0] < sz_max)
 		add_req_variable(VAR_REQ_METHOD, fld[0], fld_sz[0]);
 	if(fld[1] && fld_sz[1] && fld_sz[1] < sz_max)
-		add_req_variable(VAR_REQ_URI, fld[1], fld_sz[1]);
+		parse_uri(fld[1], fld_sz[1]);
 	if(fld[2] && fld_sz[2] && fld_sz[2] < sz_max)
 		add_req_variable(VAR_REQ_PROTOCOL, fld[2], fld_sz[2]);
 

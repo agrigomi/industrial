@@ -103,6 +103,7 @@ private:
 	bool parse_req_header(void);
 	_u32 parse_request_line(_str_t req, _u32 sz_max);
 	_u32 parse_var_line(_str_t var, _u32 sz_max);
+	_u32 parse_uri(_str_t uri, _u32 sz_max);
 	_u32 receive(void);
 	void clear_ibuffer(void);
 	_u32 send_header(void);
