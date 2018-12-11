@@ -27,7 +27,7 @@
 #include "url-codec.h"
 
 // application/x-www-form-urlencoded content type requires space encoded into '+':
-# define SPACE_TO_PLUS
+//# define SPACE_TO_PLUS
 
 using namespace std;
 
