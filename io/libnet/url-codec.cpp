@@ -13,6 +13,10 @@
  * Author:    Yassen Damyanov
  * Created:   2012-11-13
  * Changelog: See bottom of file
+ *
+ * Author:    Mihail Grigorov
+ * Changed:   2018-12-11
+ * ChangeLog: MG, 2018-12-11 Adds additional parameter (srclen) 
  */
 
 #include <string.h>
@@ -81,9 +85,9 @@ inline int hex_digit_order(char ch) {
  * returned. If src is not correctly encoded,  URL_DECODE_ERR macro is
  *  returned.
  */
-size_t UrlDecode(const char* src, char* dest, size_t dstlen) {
+size_t UrlDecode(const char* src, size_t srclen, char* dest, size_t dstlen) {
 	size_t i, di = 0;
-	for (i = 0; src[i]; i++) {
+	for (i = 0; src[i] && i < srclen; i++) {
 		if (di +1 > dstlen)  return 0;	// dest not big enough
 		char ch = src[i];
 		int high, low;
@@ -122,9 +126,9 @@ size_t UrlDecode(const char* src, char* dest, size_t dstlen) {
  * not long enough to cope with the whole encode-resulting string, 0 is
  * returned.
  */
-size_t UrlEncode(const char* src, char* dst, size_t dlen) {
+size_t UrlEncode(const char* src, size_t srclen, char* dst, size_t dlen) {
 	size_t i, di = 0;
-	for (i = 0; src[i]; i++) {
+	for (i = 0; src[i] && i < srclen; i++) {
 		char ch = src[i];
 		if (is_unsafe(ch)) {
 			if (di +3 > dlen)  return 0;	// dst not long enough
