@@ -258,9 +258,28 @@ _u32 cHttpConnection::parse_url(_str_t url, _u32 sz_max) {
 
 	if(hburl) {
 		_str_t decoded = (_str_t)mpi_bmap->ptr(hburl);
-		_u32 sz_decoded = UrlDecode((_cstr_t)url, decoded, mpi_bmap->size());
+		_u32 sz_decoded = UrlDecode((_cstr_t)url, sz_max, decoded, mpi_bmap->size());
+		_u32 i = 0; // buffer index
+		_u32 sz = 0; // common size of URL or variable (name=value)
+		_str_t name = NULL, value = NULL;
+		_u32 sz_name = 0, sz_value = 0;
 
-		//...
+		// determine URL part
+		for(; i < sz_decoded; i++) {
+			if(*(decoded + i) == '?')
+				break;
+			sz++;
+		}
+
+		add_req_variable(VAR_REQ_URL, decoded, sz);
+
+		if(i < sz_decoded) {
+			// parse variables
+			sz = 0;
+			for(i++ /* skip '?' */; i < sz_decoded; i++) {
+				//...
+			}
+		}
 
 		mpi_bmap->free(hburl);
 	}
