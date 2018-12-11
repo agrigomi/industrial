@@ -99,7 +99,7 @@ private:
 
 	_cstr_t get_rc_text(_u16 rc);
 	bool complete_req_header(void);
-	bool add_req_variable(_str_t name, _str_t value, _u32 sz_value=0);
+	bool add_req_variable(_cstr_t name, _cstr_t value, _u32 sz_value=0);
 	bool parse_req_header(void);
 	_u32 parse_request_line(_str_t req, _u32 sz_max);
 	_u32 parse_var_line(_str_t var, _u32 sz_max);
@@ -136,9 +136,11 @@ public:
 	// get request method
 	_u8 req_method(void);
 	// retuen request URI
-	_str_t req_url(void);
+	_cstr_t req_url(void);
+	// return request URN
+	_cstr_t req_urn(void);
 	// get request variable
-	_str_t req_var(_cstr_t name);
+	_cstr_t req_var(_cstr_t name);
 	// get request data
 	_u8 *req_data(_u32 *size);
 	// set variable in response header

@@ -79,9 +79,10 @@ static _http_method_map _g_method_map[] = {
 	{0,			NULL}
 };
 
-#define VAR_REQ_METHOD		(_str_t)"req-Method"
-#define VAR_REQ_URL		(_str_t)"req-URL"
-#define VAR_REQ_PROTOCOL	(_str_t)"req-Protocol"
+#define VAR_REQ_METHOD		"req-Method"
+#define VAR_REQ_URL		"req-URL"
+#define VAR_REQ_URN		"req-URN"
+#define VAR_REQ_PROTOCOL	"req-Protocol"
 
 bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
@@ -241,7 +242,7 @@ bool cHttpConnection::complete_req_header(void) {
 	return r;
 }
 
-bool cHttpConnection::add_req_variable(_str_t name, _str_t value, _u32 sz_value) {
+bool cHttpConnection::add_req_variable(_cstr_t name, _cstr_t value, _u32 sz_value) {
 	bool r = false;
 
 	if(mpi_map->add(name, mpi_str->str_len(name),
@@ -276,7 +277,11 @@ _u32 cHttpConnection::parse_url(_str_t url, _u32 sz_max) {
 		if(i < sz_decoded) {
 			// parse variables
 			sz = 0;
-			for(i++ /* skip '?' */; i < sz_decoded; i++) {
+			i++; // skip '?'a
+
+			add_req_variable(VAR_REQ_URN, decoded + i, sz_decoded - i);
+
+			for(; i < sz_decoded; i++) {
 				//...
 			}
 		}
@@ -412,7 +417,7 @@ bool cHttpConnection::parse_req_header(void) {
 
 				m_header_len = 0;
 
-				_str_t cl = req_var("Content-Length");
+				_cstr_t cl = req_var("Content-Length");
 				if(cl)
 					m_req_content_len = atoi(cl);
 				m_req_content_rcv = m_ibuffer_offset;
@@ -607,7 +612,7 @@ _u32 cHttpConnection::res_write(_u8 *data, _u32 size) {
 
 _u8 cHttpConnection::req_method(void) {
 	_u8 r = 0;
-	_str_t sm = req_var(VAR_REQ_METHOD);
+	_cstr_t sm = req_var(VAR_REQ_METHOD);
 
 	if(sm) {
 		_u32 n = 0;
@@ -625,11 +630,15 @@ _u8 cHttpConnection::req_method(void) {
 	return r;
 }
 
-_str_t cHttpConnection::req_url(void) {
+_cstr_t cHttpConnection::req_url(void) {
 	return req_var(VAR_REQ_URL);
 }
 
-_str_t cHttpConnection::req_var(_cstr_t name) {
+_cstr_t cHttpConnection::req_urn(void) {
+	return req_var(VAR_REQ_URN);
+}
+
+_cstr_t cHttpConnection::req_var(_cstr_t name) {
 	_u32 sz = 0;
 	_str_t vn = (_str_t)name;
 	return (_str_t)mpi_map->get(vn, strlen(vn), &sz);
