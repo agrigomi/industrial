@@ -109,7 +109,7 @@ public:
 	virtual _ulong get_udata(_u8 index=0)=0;
 	// get request method
 	virtual _u8 req_method(void)=0;
-	// retuen request URI
+	// retuen request URL
 	virtual _cstr_t req_url(void)=0;
 	// return request URN
 	virtual _cstr_t req_urn(void)=0;

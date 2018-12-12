@@ -277,13 +277,36 @@ _u32 cHttpConnection::parse_url(_str_t url, _u32 sz_max) {
 		if(i < sz_decoded) {
 			// parse variables
 			sz = 0;
-			i++; // skip '?'a
+			i++; // skip '?'
 
 			add_req_variable(VAR_REQ_URN, decoded + i, sz_decoded - i);
 
 			for(; i < sz_decoded; i++) {
-				//...
+				switch(*(decoded + i)) {
+					case '=': // end of name
+						value = decoded + i + 1;
+						break;
+					case '&': // end of variable
+						if(name && sz_name && value && sz_value)
+							mpi_map->add(name, sz_name, value, sz_value);
+						name = value = NULL;
+						sz_name = sz_value = 0;
+						break;
+					default:
+						if(value)
+							sz_value++;
+						else if(name)
+							sz_name++;
+						else {
+							name = decoded + i;
+							sz_name = 1;
+						}
+						break;
+				}
 			}
+
+			if(name && sz_name && value && sz_value)
+				mpi_map->add(name, sz_name, value, sz_value);
 		}
 
 		mpi_bmap->free(hburl);

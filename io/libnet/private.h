@@ -135,7 +135,7 @@ public:
 	}
 	// get request method
 	_u8 req_method(void);
-	// retuen request URI
+	// retuen request URL
 	_cstr_t req_url(void);
 	// return request URN
 	_cstr_t req_urn(void);
