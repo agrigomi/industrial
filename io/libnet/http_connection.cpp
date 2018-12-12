@@ -80,6 +80,8 @@ static _http_method_map _g_method_map[] = {
 };
 
 #define VAR_REQ_METHOD		"req-Method"
+#define VAR_REQ_HEADER		"req-Header"
+#define VAR_REQ_URI		"req-URI"
 #define VAR_REQ_URL		"req-URL"
 #define VAR_REQ_URN		"req-URN"
 #define VAR_REQ_PROTOCOL	"req-Protocol"
@@ -233,6 +235,7 @@ bool cHttpConnection::complete_req_header(void) {
 			// !!! dangerous !!!
 			if((hl = mpi_str->nfind_string(ptr, sz, "\r\n\r\n")) != -1) {
 				r = true;
+				add_req_variable(VAR_REQ_HEADER, ptr, hl);
 				m_header_len = hl + 4;
 			} else
 				m_header_len = 0;
@@ -264,6 +267,8 @@ _u32 cHttpConnection::parse_url(_str_t url, _u32 sz_max) {
 		_u32 sz = 0; // common size of URL or variable (name=value)
 		_str_t name = NULL, value = NULL;
 		_u32 sz_name = 0, sz_value = 0;
+
+		add_req_variable(VAR_REQ_URI, decoded, sz_decoded);
 
 		// determine URL part
 		for(; i < sz_decoded; i++) {
@@ -651,6 +656,14 @@ _u8 cHttpConnection::req_method(void) {
 	}
 
 	return r;
+}
+
+_cstr_t cHttpConnection::req_header(void) {
+	return req_var(VAR_REQ_HEADER);
+}
+
+_cstr_t cHttpConnection::req_uri(void) {
+	return req_var(VAR_REQ_URI);
 }
 
 _cstr_t cHttpConnection::req_url(void) {
