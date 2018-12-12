@@ -42,15 +42,31 @@ private:
 			_char_t doc[1024]="";
 
 			if((strlen(url) + strlen(p_srv->doc_root) < sizeof(doc)-1)) {
-				snprintf(doc, sizeof(doc), "%s/%s", p_srv->doc_root, url);
+				snprintf(doc, sizeof(doc), "%s%s",
+					p_srv->doc_root,
+					(strcmp(url, "/") == 0) ? "/index.html" : url);
 
 				if(method == HTTP_METHOD_GET) {
 					if(p_srv->p_http_host->mpi_fcache) {
-						//...
+						HFCACHE fc = p_srv->p_http_host->mpi_fcache->open(doc);
+						if(fc) {
+							_ulong sz = 0;
+
+							_u8 *ptr = (_u8 *)p_srv->p_http_host->mpi_fcache->ptr(fc, &sz);
+							if(ptr) {
+								pi_httpc->res_content_len(sz);
+								pi_httpc->res_code(HTTPRC_OK);
+								pi_httpc->set_udata((_ulong)fc);
+								pi_httpc->res_write(ptr, sz);
+							} else
+								pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
+						} else
+							pi_httpc->res_code(HTTPRC_NOT_FOUND);
 					} else
 						pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
 				} else if(method == HTTP_METHOD_POST) {
-					//...
+					//... Not Implemented !
+					pi_httpc->res_code(HTTPRC_NOT_IMPLEMENTED);
 				} else
 					pi_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
 			} else
@@ -62,7 +78,15 @@ private:
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpConnection *pi_httpc, void *udata) {
-			//...
+			_server_t *p_srv = (_server_t *)udata;
+			HFCACHE fc = (HFCACHE)pi_httpc->get_udata();
+			_ulong sz = 0;
+
+			if(fc) {
+				_u8 *ptr = (_u8 *)p_srv->p_http_host->mpi_fcache->ptr(fc, &sz);
+
+				pi_httpc->res_write(ptr + pi_httpc->res_content_sent(), pi_httpc->res_remainder());
+			}
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_ERROR, [](iHttpConnection *pi_httpc, void *udata) {
@@ -70,7 +94,11 @@ private:
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_CLOSE, [](iHttpConnection *pi_httpc, void *udata) {
-			//...
+			_server_t *p_srv = (_server_t *)udata;
+			HFCACHE fc = (HFCACHE)pi_httpc->get_udata();
+
+			if(fc)
+				p_srv->p_http_host->mpi_fcache->close(fc);
 		}, p_srv);
 	}
 
