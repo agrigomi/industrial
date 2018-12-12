@@ -40,6 +40,7 @@ private:
 			_u8 method = pi_httpc->req_method();
 			_cstr_t url = pi_httpc->req_url();
 			_char_t doc[1024]="";
+			iLog *pi_log = p_srv->p_http_host->mpi_log;
 
 			if((strlen(url) + strlen(p_srv->doc_root) < sizeof(doc)-1)) {
 				snprintf(doc, sizeof(doc), "%s%s",
@@ -47,6 +48,7 @@ private:
 					(strcmp(url, "/") == 0) ? "/index.html" : url);
 
 				if(method == HTTP_METHOD_GET) {
+					pi_log->fwrite(LMT_INFO, ">>> on_request(GET '%s') %p", doc, pi_httpc);
 					if(p_srv->p_http_host->mpi_fcache) {
 						HFCACHE fc = p_srv->p_http_host->mpi_fcache->open(doc);
 						if(fc) {
@@ -84,8 +86,9 @@ private:
 
 			if(fc) {
 				_u8 *ptr = (_u8 *)p_srv->p_http_host->mpi_fcache->ptr(fc, &sz);
-
-				pi_httpc->res_write(ptr + pi_httpc->res_content_sent(), pi_httpc->res_remainder());
+				_u32 res_sent = pi_httpc->res_content_sent();
+				_u32 res_remainder = pi_httpc->res_remainder();
+				pi_httpc->res_write(ptr + res_sent, res_remainder);
 			}
 		}, p_srv);
 
@@ -96,7 +99,9 @@ private:
 		p_srv->pi_http_server->on_event(HTTP_ON_CLOSE, [](iHttpConnection *pi_httpc, void *udata) {
 			_server_t *p_srv = (_server_t *)udata;
 			HFCACHE fc = (HFCACHE)pi_httpc->get_udata();
+			iLog *pi_log = p_srv->p_http_host->mpi_log;
 
+			pi_log->fwrite(LMT_INFO, ">>> on_close %p", pi_httpc);
 			if(fc)
 				p_srv->p_http_host->mpi_fcache->close(fc);
 		}, p_srv);
@@ -179,18 +184,18 @@ public:
 					pn->object->object_info(&oi);
 
 					if(pn->flags & NF_INIT) { // catch
-						if(strcmp(oi.iname, "I_NET") == 0)
+						if(strcmp(oi.iname, I_NET) == 0)
 							mpi_net = (iNet *)pn->object;
-						else if(strcmp(oi.iname, "I_FS") == 0) {
+						else if(strcmp(oi.iname, I_FS) == 0) {
 							mpi_fs = (iFS *)pn->object;
 							if((mpi_fcache = (iFileCache *)_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE)))
 								mpi_fcache->init("/tmp");
 						}
 					} else if(pn->flags & (NF_UNINIT | NF_REMOVE)) { // release
-						if(strcmp(oi.iname, "I_NET") == 0) {
+						if(strcmp(oi.iname, I_NET) == 0) {
 							stop_host();
 							release_object(_gpi_repo_, (iBase **)&mpi_net);
-						} else if(strcmp(oi.iname, "I_FS") == 0) {
+						} else if(strcmp(oi.iname, I_FS) == 0) {
 							stop_host();
 							release_object(_gpi_repo_, (iBase **)&mpi_fcache);
 							release_object(_gpi_repo_, (iBase **)&mpi_fs);
