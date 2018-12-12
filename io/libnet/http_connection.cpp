@@ -457,7 +457,12 @@ bool cHttpConnection::parse_req_header(void) {
 }
 
 _u32 cHttpConnection::res_remainder(void) {
-	return m_res_content_len - (m_content_sent < m_res_content_len) ? m_content_sent : m_res_content_len;
+	_u32 r = 0;
+
+	if(m_content_sent < m_res_content_len)
+		r = m_res_content_len - m_content_sent;
+
+	return r;
 }
 
 void cHttpConnection::clear_ibuffer(void) {
