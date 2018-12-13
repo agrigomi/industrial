@@ -66,19 +66,29 @@ private:
 						} else {
 							pi_httpc->res_code(HTTPRC_NOT_FOUND);
 							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found", p_srv->name, doc);
+							pi_log->write(LMT_TEXT, pi_httpc->req_header());
 						}
 					} else
 						pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
 				} else {
 					pi_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
 					pi_log->fwrite(LMT_ERROR, "%s: Method not allowed", p_srv->name);
+					pi_log->write(LMT_ERROR, pi_httpc->req_header());
 				}
 			} else
 				pi_httpc->res_code(HTTPRC_REQ_URI_TOO_LARGE);
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_REQUEST_DATA, [](iHttpConnection *pi_httpc, void *udata) {
-			//...
+			_server_t *p_srv = (_server_t *)udata;
+			iLog *pi_log = p_srv->p_http_host->mpi_log;
+			_u32 sz = 0;
+			_str_t data = (_str_t)pi_httpc->req_data(&sz);
+
+			pi_log->fwrite(LMT_INFO, ">>> on_request_data (%d)", sz);
+			if(data) {
+				fwrite(data, sz, 1, stdout);
+			}
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpConnection *pi_httpc, void *udata) {
@@ -99,6 +109,7 @@ private:
 			iLog *pi_log = p_srv->p_http_host->mpi_log;
 
 			pi_log->fwrite(LMT_ERROR, "%s: Error(%d)", p_srv->name, pi_httpc->error_code());
+			pi_log->write(LMT_TEXT, pi_httpc->req_header());
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_CLOSE, [](iHttpConnection *pi_httpc, void *udata) {
@@ -227,7 +238,7 @@ public:
 				srv.port = port;
 				srv.p_http_host = this;
 
-				if((srv.pi_http_server = mpi_net->create_http_server(port))) {
+				if((srv.pi_http_server = mpi_net->create_http_server(port, 16384))) {
 					_server_t *p_srv = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(srv));
 					if(p_srv) {
 						set_handlers(p_srv);
