@@ -48,29 +48,31 @@ private:
 					(strcmp(url, "/") == 0) ? "/index.html" : url);
 
 				if(method == HTTP_METHOD_GET) {
-					pi_log->fwrite(LMT_INFO, ">>> on_request(GET '%s') %p", doc, pi_httpc);
 					if(p_srv->p_http_host->mpi_fcache) {
 						HFCACHE fc = p_srv->p_http_host->mpi_fcache->open(doc);
-						if(fc) {
+						if(fc) { // open file cache
 							_ulong sz = 0;
 
 							_u8 *ptr = (_u8 *)p_srv->p_http_host->mpi_fcache->ptr(fc, &sz);
 							if(ptr) {
 								pi_httpc->res_content_len(sz);
 								pi_httpc->res_code(HTTPRC_OK);
-								pi_httpc->set_udata((_ulong)fc);
+								pi_httpc->set_udata((_ulong)fc); // keep file cache
 								pi_httpc->res_write(ptr, sz);
-							} else
+							} else { // can't get pointer to file content
 								pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
-						} else
+								pi_log->fwrite(LMT_ERROR, "%s: Internal error", p_srv->name);
+							}
+						} else {
 							pi_httpc->res_code(HTTPRC_NOT_FOUND);
+							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found", p_srv->name, doc);
+						}
 					} else
 						pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
-				} else if(method == HTTP_METHOD_POST) {
-					//... Not Implemented !
-					pi_httpc->res_code(HTTPRC_NOT_IMPLEMENTED);
-				} else
+				} else {
 					pi_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
+					pi_log->fwrite(LMT_ERROR, "%s: Method not allowed", p_srv->name);
+				}
 			} else
 				pi_httpc->res_code(HTTPRC_REQ_URI_TOO_LARGE);
 		}, p_srv);
@@ -81,7 +83,7 @@ private:
 
 		p_srv->pi_http_server->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpConnection *pi_httpc, void *udata) {
 			_server_t *p_srv = (_server_t *)udata;
-			HFCACHE fc = (HFCACHE)pi_httpc->get_udata();
+			HFCACHE fc = (HFCACHE)pi_httpc->get_udata(); // restore file cache
 			_ulong sz = 0;
 
 			if(fc) {
@@ -93,16 +95,17 @@ private:
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_ERROR, [](iHttpConnection *pi_httpc, void *udata) {
-			//...
+			_server_t *p_srv = (_server_t *)udata;
+			iLog *pi_log = p_srv->p_http_host->mpi_log;
+
+			pi_log->fwrite(LMT_ERROR, "%s: Error(%d)", p_srv->name, pi_httpc->error_code());
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_CLOSE, [](iHttpConnection *pi_httpc, void *udata) {
 			_server_t *p_srv = (_server_t *)udata;
 			HFCACHE fc = (HFCACHE)pi_httpc->get_udata();
-			iLog *pi_log = p_srv->p_http_host->mpi_log;
 
-			pi_log->fwrite(LMT_INFO, ">>> on_close %p", pi_httpc);
-			if(fc)
+			if(fc) // close file cache
 				p_srv->p_http_host->mpi_fcache->close(fc);
 		}, p_srv);
 	}
