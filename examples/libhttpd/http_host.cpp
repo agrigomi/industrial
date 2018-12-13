@@ -109,7 +109,6 @@ private:
 			iLog *pi_log = p_srv->p_http_host->mpi_log;
 
 			pi_log->fwrite(LMT_ERROR, "%s: Error(%d)", p_srv->name, pi_httpc->error_code());
-			pi_log->write(LMT_TEXT, pi_httpc->req_header());
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_CLOSE, [](iHttpConnection *pi_httpc, void *udata) {
