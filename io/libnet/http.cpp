@@ -56,7 +56,7 @@ void cHttpServer::http_server_thread(void) {
 	m_is_stopped = true;
 }
 
-#define NEMPTY	500
+#define NEMPTY	1000
 
 void *http_worker_thread(void *udata) {
 	void *r = 0;
