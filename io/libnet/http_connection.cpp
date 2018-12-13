@@ -106,7 +106,6 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_oheader_sent = 0;
 			m_content_sent = 0;
 			m_header_len = 0;
-			m_alive = false;
 			memset(m_udata, 0, sizeof(m_udata));
 			mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
 			mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
@@ -134,7 +133,6 @@ bool cHttpConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap) {
 		mpi_bmap = pi_bmap;
 		// use non blocking mode
 		mp_sio->blocking(false);
-		m_alive = mp_sio->alive();
 	}
 
 	return r;
@@ -142,32 +140,28 @@ bool cHttpConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap) {
 
 void cHttpConnection::close(void) {
 	if(mp_sio) {
-		mp_sio->_close();
-		mp_sio = 0;
-		if(m_ibuffer) {
-			mpi_bmap->free(m_ibuffer);
-			m_ibuffer = 0;
-		}
-		if(m_oheader) {
-			mpi_bmap->free(m_oheader);
-			m_oheader = 0;
-		}
-		if(m_obuffer) {
-			mpi_bmap->free(m_obuffer);
-			m_obuffer = 0;
-		}
+		_gpi_repo_->object_release(mp_sio);
+		mp_sio = NULL;
+	}
+	if(m_ibuffer) {
+		mpi_bmap->free(m_ibuffer);
+		m_ibuffer = 0;
+	}
+	if(m_oheader) {
+		mpi_bmap->free(m_oheader);
+		m_oheader = 0;
+	}
+	if(m_obuffer) {
+		mpi_bmap->free(m_obuffer);
+		m_obuffer = 0;
 	}
 }
 
 bool cHttpConnection::alive(void) {
 	bool r = false;
 
-	if((r = m_alive)) {
-		if(mp_sio)
-			r = m_alive = mp_sio->alive();
-		else
-			r = m_alive = false;
-	}
+	if(mp_sio)
+		r = mp_sio->alive();
 
 	return r;
 }
@@ -619,7 +613,7 @@ _u8 cHttpConnection::process(void) {
 			}
 			break;
 		case HTTPC_CLOSE:
-			m_alive = false;
+			close();
 			break;
 	}
 
