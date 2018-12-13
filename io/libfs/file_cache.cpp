@@ -249,6 +249,12 @@ public:
 		remove_cache(pfce);
 	}
 
+	time_t mtime(HFCACHE hfc) {
+		_fce_t *pfce = (_fce_t *)hfc;
+
+		return pfce->mtime;
+	}
+
 	void remove(HFCACHE hfc) {
 		_fce_t *pfce = (_fce_t *)hfc;
 

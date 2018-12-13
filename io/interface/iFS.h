@@ -54,9 +54,15 @@ public:
 	INTERFACE(iFileCache, I_FILE_CACHE);
 	// Initialize cache with path to cache folder
 	virtual bool init(_cstr_t path)=0;
+	// open file in cache
 	virtual HFCACHE open(_cstr_t path)=0;
+	// return pointer to file content
 	virtual void *ptr(HFCACHE hfc, _ulong *size)=0;
+	// close file in cache
 	virtual void close(HFCACHE hfc)=0;
+	// return last modify time
+	virtual time_t mtime(HFCACHE hfc)=0;
+	// remove cache
 	virtual void remove(HFCACHE hfc)=0;
 };
 
