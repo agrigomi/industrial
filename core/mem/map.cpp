@@ -56,8 +56,8 @@ public:
 				map_cxt.pp_list = 0;
 				map_cxt.udata = this;
 
-				map_init(&map_cxt);
-				r = true;
+				if(map_init(&map_cxt) == _true)
+					r = true;
 			} break;
 			case OCTL_UNINIT: {
 				iRepository *pi_repo = (iRepository *)arg;

@@ -15,12 +15,19 @@ static _ulong hash(_u8 *key, _u32 sz) {
 	return hash;
 }
 
-void map_init(_map_context_t *p_mcxt) {
+_bool map_init(_map_context_t *p_mcxt) {
+	_bool r = _false;
+
 	if(p_mcxt->pf_mem_alloc && p_mcxt->capacity && !p_mcxt->pp_list) {
 		/* initial allocation of data array */
-		p_mcxt->pp_list = p_mcxt->pf_mem_alloc(p_mcxt->capacity * sizeof(_map_rec_hdr_t *), p_mcxt->udata);
-		p_mcxt->records = p_mcxt->collisions = 0;
+		if((p_mcxt->pp_list = p_mcxt->pf_mem_alloc(p_mcxt->capacity * sizeof(_map_rec_hdr_t *), p_mcxt->udata))) {
+			memset(p_mcxt->pp_list, 0, p_mcxt->capacity * sizeof(_map_rec_hdr_t *));
+			p_mcxt->records = p_mcxt->collisions = 0;
+			r = _true;
+		}
 	}
+
+	return r;
 }
 
 static _bool add_record(_map_rec_hdr_t *p_rec, _map_rec_hdr_t **pp_map, _u32 capacity, _u32 *collisions) {

@@ -32,7 +32,7 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif
-void map_init(_map_context_t *p_mcxt);
+_bool map_init(_map_context_t *p_mcxt);
 void *map_add(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 sz_data);
 void *map_get(_map_context_t *p_mcxt, void *key, _u32 sz_key, _u32 *sz_data);
 void map_del(_map_context_t *p_mcxt, void *key, _u32 sz_key);
