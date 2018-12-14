@@ -7,6 +7,8 @@
 #define CFREE	0 // column for pending connections
 #define CBUSY	1 // column for busy connections
 
+#define MAX_WORKERS	32
+
 // bufferMap callback
 _u32 buffer_io(_u8 op, void *ptr, _u32 size, void *udata) {
 	_u32 r = 0;
@@ -56,13 +58,10 @@ void cHttpServer::http_server_thread(void) {
 	m_is_stopped = true;
 }
 
-#define NEMPTY	1000
-
 void *http_worker_thread(void *udata) {
 	void *r = 0;
 	cHttpServer *p_https = static_cast<cHttpServer *>(udata);
 	volatile _u32 num = p_https->m_active_workers++;
-	_u32 nempty = NEMPTY;
 
 	p_https->m_num_workers = p_https->m_active_workers;
 
@@ -79,17 +78,8 @@ void *http_worker_thread(void *udata) {
 				p_https->call_event_handler(HTTP_ON_CLOSE, rec->p_httpc);
 				p_https->remove_connection(rec);
 			}
-
-			nempty = NEMPTY;
-		} else {
-			if(nempty) {
-				nempty--;
-				usleep(10000);
-			} else {
-				p_https->m_active_workers--;
-				nempty = NEMPTY;
-			}
-		}
+		} else
+			usleep(10000);
 	}
 
 	p_https->m_num_workers--;
@@ -215,7 +205,7 @@ _http_connection_t *cHttpServer::add_connection(void) {
 					nbhttpc = mpi_list->cnt(hm);
 				}
 				mpi_list->unlock(hm);
-				if((m_num_workers - nbhttpc) < nfhttpc)
+				if((m_num_workers - nbhttpc) < nfhttpc && m_num_workers < MAX_WORKERS)
 					// create worker
 					start_worker();
 			}
