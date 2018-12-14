@@ -1,3 +1,4 @@
+#include <string.h>
 #include "iRepository.h"
 #include "iMemory.h"
 #include "ll_alg.h"
@@ -56,6 +57,7 @@ public:
 	}
 
 	void init(_u8 mode, _u8 ncol) {
+		memset(&m_cxt, 0, sizeof(_ll_context_t));
 		m_cxt.mode = mode;
 		m_cxt.ccol = 0;
 		m_cxt.ncol = ncol;
