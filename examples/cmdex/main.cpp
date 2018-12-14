@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 #include "startup.h"
 #include "iRepository.h"
 #include "iLog.h"
@@ -13,6 +14,30 @@
 IMPLEMENT_BASE_ARRAY("command_example", 100);
 
 static iStdIO *gpi_stdio = 0;
+
+void signal_handler(int signum, siginfo_t *info, void *) {
+	// info->si_addr holds the dereferenced pointer address
+//	if (info->si_addr == NULL) {
+		// This will be thrown at the point in the code
+		// where the exception was caused.
+		printf("exception %d\n", signum);
+//		printf("signal %d\n", signum);
+//	} else {
+		// Now restore default behaviour for this signal,
+		// and send signal to self.
+//		signal(signum, SIG_DFL);
+//		kill(getpid(), signum);
+//	}
+}
+
+void handle(int sig) {
+	struct sigaction act; // Signal structure
+
+	act.sa_sigaction = signal_handler; // Set the action to our function.
+	sigemptyset(&act.sa_mask); // Initialise signal set.
+	act.sa_flags = SA_SIGINFO|SA_NODEFER; // Our handler takes 3 par.
+	sigaction(sig, &act, NULL);
+}
 
 void log_listener(_u8 lmt, _str_t msg) {
 	_char_t pref = '-';
@@ -41,6 +66,9 @@ _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
 
 	if(r == ERR_NONE) {
+		handle(SIGSEGV); // Set signal action to our handler.
+		handle(SIGPIPE);
+
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = dynamic_cast<iLog*>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
 		gpi_stdio = dynamic_cast<iStdIO*>(pi_repo->object_by_iname(I_STD_IO, RF_ORIGINAL));
