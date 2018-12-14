@@ -11,14 +11,14 @@ static void hello_handler(iCmd *pi_cmd, // interface to command opbect
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array
 			_u32 argc, // number of arguments
-			_str_t argv[] // arguments
+			_cstr_t argv[] // arguments
 			) {
 	bool opt_s = pi_cmd_host->option_check("s", p_opt);
 	bool opt_1 = pi_cmd_host->option_check("opt-1", p_opt);
-	_str_t inp = pi_cmd_host->option_value("inp", p_opt);
-	_str_t def = pi_cmd_host->option_value("def", p_opt);
+	_cstr_t inp = pi_cmd_host->option_value("inp", p_opt);
+	_cstr_t def = pi_cmd_host->option_value("def", p_opt);
 	_u32 arg_idx = 1;
-	_str_t arg = pi_cmd_host->argument(argc, argv, p_opt, arg_idx);
+	_cstr_t arg = pi_cmd_host->argument(argc, argv, p_opt, arg_idx);
 
 	out(pi_io, "Hello !\n");
 	if(opt_s)

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "iCmd.h"
 #include "iHttpHost.h"
 #include "iRepository.h"
@@ -8,6 +9,10 @@
 #define ACT_REMOVE	"remove"
 #define ACT_START	"start"
 #define ACT_STOP	"stop"
+
+#define OPT_HTTPD_NAME	"name"
+#define OPT_HTTPD_PORT	"port"
+#define OPT_HTTPD_ROOT	"root"
 
 typedef struct {
 	_cstr_t	a_name;
@@ -42,8 +47,20 @@ static void cmd_httpd_create(iCmd *pi_cmd, // interface to command opbect
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array
 			_u32 argc, // number of arguments
-			_str_t argv[] // arguments
+			_cstr_t argv[] // arguments
 			) {
+	iHttpHost *pi_httpd = get_httpd();
+
+	if(pi_httpd) {
+		_cstr_t name = pi_cmd_host->option_value(OPT_HTTPD_NAME, p_opt);
+		_cstr_t port = pi_cmd_host->option_value(OPT_HTTPD_PORT, p_opt);
+		_cstr_t root = pi_cmd_host->option_value(OPT_HTTPD_ROOT, p_opt);
+
+		if(name && port && root)
+			pi_httpd->create(name, atoi(port), root);
+		else
+			fout(pi_io, "usage: httpd create --name=... --port=... --root=...\n");
+	}
 }
 
 static void cmd_httpd_remove(iCmd *pi_cmd, // interface to command opbect
@@ -51,7 +68,7 @@ static void cmd_httpd_remove(iCmd *pi_cmd, // interface to command opbect
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array
 			_u32 argc, // number of arguments
-			_str_t argv[] // arguments
+			_cstr_t argv[] // arguments
 			) {
 }
 
@@ -60,7 +77,7 @@ static void cmd_httpd_start(iCmd *pi_cmd, // interface to command opbect
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array
 			_u32 argc, // number of arguments
-			_str_t argv[] // arguments
+			_cstr_t argv[] // arguments
 			) {
 }
 
@@ -69,7 +86,7 @@ static void cmd_httpd_stop(iCmd *pi_cmd, // interface to command opbect
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array
 			_u32 argc, // number of arguments
-			_str_t argv[] // arguments
+			_cstr_t argv[] // arguments
 			) {
 }
 
@@ -86,9 +103,9 @@ static void httpd_handler(iCmd *pi_cmd, // interface to command opbect
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array
 			_u32 argc, // number of arguments
-			_str_t argv[] // arguments
+			_cstr_t argv[] // arguments
 			) {
-	_str_t arg = pi_cmd_host->argument(argc, argv, p_opt, 1);
+	_cstr_t arg = pi_cmd_host->argument(argc, argv, p_opt, 1);
 
 	if(arg) {
 		_u32 n = 0;
@@ -110,10 +127,10 @@ static void httpd_handler(iCmd *pi_cmd, // interface to command opbect
 }
 
 static _cmd_opt_t _g_opt[] = {
-	{ "port",	OF_LONG,	0,	"Listen port number"},
-	{ "name",	OF_LONG,	0,	"Name of http server" },
-	{ "root",	OF_LONG,	0,	"Documents root directory" },
-	{ 0,		0,		0,	0 } // terminate options list
+	{ OPT_HTTPD_PORT,	OF_LONG|OF_VALUE,	0,	"Listen port number"},
+	{ OPT_HTTPD_NAME,	OF_LONG|OF_VALUE,	0,	"Name of http server" },
+	{ OPT_HTTPD_ROOT,	OF_LONG|OF_VALUE,	0,	"Documents root directory" },
+	{ 0,			0,			0,	0 } // terminate options list
 };
 
 static _cmd_t _g_cmd[] = {

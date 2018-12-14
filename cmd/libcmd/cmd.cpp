@@ -24,7 +24,7 @@ private:
 	iHeap	*mpi_heap;
 	HNOTIFY	mh_notify;
 
-	_cmd_rec_t *find_command(iBase *pi_cmd, _str_t cmd_name) {
+	_cmd_rec_t *find_command(iBase *pi_cmd, _cstr_t cmd_name) {
 		_cmd_rec_t *r = 0;
 		iCmd *pi_cmd_obj = dynamic_cast<iCmd *>(pi_cmd);
 
@@ -238,7 +238,7 @@ private:
 		}
 	}
 
-	bool find_value(_str_t val, _cmd_opt_t *p_opt_array) {
+	bool find_value(_cstr_t val, _cmd_opt_t *p_opt_array) {
 		bool r = false;
 		_u32 n = 0;
 
@@ -255,7 +255,7 @@ private:
 		return r;
 	}
 
-	_cmd_t *get_cmd_info(_str_t cmd_name, iCmd **pi_cmd, _cmd_rec_t **pp_rec) {
+	_cmd_t *get_cmd_info(_cstr_t cmd_name, iCmd **pi_cmd, _cmd_rec_t **pp_rec) {
 		_cmd_rec_t *cmd_rec = find_command(0, cmd_name);
 		_cmd_t *r = (cmd_rec) ? cmd_rec->pi_cmd->get_info() : 0;
 
@@ -320,7 +320,7 @@ public:
 		return r;
 	}
 
-	_cmd_t *get_info(_str_t cmd_name, iCmd **pi_cmd=0) {
+	_cmd_t *get_info(_cstr_t cmd_name, iCmd **pi_cmd=0) {
 		iCmd *_pi_cmd = 0;
 		_cmd_rec_t *p_rec = 0;
 		_cmd_t *r = get_cmd_info(cmd_name, &_pi_cmd, &p_rec);
@@ -362,7 +362,7 @@ public:
 						}
 
 						p_rec->running = true;
-						p_cmd->cmd_handler(pi_cmd, this, pi_io, p_opt, argc, argv);
+						p_cmd->cmd_handler(pi_cmd, this, pi_io, p_opt, argc, (_cstr_t*)argv);
 						p_rec->running = false;
 
 						if(p_opt)
@@ -393,7 +393,7 @@ public:
 		return r;
 	}
 	// get option value
-	_str_t option_value(_cstr_t opt_name, _cmd_opt_t *opt_array) {
+	_cstr_t option_value(_cstr_t opt_name, _cmd_opt_t *opt_array) {
 		_str_t r = 0;
 		_cmd_opt_t *p_opt = find_option(opt_name, opt_array);
 
@@ -410,12 +410,12 @@ public:
 	}
 
 	// retrieve arguments
-	_str_t argument(_u32 argc, _str_t argv[], _cmd_opt_t *p_opt_array, _u32 idx) {
-		_str_t r = 0;
+	_cstr_t argument(_u32 argc, _cstr_t argv[], _cmd_opt_t *p_opt_array, _u32 idx) {
+		_cstr_t r = 0;
 		_u32 arg_idx = 0;
 
 		for(_u32 i = 0; i < argc; i++) {
-			_str_t arg = argv[i];
+			_cstr_t arg = argv[i];
 
 			if(arg[0] != '-') {
 				if(find_value(arg, p_opt_array) == false) {

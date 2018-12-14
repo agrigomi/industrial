@@ -55,7 +55,7 @@ static void flags2str(_u32 f, _str_t str, _u32 sz) {
 
 static void cmd_repo_list(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
-			_u32 argc, _str_t argv[]) {
+			_u32 argc, _cstr_t argv[]) {
 	_enum_ext_t eext = _gpi_repo_->enum_ext_first();
 	bool ext_only = pi_cmd_host->option_check(OPT_EXT_ONLY, p_opt);
 
@@ -93,9 +93,9 @@ static void cmd_repo_list(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 
 static void cmd_ext_load(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
-			_u32 argc, _str_t argv[]) {
-	_str_t arg = 0;
-	_str_t alias = pi_cmd_host->option_value(OPT_ALIAS, p_opt);
+			_u32 argc, _cstr_t argv[]) {
+	_cstr_t arg = 0;
+	_cstr_t alias = pi_cmd_host->option_value(OPT_ALIAS, p_opt);
 	_u32 i = 2;
 
 	while((arg = pi_cmd_host->argument(argc, argv, p_opt, i))) {
@@ -109,8 +109,8 @@ static void cmd_ext_load(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 
 static void cmd_ext_unload(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
-			_u32 argc, _str_t argv[]) {
-	_str_t arg = 0;
+			_u32 argc, _cstr_t argv[]) {
+	_cstr_t arg = 0;
 	_u32 i = 2;
 
 	while((arg = pi_cmd_host->argument(argc, argv, p_opt, i)))  {
@@ -132,9 +132,9 @@ static _cmd_action_t _g_cmd_repo_actions_[]={
 
 static void cmd_repo_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
-			_u32 argc, _str_t argv[]) {
-	_str_t arg = pi_cmd_host->argument(argc, argv, p_opt, 1);
-	_str_t ext_dir = pi_cmd_host->option_value(OPT_EXT_DIR, p_opt);
+			_u32 argc, _cstr_t argv[]) {
+	_cstr_t arg = pi_cmd_host->argument(argc, argv, p_opt, 1);
+	_cstr_t ext_dir = pi_cmd_host->option_value(OPT_EXT_DIR, p_opt);
 
 	if(ext_dir)
 		_gpi_repo_->extension_dir(ext_dir);

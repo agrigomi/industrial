@@ -58,9 +58,9 @@ static void help_command(_cmd_t *p_cmd, iIO *pi_io, bool bfull) {
 
 static void help_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
-			_u32 argc, _str_t argv[]) {
+			_u32 argc, _cstr_t argv[]) {
 	bool bfull = pi_cmd_host->option_check(OPT_FULL, p_opt);
-	_str_t arg = pi_cmd_host->argument(argc, argv, p_opt, 1);
+	_cstr_t arg = pi_cmd_host->argument(argc, argv, p_opt, 1);
 
 	output(pi_io, "\n");
 	if(arg) {
