@@ -17,17 +17,16 @@ static iStdIO *gpi_stdio = 0;
 
 void signal_handler(int signum, siginfo_t *info, void *) {
 	// info->si_addr holds the dereferenced pointer address
-//	if (info->si_addr == NULL) {
+	if (info->si_addr == NULL) {
 		// This will be thrown at the point in the code
 		// where the exception was caused.
-		printf("exception %d\n", signum);
-//		printf("signal %d\n", signum);
-//	} else {
+		printf("signal %d\n", signum);
+	} else {
 		// Now restore default behaviour for this signal,
 		// and send signal to self.
-//		signal(signum, SIG_DFL);
-//		kill(getpid(), signum);
-//	}
+		signal(signum, SIG_DFL);
+		kill(getpid(), signum);
+	}
 }
 
 void handle(int sig) {
