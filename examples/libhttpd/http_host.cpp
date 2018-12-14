@@ -66,7 +66,6 @@ private:
 						} else {
 							pi_httpc->res_code(HTTPRC_NOT_FOUND);
 							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found", p_srv->name, doc);
-							pi_log->write(LMT_TEXT, pi_httpc->req_header());
 						}
 					} else
 						pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
