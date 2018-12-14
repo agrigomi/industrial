@@ -134,7 +134,7 @@ _u32 cSocketIO::write(const void *data, _u32 size) {
 					m_alive = false;
 			} break;
 			case SOCKET_IO_TCP: {
-				_s32 _r = ::write(m_socket, data, size);
+				_s32 _r = ::send(m_socket, data, size, MSG_NOSIGNAL);
 				if(_r > 0)
 					r = _r;
 				else
