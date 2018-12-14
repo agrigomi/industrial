@@ -56,9 +56,10 @@ static void cmd_httpd_create(iCmd *pi_cmd, // interface to command opbect
 		_cstr_t port = pi_cmd_host->option_value(OPT_HTTPD_PORT, p_opt);
 		_cstr_t root = pi_cmd_host->option_value(OPT_HTTPD_ROOT, p_opt);
 
-		if(name && port && root)
-			pi_httpd->create(name, atoi(port), root);
-		else
+		if(name && port && root) {
+			if(!pi_httpd->create(name, atoi(port), root))
+				fout(pi_io, "Failed to create http server '%s'\n", name);
+		} else
 			fout(pi_io, "usage: httpd create --name=... --port=... --root=...\n");
 	}
 }

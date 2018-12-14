@@ -73,6 +73,11 @@ private:
 					pi_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
 					pi_log->fwrite(LMT_ERROR, "%s: Method not allowed", p_srv->name);
 					pi_log->write(LMT_ERROR, pi_httpc->req_header());
+
+					_u32 sz = 0;
+					_str_t data = (_str_t)pi_httpc->req_data(&sz);
+					if(data && sz)
+						fwrite(data, sz, 1, stdout);
 				}
 			} else
 				pi_httpc->res_code(HTTPRC_REQ_URI_TOO_LARGE);
