@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <execinfo.h>
 #include "startup.h"
 #include "iRepository.h"
 #include "iLog.h"
@@ -14,8 +15,25 @@
 IMPLEMENT_BASE_ARRAY("command_example", 100);
 
 static iStdIO *gpi_stdio = 0;
+#define BT_BUF_SIZE 100
 
 void signal_handler(int signum, siginfo_t *info, void *) {
+	int j, nptrs;
+	void *buffer[BT_BUF_SIZE];
+	char **strings;
+
+	nptrs = backtrace(buffer, BT_BUF_SIZE);
+
+	/* The call backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO)
+	would produce similar output to the following: */
+
+	if((strings = backtrace_symbols(buffer, nptrs))) {
+		for (j = 0; j < nptrs; j++)
+			printf("%s\n", strings[j]);
+
+		free(strings);
+	}
+
 	// info->si_addr holds the dereferenced pointer address
 	if (info->si_addr == NULL) {
 		// This will be thrown at the point in the code
@@ -66,7 +84,7 @@ _err_t main(int argc, char *argv[]) {
 
 	if(r == ERR_NONE) {
 		handle(SIGSEGV); // Set signal action to our handler.
-		handle(SIGPIPE);
+		//handle(SIGPIPE);
 
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = dynamic_cast<iLog*>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
