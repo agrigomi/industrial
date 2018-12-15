@@ -69,15 +69,18 @@ void *http_worker_thread(void *udata) {
 		_http_connection_t *rec = p_https->get_connection();
 
 		if(rec) {
-			if(rec->p_httpc->alive()) {
-				_u8 evt = rec->p_httpc->process();
+			if(rec->p_httpc) {
+				if(rec->p_httpc->alive()) {
+					_u8 evt = rec->p_httpc->process();
 
-				p_https->call_event_handler(evt, rec->p_httpc);
-				p_https->free_connection(rec);
-			} else {
-				p_https->call_event_handler(HTTP_ON_CLOSE, rec->p_httpc);
+					p_https->call_event_handler(evt, rec->p_httpc);
+					p_https->free_connection(rec);
+				} else {
+					p_https->call_event_handler(HTTP_ON_CLOSE, rec->p_httpc);
+					p_https->remove_connection(rec);
+				}
+			} else
 				p_https->remove_connection(rec);
-			}
 		} else
 			usleep(10000);
 	}
@@ -190,8 +193,7 @@ _http_connection_t *cHttpServer::add_connection(void) {
 	if(p_sio) {
 		_http_connection_t rec;
 
-		rec.p_httpc = (cHttpConnection *)_gpi_repo_->object_by_cname(CLASS_NAME_HTTP_CONNECTION, RF_CLONE);
-		if(rec.p_httpc) {
+		if((rec.p_httpc = (cHttpConnection *)_gpi_repo_->object_by_cname(CLASS_NAME_HTTP_CONNECTION, RF_CLONE))) {
 			_u32 nfhttpc = 0;
 			_u32 nbhttpc = 0;
 
