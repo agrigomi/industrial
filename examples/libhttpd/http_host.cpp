@@ -92,6 +92,7 @@ private:
 			pi_log->fwrite(LMT_INFO, ">>> on_request_data (%d)", sz);
 			if(data) {
 				fwrite(data, sz, 1, stdout);
+				fwrite("\r\n", 2, 1, stdout);
 			}
 		}, p_srv);
 

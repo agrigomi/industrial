@@ -149,6 +149,7 @@ static _cmd_t _g_cmd[] = {
 	{ "httpd",	_g_opt,	httpd_handler,	"Http management",
 		"Manage HTTP servers by following commands:\n"
 		ACT_CREATE "\t\t:Create HTTP server ( httpd create --name=... --port=... --root=... )\n"
+		ACT_LIST   "\t\t:List HTTP servers  ( httpd list )\n"
 		ACT_REMOVE "\t\t:Remove HTTP server ( httpd remove <server name> )\n"
 		ACT_START  "\t\t:Start HTTP server  ( httpd start <server name> )\n"
 		ACT_STOP   "\t\t:Stop HTTP server   ( httpd stop <server name> )\n",
