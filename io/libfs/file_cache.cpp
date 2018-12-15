@@ -222,7 +222,7 @@ public:
 		pfce->mutex.lock();
 		if(pfce->pi_fio) {
 			if(!pfce->ptr)
-				pfce->ptr = pfce->pi_fio->map();
+				pfce->ptr = pfce->pi_fio->map(MPF_READ);
 			*size = pfce->size;
 			r = pfce->ptr;
 		}
