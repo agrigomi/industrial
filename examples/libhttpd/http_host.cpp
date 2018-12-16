@@ -304,6 +304,22 @@ public:
 
 		return r;
 	}
+
+	void enumerate(_enum_http_t *pcb, void *udata=NULL) {
+		_map_enum_t me = mpi_map->enum_open();
+
+		if(me) {
+			_u32 sz = 0;
+			_server_t *p_srv = (_server_t *)mpi_map->enum_first(me, &sz);
+
+			while(p_srv) {
+				pcb((p_srv->pi_http_server) ? true : false, p_srv->name, p_srv->port, p_srv->doc_root, udata);
+				p_srv = (_server_t *)mpi_map->enum_next(me, &sz);
+			}
+
+			mpi_map->enum_close(me);
+		}
+	}
 };
 
 static cHttpHost _g_http_host_;

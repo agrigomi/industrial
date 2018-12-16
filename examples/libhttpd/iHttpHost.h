@@ -2,6 +2,8 @@
 
 #define I_HTTP_HOST	"iHttpHost"
 
+typedef void _enum_http_t(bool running, _cstr_t name, _u32 port, _cstr_t root, void *udata);
+
 class iHttpHost: public iBase {
 public:
 	INTERFACE(iHttpHost, I_HTTP_HOST);
@@ -13,4 +15,6 @@ public:
 	virtual bool stop(_cstr_t name)=0;
 	// Remove http server
 	virtual bool remove(_cstr_t name)=0;
+	// Enumeration of http servers
+	virtual void enumerate(_enum_http_t *pcb, void *udata=NULL)=0;
 };

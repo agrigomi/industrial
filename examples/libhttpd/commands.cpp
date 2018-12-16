@@ -121,6 +121,13 @@ static void cmd_httpd_list(iCmd *pi_cmd, // interface to command opbect
 			_u32 argc, // number of arguments
 			_cstr_t argv[] // arguments
 			) {
+	iHttpHost *pi_http_host = get_httpd();
+
+	pi_http_host->enumerate([](bool running, _cstr_t name, _u32 port, _cstr_t root, void *udata) {
+		iIO *pi_io = (iIO *)udata;
+
+		fout(pi_io, "[%c] %s\t\t%d\t\t%s\n", (running) ? 'R' : 'S', name, port, root);
+	}, pi_io);
 }
 
 static _cmd_action_t _g_cmd_httpd_actions_[]={
