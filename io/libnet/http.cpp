@@ -258,7 +258,6 @@ void cHttpServer::remove_connection(_http_connection_t *rec) {
 	mpi_list->col(rec->state, hm);
 	if(mpi_list->sel(rec, hm)) {
 		if(rec->p_httpc) {
-			p_tcps->close(dynamic_cast<iSocketIO *>(rec->p_httpc->get_socket_io()));
 			_gpi_repo_->object_release(rec->p_httpc);
 		}
 		mpi_list->del(hm);
@@ -274,7 +273,6 @@ void cHttpServer::clear_column(_u8 col, HMUTEX hlock) {
 	mpi_list->col(col, hlock);
 	while((rec = (_http_connection_t *)mpi_list->first(&sz, hlock))) {
 		if(rec->p_httpc) {
-			p_tcps->close(dynamic_cast<iSocketIO *>(rec->p_httpc->get_socket_io()));
 			_gpi_repo_->object_release(rec->p_httpc);
 		}
 		mpi_list->del(hlock);
