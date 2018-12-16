@@ -485,7 +485,7 @@ _u32 cHttpConnection::send_header(void) {
 	if(m_response_code) {
 		if(!m_oheader_sent) {
 			// send first line
-			_u32 n = snprintf(rs, sizeof(rs), "HTTP/1.1 %u %s\r\n",
+			_u32 n = snprintf(rs, sizeof(rs), "HTTP/2.0 %u %s\r\n",
 					m_response_code, get_rc_text(m_response_code));
 
 			mp_sio->write(rs, n);
@@ -526,12 +526,13 @@ _u32 cHttpConnection::send_content(void) {
 	if(m_res_content_len && m_content_sent < m_res_content_len) {
 		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_obuffer);
 		if(ptr && m_obuffer_offset) {
+			// use blocking mode for content send
+			mp_sio->blocking(true);
 			if((r = mp_sio->write(ptr, m_obuffer_offset))) {
-				// folding of output buffer
-				mpi_str->mem_cpy(ptr, ptr + r, m_obuffer_offset - r);
-				m_obuffer_offset -= r;
+				m_obuffer_offset = 0;
 				m_content_sent += r;
 			}
+			mp_sio->blocking(false);
 		}
 	}
 
