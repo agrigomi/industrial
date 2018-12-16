@@ -246,7 +246,7 @@ public:
 				srv.port = port;
 				srv.p_http_host = this;
 
-				if((srv.pi_http_server = mpi_net->create_http_server(port, 16384))) {
+				if((srv.pi_http_server = mpi_net->create_http_server(port))) {
 					_server_t *p_srv = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(srv));
 					if(p_srv) {
 						set_handlers(p_srv);
@@ -268,7 +268,7 @@ public:
 
 		if(p_srv) {
 			if(!p_srv->pi_http_server) {
-				if((p_srv->pi_http_server = mpi_net->create_http_server(p_srv->port, 16384))) {
+				if((p_srv->pi_http_server = mpi_net->create_http_server(p_srv->port))) {
 					set_handlers(p_srv);
 					r = true;
 				}
