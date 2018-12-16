@@ -297,7 +297,8 @@ private:
 
 		if(mpi_cxt_list->sel(obj, hm))
 			mpi_cxt_list->del(hm);
-
+		else
+			LOG(LMT_ERROR, "REPOSITORY: Trying to remove invalid context %p", obj);
 		mpi_cxt_list->unlock(hm);
 	}
 
