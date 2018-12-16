@@ -72,6 +72,14 @@ static void cmd_httpd_remove(iCmd *pi_cmd, // interface to command opbect
 			_u32 argc, // number of arguments
 			_cstr_t argv[] // arguments
 			) {
+	// server name should be in argument 2
+	_cstr_t sname = pi_cmd_host->argument(argc, argv, p_opt, 2);
+	iHttpHost *pi_http_host = get_httpd();
+
+	if(sname && pi_http_host) {
+		if(!pi_http_host->remove(sname))
+			fout(pi_io, "Failed to remove server '%s'\n", sname);
+	}
 }
 
 static void cmd_httpd_start(iCmd *pi_cmd, // interface to command opbect
@@ -81,6 +89,13 @@ static void cmd_httpd_start(iCmd *pi_cmd, // interface to command opbect
 			_u32 argc, // number of arguments
 			_cstr_t argv[] // arguments
 			) {
+	_cstr_t sname = pi_cmd_host->argument(argc, argv, p_opt, 2);
+	iHttpHost *pi_http_host = get_httpd();
+
+	if(sname && pi_http_host) {
+		if(!pi_http_host->start(sname))
+			fout(pi_io, "Failed to start server '%s'\n", sname);
+	}
 }
 
 static void cmd_httpd_stop(iCmd *pi_cmd, // interface to command opbect
@@ -90,6 +105,13 @@ static void cmd_httpd_stop(iCmd *pi_cmd, // interface to command opbect
 			_u32 argc, // number of arguments
 			_cstr_t argv[] // arguments
 			) {
+	_cstr_t sname = pi_cmd_host->argument(argc, argv, p_opt, 2);
+	iHttpHost *pi_http_host = get_httpd();
+
+	if(sname && pi_http_host) {
+		if(!pi_http_host->stop(sname))
+			fout(pi_io, "Failed to stop server '%s'\n", sname);
+	}
 }
 
 static void cmd_httpd_list(iCmd *pi_cmd, // interface to command opbect

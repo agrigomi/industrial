@@ -259,24 +259,48 @@ public:
 
 	bool start(_cstr_t name) {
 		bool r = false;
+		_u32 sz = 0;
+		_server_t *p_srv = (_server_t *)mpi_map->get(name, strlen(name), &sz);
 
-		//...
+		if(p_srv) {
+			if(!p_srv->pi_http_server) {
+				if((p_srv->pi_http_server = mpi_net->create_http_server(p_srv->port, 16384))) {
+					set_handlers(p_srv);
+					r = true;
+				}
+			} else
+				r = true;
+		}
 
 		return r;
 	}
 
 	bool stop(_cstr_t name) {
 		bool r = false;
+		_u32 sz = 0;
+		_server_t *p_srv = (_server_t *)mpi_map->get(name, strlen(name), &sz);
 
-		//...
+		if(p_srv) {
+			if(p_srv->pi_http_server) {
+				_gpi_repo_->object_release(p_srv->pi_http_server);
+				p_srv->pi_http_server = NULL;
+			}
+			r = true;
+		}
 
 		return r;
 	}
 
 	bool remove(_cstr_t name) {
 		bool r = false;
+		_u32 sz = 0;
+		_server_t *p_srv = (_server_t *)mpi_map->get(name, strlen(name), &sz);
 
-		//...
+		if(p_srv) {
+			stop(p_srv->name);
+			mpi_map->del(name, strlen(name));
+			r = true;
+		}
 
 		return r;
 	}
