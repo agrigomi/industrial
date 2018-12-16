@@ -103,9 +103,13 @@ private:
 
 			if(fc) {
 				_u8 *ptr = (_u8 *)p_srv->p_http_host->mpi_fcache->ptr(fc, &sz);
-				_u32 res_sent = pi_httpc->res_content_sent();
-				_u32 res_remainder = pi_httpc->res_remainder();
-				pi_httpc->res_write(ptr + res_sent, res_remainder);
+
+				if(ptr) {
+					_u32 res_sent = pi_httpc->res_content_sent();
+					_u32 res_remainder = pi_httpc->res_remainder();
+
+					pi_httpc->res_write(ptr + res_sent, res_remainder);
+				}
 			}
 		}, p_srv);
 
