@@ -43,7 +43,7 @@ static void fout(iIO *pi_io, _cstr_t fmt, ...) {
 	}
 }
 
-static void cmd_httpd_create(iCmd *pi_cmd, // interface to command opbect
+static void cmd_httpd_create(iCmd *pi_cmd, // interface to command object
 			iCmdHost *pi_cmd_host, // interface to command host
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array
@@ -65,7 +65,7 @@ static void cmd_httpd_create(iCmd *pi_cmd, // interface to command opbect
 	}
 }
 
-static void cmd_httpd_remove(iCmd *pi_cmd, // interface to command opbect
+static void cmd_httpd_remove(iCmd *pi_cmd, // interface to command object
 			iCmdHost *pi_cmd_host, // interface to command host
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array
@@ -82,7 +82,7 @@ static void cmd_httpd_remove(iCmd *pi_cmd, // interface to command opbect
 	}
 }
 
-static void cmd_httpd_start(iCmd *pi_cmd, // interface to command opbect
+static void cmd_httpd_start(iCmd *pi_cmd, // interface to command object
 			iCmdHost *pi_cmd_host, // interface to command host
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array
@@ -98,7 +98,7 @@ static void cmd_httpd_start(iCmd *pi_cmd, // interface to command opbect
 	}
 }
 
-static void cmd_httpd_stop(iCmd *pi_cmd, // interface to command opbect
+static void cmd_httpd_stop(iCmd *pi_cmd, // interface to command object
 			iCmdHost *pi_cmd_host, // interface to command host
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array
@@ -114,7 +114,7 @@ static void cmd_httpd_stop(iCmd *pi_cmd, // interface to command opbect
 	}
 }
 
-static void cmd_httpd_list(iCmd *pi_cmd, // interface to command opbect
+static void cmd_httpd_list(iCmd *pi_cmd, // interface to command object
 			iCmdHost *pi_cmd_host, // interface to command host
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array
@@ -139,7 +139,7 @@ static _cmd_action_t _g_cmd_httpd_actions_[]={
 	{ 0,			0 }
 };
 
-static void httpd_handler(iCmd *pi_cmd, // interface to command opbect
+static void httpd_handler(iCmd *pi_cmd, // interface to command object
 			iCmdHost *pi_cmd_host, // interface to command host
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array

@@ -6,7 +6,7 @@ static void out(iIO *pi_io, _cstr_t str) {
 		pi_io->write(str, strlen(str));
 }
 
-static void hello_handler(iCmd *pi_cmd, // interface to command opbect
+static void hello_handler(iCmd *pi_cmd, // interface to command object
 			iCmdHost *pi_cmd_host, // interface to command host
 			iIO *pi_io, // interface to I/O object
 			_cmd_opt_t *p_opt, // options array

@@ -23,7 +23,7 @@ typedef void*	_cmd_enum_t;
 class iCmd;
 class iCmdHost;
 
-typedef void _cmd_handler_t(iCmd *, // interface to command opbect
+typedef void _cmd_handler_t(iCmd *, // interface to command object
 			iCmdHost *, // interface to command host
 			iIO *, // interface to I/O object
 			_cmd_opt_t *, // options array
