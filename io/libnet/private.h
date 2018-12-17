@@ -87,6 +87,7 @@ private:
 	_u32		m_oheader_offset;
 	_u32		m_obuffer_offset;
 	_u32		m_oheader_sent;
+	_u32		m_obuffer_sent;
 	_u32		m_header_len;
 	_u32		m_res_content_len;
 	_u32		m_req_content_len;

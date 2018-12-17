@@ -104,6 +104,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_req_content_len = 0;
 			m_req_content_rcv = 0;
 			m_oheader_sent = 0;
+			m_obuffer_sent = 0;
 			m_content_sent = 0;
 			m_header_len = 0;
 			memset(m_udata, 0, sizeof(m_udata));
@@ -526,13 +527,10 @@ _u32 cHttpConnection::send_content(void) {
 	if(m_res_content_len && m_content_sent < m_res_content_len) {
 		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_obuffer);
 		if(ptr && m_obuffer_offset) {
-			// use blocking mode for content send
-			mp_sio->blocking(true);
-			if((r = mp_sio->write(ptr, m_obuffer_offset))) {
-				m_obuffer_offset = 0;
+			if((r = mp_sio->write(ptr + m_obuffer_sent, m_obuffer_offset - m_obuffer_sent))) {
+				m_obuffer_sent += r;
 				m_content_sent += r;
 			}
-			mp_sio->blocking(false);
 		}
 	}
 
@@ -605,9 +603,12 @@ _u8 cHttpConnection::process(void) {
 			else {
 				if(alive()) {
 					send_content();
-					if(m_content_sent < m_res_content_len)
-						r = HTTP_ON_RESPONSE_DATA;
-					else
+					if(m_content_sent < m_res_content_len) {
+						if(m_obuffer_sent >= m_obuffer_offset) {
+							r = HTTP_ON_RESPONSE_DATA;
+							m_obuffer_sent = m_obuffer_offset = 0;
+						}
+					} else
 						m_state = HTTPC_CLOSE;
 				} else
 					m_state = HTTPC_CLOSE;
