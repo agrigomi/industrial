@@ -63,7 +63,7 @@ void *http_worker_thread(void *udata) {
 	cHttpServer *p_https = static_cast<cHttpServer *>(udata);
 	volatile _u32 num = p_https->m_active_workers++;
 
-	p_https->m_num_workers = p_https->m_active_workers;
+	p_https->m_num_workers++;
 
 	while(num < p_https->m_active_workers) {
 		_http_connection_t *rec = p_https->get_connection();
@@ -115,8 +115,11 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 
 			// stop all workers
 			m_active_workers = 0;
-			while(m_num_workers)
+			_u32 t = 1000;
+			while(m_num_workers && t) {
 				usleep(10000);
+				t--;
+			}
 
 			remove_all_connections();
 			_close();
