@@ -43,6 +43,12 @@ bool cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
 	_s32 opt = 1;
 	setsockopt(m_socket, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
 
+	struct timeval timeout;
+	timeout.tv_sec = 15;
+	timeout.tv_usec = 0;
+
+	setsockopt(m_socket, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
+
 	if((m_mode == SOCKET_IO_SSL_SERVER || m_mode == SOCKET_IO_SSL_CLIENT) && p_ssl_cxt) {
 		if((mp_cSSL = SSL_new(p_ssl_cxt))) {
 			SSL_set_fd(mp_cSSL, m_socket);
