@@ -71,6 +71,7 @@ struct sockaddr_in *cSocketIO::clientaddr(void) {
 
 void cSocketIO::_close(void) {
 	if(m_socket) {
+		blocking(false);
 		if(::close(m_socket) >= 0) {
 			m_socket = 0;
 
