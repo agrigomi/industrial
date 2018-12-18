@@ -40,6 +40,9 @@ bool cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
 	if(p_caddr)
 		memcpy(&m_clientaddr, p_caddr, sizeof(struct sockaddr_in));
 
+	_s32 opt = 1;
+	setsockopt(m_socket, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
+
 	if((m_mode == SOCKET_IO_SSL_SERVER || m_mode == SOCKET_IO_SSL_CLIENT) && p_ssl_cxt) {
 		if((mp_cSSL = SSL_new(p_ssl_cxt))) {
 			SSL_set_fd(mp_cSSL, m_socket);

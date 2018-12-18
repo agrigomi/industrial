@@ -1,4 +1,5 @@
 #include <string.h>
+#include <unistd.h>
 #include "private.h"
 #include "time.h"
 #include "url-codec.h"
@@ -527,10 +528,11 @@ _u32 cHttpConnection::send_content(void) {
 	if(m_res_content_len && m_content_sent < m_res_content_len) {
 		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_obuffer);
 		if(ptr && m_obuffer_offset) {
-			if((r = mp_sio->write(ptr + m_obuffer_sent, m_obuffer_offset - m_obuffer_sent))) {
-				m_obuffer_sent += r;
-				m_content_sent += r;
-			}
+			//mp_sio->blocking(true);
+			r = mp_sio->write(ptr + m_obuffer_sent, m_obuffer_offset - m_obuffer_sent);
+			m_obuffer_sent += r;
+			m_content_sent += r;
+			//mp_sio->blocking(false);
 		}
 	}
 
