@@ -552,9 +552,11 @@ _u8 cHttpConnection::process(void) {
 				if(alive())
 					m_state = HTTPC_COMPLETE_HEADER;
 				else {
-					m_error_code = HTTPRC_GONE;
 					m_state = HTTPC_CLOSE;
-					r = HTTP_ON_ERROR;
+					if(m_ibuffer_offset) {
+						m_error_code = HTTPRC_GONE;
+						r = HTTP_ON_ERROR;
+					}
 				}
 			}
 			break;
