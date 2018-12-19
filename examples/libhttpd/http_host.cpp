@@ -57,6 +57,8 @@ private:
 							if(ptr) {
 								pi_httpc->res_content_len(sz);
 								pi_httpc->res_code(HTTPRC_OK);
+								pi_httpc->res_var("Server", "ExtHttp (proholic)");
+								pi_httpc->res_mtime(p_srv->p_http_host->mpi_fcache->mtime(fc));
 								pi_httpc->set_udata((_ulong)fc); // keep file cache
 								pi_httpc->res_write(ptr, sz);
 							} else { // can't get pointer to file content

@@ -133,6 +133,8 @@ public:
 	virtual _u32 res_content_len(void)=0;
 	// return nimber of sent bytes for response content
 	virtual _u32 res_content_sent(void)=0;
+	// set last modify time in response header
+	virtual void res_mtime(time_t mtime)=0;
 	// returns the content length of  request
 	virtual _u32 req_content_len(void)=0;
 	// return remainder pard of response data in bytes (ContentLength - Sent)

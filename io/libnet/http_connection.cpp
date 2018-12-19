@@ -734,4 +734,12 @@ bool cHttpConnection::res_content_len(_u32 content_len) {
 	return res_var("Content-Length", cl);
 }
 
+void cHttpConnection::res_mtime(time_t mtime) {
+	_char_t value[128]="";
+	tm *_tm = gmtime(&mtime);
+	strftime(value, sizeof(value), "%a, %d %b %Y %H:%M:%S GMT", _tm);
+
+	res_var("Last-Modified", value);
+}
+
 static cHttpConnection _g_httpc_;

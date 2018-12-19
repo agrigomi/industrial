@@ -168,6 +168,8 @@ public:
 	_u32 res_content_sent(void) {
 		return m_content_sent;
 	}
+	// set last modify time in response header
+	void res_mtime(time_t mtime);
 	// returns the content length of  request
 	_u32 req_content_len(void) {
 		return m_req_content_len;
