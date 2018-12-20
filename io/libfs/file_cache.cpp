@@ -177,16 +177,27 @@ public:
 		return r;
 	}
 
-	bool init(_cstr_t path) {
+	bool init(_cstr_t path, _cstr_t key=NULL) {
 		bool r = make_cache_dir(path, I_FILE_CACHE);
 
 		if(r) {
 			_char_t sbase[MAX_FCACHE_PATH]="";
-			_char_t saddr[32]="";
+			bool auto_key = false;
 
 			snprintf(sbase, sizeof(sbase), "%s", m_cache_path);
-			snprintf(saddr, sizeof(saddr), "%lu", (_ulong)this);
-			r = make_cache_dir(sbase, saddr);
+
+			if(!key)
+				auto_key = true;
+			else if(strlen(key) == 0)
+				auto_key = true;
+
+			if(auto_key) {
+				_char_t saddr[32]="";
+
+				snprintf(saddr, sizeof(saddr), "%lu", (_ulong)this);
+				r = make_cache_dir(sbase, saddr);
+			} else
+				r = make_cache_dir(sbase, key);
 		}
 
 		return r;

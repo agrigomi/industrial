@@ -213,7 +213,7 @@ public:
 						else if(strcmp(oi.iname, I_FS) == 0) {
 							mpi_fs = (iFS *)pn->object;
 							if((mpi_fcache = (iFileCache *)_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE)))
-								mpi_fcache->init("/tmp");
+								mpi_fcache->init("/tmp", "ExtHttp");
 						}
 					} else if(pn->flags & (NF_UNINIT | NF_REMOVE)) { // release
 						if(strcmp(oi.iname, I_NET) == 0) {

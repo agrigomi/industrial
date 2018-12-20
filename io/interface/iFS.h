@@ -54,7 +54,7 @@ class iFileCache: public iBase {
 public:
 	INTERFACE(iFileCache, I_FILE_CACHE);
 	// Initialize cache with path to cache folder
-	virtual bool init(_cstr_t path)=0;
+	virtual bool init(_cstr_t path, _cstr_t key=NULL)=0;
 	// open file in cache
 	virtual HFCACHE open(_cstr_t path)=0;
 	// return pointer to file content
