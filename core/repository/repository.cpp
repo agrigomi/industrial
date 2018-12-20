@@ -14,8 +14,8 @@
 
 typedef struct {
 	iBase	*monitored;
-	_cstr_t	iname;
-	_cstr_t	cname;
+	_str_t	iname;
+	_str_t	cname;
 	iBase	*handler;
 }_notify_t;
 
@@ -181,17 +181,24 @@ private:
 	void remove_notifications(iBase *handler) {
 		if(mpi_notify_list) {
 			HMUTEX hm = mpi_notify_list->lock();
+			iHeap *pi_heap = (iHeap *)object_by_iname(I_HEAP, RF_ORIGINAL);
 			_u32 sz = 0;
 			_notify_t *rec = (_notify_t *)mpi_notify_list->first(&sz, hm);
 
 			while(rec) {
 				if(rec->handler == handler) {
+					if(rec->iname)
+						pi_heap->free(rec->iname, strlen(rec->iname));
+					if(rec->cname)
+						pi_heap->free(rec->cname, strlen(rec->cname));
+
 					mpi_notify_list->del(hm);
 					rec = (_notify_t *)mpi_notify_list->current(&sz, hm);
 				} else
 					rec = (_notify_t *)mpi_notify_list->next(&sz, hm);
 			}
 
+			object_release(pi_heap);
 			mpi_notify_list->unlock(hm);
 		}
 	}
@@ -663,11 +670,33 @@ public:
 		_notify_t *r = 0;
 
 		if(mpi_notify_list && handler_obj) {
-			_notify_t n = {	mon_obj, mon_iname, mon_cname, handler_obj };
+			_notify_t n = {NULL, NULL, NULL, handler_obj};
+
+			n.monitored = mon_obj;
+
+			iHeap *pi_heap = (iHeap *)object_by_iname(I_HEAP, RF_ORIGINAL);
+
+		 	if(mon_iname) {
+				if((n.iname = (_str_t)pi_heap->alloc(strlen(mon_iname)+1)))
+					strcpy(n.iname, mon_iname);
+			}
+
+		 	if(mon_cname) {
+				if((n.cname = (_str_t)pi_heap->alloc(strlen(mon_cname)+1)))
+					strcpy(n.cname, mon_cname);
+			}
+
 			if((r = (_notify_t *)mpi_notify_list->add(&n, sizeof(_notify_t)))) {
 				if(scan_flags)
 					scan_for_notifications(&n, scan_flags);
+			} else {
+				if(n.iname)
+					pi_heap->free(n.iname, strlen(n.iname));
+				if(n.cname)
+					pi_heap->free(n.cname, strlen(n.cname));
 			}
+
+			object_release(pi_heap);
 		}
 
 		return r;
@@ -677,9 +706,20 @@ public:
 		_notify_t *rec = (_notify_t *)h;
 
 		if(mpi_notify_list) {
+			_u32 sz = 0;
 			HMUTEX hm = mpi_notify_list->lock();
-			if(mpi_notify_list->sel(rec, hm))
+			iHeap *pi_heap = (iHeap *)object_by_iname(I_HEAP, RF_ORIGINAL);
+
+			if(mpi_notify_list->sel(rec, hm)) {
+				_notify_t *pn = (_notify_t *)mpi_notify_list->current(&sz, hm);
+				if(pn->iname)
+					pi_heap->free(pn->iname, strlen(pn->iname));
+				if(pn->cname)
+					pi_heap->free(pn->cname, strlen(pn->cname));
 				mpi_notify_list->del(hm);
+			}
+
+			object_release(pi_heap);
 			mpi_notify_list->unlock(hm);
 		}
 	}
