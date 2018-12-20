@@ -554,13 +554,8 @@ _u8 cHttpConnection::process(void) {
 			if(!receive()) {
 				if(alive())
 					m_state = HTTPC_COMPLETE_HEADER;
-				else {
+				else
 					m_state = HTTPC_CLOSE;
-					if(m_ibuffer_offset) {
-						m_error_code = HTTPRC_GONE;
-						r = HTTP_ON_ERROR;
-					}
-				}
 			}
 			break;
 		case HTTPC_COMPLETE_HEADER:
@@ -572,7 +567,6 @@ _u8 cHttpConnection::process(void) {
 					m_state = HTTPC_RECEIVE_HEADER;
 				} else
 					m_state = HTTPC_CLOSE;
-
 			}
 			break;
 		case HTTPC_PARSE_HEADER:
