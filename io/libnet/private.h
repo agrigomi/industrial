@@ -96,6 +96,7 @@ private:
 	_u16		m_error_code;
 	_u16		m_response_code;
 	_u16		m_state;
+	_u32		m_try_count;
 	_ulong		m_udata[HTTPC_MAX_UDATA_INDEX];
 
 	_cstr_t get_rc_text(_u16 rc);
