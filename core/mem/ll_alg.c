@@ -280,27 +280,29 @@ void  ll_del(_ll_context_t *p_cxt, _u64 hlock) {
 
 	_ll_item_hdr_t *p_cur = p_cxt->state[p_cxt->ccol].p_current;
 	if(p_cur && p_cxt->p_free) {
-		if(p_cur->prev)
+		_ll_item_hdr_t *p_prev = p_cur->prev, *p_next = p_cur->next;
+
+		if(p_prev)
 			/* releate prev to next */
-			p_cur->prev->next = p_cur->next;
+			p_prev->next = p_cur->next;
 
-		if(p_cur->next) {
+		if(p_next) {
 			/* releate next to prev */
-			p_cur->next->prev = p_cur->prev;
-
-			p_cxt->state[p_cxt->ccol].p_current = p_cur->next;
-		}
+			p_next->prev = p_cur->prev;
+			p_cxt->state[p_cxt->ccol].p_current = p_next;
+		} else
+			p_cxt->state[p_cxt->ccol].p_current = p_prev;
 
 		if(p_cur == p_cxt->state[p_cxt->ccol].p_first) {
 			p_cxt->state[p_cxt->ccol].p_current =
-					p_cxt->state[p_cxt->ccol].p_first = p_cur->next;
+					p_cxt->state[p_cxt->ccol].p_first = p_next;
 			if(p_cxt->mode == LL_MODE_RING)
 				p_cxt->state[p_cxt->ccol].p_last->next =
 					p_cxt->state[p_cxt->ccol].p_current;
 		}
 
 		if(p_cur == p_cxt->state[p_cxt->ccol].p_last) {
-			p_cxt->state[p_cxt->ccol].p_current = p_cxt->state[p_cxt->ccol].p_last = p_cur->prev;
+			p_cxt->state[p_cxt->ccol].p_current = p_cxt->state[p_cxt->ccol].p_last = p_prev;
 			if(p_cxt->mode == LL_MODE_RING)
 				p_cxt->state[p_cxt->ccol].p_current->next = p_cxt->state[p_cxt->ccol].p_first;
 			p_cxt->state[p_cxt->ccol].current--;
