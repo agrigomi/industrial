@@ -501,9 +501,11 @@ _u32 cHttpConnection::send_header(void) {
 			_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_oheader);
 
 			if(ptr) {
+				mp_sio->blocking(true);
 				r = mp_sio->write(ptr + m_oheader_sent,
 						m_oheader_offset - m_oheader_sent);
 				m_oheader_sent += r;
+				mp_sio->blocking(false);
 			}
 		}
 
