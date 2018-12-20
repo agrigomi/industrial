@@ -192,6 +192,14 @@ public:
 	BASE(cCmdHttpd, "cCmdHttpd", RF_ORIGINAL, 1,0,0);
 
 	bool object_ctl(_u32 c, void *arg, ...) {
+		switch(c) {
+			case OCTL_UNINIT: {
+				iHttpHost *pi_httpd = get_httpd();
+
+				if(pi_httpd)
+					_gpi_repo_->object_release(pi_httpd);
+			} break;
+		}
 		return true;
 	}
 

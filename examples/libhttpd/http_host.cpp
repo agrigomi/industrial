@@ -156,7 +156,24 @@ private:
 	}
 
 	void stop_host(void) {
-		//...
+		_map_enum_t me = mpi_map->enum_open();
+
+		mpi_log->write(LMT_INFO, "Stop ExtHttp...");
+		if(me) {
+			_u32 sz = 0;
+			_server_t *p_srv = (_server_t *)mpi_map->enum_first(me, &sz);
+
+			while(p_srv) {
+				if(p_srv->pi_http_server) {
+					mpi_log->fwrite(LMT_INFO, "ExtHttp: Stop server '%s'", p_srv->name);
+					_gpi_repo_->object_release(p_srv->pi_http_server);
+					p_srv->pi_http_server = NULL;
+				}
+				p_srv = (_server_t *)mpi_map->enum_next(me, &sz);
+			}
+
+			mpi_map->enum_close(me);
+		}
 	}
 
 public:
@@ -208,18 +225,22 @@ public:
 					pn->object->object_info(&oi);
 
 					if(pn->flags & NF_INIT) { // catch
-						if(strcmp(oi.iname, I_NET) == 0)
+						if(strcmp(oi.iname, I_NET) == 0) {
+							mpi_log->write(LMT_INFO, "ExtHttp: catch networking");
 							mpi_net = (iNet *)pn->object;
-						else if(strcmp(oi.iname, I_FS) == 0) {
+						} else if(strcmp(oi.iname, I_FS) == 0) {
+							mpi_log->write(LMT_INFO, "ExtHttp: catch FS support");
 							mpi_fs = (iFS *)pn->object;
 							if((mpi_fcache = (iFileCache *)_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE)))
 								mpi_fcache->init("/tmp", "ExtHttp");
 						}
 					} else if(pn->flags & (NF_UNINIT | NF_REMOVE)) { // release
 						if(strcmp(oi.iname, I_NET) == 0) {
+							mpi_log->write(LMT_INFO, "ExtHttp: release networking");
 							stop_host();
 							release_object(_gpi_repo_, (iBase **)&mpi_net);
 						} else if(strcmp(oi.iname, I_FS) == 0) {
+							mpi_log->write(LMT_INFO, "ExtHttp: release FS support");
 							stop_host();
 							release_object(_gpi_repo_, (iBase **)&mpi_fcache);
 							release_object(_gpi_repo_, (iBase **)&mpi_fs);
