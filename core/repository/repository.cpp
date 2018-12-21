@@ -188,9 +188,9 @@ private:
 			while(rec) {
 				if(rec->handler == handler) {
 					if(rec->iname)
-						pi_heap->free(rec->iname, strlen(rec->iname));
+						pi_heap->free(rec->iname, strlen(rec->iname)+1);
 					if(rec->cname)
-						pi_heap->free(rec->cname, strlen(rec->cname));
+						pi_heap->free(rec->cname, strlen(rec->cname)+1);
 
 					mpi_notify_list->del(hm);
 					rec = (_notify_t *)mpi_notify_list->current(&sz, hm);
@@ -691,9 +691,9 @@ public:
 					scan_for_notifications(&n, scan_flags);
 			} else {
 				if(n.iname)
-					pi_heap->free(n.iname, strlen(n.iname));
+					pi_heap->free(n.iname, strlen(n.iname)+1);
 				if(n.cname)
-					pi_heap->free(n.cname, strlen(n.cname));
+					pi_heap->free(n.cname, strlen(n.cname)+1);
 			}
 
 			object_release(pi_heap);
@@ -713,9 +713,9 @@ public:
 			if(mpi_notify_list->sel(rec, hm)) {
 				_notify_t *pn = (_notify_t *)mpi_notify_list->current(&sz, hm);
 				if(pn->iname)
-					pi_heap->free(pn->iname, strlen(pn->iname));
+					pi_heap->free(pn->iname, strlen(pn->iname)+1);
 				if(pn->cname)
-					pi_heap->free(pn->cname, strlen(pn->cname));
+					pi_heap->free(pn->cname, strlen(pn->cname)+1);
 				mpi_notify_list->del(hm);
 			}
 
