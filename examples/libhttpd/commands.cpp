@@ -20,12 +20,12 @@ typedef struct {
 	_cmd_handler_t	*a_handler;
 }_cmd_action_t;
 
+static iHttpHost *gpi_http_host = NULL;
 
 static iHttpHost *get_httpd(void) {
-	static iHttpHost *gpi_http_host = NULL;
-
-	if(!gpi_http_host)
+	if(!gpi_http_host) {
 		gpi_http_host = (iHttpHost *)_gpi_repo_->object_by_iname(I_HTTP_HOST, RF_ORIGINAL);
+	}
 
 	return gpi_http_host;
 }
@@ -192,15 +192,18 @@ public:
 	BASE(cCmdHttpd, "cCmdHttpd", RF_ORIGINAL, 1,0,0);
 
 	bool object_ctl(_u32 c, void *arg, ...) {
-		switch(c) {
-			case OCTL_UNINIT: {
-				iHttpHost *pi_httpd = get_httpd();
+		bool r = false;
 
-				if(pi_httpd)
-					_gpi_repo_->object_release(pi_httpd);
-			} break;
+		switch(c) {
+			case OCTL_INIT:
+				r = true;
+				break;
+			case OCTL_UNINIT:
+				if(gpi_http_host)
+					_gpi_repo_->object_release(gpi_http_host);
+				r = true;
 		}
-		return true;
+		return r;
 	}
 
 	_cmd_t *get_info(void) {

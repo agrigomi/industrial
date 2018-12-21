@@ -648,6 +648,8 @@ public:
 			if(array) {
 				disable_array(array, count);
 				uninit_array(array, count);
+				// call uninit_array once again to clean internal references
+				uninit_array(array, count);
 				if(get_references(array, count) == 0) {
 					if((r = pi_ext->unload()) == ERR_NONE) {
 						remove_extension(pi_ext);
