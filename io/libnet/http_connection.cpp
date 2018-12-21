@@ -87,7 +87,7 @@ static _http_method_map _g_method_map[] = {
 #define VAR_REQ_URN		"req-URN"
 #define VAR_REQ_PROTOCOL	"req-Protocol"
 
-#define MAX_TRY_COUNT	4990000
+#define MAX_TRY_COUNT	2000000
 
 bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
