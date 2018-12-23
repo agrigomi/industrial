@@ -66,14 +66,20 @@ private:
 								pi_log->fwrite(LMT_ERROR, "%s: Internal error", p_srv->name);
 							}
 						} else {
+							_char_t req_ip[32]="";
+
+							pi_httpc->peer_ip(req_ip, sizeof(req_ip));
 							pi_httpc->res_code(HTTPRC_NOT_FOUND);
-							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found", p_srv->name, doc);
+							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found (%s)", p_srv->name, doc, req_ip);
 						}
 					} else
 						pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
 				} else {
+					_char_t req_ip[32]="";
+
+					pi_httpc->peer_ip(req_ip, sizeof(req_ip));
 					pi_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
-					pi_log->fwrite(LMT_ERROR, "%s: Method not allowed", p_srv->name);
+					pi_log->fwrite(LMT_ERROR, "%s: Method not allowed (%s)", p_srv->name, req_ip);
 					pi_log->write(LMT_TEXT, pi_httpc->req_header());
 
 					_u32 sz = 0;
