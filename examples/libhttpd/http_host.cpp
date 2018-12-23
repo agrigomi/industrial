@@ -84,8 +84,10 @@ private:
 
 					_u32 sz = 0;
 					_str_t data = (_str_t)pi_httpc->req_data(&sz);
-					if(data && sz)
+					if(data && sz) {
 						fwrite(data, sz, 1, stdout);
+						fwrite("\r\n", 2, 1, stdout);
+					}
 				}
 			} else
 				pi_httpc->res_code(HTTPRC_REQ_URI_TOO_LARGE);
