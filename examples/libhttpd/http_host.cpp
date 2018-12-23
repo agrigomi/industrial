@@ -74,6 +74,23 @@ private:
 						}
 					} else
 						pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
+				} else if(method == HTTP_METHOD_HEAD) {
+					if(p_srv->p_http_host->mpi_fcache) {
+						HFCACHE fc = p_srv->p_http_host->mpi_fcache->open(doc);
+						if(fc) { // open file cache
+							pi_httpc->res_code(HTTPRC_OK);
+							pi_httpc->res_var("Server", "ExtHttp (proholic)");
+							pi_httpc->res_mtime(p_srv->p_http_host->mpi_fcache->mtime(fc));
+							p_srv->p_http_host->mpi_fcache->close(fc);
+						} else {
+							_char_t req_ip[32]="";
+
+							pi_httpc->peer_ip(req_ip, sizeof(req_ip));
+							pi_httpc->res_code(HTTPRC_NOT_FOUND);
+							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found (%s)", p_srv->name, doc, req_ip);
+						}
+					} else
+						pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
 				} else {
 					_char_t req_ip[32]="";
 
