@@ -171,7 +171,6 @@ private:
 		_char_t name[256]="";
 
 		if(arg_port && arg_root) {
-
 			if(arg_name)
 				strncpy(name, arg_name, sizeof(name)-1);
 			else
@@ -303,9 +302,11 @@ public:
 						r = true;
 					} else
 						_gpi_repo_->object_release(srv.pi_http_server);
-				}
+				} else
+					mpi_log->fwrite(LMT_ERROR, "Unable to create server '%s' on port %d", name, port);
 			}
-		}
+		} else
+			mpi_log->write(LMT_ERROR, "No network support");
 
 		return r;
 	}
