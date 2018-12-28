@@ -15,10 +15,9 @@ struct request: public _request_t{
 struct response: public _response_t {
 	iHttpConnection *mpi_httpc;
 
-	void code(_u16 rc);
 	void var(_cstr_t name, _cstr_t value);
 	_u32 write(void *data, _u32 size);
-	_u32 end(void *data, _u32 size);
+	_u32 end(_u16 response_code, void *data, _u32 size);
 };
 
 struct server: public _server_t {
