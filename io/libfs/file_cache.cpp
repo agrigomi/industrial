@@ -46,14 +46,22 @@ private:
 		}
 
 		_char_t cache_path[MAX_FCACHE_PATH*2]="";
+		bool _r = false;
+		time_t mtime = mpi_fs->modify_time(path);
 
 		snprintf(cache_path, sizeof(cache_path), "%s/%s", m_cache_path, pfce->sha_fname);
-		if(mpi_fs->copy(path, (_cstr_t)cache_path)) {
+
+		if(mpi_fs->modify_time(cache_path) < mtime)
+			_r = mpi_fs->copy(path, (_cstr_t)cache_path);
+		else
+			_r = true;
+
+		if(_r) {
 			if((pfce->pi_fio = mpi_fs->open(cache_path))) {
 				pfce->refc = 0;
 				pfce->ptr = NULL;
 				pfce->size = pfce->pi_fio->size();
-				pfce->mtime = mpi_fs->modify_time(path);
+				pfce->mtime = mtime;
 				pfce->remove = false;
 				r = true;
 			}
