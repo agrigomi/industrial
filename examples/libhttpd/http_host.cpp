@@ -12,6 +12,7 @@
 #define MAX_SERVER_NAME		32
 #define MAX_DOC_ROOT		256
 #define SERVER_NAME		"ExtHttp (proholic)"
+#define BUFFER_SIZE		(16*1024)
 
 class cHttpHost: public iHttpHost {
 private:
@@ -294,7 +295,7 @@ public:
 				srv.port = port;
 				srv.p_http_host = this;
 
-				if((srv.pi_http_server = mpi_net->create_http_server(port))) {
+				if((srv.pi_http_server = mpi_net->create_http_server(port, BUFFER_SIZE))) {
 					_server_t *p_srv = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(srv));
 					if(p_srv) {
 						set_handlers(p_srv);
@@ -318,7 +319,7 @@ public:
 
 		if(p_srv) {
 			if(!p_srv->pi_http_server) {
-				if((p_srv->pi_http_server = mpi_net->create_http_server(p_srv->port))) {
+				if((p_srv->pi_http_server = mpi_net->create_http_server(p_srv->port, BUFFER_SIZE))) {
 					set_handlers(p_srv);
 					r = true;
 				}
