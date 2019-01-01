@@ -66,6 +66,7 @@ private:
 								pi_httpc->res_write(ptr, sz);
 							} else { // can't get pointer to file content
 								pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
+								p_srv->p_http_host->mpi_fcache->close(fc);
 								pi_log->fwrite(LMT_ERROR, "%s: Internal error", p_srv->name);
 							}
 						} else {
@@ -91,8 +92,10 @@ private:
 							pi_httpc->res_code(HTTPRC_NOT_FOUND);
 							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found (%s)", p_srv->name, doc, req_ip);
 						}
-					} else
+					} else {
 						pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
+						pi_log->fwrite(LMT_ERROR, "%s: Internal error", p_srv->name);
+					}
 				} else {
 					_char_t req_ip[32]="";
 
@@ -108,8 +111,11 @@ private:
 						fwrite("\r\n", 2, 1, stdout);
 					}
 				}
-			} else
+			} else {
 				pi_httpc->res_code(HTTPRC_REQ_URI_TOO_LARGE);
+				pi_log->write(LMT_ERROR, "Request URI too large");
+				pi_log->write(LMT_TEXT, url);
+			}
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_REQUEST_DATA, [](iHttpConnection *pi_httpc, void *udata) {
