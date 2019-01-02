@@ -32,12 +32,14 @@ typedef void _on_route_event_t(_request_t *request, _response_t *response, void 
 #define ON_DISCONNECT	HTTP_ON_DISCONNECT
 
 typedef struct {
+	virtual bool is_running(void)=0;
 	virtual bool start(void)=0;
 	virtual void stop(void)=0;
 	virtual _cstr_t name(void)=0;
 	virtual _u32 port(void)=0;
 	virtual void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata)=0;
 	virtual void on_event(_u8 evt, _on_http_event_t *pcb, void *udata)=0;
+	virtual void remove_route(_u8 method, _cstr_t path)=0;
 }_server_t;
 
 class iGatn: public iBase {
