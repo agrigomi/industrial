@@ -177,11 +177,13 @@ public:
 			if(mpi_map && mpi_net && mpi_fs) {
 				server srv;
 
-				memset(&srv, 0, sizeof(server));
 				srv.mpi_server = NULL;
 				strncpy(srv.m_name, name, MAX_SERVER_NAME-1);
 				strncpy(srv.m_doc_root, doc_root, MAX_DOC_ROOT_PATH-1);
 				strncpy(srv.m_cache_path, cache_path, MAX_CACHE_PATH-1);
+				memset(srv.m_event, 0, sizeof(srv.m_event));
+				memset(srv.m_doc_root, 0, sizeof(srv.m_doc_root));
+				memset(srv.m_cache_path, 0, sizeof(srv.m_cache_path));
 				srv.m_port = port;
 				srv.mpi_net = mpi_net;
 				srv.mpi_fs = mpi_fs;
