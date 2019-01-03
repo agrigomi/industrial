@@ -28,7 +28,7 @@ bool server::create_connection(iHttpConnection *p_httpc) {
 	_connection_t *p_cnt = (_connection_t *)mpi_heap->alloc(sizeof(_connection_t));
 
 	if(p_cnt) {
-		memcpy(p_cnt, &tmp, sizeof(_connection_t));
+		memcpy((void *)p_cnt, (void *)&tmp, sizeof(_connection_t));
 		p_cnt->req.mpi_httpc = p_cnt->res.mpi_httpc = p_httpc;
 		//...
 
