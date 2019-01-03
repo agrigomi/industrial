@@ -42,6 +42,8 @@ typedef struct {
 	virtual void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata)=0;
 	virtual void on_event(_u8 evt, _on_http_event_t *pcb, void *udata)=0;
 	virtual void remove_route(_u8 method, _cstr_t path)=0;
+	virtual _request_t *get_request(iHttpConnection *pi_httpc)=0;
+	virtual _response_t *get_response(iHttpConnection *pi_httpc)=0;
 }_server_t;
 
 class iGatn: public iBase {

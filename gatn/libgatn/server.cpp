@@ -47,9 +47,10 @@ void server::set_handlers(void) {
 	mpi_server->on_event(HTTP_ON_REQUEST, [](iHttpConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
+		p_srv->create_connection(p_httpc);
+
 		p_srv->call_handler(HTTP_ON_REQUEST, p_httpc);
-		if(p_srv->create_connection(p_httpc))
-			p_srv->call_route_handler(HTTP_ON_REQUEST, p_httpc);
+		p_srv->call_route_handler(HTTP_ON_REQUEST, p_httpc);
 	}, this);
 
 	mpi_server->on_event(HTTP_ON_REQUEST_DATA, [](iHttpConnection *p_httpc, void *udata) {
@@ -239,5 +240,26 @@ void server::remove_route(_u8 method, _cstr_t path) {
 	strncpy(key.path, path, MAX_ROUTE_PATH-1);
 	if(mpi_map)
 		mpi_map->del(&key, sizeof(_route_key_t));
+}
+
+_request_t *server::get_request(iHttpConnection *pi_httpc) {
+	_request_t *r = NULL;
+	_connection_t *pc = (_connection_t *)pi_httpc->get_udata(IDX_CONNECTION);
+
+	if(pc)
+		r = &pc->req;
+
+	return r;
+}
+
+_response_t *server::get_response(iHttpConnection *pi_httpc) {
+	_response_t *r = NULL;
+
+	_connection_t *pc = (_connection_t *)pi_httpc->get_udata(IDX_CONNECTION);
+
+	if(pc)
+		r = &pc->res;
+
+	return r;
 }
 

@@ -69,4 +69,6 @@ struct server: public _server_t {
 	void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata);
 	void on_event(_u8 evt, _on_http_event_t *pcb, void *udata);
 	void remove_route(_u8 method, _cstr_t path);
+	_request_t *get_request(iHttpConnection *pi_httpc);
+	_response_t *get_response(iHttpConnection *pi_httpc);
 };
