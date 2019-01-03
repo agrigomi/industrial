@@ -7,10 +7,11 @@ IMPLEMENT_BASE_ARRAY("libgatn", 10);
 
 class cGatn: public iGatn {
 private:
-	iMap	*mpi_map;// server map
-	iNet	*mpi_net;
-	iFS	*mpi_fs;
-	iLog	*mpi_log;
+	iMap		*mpi_map;// server map
+	iNet		*mpi_net;
+	iFS		*mpi_fs;
+	iLog		*mpi_log;
+	iBufferMap	*mpi_bmap;
 
 	void stop(bool autorestore=false) { // stop servers
 		_map_enum_t en = mpi_map->enum_open();
@@ -98,13 +99,22 @@ public:
 
 				mpi_map = dynamic_cast<iMap *>(pi_repo->object_by_iname(I_MAP, RF_CLONE));
 				mpi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
-
+				mpi_bmap = dynamic_cast<iBufferMap *>(pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE));
 				mpi_net = NULL;
 				mpi_fs = NULL;
 
-				if(mpi_map && mpi_log) {
+				if(mpi_map && mpi_log && mpi_bmap) {
 					pi_repo->monitoring_add(NULL, I_NET, NULL, this, SCAN_ORIGINAL);
 					pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
+
+					mpi_bmap->init(GATN_BUFFER_SIZE, [](_u8 op, void *bptr, _u32 sz, void *udata)->_u32 {
+						_u32 r = 0;
+
+						if(op == BIO_INIT)
+							memset(bptr, 0, sz);
+
+						return r;
+					});
 					r = true;
 				}
 			} break;
@@ -114,6 +124,7 @@ public:
 				destroy();
 				pi_repo->object_release(mpi_map);
 				pi_repo->object_release(mpi_log);
+				pi_repo->object_release(mpi_bmap);
 				r = true;
 			} break;
 			case OCTL_NOTIFY: {
@@ -167,6 +178,7 @@ public:
 				srv.mpi_fs = mpi_fs;
 				srv.mpi_log = mpi_log;
 				srv.m_autorestore = false;
+				srv.mpi_bmap = mpi_bmap;
 				memset(srv.m_event, 0, sizeof(srv.m_event));
 				if((srv.mpi_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE))))
 					r = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(server));

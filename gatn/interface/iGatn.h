@@ -23,13 +23,14 @@ typedef struct {
 	//...
 }_response_t;
 
-typedef void _on_route_event_t(_request_t *request, _response_t *response, void *udata);
-
+// events
 #define ON_CONNECT	HTTP_ON_OPEN
 #define ON_REQUEST	HTTP_ON_REQUEST
 #define ON_DATA		HTTP_ON_REQUEST_DATA
 #define ON_ERROR	HTTP_ON_ERROR
 #define ON_DISCONNECT	HTTP_ON_DISCONNECT
+
+typedef void _on_route_event_t(_u8 evt, _request_t *request, _response_t *response, void *udata);
 
 typedef struct {
 	virtual bool is_running(void)=0;

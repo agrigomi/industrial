@@ -23,6 +23,7 @@ struct response: public _response_t {
 
 #define MAX_SERVER_NAME		32
 #define SERVER_BUFFER_SIZE	16384
+#define GATN_BUFFER_SIZE	64*1024
 #define HTTP_MAX_EVENTS		10
 
 typedef struct {
@@ -40,6 +41,7 @@ struct server: public _server_t {
 	iLog		*mpi_log; // system log
 	bool		m_autorestore;
 	_event_data_t	m_event[HTTP_MAX_EVENTS];
+	iBufferMap	*mpi_bmap;
 
 	bool is_running(void) {
 		return (mpi_server) ? true : false;
@@ -54,6 +56,8 @@ struct server: public _server_t {
 	}
 	void set_handlers(void);
 	void call_handler(_u8 evt, iHttpConnection *p_httpc);
+	void call_route_handler(_u8 evt, iHttpConnection *p_httpc);
+	void update_response(iHttpConnection *p_httpc);
 	void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata);
 	void on_event(_u8 evt, _on_http_event_t *pcb, void *udata);
 	void remove_route(_u8 method, _cstr_t path);

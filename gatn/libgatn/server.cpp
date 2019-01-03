@@ -25,25 +25,28 @@ void server::set_handlers(void) {
 		server *p_srv = (server *)udata;
 
 		p_srv->call_handler(HTTP_ON_REQUEST, p_httpc);
-		//...
+		p_srv->call_route_handler(HTTP_ON_REQUEST, p_httpc);
 	}, this);
 
 	mpi_server->on_event(HTTP_ON_REQUEST_DATA, [](iHttpConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
 		p_srv->call_handler(HTTP_ON_REQUEST_DATA, p_httpc);
+		p_srv->call_route_handler(HTTP_ON_REQUEST_DATA, p_httpc);
 	}, this);
 
 	mpi_server->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
 		p_srv->call_handler(HTTP_ON_RESPONSE_DATA, p_httpc);
+		p_srv->update_response(p_httpc);
 	}, this);
 
 	mpi_server->on_event(HTTP_ON_ERROR, [](iHttpConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
 		p_srv->call_handler(HTTP_ON_ERROR, p_httpc);
+		p_srv->call_route_handler(HTTP_ON_ERROR, p_httpc);
 	}, this);
 
 	mpi_server->on_event(HTTP_ON_CLOSE, [](iHttpConnection *p_httpc, void *udata) {
@@ -81,6 +84,34 @@ void server::call_handler(_u8 evt, iHttpConnection *p_httpc) {
 		if(m_event[evt].pcb)
 			m_event[evt].pcb(p_httpc, m_event[evt].udata);
 	}
+}
+
+void server::call_route_handler(_u8 evt, iHttpConnection *p_httpc) {
+	_route_key_t key;
+	_u32 sz=0;
+	_cstr_t url = p_httpc->req_url();
+
+	// response header
+	p_httpc->res_var("Server", m_name);
+
+	memset(&key, 0, sizeof(_route_key_t));
+	key.method = p_httpc->req_method();
+	strncpy(key.path, url, sizeof(key.path));
+
+	_route_data_t *prd = (_route_data_t *)mpi_map->get(&key, sizeof(_route_key_t), &sz);
+	if(prd) {
+		// route found
+		//...
+	} else {
+		// route not found
+		//...
+		p_httpc->res_code(HTTPRC_NOT_FOUND);
+	}
+}
+
+void server::update_response(iHttpConnection *p_httpc) {
+	// write response remainder
+	//...
 }
 
 void server::on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata) {
