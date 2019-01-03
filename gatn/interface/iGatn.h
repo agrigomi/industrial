@@ -28,7 +28,8 @@ typedef struct {
 #define ON_REQUEST	HTTP_ON_REQUEST
 #define ON_DATA		HTTP_ON_REQUEST_DATA
 #define ON_ERROR	HTTP_ON_ERROR
-#define ON_DISCONNECT	HTTP_ON_DISCONNECT
+#define ON_DISCONNECT	HTTP_ON_CLOSE
+#define ON_NOT_FOUND	HTTP_ON_RESERVED1
 
 typedef void _on_route_event_t(_u8 evt, _request_t *request, _response_t *response, void *udata);
 
@@ -47,7 +48,7 @@ class iGatn: public iBase {
 public:
 	INTERFACE(iGatn, I_GATN);
 
-	virtual _server_t *create_server(_cstr_t name, _u32 port)=0;
+	virtual _server_t *create_server(_cstr_t name, _u32 port, _cstr_t doc_root, _cstr_t cache_path)=0;
 	virtual _server_t *server_by_name(_cstr_t name)=0;
 	virtual void remove_server(_server_t *p_srv)=0;
 	//...

@@ -12,6 +12,7 @@ private:
 	iFS		*mpi_fs;
 	iLog		*mpi_log;
 	iBufferMap	*mpi_bmap;
+	iHeap		*mpi_heap;
 
 	void stop(bool autorestore=false) { // stop servers
 		_map_enum_t en = mpi_map->enum_open();
@@ -28,6 +29,8 @@ private:
 					p->stop();
 					p->mpi_net = NULL;
 					p->mpi_fs = NULL;
+					_gpi_repo_->object_release(p->mpi_fcache);
+					p->mpi_fcache = NULL;
 					p->m_autorestore = autorestore;
 					p_srv = (_server_t *)mpi_map->enum_next(en, &sz, hm);
 				}
@@ -79,6 +82,7 @@ private:
 					_gpi_repo_->object_release(p->mpi_server);
 					p->mpi_server = NULL;
 					_gpi_repo_->object_release(p->mpi_map);
+					_gpi_repo_->object_release(p->mpi_fcache);
 				}
 				p_srv = (_server_t *)mpi_map->enum_next(en, &sz, hm);
 			}
@@ -100,10 +104,11 @@ public:
 				mpi_map = dynamic_cast<iMap *>(pi_repo->object_by_iname(I_MAP, RF_CLONE));
 				mpi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
 				mpi_bmap = dynamic_cast<iBufferMap *>(pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE));
+				mpi_heap = dynamic_cast<iHeap *>(pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL));
 				mpi_net = NULL;
 				mpi_fs = NULL;
 
-				if(mpi_map && mpi_log && mpi_bmap) {
+				if(mpi_map && mpi_log && mpi_bmap && mpi_heap) {
 					pi_repo->monitoring_add(NULL, I_NET, NULL, this, SCAN_ORIGINAL);
 					pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
 
@@ -125,6 +130,7 @@ public:
 				pi_repo->object_release(mpi_map);
 				pi_repo->object_release(mpi_log);
 				pi_repo->object_release(mpi_bmap);
+				pi_repo->object_release(mpi_heap);
 				r = true;
 			} break;
 			case OCTL_NOTIFY: {
@@ -163,7 +169,7 @@ public:
 		return r;
 	}
 
-	_server_t *create_server(_cstr_t name, _u32 port) {
+	_server_t *create_server(_cstr_t name, _u32 port, _cstr_t doc_root, _cstr_t cache_path) {
 		_server_t *r = NULL;
 		_u32 sz = 0;
 
@@ -171,15 +177,18 @@ public:
 			if(mpi_map && mpi_net && mpi_fs) {
 				server srv;
 
+				memset(&srv, 0, sizeof(server));
 				srv.mpi_server = NULL;
 				strncpy(srv.m_name, name, MAX_SERVER_NAME-1);
+				strncpy(srv.m_doc_root, doc_root, MAX_DOC_ROOT_PATH-1);
+				strncpy(srv.m_cache_path, cache_path, MAX_CACHE_PATH-1);
 				srv.m_port = port;
 				srv.mpi_net = mpi_net;
 				srv.mpi_fs = mpi_fs;
 				srv.mpi_log = mpi_log;
+				srv.mpi_heap = mpi_heap;
 				srv.m_autorestore = false;
 				srv.mpi_bmap = mpi_bmap;
-				memset(srv.m_event, 0, sizeof(srv.m_event));
 				if((srv.mpi_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE))))
 					r = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(server));
 
@@ -203,7 +212,7 @@ public:
 		if(p) {
 			_gpi_repo_->object_release(p->mpi_server);
 			_gpi_repo_->object_release(p->mpi_map);
-
+			_gpi_repo_->object_release(p->mpi_fcache);
 			mpi_map->del(p->m_name, strlen(p->m_name));
 		}
 	}

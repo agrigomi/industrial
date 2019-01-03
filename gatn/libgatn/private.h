@@ -25,6 +25,8 @@ struct response: public _response_t {
 #define SERVER_BUFFER_SIZE	16384
 #define GATN_BUFFER_SIZE	64*1024
 #define HTTP_MAX_EVENTS		10
+#define MAX_DOC_ROOT_PATH	512
+#define MAX_CACHE_PATH		512
 
 typedef struct {
 	_on_http_event_t	*pcb;
@@ -39,9 +41,13 @@ struct server: public _server_t {
 	iNet		*mpi_net; // networking
 	iFS		*mpi_fs; // FS support
 	iLog		*mpi_log; // system log
+	iHeap		*mpi_heap;
 	bool		m_autorestore;
 	_event_data_t	m_event[HTTP_MAX_EVENTS];
 	iBufferMap	*mpi_bmap;
+	iFileCache	*mpi_fcache;
+	_char_t		m_doc_root[MAX_DOC_ROOT_PATH];
+	_char_t		m_cache_path[MAX_CACHE_PATH];
 
 	bool is_running(void) {
 		return (mpi_server) ? true : false;
@@ -54,6 +60,8 @@ struct server: public _server_t {
 	_u32 port(void) {
 		return m_port;
 	}
+	bool create_connection(iHttpConnection *p_httpc);
+	_cstr_t resolve_content_type(_cstr_t doc_name);
 	void set_handlers(void);
 	void call_handler(_u8 evt, iHttpConnection *p_httpc);
 	void call_route_handler(_u8 evt, iHttpConnection *p_httpc);
