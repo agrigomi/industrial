@@ -50,6 +50,7 @@ private:
 					(strcmp(url, "/") == 0) ? "/index.html" : url);
 
 				pi_httpc->res_var("Server", SERVER_NAME);
+				pi_httpc->res_var("Allow", "GET, HEAD");
 
 				if(method == HTTP_METHOD_GET) {
 					if(p_srv->p_http_host->mpi_fcache) {
