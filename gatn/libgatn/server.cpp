@@ -4,8 +4,8 @@
 
 #define MAX_ROUTE_PATH	256
 
-#define IDX_FCACHE	0
-#define IDX_CONNECTION	1
+#define IDX_FCACHE	6
+#define IDX_CONNECTION	7
 
 typedef struct {
 	_u8	method;
