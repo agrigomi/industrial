@@ -7,6 +7,7 @@
 #define I_GATN	"iGatn"
 
 typedef struct {
+	virtual _u8 method(void)=0;
 	virtual _cstr_t header(void)=0;
 	virtual _cstr_t utl(void)=0;
 	virtual _cstr_t urn(void)=0;

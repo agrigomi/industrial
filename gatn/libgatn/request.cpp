@@ -1,6 +1,15 @@
 #include "iGatn.h"
 #include "private.h"
 
+_u8 request::method(void) {
+	_u8 r = 0;
+
+	if(mpi_httpc)
+		r = mpi_httpc->req_method();
+
+	return r;
+}
+
 _cstr_t request::header(void) {
 	_cstr_t r = NULL;
 
@@ -55,3 +64,6 @@ void *request::data(_u32 *size) {
 	return r;
 }
 
+void request::destroy(void) {
+	//...
+}

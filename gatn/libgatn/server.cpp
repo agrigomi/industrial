@@ -30,7 +30,8 @@ bool server::create_connection(iHttpConnection *p_httpc) {
 	if(p_cnt) {
 		memcpy((void *)p_cnt, (void *)&tmp, sizeof(_connection_t));
 		p_cnt->req.mpi_httpc = p_cnt->res.mpi_httpc = p_httpc;
-		//...
+		p_cnt->res.mpi_heap = mpi_heap;
+		p_cnt->res.mpi_bmap = mpi_bmap;
 
 		p_httpc->set_udata((_ulong)p_cnt, IDX_CONNECTION);
 		r = true;
@@ -86,30 +87,32 @@ void server::set_handlers(void) {
 		if(fc)
 			// close file cache
 			p_srv->mpi_fcache->close(fc);
-		if(pc)
+
+		if(pc) {
 			// release connection memory
+			pc->req.destroy();
+			pc->res.destroy();
 			p_srv->mpi_heap->free(pc, sizeof(_connection_t));
+		}
 	}, this);
 }
 
 bool server::start(void) {
 	bool r = false;
 
-	if(!mpi_server) {
-		if(mpi_map && mpi_net && mpi_fs) {
-			if((mpi_server = mpi_net->create_http_server(m_port, SERVER_BUFFER_SIZE))) {
-				if(!mpi_fcache) { // create file cache
-					if((mpi_fcache = dynamic_cast<iFileCache *>(_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE))))
-						mpi_fcache->init(m_cache_path, m_name);
-				}
-				if(mpi_fcache) {
-					set_handlers();
-					r = true;
-				}
-			}
+	if(mpi_map && mpi_net && mpi_fs) {
+		if(!mpi_fcache) { // create file cache
+			if((mpi_fcache = dynamic_cast<iFileCache *>(_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE))))
+				mpi_fcache->init(m_cache_path, m_name);
 		}
-	} else
-		r = true;
+		if(!mpi_server)
+			mpi_server = mpi_net->create_http_server(m_port, SERVER_BUFFER_SIZE);
+
+		if(mpi_fcache && mpi_server) {
+			set_handlers();
+			r = true;
+		}
+	}
 
 	return r;
 }
@@ -118,6 +121,10 @@ void server::stop(void) {
 	if(mpi_server) {
 		_gpi_repo_->object_release(mpi_server);
 		mpi_server = NULL;
+	}
+	if(mpi_fcache) {
+		_gpi_repo_->object_release(mpi_fcache);
+		mpi_fcache = NULL;
 	}
 }
 

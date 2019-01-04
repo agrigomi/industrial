@@ -29,8 +29,6 @@ private:
 					p->stop();
 					p->mpi_net = NULL;
 					p->mpi_fs = NULL;
-					_gpi_repo_->object_release(p->mpi_fcache);
-					p->mpi_fcache = NULL;
 					p->m_autorestore = autorestore;
 					p_srv = (_server_t *)mpi_map->enum_next(en, &sz, hm);
 				}
@@ -83,6 +81,7 @@ private:
 					p->mpi_server = NULL;
 					_gpi_repo_->object_release(p->mpi_map);
 					_gpi_repo_->object_release(p->mpi_fcache);
+					p->mpi_fcache = NULL;
 				}
 				p_srv = (_server_t *)mpi_map->enum_next(en, &sz, hm);
 			}

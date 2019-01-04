@@ -21,3 +21,7 @@ _u32 response::end(_u16 response_code, void *data, _u32 size) {
 
 	return r;
 }
+
+void response::destroy(void) {
+	//...
+}

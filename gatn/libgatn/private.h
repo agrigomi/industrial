@@ -5,20 +5,25 @@
 struct request: public _request_t{
 	iHttpConnection *mpi_httpc;
 
+	_u8 method(void);
 	_cstr_t header(void);
 	_cstr_t utl(void);
 	_cstr_t urn(void);
 	_cstr_t var(_cstr_t name);
 	_u32 content_len(void);
 	void *data(_u32 *size);
+	void destroy(void);
 };
 
 struct response: public _response_t {
 	iHttpConnection *mpi_httpc;
+	iHeap *mpi_heap;
+	iBufferMap *mpi_bmap;
 
 	void var(_cstr_t name, _cstr_t value);
 	_u32 write(void *data, _u32 size);
 	_u32 end(_u16 response_code, void *data, _u32 size);
+	void destroy(void);
 };
 
 #define MAX_SERVER_NAME		32
