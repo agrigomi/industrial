@@ -276,6 +276,7 @@ void cHttpServer::clear_column(_u8 col, HMUTEX hlock) {
 	mpi_list->col(col, hlock);
 	while((rec = (_http_connection_t *)mpi_list->first(&sz, hlock))) {
 		if(rec->p_httpc) {
+			call_event_handler(HTTP_ON_CLOSE, rec->p_httpc);
 			_gpi_repo_->object_release(rec->p_httpc);
 		}
 		mpi_list->del(hlock);
