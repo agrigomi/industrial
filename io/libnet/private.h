@@ -149,6 +149,8 @@ public:
 	_cstr_t req_var(_cstr_t name);
 	// get request data
 	_u8 *req_data(_u32 *size);
+	// get requested protocol
+	_cstr_t req_protocol(void);
 	// set variable in response header
 	bool res_var(_cstr_t name, _cstr_t value);
 	// get error code

@@ -707,6 +707,10 @@ _u8 *cHttpConnection::req_data(_u32 *size) {
 	return r;
 }
 
+_cstr_t cHttpConnection::req_protocol(void) {
+	return req_var(VAR_REQ_PROTOCOL);
+}
+
 bool cHttpConnection::res_var(_cstr_t name, _cstr_t value) {
 	bool r = false;
 
