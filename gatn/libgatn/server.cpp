@@ -32,7 +32,10 @@ bool server::create_connection(iHttpConnection *p_httpc) {
 		p_cnt->req.mpi_httpc = p_cnt->res.mpi_httpc = p_httpc;
 		p_cnt->res.mpi_heap = mpi_heap;
 		p_cnt->res.mpi_bmap = mpi_bmap;
-
+		p_cnt->res.mp_hbarray = NULL;
+		p_cnt->res.m_hbcount = 0;
+		p_cnt->res.m_content_len = 0;
+		p_cnt->res.m_buffers = 0;
 		p_httpc->set_udata((_ulong)p_cnt, IDX_CONNECTION);
 		r = true;
 	}

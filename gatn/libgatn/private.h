@@ -19,7 +19,15 @@ struct response: public _response_t {
 	iHttpConnection *mpi_httpc;
 	iHeap *mpi_heap;
 	iBufferMap *mpi_bmap;
+	HBUFFER	*mp_hbarray;
+	_u32 m_hbcount; // array capacity
+	_u32 m_buffers; // allocated buffers
+	_u32 m_content_len;
 
+	bool alloc_buffer(void);
+	_u32 capacity(void);
+	_u32 remainder(void);
+	bool resize_array(void);
 	void var(_cstr_t name, _cstr_t value);
 	_u32 write(void *data, _u32 size);
 	_u32 end(_u16 response_code, void *data, _u32 size);
