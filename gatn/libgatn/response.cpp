@@ -59,7 +59,32 @@ void response::var(_cstr_t name, _cstr_t value) {
 _u32 response::write(void *data, _u32 size) {
 	_u32 r = 0;
 
-	//...
+	while(remainder() < size) {
+		if(!alloc_buffer())
+			break;
+	}
+
+	if(remainder() >= size) {
+		_u32 sz = 0;
+		_u32 bs = mpi_bmap->size();
+
+		while(r < size) {
+			_u32 nbuffer = m_content_len / bs;
+			_u32 offset = m_content_len % bs;
+			_u32 blen = bs - offset;
+			_u32 brem = size - r;
+			HBUFFER hb = mp_hbarray[nbuffer];
+
+			if(hb) {
+				_u8 *ptr = (_u8 *)mpi_bmap->ptr(hb);
+				sz = (brem < blen) ? brem : blen;
+				memcpy(ptr + offset, ((_u8 *)data) + r, sz);
+				r += sz;
+				m_content_len += sz;
+			} else
+				break;
+		}
+	}
 
 	return r;
 }
