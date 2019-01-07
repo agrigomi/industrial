@@ -36,7 +36,7 @@ struct response: public _response_t {
 
 #define MAX_SERVER_NAME		32
 #define SERVER_BUFFER_SIZE	16384
-#define GATN_BUFFER_SIZE	64*1024
+#define GATN_BUFFER_SIZE	32*1024
 #define HTTP_MAX_EVENTS		10
 #define MAX_DOC_ROOT_PATH	512
 #define MAX_CACHE_PATH		512
