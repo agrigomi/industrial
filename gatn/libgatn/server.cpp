@@ -222,7 +222,9 @@ void server::update_response(iHttpConnection *p_httpc) {
 		}
 	} else {
 		// update content from response buffer
-		//...
+		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
+		if(pc)
+			pc->res.process_content();
 	}
 }
 

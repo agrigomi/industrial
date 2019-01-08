@@ -105,3 +105,36 @@ void response::destroy(void) {
 		mpi_heap->free(mp_hbarray, m_hbcount * sizeof(HBUFFER));
 	}
 }
+
+void response::process_content(void) {
+	_u32 content_len = mpi_httpc->res_content_len();
+	_u32 content_sent= mpi_httpc->res_content_sent();
+	_u32 bs = mpi_bmap->size();
+	_u32 content_buffers = (content_len / bs) + (content_len % bs) ? 1 : 0;
+	_u32 nbuffer = content_sent / bs;
+	_u32 offset = content_sent % bs;
+	_u32 size = bs - offset;
+
+	if(nbuffer == content_buffers - 1)
+		// last buffer (adjust size)
+		size -= (content_buffers * bs) - content_len;
+
+	if(content_sent < content_len) {
+		HBUFFER hb = mp_hbarray[nbuffer];
+
+		if(hb) {
+			_u8 *ptr = (_u8 *)mpi_bmap->ptr(hb);
+			mpi_httpc->res_write(ptr + offset, size);
+		}
+	}
+
+	if(nbuffer) {
+		// release old buffers
+		for(_u32 i = 0; i < nbuffer; i++) {
+			if(mp_hbarray[i]) {
+				mpi_bmap->free(mp_hbarray[i]);
+				mp_hbarray[i] = NULL;
+			}
+		}
+	}
+}
