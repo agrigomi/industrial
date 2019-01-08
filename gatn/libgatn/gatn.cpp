@@ -217,6 +217,28 @@ public:
 			mpi_map->del(p->m_name, strlen(p->m_name));
 		}
 	}
+
+	bool stop_server(_server_t *p_srv) {
+		bool r = false;
+		server *ps = dynamic_cast<server *>(p_srv);
+
+		if(ps) {
+			ps->stop();
+			r = !ps->is_running();
+		}
+
+		return r;
+	}
+
+	bool start_server(_server_t *p_srv) {
+		bool r = false;
+		server *ps = dynamic_cast<server *>(p_srv);
+
+		if(ps)
+			r = ps->start();
+
+		return r;
+	}
 };
 
 static cGatn _g_gatn_;

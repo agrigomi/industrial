@@ -55,7 +55,8 @@ public:
 	virtual _server_t *create_server(_cstr_t name, _u32 port, _cstr_t doc_root, _cstr_t cache_path)=0;
 	virtual _server_t *server_by_name(_cstr_t name)=0;
 	virtual void remove_server(_server_t *p_srv)=0;
-	//...
+	virtual bool stop_server(_server_t *p_srv)=0;
+	virtual bool start_server(_server_t *p_srv)=0;
 };
 
 #endif
