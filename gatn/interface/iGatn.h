@@ -21,7 +21,6 @@ typedef struct {
 	virtual void var(_cstr_t name, _cstr_t value)=0;
 	virtual _u32 write(void *data, _u32 size)=0;
 	virtual _u32 end(_u16 response_code, void *data, _u32 size)=0;
-	virtual void process_content(void);
 	//...
 }_response_t;
 
