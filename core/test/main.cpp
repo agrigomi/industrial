@@ -66,6 +66,9 @@ _err_t main(int argc, char *argv[]) {
 					printf(">> upload_file\n");
 					_u32 sz = 0;
 
+					if(evt == HTTP_ON_REQUEST)
+						res->end(HTTPRC_OK, (_str_t)g_body, strlen(g_body));
+
 					_str_t data = (_str_t)req->data(&sz);
 					if(data) {
 						fwrite(data, sz, 1, stdout);
