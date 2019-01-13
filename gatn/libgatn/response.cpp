@@ -1,3 +1,4 @@
+#include <string.h>
 #include "iGatn.h"
 #include "private.h"
 

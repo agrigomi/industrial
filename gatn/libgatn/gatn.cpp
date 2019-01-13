@@ -1,3 +1,4 @@
+#include <string.h>
 #include "startup.h"
 #include "iGatn.h"
 #include "iLog.h"
