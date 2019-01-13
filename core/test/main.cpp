@@ -27,7 +27,6 @@ _err_t main(int argc, char *argv[]) {
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
 
-		//pi_log->add_listener(log_listener);
 		pi_log->add_listener([](_u8 lmt, _str_t msg) {
 			_char_t pref = '-';
 
@@ -72,17 +71,7 @@ _err_t main(int argc, char *argv[]) {
 						fwrite(data, sz, 1, stdout);
 					}
 				}, p_srv);
-/*
-				p_srv->on_event(HTTP_ON_REQUEST_DATA, [](iHttpConnection *p_httpc, void *udata) {
-					_u32 sz = 0;
 
-					printf(">> on_request_data\n");
-					_str_t data = (_str_t)p_httpc->req_data(&sz);
-					if(data) {
-						fwrite(data, sz, 1, stdout);
-					}
-				}, p_srv);
-*/
 				//...
 				while(getchar() != 'q');
 			} else
