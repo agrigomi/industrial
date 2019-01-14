@@ -47,6 +47,8 @@ typedef struct {
 	void			*udata;
 }_event_data_t;
 
+_cstr_t resolve_mime_type(_cstr_t fname);
+
 struct server: public _server_t {
 	_char_t 	m_name[MAX_SERVER_NAME];
 	_u32 		m_port;

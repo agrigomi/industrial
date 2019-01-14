@@ -47,7 +47,7 @@ _err_t main(int argc, char *argv[]) {
 
 		iGatn *pi_gatn = (iGatn *)pi_repo->object_by_iname(I_GATN, RF_ORIGINAL);
 		if(pi_gatn) {
-			_server_t *p_srv = pi_gatn->create_server("gatn-1 (proholic)", 8081, "../test/gamewarrior", "/tmp");
+			_server_t *p_srv = pi_gatn->create_server("gatn-1 (proholic)", 8081, "../test/original", "/tmp");
 			if(p_srv) {
 				while(!p_srv->is_running()) {
 					printf(".");
