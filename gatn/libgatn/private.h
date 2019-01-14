@@ -33,6 +33,7 @@ struct response: public _response_t {
 	_u32 end(_u16 response_code, void *data, _u32 size);
 	void destroy(void);
 	void process_content(void);
+	void redirect(_cstr_t uri);
 };
 
 #define MAX_SERVER_NAME		32

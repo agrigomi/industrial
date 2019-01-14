@@ -62,6 +62,10 @@ _err_t main(int argc, char *argv[]) {
 					res->end(HTTPRC_OK, (_str_t)g_body, strlen(g_body));
 				}, p_srv);
 
+				p_srv->on_route(HTTP_METHOD_GET, "/oland/", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
+					res->redirect("http://oland.ddns.net");
+				}, p_srv);
+
 				p_srv->on_route(HTTP_METHOD_POST, "/file/upload", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
 					printf(">> upload_file\n");
 					_u32 sz = 0;

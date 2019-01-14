@@ -13,7 +13,7 @@ bool response::resize_array(void) {
 		// clean new array
 		memset(hb_array, 0, nhb_count * sizeof(HBUFFER));
 		if(mp_hbarray) {
-			// copy old array to noew one
+			// copy old array to new one
 			memcpy(hb_array, mp_hbarray, m_hbcount * sizeof(HBUFFER));
 			// release old array
 			mpi_heap->free(mp_hbarray, (m_hbcount * sizeof(HBUFFER)));
@@ -138,4 +138,13 @@ void response::process_content(void) {
 			}
 		}
 	}
+}
+
+void response::redirect(_cstr_t uri) {
+	_cstr_t s = "<meta http-equiv=\"refresh\" content=\"0; url=";
+
+	var("Content-Type", "text/html");
+	write((void *)s, strlen(s));
+	write((void *)uri, strlen(uri));
+	end(HTTPRC_OK, (void *)"\"/>", 3);
 }
