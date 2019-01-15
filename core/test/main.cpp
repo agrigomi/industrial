@@ -10,11 +10,12 @@
 #include "iCmd.h"
 #include "iMemory.h"
 #include "iHT.h"
+#include "iGatn.h"
 
 IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
 _cstr_t g_body = "<!DOCTYPE HTML>\
-<form action=\"upload_file\" method=\"post\" enctype=\"multipart/form-data\">\
+<form action=\"upload\" method=\"post\" enctype=\"multipart/form-data\">\
 Select image to upload:\
 <input type=\"file\" name=\"fileToUpload\" id=\"fileToUpload\">\
 <input type=\"submit\" value=\"Upload Image\" name=\"submit\">\
@@ -26,7 +27,6 @@ _err_t main(int argc, char *argv[]) {
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
 
-		//pi_log->add_listener(log_listener);
 		pi_log->add_listener([](_u8 lmt, _str_t msg) {
 			_char_t pref = '-';
 
@@ -43,6 +43,47 @@ _err_t main(int argc, char *argv[]) {
 		pi_repo->extension_load("extht.so");
 		pi_repo->extension_load("extfs.so");
 		pi_repo->extension_load("extnet.so");
+		pi_repo->extension_load("extgatn.so");
+
+		iGatn *pi_gatn = (iGatn *)pi_repo->object_by_iname(I_GATN, RF_ORIGINAL);
+		if(pi_gatn) {
+			_server_t *p_srv = pi_gatn->create_server("gatn-1 (proholic)", 8081, "../test/original", "/tmp");
+			if(p_srv) {
+				while(!p_srv->is_running()) {
+					printf(".");
+					fflush(stdout);
+					usleep(10000*100);
+					p_srv->start();
+				}
+
+				pi_log->fwrite(LMT_INFO, "'%s' started", p_srv->name());
+
+				p_srv->on_route(HTTP_METHOD_GET, "/file/", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
+					res->end(HTTPRC_OK, (_str_t)g_body, strlen(g_body));
+				}, p_srv);
+
+				p_srv->on_route(HTTP_METHOD_GET, "/oland/", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
+					res->redirect("http://oland.ddns.net");
+				}, p_srv);
+
+				p_srv->on_route(HTTP_METHOD_POST, "/file/upload", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
+					printf(">> upload_file\n");
+					_u32 sz = 0;
+
+					if(evt == HTTP_ON_REQUEST)
+						res->end(HTTPRC_OK, (_str_t)g_body, strlen(g_body));
+
+					_str_t data = (_str_t)req->data(&sz);
+					if(data) {
+						fwrite(data, sz, 1, stdout);
+					}
+				}, p_srv);
+
+				//...
+				while(getchar() != 'q');
+			} else
+				pi_log->write(LMT_ERROR, "Failed to create Gatn server\n");
+		}
 /*
 		iFileCache *pifsc = (iFileCache *)pi_repo->object_by_iname(I_FILE_CACHE, RF_CLONE);
 		if(pifsc) {
@@ -60,7 +101,7 @@ _err_t main(int argc, char *argv[]) {
 
 			pi_repo->object_release(pifsc);
 		}
-*/
+
 		iNet *pi_net = dynamic_cast<iNet*>(pi_repo->object_by_iname(I_NET, RF_ORIGINAL));
 		if(pi_net) {
 			iHttpServer *pi_http = pi_net->create_http_server(8081);
@@ -153,7 +194,7 @@ _err_t main(int argc, char *argv[]) {
 			}
 			pi_repo->object_release(pi_fs);
 		}
-
+*/
 		uninit();
 	}
 

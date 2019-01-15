@@ -1,3 +1,4 @@
+#include <string.h>
 #include "iGatn.h"
 #include "iRepository.h"
 #include "private.h"
@@ -139,8 +140,8 @@ void server::call_handler(_u8 evt, iHttpConnection *p_httpc) {
 }
 
 _cstr_t server::resolve_content_type(_cstr_t doc_name) {
-	// temp. code
-	return "";
+	_cstr_t r = resolve_mime_type(doc_name);
+	return (r) ? r : "";
 }
 
 void server::call_route_handler(_u8 evt, iHttpConnection *p_httpc) {

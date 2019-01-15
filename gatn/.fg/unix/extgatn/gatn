@@ -2,4 +2,5 @@ gatn/libgatn/gatn.cpp
 gatn/libgatn/request.cpp
 gatn/libgatn/response.cpp
 gatn/libgatn/server.cpp
+gatn/libgatn/mime_resolver.cpp
 

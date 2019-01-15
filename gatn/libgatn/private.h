@@ -33,6 +33,7 @@ struct response: public _response_t {
 	_u32 end(_u16 response_code, void *data, _u32 size);
 	void destroy(void);
 	void process_content(void);
+	void redirect(_cstr_t uri);
 };
 
 #define MAX_SERVER_NAME		32
@@ -46,6 +47,8 @@ typedef struct {
 	_on_http_event_t	*pcb;
 	void			*udata;
 }_event_data_t;
+
+_cstr_t resolve_mime_type(_cstr_t fname);
 
 struct server: public _server_t {
 	_char_t 	m_name[MAX_SERVER_NAME];
