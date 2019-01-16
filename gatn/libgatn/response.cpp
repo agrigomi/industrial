@@ -91,7 +91,8 @@ _u32 response::write(void *data, _u32 size) {
 }
 
 _u32 response::end(_u16 response_code, void *data, _u32 size) {
-	write(data, size);
+	if(data && size)
+		write(data, size);
 	mpi_httpc->res_code(response_code);
 	mpi_httpc->res_content_len(m_content_len);
 	return m_content_len;

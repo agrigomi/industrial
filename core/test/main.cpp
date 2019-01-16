@@ -79,6 +79,19 @@ _err_t main(int argc, char *argv[]) {
 					}
 				}, p_srv);
 
+				p_srv->on_route(HTTP_METHOD_GET, "/login/", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
+					_cstr_t auth = req->var("Authorization");
+
+					if(!auth) {
+						res->var("WWW-Authenticate", "Basic realm=\"gatn-1 (proholic)\"");
+						res->end(HTTPRC_UNAUTHORIZED, NULL, 0);
+						printf(">> send authentication request\n");
+					} else {
+						res->write((void *)"Authorized :", 12);
+						res->end(HTTPRC_OK, (void *)auth, strlen(auth));
+						printf("--- authenticated\n");
+					}
+				}, p_srv);
 				//...
 				while(getchar() != 'q');
 			} else
