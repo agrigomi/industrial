@@ -87,6 +87,7 @@ void server::set_handlers(void) {
 		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
 		p_srv->call_handler(HTTP_ON_CLOSE, p_httpc);
+		p_srv->call_route_handler(HTTP_ON_CLOSE, p_httpc);
 
 		if(fc)
 			// close file cache

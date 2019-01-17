@@ -59,7 +59,7 @@ _err_t main(int argc, char *argv[]) {
 				pi_log->fwrite(LMT_INFO, "'%s' started", p_srv->name());
 
 				p_srv->on_route(HTTP_METHOD_GET, "/file/", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
-					res->end(HTTPRC_OK, (_str_t)g_body, strlen(g_body));
+					res->end(HTTPRC_OK, g_body);
 				}, p_srv);
 
 				p_srv->on_route(HTTP_METHOD_GET, "/oland/", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
@@ -71,7 +71,11 @@ _err_t main(int argc, char *argv[]) {
 					_u32 sz = 0;
 
 					if(evt == HTTP_ON_REQUEST)
-						res->end(HTTPRC_OK, (_str_t)g_body, strlen(g_body));
+						res->end(HTTPRC_OK, g_body);
+					else if(evt == HTTP_ON_CLOSE) {
+						printf(">> on_close\n");
+					}
+
 
 					_str_t data = (_str_t)req->data(&sz);
 					if(data) {
@@ -87,8 +91,7 @@ _err_t main(int argc, char *argv[]) {
 						res->end(HTTPRC_UNAUTHORIZED, NULL, 0);
 						printf(">> send authentication request\n");
 					} else {
-						res->write((void *)"Authorized :", 12);
-						res->end(HTTPRC_OK, (void *)auth, strlen(auth));
+						res->_end(HTTPRC_OK, "Authorized :%s", auth);
 						printf("--- authenticated\n");
 					}
 				}, p_srv);
