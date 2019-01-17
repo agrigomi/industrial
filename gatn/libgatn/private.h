@@ -29,8 +29,13 @@ struct response: public _response_t {
 	_u32 remainder(void);
 	bool resize_array(void);
 	void var(_cstr_t name, _cstr_t value);
+	void _var(_cstr_t name, _cstr_t fmt, ...);
 	_u32 write(void *data, _u32 size);
+	_u32 write(_cstr_t str);
+	_u32 _write(_cstr_t fmt, ...);
 	_u32 end(_u16 response_code, void *data, _u32 size);
+	_u32 end(_u16 response_code, _cstr_t str);
+	_u32 _end(_u16 response_code, _cstr_t fmt, ...);
 	void destroy(void);
 	void process_content(void);
 	void redirect(_cstr_t uri);

@@ -57,6 +57,16 @@ void response::var(_cstr_t name, _cstr_t value) {
 		mpi_httpc->res_var(name, value);
 }
 
+void response::_var(_cstr_t name, _cstr_t fmt, ...) {
+	_char_t lb[1024]="";
+	va_list args;
+
+	va_start(args, fmt);
+	vsnprintf(lb, sizeof(lb), fmt, args);
+	var(name, lb);
+	va_end(args);
+}
+
 _u32 response::write(void *data, _u32 size) {
 	_u32 r = 0;
 
@@ -90,12 +100,46 @@ _u32 response::write(void *data, _u32 size) {
 	return r;
 }
 
+_u32 response::write(_cstr_t str) {
+	return write((void *)str, strlen(str));
+}
+
+_u32 response::_write(_cstr_t fmt, ...) {
+	_u32 r = 0;
+	_char_t lb[4096]="";
+	va_list args;
+
+	va_start(args, fmt);
+	r = vsnprintf(lb, sizeof(lb), fmt, args);
+	r = write(lb, r);
+	va_end(args);
+
+	return r;
+}
+
 _u32 response::end(_u16 response_code, void *data, _u32 size) {
 	if(data && size)
 		write(data, size);
 	mpi_httpc->res_code(response_code);
 	mpi_httpc->res_content_len(m_content_len);
 	return m_content_len;
+}
+
+_u32 response::end(_u16 response_code, _cstr_t str) {
+	return end(response_code, (void *)str, strlen(str));
+}
+
+_u32 response::_end(_u16 response_code, _cstr_t fmt, ...) {
+	_u32 r = 0;
+	_char_t lb[4096]="";
+	va_list args;
+
+	va_start(args, fmt);
+	r = vsnprintf(lb, sizeof(lb), fmt, args);
+	r = end(response_code, lb, r);
+	va_end(args);
+
+	return r;
 }
 
 void response::destroy(void) {

@@ -19,8 +19,13 @@ typedef struct {
 
 typedef struct {
 	virtual void var(_cstr_t name, _cstr_t value)=0;
+	virtual void _var(_cstr_t name, _cstr_t fmt, ...)=0;
 	virtual _u32 write(void *data, _u32 size)=0;
+	virtual _u32 write(_cstr_t str)=0;
+	virtual _u32 _write(_cstr_t fmt, ...)=0;
 	virtual _u32 end(_u16 response_code, void *data, _u32 size)=0;
+	virtual _u32 end(_u16 response_code, _cstr_t str)=0;
+	virtual _u32 _end(_u16 response_code, _cstr_t fmt, ...)=0;
 	virtual void redirect(_cstr_t uri)=0;
 	//...
 }_response_t;
