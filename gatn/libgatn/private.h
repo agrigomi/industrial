@@ -5,6 +5,9 @@
 struct request: public _request_t{
 	iHttpConnection *mpi_httpc;
 
+	iHttpConnection *connection(void) {
+		return mpi_httpc;
+	}
 	_u8 method(void);
 	_cstr_t header(void);
 	_cstr_t utl(void);
@@ -24,6 +27,9 @@ struct response: public _response_t {
 	_u32 m_buffers; // allocated buffers
 	_u32 m_content_len;
 
+	iHttpConnection *connection(void) {
+		return mpi_httpc;
+	}
 	bool alloc_buffer(void);
 	_u32 capacity(void);
 	_u32 remainder(void);

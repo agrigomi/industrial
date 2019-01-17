@@ -7,6 +7,7 @@
 #define I_GATN	"iGatn"
 
 typedef struct {
+	virtual iHttpConnection *connection(void)=0;
 	virtual _u8 method(void)=0;
 	virtual _cstr_t header(void)=0;
 	virtual _cstr_t utl(void)=0;
@@ -18,6 +19,7 @@ typedef struct {
 }_request_t;
 
 typedef struct {
+	virtual iHttpConnection *connection(void)=0;
 	virtual void var(_cstr_t name, _cstr_t value)=0;
 	virtual void _var(_cstr_t name, _cstr_t fmt, ...)=0;
 	virtual _u32 write(void *data, _u32 size)=0;
