@@ -43,6 +43,9 @@ private:
 			_cstr_t url = pi_httpc->req_url();
 			_char_t doc[1024]="";
 			iLog *pi_log = p_srv->p_http_host->mpi_log;
+			_char_t req_ip[32]="";
+
+			pi_httpc->peer_ip(req_ip, sizeof(req_ip));
 
 			if((strlen(url) + strlen(p_srv->doc_root) < sizeof(doc)-1)) {
 				snprintf(doc, sizeof(doc), "%s%s",
@@ -58,6 +61,7 @@ private:
 						if(fc) { // open file cache
 							_ulong sz = 0;
 
+							pi_log->fwrite(LMT_INFO, "GET '%s' (%s)", doc, req_ip);
 							_u8 *ptr = (_u8 *)p_srv->p_http_host->mpi_fcache->ptr(fc, &sz);
 							if(ptr) {
 								pi_httpc->res_content_len(sz);
@@ -71,9 +75,6 @@ private:
 								pi_log->fwrite(LMT_ERROR, "%s: Internal error", p_srv->name);
 							}
 						} else {
-							_char_t req_ip[32]="";
-
-							pi_httpc->peer_ip(req_ip, sizeof(req_ip));
 							pi_httpc->res_code(HTTPRC_NOT_FOUND);
 							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found (%s)", p_srv->name, doc, req_ip);
 						}
@@ -83,6 +84,7 @@ private:
 					if(p_srv->p_http_host->mpi_fcache) {
 						HFCACHE fc = p_srv->p_http_host->mpi_fcache->open(doc);
 						if(fc) { // open file cache
+							//pi_log->fwrite(LMT_INFO, "HEAD '%s' (%s)", doc, req_ip);
 							pi_httpc->res_code(HTTPRC_OK);
 							pi_httpc->res_mtime(p_srv->p_http_host->mpi_fcache->mtime(fc));
 							p_srv->p_http_host->mpi_fcache->close(fc);
