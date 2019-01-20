@@ -186,10 +186,6 @@ void response::process_content(void) {
 }
 
 void response::redirect(_cstr_t uri) {
-	_cstr_t s = "<meta http-equiv=\"refresh\" content=\"0; url=";
-
 	var("Content-Type", "text/html");
-	write((void *)s, strlen(s));
-	write((void *)uri, strlen(uri));
-	end(HTTPRC_OK, (void *)"\"/>", 3);
+	_end(HTTPRC_OK, "<meta http-equiv=\"refresh\" content=\"0; url=%s\"/>", uri);
 }
