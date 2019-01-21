@@ -17,7 +17,7 @@ public:
 	virtual void destroy_context(HTCONTEXT)=0;
 	// Parse (indexing) hypertext content
 	virtual bool parse(HTCONTEXT, // parser context
-			_str_t, // Content of hypertext
+			_cstr_t, // Content of hypertext
 			_ulong // Size of hypertext content
 			)=0;
 	// Select hypertext tag

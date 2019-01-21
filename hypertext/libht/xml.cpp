@@ -46,7 +46,7 @@ public:
 		xml_destroy_context((_xml_context_t *)hc);
 	}
 
-	bool parse(HTCONTEXT hc, _str_t xml_text, _ulong size) {
+	bool parse(HTCONTEXT hc, _cstr_t xml_text, _ulong size) {
 		bool r = false;
 
 		if(xml_parse((_xml_context_t *)hc, (unsigned char*)xml_text, size) == XML_OK)
