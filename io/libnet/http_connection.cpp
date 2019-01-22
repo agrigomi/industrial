@@ -440,20 +440,22 @@ bool cHttpConnection::parse_req_header(void) {
 			}
 
 			if(offset == m_header_len) {
-				r = true;
-				if(m_ibuffer_offset > m_header_len) {
-					// have request data
-					mpi_str->mem_cpy(hdr, hdr + m_header_len, m_ibuffer_offset - m_header_len);
-					m_ibuffer_offset -= m_header_len;
-				} else
-					m_ibuffer_offset = 0;
+				if(req_method()) {
+					r = true;
+					if(m_ibuffer_offset > m_header_len) {
+						// have request data
+						mpi_str->mem_cpy(hdr, hdr + m_header_len, m_ibuffer_offset - m_header_len);
+						m_ibuffer_offset -= m_header_len;
+					} else
+						m_ibuffer_offset = 0;
 
-				m_header_len = 0;
+					m_header_len = 0;
 
-				_cstr_t cl = req_var("Content-Length");
-				if(cl)
-					m_req_content_len = atoi(cl);
-				m_req_content_rcv = m_ibuffer_offset;
+					_cstr_t cl = req_var("Content-Length");
+					if(cl)
+						m_req_content_len = atoi(cl);
+					m_req_content_rcv = m_ibuffer_offset;
+				}
 			}
 		}
 	}
