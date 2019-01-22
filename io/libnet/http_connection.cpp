@@ -87,7 +87,7 @@ static _http_method_map _g_method_map[] = {
 #define VAR_REQ_URN		"req-URN"
 #define VAR_REQ_PROTOCOL	"req-Protocol"
 
-#define MAX_TRY_COUNT	2000000
+#define TIMEOUT_SEC	5
 
 bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
@@ -110,7 +110,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_obuffer_sent = 0;
 			m_content_sent = 0;
 			m_header_len = 0;
-			m_try_count = 0;
+			m_stime = time(NULL);
 			memset(m_udata, 0, sizeof(m_udata));
 			mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
 			mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
@@ -440,22 +440,20 @@ bool cHttpConnection::parse_req_header(void) {
 			}
 
 			if(offset == m_header_len) {
-				if(req_method()) {
-					r = true;
-					if(m_ibuffer_offset > m_header_len) {
-						// have request data
-						mpi_str->mem_cpy(hdr, hdr + m_header_len, m_ibuffer_offset - m_header_len);
-						m_ibuffer_offset -= m_header_len;
-					} else
-						m_ibuffer_offset = 0;
+				r = true;
+				if(m_ibuffer_offset > m_header_len) {
+					// have request data
+					mpi_str->mem_cpy(hdr, hdr + m_header_len, m_ibuffer_offset - m_header_len);
+					m_ibuffer_offset -= m_header_len;
+				} else
+					m_ibuffer_offset = 0;
 
-					m_header_len = 0;
+				m_header_len = 0;
 
-					_cstr_t cl = req_var("Content-Length");
-					if(cl)
-						m_req_content_len = atoi(cl);
-					m_req_content_rcv = m_ibuffer_offset;
-				}
+				_cstr_t cl = req_var("Content-Length");
+				if(cl)
+					m_req_content_len = atoi(cl);
+				m_req_content_rcv = m_ibuffer_offset;
 			}
 		}
 	}
@@ -566,11 +564,11 @@ _u8 cHttpConnection::process(void) {
 			if(complete_req_header())
 				m_state = HTTPC_PARSE_HEADER;
 			else {
-				if(m_try_count < MAX_TRY_COUNT) {
-					m_try_count++;
-					m_state = HTTPC_RECEIVE_HEADER;
-				} else
+				if((time(NULL) - m_stime) > TIMEOUT_SEC) {
+					r = HTTP_ON_ERROR;
+					m_error_code = HTTPRC_REQUEST_TIMEOUT;
 					m_state = HTTPC_CLOSE;
+				}
 			}
 			break;
 		case HTTPC_PARSE_HEADER:
