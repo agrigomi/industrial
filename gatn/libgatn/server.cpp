@@ -150,60 +150,62 @@ void server::call_route_handler(_u8 evt, iHttpConnection *p_httpc) {
 	_u32 sz=0;
 	_cstr_t url = p_httpc->req_url();
 
-	// response header
-	p_httpc->res_var("Server", m_name);
+	if(url) {
+		// response header
+		p_httpc->res_var("Server", m_name);
 
-	memset(&key, 0, sizeof(_route_key_t));
-	key.method = p_httpc->req_method();
-	strncpy(key.path, url, sizeof(key.path));
+		memset(&key, 0, sizeof(_route_key_t));
+		key.method = p_httpc->req_method();
+		strncpy(key.path, url, sizeof(key.path));
 
-	_route_data_t *prd = (_route_data_t *)mpi_map->get(&key, sizeof(_route_key_t), &sz);
+		_route_data_t *prd = (_route_data_t *)mpi_map->get(&key, sizeof(_route_key_t), &sz);
 
-	if(prd) {
-		// route found
-		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
-		if(pc) // call route handler
-			prd->pcb(evt, &pc->req, &pc->res, prd->udata);
-	} else if(evt == HTTP_ON_REQUEST) {
-		// route not found
-		// try to resolve file name
-		_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
+		if(prd) {
+			// route found
+			_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
+			if(pc) // call route handler
+				prd->pcb(evt, &pc->req, &pc->res, prd->udata);
+		} else if(evt == HTTP_ON_REQUEST) {
+			// route not found
+			// try to resolve file name
+			_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
 
-		if((strlen(url) + strlen(m_doc_root) < sizeof(doc)-1)) {
-			snprintf(doc, sizeof(doc), "%s%s",
-				m_doc_root,
-				(strcmp(url, "/") == 0) ? "/index.html" : url);
-			HFCACHE fc = mpi_fcache->open(doc);
-			if(fc) {
-				if(key.method == HTTP_METHOD_GET) {
-					_ulong doc_sz = 0;
+			if((strlen(url) + strlen(m_doc_root) < sizeof(doc)-1)) {
+				snprintf(doc, sizeof(doc), "%s%s",
+					m_doc_root,
+					(strcmp(url, "/") == 0) ? "/index.html" : url);
+				HFCACHE fc = mpi_fcache->open(doc);
+				if(fc) {
+					if(key.method == HTTP_METHOD_GET) {
+						_ulong doc_sz = 0;
 
-					_u8 *ptr = (_u8 *)mpi_fcache->ptr(fc, &doc_sz);
-					if(ptr) {
-						p_httpc->set_udata((_ulong)fc, IDX_FCACHE);
-						p_httpc->res_content_len(doc_sz);
-						p_httpc->res_code(HTTPRC_OK);
-						p_httpc->res_var("Content-Type", resolve_content_type(doc));
+						_u8 *ptr = (_u8 *)mpi_fcache->ptr(fc, &doc_sz);
+						if(ptr) {
+							p_httpc->set_udata((_ulong)fc, IDX_FCACHE);
+							p_httpc->res_content_len(doc_sz);
+							p_httpc->res_code(HTTPRC_OK);
+							p_httpc->res_var("Content-Type", resolve_content_type(doc));
+							p_httpc->res_mtime(mpi_fcache->mtime(fc));
+							p_httpc->res_write(ptr, doc_sz);
+						} else {
+							p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
+							mpi_fcache->close(fc);
+						}
+					} else if(key.method == HTTP_METHOD_HEAD) {
 						p_httpc->res_mtime(mpi_fcache->mtime(fc));
-						p_httpc->res_write(ptr, doc_sz);
+						p_httpc->res_code(HTTPRC_OK);
+						mpi_fcache->close(fc);
 					} else {
-						p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
+						p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
 						mpi_fcache->close(fc);
 					}
-				} else if(key.method == HTTP_METHOD_HEAD) {
-					p_httpc->res_mtime(mpi_fcache->mtime(fc));
-					p_httpc->res_code(HTTPRC_OK);
-					mpi_fcache->close(fc);
 				} else {
-					p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
-					mpi_fcache->close(fc);
+					p_httpc->res_code(HTTPRC_NOT_FOUND);
+					call_handler(ON_NOT_FOUND, p_httpc);
 				}
-			} else {
-				p_httpc->res_code(HTTPRC_NOT_FOUND);
-				call_handler(ON_NOT_FOUND, p_httpc);
-			}
-		} else
-			p_httpc->res_code(HTTPRC_REQ_URI_TOO_LARGE);
+			} else
+				p_httpc->res_code(HTTPRC_REQ_URI_TOO_LARGE);
+		}
 	}
 }
 
