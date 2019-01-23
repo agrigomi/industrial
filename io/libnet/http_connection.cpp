@@ -87,7 +87,7 @@ static _http_method_map _g_method_map[] = {
 #define VAR_REQ_URN		"req-URN"
 #define VAR_REQ_PROTOCOL	"req-Protocol"
 
-#define TIMEOUT_SEC	10
+#define TIMEOUT_SEC	15
 
 bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
@@ -564,10 +564,8 @@ _u8 cHttpConnection::process(void) {
 			if(complete_req_header())
 				m_state = HTTPC_PARSE_HEADER;
 			else {
-				if((time(NULL) - m_stime) > TIMEOUT_SEC) {
-					m_state = HTTPC_SEND_HEADER;
-					m_response_code = HTTPRC_REQUEST_TIMEOUT;
-				}
+				if((time(NULL) - m_stime) > TIMEOUT_SEC)
+					m_state = HTTPC_CLOSE;
 			}
 			break;
 		case HTTPC_PARSE_HEADER:
