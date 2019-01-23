@@ -566,6 +566,8 @@ _u8 cHttpConnection::process(void) {
 			else {
 				if((time(NULL) - m_stime) > TIMEOUT_SEC)
 					m_state = HTTPC_CLOSE;
+				else
+					m_state = HTTPC_RECEIVE_HEADER;
 			}
 			break;
 		case HTTPC_PARSE_HEADER:
