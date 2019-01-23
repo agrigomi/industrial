@@ -87,7 +87,7 @@ static _http_method_map _g_method_map[] = {
 #define VAR_REQ_URN		"req-URN"
 #define VAR_REQ_PROTOCOL	"req-Protocol"
 
-#define TIMEOUT_SEC	15
+#define TIMEOUT_SEC	8
 
 bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
