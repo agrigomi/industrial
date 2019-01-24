@@ -28,6 +28,7 @@ typedef struct {
 	_version_t	version;
 }_object_request_t;
 
+typedef _base_entry_t* HOBJECT;
 typedef void* HNOTIFY;
 typedef void* _enum_ext_t;
 
@@ -41,6 +42,9 @@ public:
 	virtual void   object_release(iBase *)=0;
 	virtual iBase *object_by_cname(_cstr_t cname, _rf_t)=0;
 	virtual iBase *object_by_iname(_cstr_t iname, _rf_t)=0;
+	virtual iBase *object_by_handle(HOBJECT, _rf_t)=0;
+	virtual HOBJECT handle_by_iname(_cstr_t iname)=0;
+	virtual HOBJECT handle_by_cname(_cstr_t cname)=0;
 
 	virtual void init_array(_base_entry_t *array, _u32 count)=0;
 

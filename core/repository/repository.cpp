@@ -505,9 +505,9 @@ public:
 		}
 	}
 
-	iBase *object_request(_object_request_t *req, _rf_t rf) {
+	iBase *object_by_handle(HOBJECT ho, _rf_t rf) {
 		iBase *r = 0;
-		_base_entry_t *bentry = find(req);
+		_base_entry_t *bentry = ho;
 
 		if(bentry) {
 			_object_info_t info;
@@ -556,7 +556,18 @@ public:
 					}
 				}
 			}
-		} else
+		}
+
+		return r;
+	}
+
+	iBase *object_request(_object_request_t *req, _rf_t rf) {
+		iBase *r = 0;
+		_base_entry_t *bentry = find(req);
+
+		if(bentry)
+			r = object_by_handle(bentry, rf);
+		 else
 			LOG(LMT_ERROR, "REPOSITORY: Unable to find object(iname='%s'; cname='%s')", req->iname, req->cname);
 
 		return r;
@@ -597,6 +608,26 @@ public:
 	iBase *object_by_iname(_cstr_t name, _rf_t rf) {
 		_object_request_t req = {RQ_INTERFACE, NULL, name};
 		return object_request(&req, rf);
+	}
+
+	HOBJECT handle_by_iname(_cstr_t iname) {
+		HOBJECT r = NULL;
+		_object_request_t req = {RQ_INTERFACE, NULL, iname};
+
+		if(!(r = find(&req)))
+			LOG(LMT_ERROR, "REPOSITORY: Unable to find object(iname='%s')", iname);
+
+		return r;
+	}
+
+	HOBJECT handle_by_cname(_cstr_t cname) {
+		HOBJECT r = NULL;
+		_object_request_t req = {RQ_NAME, cname, NULL};
+
+		if(!(r = find(&req)))
+			LOG(LMT_ERROR, "REPOSITORY: Unable to find object(cname='%s')", cname);
+
+		return r;
 	}
 
 	// extensions
