@@ -58,6 +58,7 @@ private:
 	_s32 m_server_socket;
 	bool m_use_ssl;
 	SSL_CTX *mp_sslcxt;
+	HOBJECT m_hsio;
 
 	void init_ssl(void);
 	void destroy_ssl(void);
@@ -211,6 +212,7 @@ private:
 	volatile _u32		m_num_workers;
 	volatile _u32 		m_active_workers;
 	_http_event_t		m_event[HTTP_MAX_EVENTS];
+	HOBJECT			m_hconnection;
 
 	friend void *http_worker_thread(void *);
 

@@ -46,7 +46,8 @@ bool cTCPServer::object_ctl(_u32 cmd, void *arg, ...) {
 			m_server_socket = 0;
 			m_use_ssl = false;
 			mp_sslcxt = 0;
-			r = true;
+			if((m_hsio = pi_repo->handle_by_cname(CLASS_NAME_SOCKET_IO)))
+				r = true;
 		} break;
 		case OCTL_UNINIT: {
 			_close();
@@ -149,7 +150,7 @@ iSocketIO *cTCPServer::listen(void) {
 		_s32 connect_socket = accept(m_server_socket, (struct sockaddr *)&caddr, &addrlen);
 
 		if(connect_socket > 0) {
-			cSocketIO *psio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
+			cSocketIO *psio = (cSocketIO *)_gpi_repo_->object_by_handle(m_hsio, RF_CLONE);
 			if(psio) {
 				if(psio->_init(0, &caddr, connect_socket,
 						(m_use_ssl && mp_sslcxt) ? SOCKET_IO_SSL_SERVER : SOCKET_IO_TCP,
