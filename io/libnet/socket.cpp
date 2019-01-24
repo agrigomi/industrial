@@ -44,7 +44,7 @@ bool cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
 	setsockopt(m_socket, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
 
 	struct timeval timeout;
-	timeout.tv_sec = 15;
+	timeout.tv_sec = 20;
 	timeout.tv_usec = 0;
 
 	setsockopt(m_socket, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));

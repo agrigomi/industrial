@@ -87,7 +87,8 @@ static _http_method_map _g_method_map[] = {
 #define VAR_REQ_URN		"req-URN"
 #define VAR_REQ_PROTOCOL	"req-Protocol"
 
-#define TIMEOUT_SEC	8
+#define TIMEOUT_SEC	10
+#define USE_CONNECTION_TIMEOUT
 
 bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
@@ -564,9 +565,11 @@ _u8 cHttpConnection::process(void) {
 			if(complete_req_header())
 				m_state = HTTPC_PARSE_HEADER;
 			else {
+#ifdef USE_CONNECTION_TIMEOUT
 				if((time(NULL) - m_stime) > TIMEOUT_SEC)
 					m_state = HTTPC_CLOSE;
 				else
+#endif
 					m_state = HTTPC_RECEIVE_HEADER;
 			}
 			break;
@@ -616,8 +619,17 @@ _u8 cHttpConnection::process(void) {
 							r = HTTP_ON_RESPONSE_DATA;
 							m_obuffer_sent = m_obuffer_offset = 0;
 						}
-					} else
-						m_state = HTTPC_CLOSE;
+					} else {
+						_cstr_t ctype = req_var("Connection");
+
+						if(ctype && strcmp(ctype, "keep-alive") == 0) {
+							m_state = HTTPC_RECEIVE_HEADER;
+#ifdef USE_CONNECTION_TIMEOUT
+							m_stime = time(NULL);
+#endif
+						} else
+							m_state = HTTPC_CLOSE;
+					}
 				} else
 					m_state = HTTPC_CLOSE;
 			}
