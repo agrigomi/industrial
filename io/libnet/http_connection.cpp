@@ -622,11 +622,21 @@ _u8 cHttpConnection::process(void) {
 					} else {
 						_cstr_t ctype = req_var("Connection");
 
-						if(ctype && strcmp(ctype, "keep-alive") == 0) {
+						if(ctype && strcmp(ctype, "keep-alive") == 0) { // reuse connection
 							m_state = HTTPC_RECEIVE_HEADER;
-#ifdef USE_CONNECTION_TIMEOUT
+							m_ibuffer = m_oheader = m_obuffer = 0;
+							m_ibuffer_offset = m_oheader_offset = m_obuffer_offset = 0;
+							m_response_code = 0;
+							m_error_code = 0;
+							m_res_content_len = 0;
+							m_req_content_len = 0;
+							m_req_content_rcv = 0;
+							m_oheader_sent = 0;
+							m_obuffer_sent = 0;
+							m_content_sent = 0;
+							m_header_len = 0;
+							mpi_map->clr();
 							m_stime = time(NULL);
-#endif
 						} else
 							m_state = HTTPC_CLOSE;
 					}
