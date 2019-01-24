@@ -112,6 +112,7 @@ private:
 	_u32 send_header(void);
 	_u32 send_content(void);
 	_u32 receive_content(void);
+	void clean_members(void);
 
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);

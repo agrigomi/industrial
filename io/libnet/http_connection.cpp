@@ -99,24 +99,13 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 
 			mp_sio = NULL;
 			mpi_bmap = NULL;
-			m_state = 0;
-			m_ibuffer = m_oheader = m_obuffer = 0;
-			m_ibuffer_offset = m_oheader_offset = m_obuffer_offset = 0;
-			m_response_code = 0;
-			m_error_code = 0;
-			m_res_content_len = 0;
-			m_req_content_len = 0;
-			m_req_content_rcv = 0;
-			m_oheader_sent = 0;
-			m_obuffer_sent = 0;
-			m_content_sent = 0;
-			m_header_len = 0;
-			m_stime = time(NULL);
 			memset(m_udata, 0, sizeof(m_udata));
 			mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
 			mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
-			if(mpi_str && mpi_map)
+			if(mpi_str && mpi_map) {
 				r = true;
+				clean_members();
+			}
 		} break;
 		case OCTL_UNINIT: {
 			iRepository *pi_repo = (iRepository *)arg;
@@ -129,6 +118,23 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	}
 
 	return r;
+}
+
+void cHttpConnection::clean_members(void) {
+	m_state = 0;
+	m_ibuffer = m_oheader = m_obuffer = 0;
+	m_ibuffer_offset = m_oheader_offset = m_obuffer_offset = 0;
+	m_response_code = 0;
+	m_error_code = 0;
+	m_res_content_len = 0;
+	m_req_content_len = 0;
+	m_req_content_rcv = 0;
+	m_oheader_sent = 0;
+	m_obuffer_sent = 0;
+	m_content_sent = 0;
+	m_header_len = 0;
+	m_stime = time(NULL);
+	mpi_map->clr();
 }
 
 bool cHttpConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap) {
@@ -623,20 +629,8 @@ _u8 cHttpConnection::process(void) {
 						_cstr_t ctype = req_var("Connection");
 
 						if(ctype && strcmp(ctype, "keep-alive") == 0) { // reuse connection
+							clean_members();
 							m_state = HTTPC_RECEIVE_HEADER;
-							m_ibuffer = m_oheader = m_obuffer = 0;
-							m_ibuffer_offset = m_oheader_offset = m_obuffer_offset = 0;
-							m_response_code = 0;
-							m_error_code = 0;
-							m_res_content_len = 0;
-							m_req_content_len = 0;
-							m_req_content_rcv = 0;
-							m_oheader_sent = 0;
-							m_obuffer_sent = 0;
-							m_content_sent = 0;
-							m_header_len = 0;
-							mpi_map->clr();
-							m_stime = time(NULL);
 						} else
 							m_state = HTTPC_CLOSE;
 					}
