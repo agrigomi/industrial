@@ -595,7 +595,7 @@ _u8 cHttpConnection::process(void) {
 			} else {
 				r = HTTP_ON_ERROR;
 				m_error_code = HTTPRC_BAD_REQUEST;
-				m_state = HTTPC_CLOSE;
+				m_state = HTTPC_SEND_HEADER;
 			}
 			break;
 		case HTTPC_RECEIVE_CONTENT:
