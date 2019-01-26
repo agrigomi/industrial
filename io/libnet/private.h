@@ -100,6 +100,7 @@ private:
 	_u16		m_state;
 	time_t		m_stime;
 	_ulong		m_udata[HTTPC_MAX_UDATA_INDEX];
+	_char_t		m_res_protocol[16];
 
 	_cstr_t get_rc_text(_u16 rc);
 	bool complete_req_header(void);
@@ -160,6 +161,8 @@ public:
 	_u16 error_code(void) {
 		return m_error_code;
 	}
+	// set response protocol as string like 'HTTP/1.1'
+	 void res_protocol(_cstr_t protocol);
 	// set response code
 	void res_code(_u16 httprc) {
 		m_response_code = httprc;

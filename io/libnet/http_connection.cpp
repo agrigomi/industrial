@@ -134,6 +134,7 @@ void cHttpConnection::clean_members(void) {
 	m_content_sent = 0;
 	m_header_len = 0;
 	m_stime = time(NULL);
+	strncpy(m_res_protocol, "HTTP/1.1", sizeof(m_res_protocol)-1);
 	mpi_map->clr();
 }
 
@@ -497,8 +498,10 @@ _u32 cHttpConnection::send_header(void) {
 	if(m_response_code) {
 		if(!m_oheader_sent) {
 			// send first line
-			_u32 n = snprintf(rs, sizeof(rs), "HTTP/2.0 %u %s\r\n",
-					m_response_code, get_rc_text(m_response_code));
+			_u32 n = snprintf(rs, sizeof(rs), "%s %u %s\r\n",
+					m_res_protocol,
+					m_response_code,
+					get_rc_text(m_response_code));
 
 			mp_sio->write(rs, n);
 		}
@@ -755,6 +758,10 @@ bool cHttpConnection::res_var(_cstr_t name, _cstr_t value) {
 
 	return r;
 }
+
+ void cHttpConnection::res_protocol(_cstr_t protocol) {
+	 strncpy(m_res_protocol, protocol, sizeof(m_res_protocol)-1);
+ }
 
 bool cHttpConnection::res_content_len(_u32 content_len) {
 	_char_t cl[32]="";
