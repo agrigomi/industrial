@@ -10,12 +10,20 @@
 #define I_MAP		"iMap"
 #define I_BUFFER_MAP	"iBufferMap"
 
+typedef struct {
+	_u32 robj; // number of reserved objects
+	_u32 aobj; // number of active objects
+	_u32 dpgs; // number of data pages
+	_u32 mpgs; // number of meta pages
+}_heap_status_t;
+
 class iHeap:public iBase {
 public:
 	INTERFACE(iHeap, I_HEAP);
 	virtual void *alloc(_u32)=0;
 	virtual void free(void *, _u32)=0;
 	virtual bool verify(void *, _u32)=0;
+	virtual void status(_heap_status_t *p_hs)=0;
 };
 
 class iRingBuffer: public iBase {

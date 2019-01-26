@@ -88,6 +88,16 @@ public:
 	bool verify(void *ptr, _u32 size) {
 		return (s2_verify(&m_s2c, ptr, size)) ? true : false;
 	}
+
+	void status(_heap_status_t *p_hs) {
+		_s2_status_t s2_sts;
+
+		s2_status(&m_s2c, &s2_sts);
+		p_hs->robj = s2_sts.nrobj;
+		p_hs->aobj = s2_sts.naobj;
+		p_hs->dpgs = s2_sts.ndpg;
+		p_hs->mpgs = s2_sts.nspg;
+	}
 };
 
 static cHeap _g_object_;
