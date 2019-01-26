@@ -581,8 +581,14 @@ _u8 cHttpConnection::process(void) {
 			break;
 		case HTTPC_PARSE_HEADER:
 			if(parse_req_header()) {
-				r = HTTP_ON_REQUEST;
-				m_state = HTTPC_RECEIVE_CONTENT;
+				if(req_url() && req_method()) {
+					r = HTTP_ON_REQUEST;
+					m_state = HTTPC_RECEIVE_CONTENT;
+				} else {
+					r = HTTP_ON_ERROR;
+					m_error_code = HTTPRC_BAD_REQUEST;
+					m_state = HTTPC_CLOSE;
+				}
 			} else {
 				r = HTTP_ON_ERROR;
 				m_error_code = HTTPRC_BAD_REQUEST;
