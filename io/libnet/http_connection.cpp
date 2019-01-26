@@ -590,7 +590,7 @@ _u8 cHttpConnection::process(void) {
 				} else {
 					r = HTTP_ON_ERROR;
 					m_error_code = HTTPRC_BAD_REQUEST;
-					m_state = HTTPC_CLOSE;
+					m_state = HTTPC_SEND_HEADER;
 				}
 			} else {
 				r = HTTP_ON_ERROR;
@@ -760,7 +760,7 @@ bool cHttpConnection::res_var(_cstr_t name, _cstr_t value) {
 }
 
  void cHttpConnection::res_protocol(_cstr_t protocol) {
-	 strncpy(m_res_protocol, protocol, sizeof(m_res_protocol)-1);
+	strncpy(m_res_protocol, protocol, sizeof(m_res_protocol)-1);
  }
 
 bool cHttpConnection::res_content_len(_u32 content_len) {
