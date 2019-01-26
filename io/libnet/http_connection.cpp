@@ -575,9 +575,11 @@ _u8 cHttpConnection::process(void) {
 				m_state = HTTPC_PARSE_HEADER;
 			else {
 #ifdef USE_CONNECTION_TIMEOUT
-				if((time(NULL) - m_stime) > TIMEOUT_SEC)
-					m_state = HTTPC_CLOSE;
-				else
+				if((time(NULL) - m_stime) > TIMEOUT_SEC) {
+					m_state = HTTPC_SEND_HEADER;
+					m_error_code = HTTPRC_REQUEST_TIMEOUT;
+					r = HTTP_ON_ERROR;
+				} else
 #endif
 					m_state = HTTPC_RECEIVE_HEADER;
 			}
