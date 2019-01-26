@@ -165,6 +165,9 @@ private:
 
 			if(hdr)
 				pi_log->fwrite(LMT_TEXT, "%s: %s", p_srv->name, hdr);
+
+			pi_httpc->res_code(pi_httpc->error_code());
+			pi_httpc->res_var("Server", SERVER_NAME);
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_CLOSE, [](iHttpConnection *pi_httpc, void *udata) {
