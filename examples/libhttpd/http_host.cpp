@@ -155,8 +155,16 @@ private:
 		p_srv->pi_http_server->on_event(HTTP_ON_ERROR, [](iHttpConnection *pi_httpc, void *udata) {
 			_server_t *p_srv = (_server_t *)udata;
 			iLog *pi_log = p_srv->p_http_host->mpi_log;
+			_char_t req_ip[32]="";
 
-			pi_log->fwrite(LMT_ERROR, "%s: Error(%d)", p_srv->name, pi_httpc->error_code());
+			pi_httpc->peer_ip(req_ip, sizeof(req_ip));
+
+			pi_log->fwrite(LMT_ERROR, "%s: Error(%d) (%s)", p_srv->name, pi_httpc->error_code(), req_ip);
+
+			_cstr_t hdr = pi_httpc->req_header();
+
+			if(hdr)
+				pi_log->fwrite(LMT_TEXT, "%s: %s", p_srv->name, hdr);
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_CLOSE, [](iHttpConnection *pi_httpc, void *udata) {
