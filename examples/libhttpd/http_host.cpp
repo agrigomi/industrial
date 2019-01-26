@@ -47,7 +47,7 @@ private:
 
 			pi_httpc->peer_ip(req_ip, sizeof(req_ip));
 
-			if((strlen(url) + strlen(p_srv->doc_root) < sizeof(doc)-1)) {
+			if((url && strlen(url) + strlen(p_srv->doc_root) < sizeof(doc)-1)) {
 				snprintf(doc, sizeof(doc), "%s%s",
 					p_srv->doc_root,
 					(strcmp(url, "/") == 0) ? "/index.html" : url);
@@ -115,9 +115,10 @@ private:
 					}
 				}
 			} else {
-				pi_httpc->res_code(HTTPRC_REQ_URI_TOO_LARGE);
-				pi_log->write(LMT_ERROR, "Request URI too large");
-				pi_log->write(LMT_TEXT, url);
+				pi_httpc->res_code(HTTPRC_BAD_REQUEST);
+				pi_log->write(LMT_ERROR, "Invalid request URI");
+				if(url)
+					pi_log->write(LMT_TEXT, url);
 			}
 		}, p_srv);
 
