@@ -116,7 +116,7 @@ private:
 				}
 			} else {
 				pi_httpc->res_code(HTTPRC_BAD_REQUEST);
-				pi_log->write(LMT_ERROR, "Invalid request URI");
+				pi_log->fwrite(LMT_ERROR, "Invalid request URI (%s)", req_ip);
 				if(url)
 					pi_log->write(LMT_TEXT, url);
 			}
