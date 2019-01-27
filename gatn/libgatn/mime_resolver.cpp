@@ -1,5 +1,6 @@
 #include <string.h>
-#include "dtype.h"
+#include "iRepository.h"
+#include "iMemory.h"
 
 typedef struct {
 	_cstr_t	ext;
@@ -570,21 +571,58 @@ static _mime_t _g_mime_map_[]= {
 	{0,	0}
 };
 
+static bool _g_is_init_mime_type_resolver_ = false;
+static iMap *_g_map_ = NULL;
+
+void init_mime_type_resolver(void) {
+	_u32 n = 0;
+
+	if(!_g_is_init_mime_type_resolver_) {
+		if((_g_map_ = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE)))) {
+			while(_g_mime_map_[n].ext) {
+				_g_map_->add(_g_mime_map_[n].ext, strlen(_g_mime_map_[n].ext),
+						_g_mime_map_[n].type, strlen(_g_mime_map_[n].type));
+				n++;
+			}
+			_g_is_init_mime_type_resolver_ = true;
+		}
+	}
+}
+
+void uninit_mime_type_resolver(void) {
+	if(_g_is_init_mime_type_resolver_) {
+		_gpi_repo_->object_release(_g_map_);
+		_g_is_init_mime_type_resolver_ = false;
+		_g_map_ = NULL;
+	}
+}
+
 _cstr_t resolve_mime_type(_cstr_t fname) {
 	_cstr_t r = 0;
 	_u32 fn_len = strlen(fname);
-	_u32 n = 0;
+	_u32 i = fn_len - 1;
 
-	while(_g_mime_map_[n].ext) {
-		_u32 ext_len = strlen(_g_mime_map_[n].ext);
-		_cstr_t pfn = fname + fn_len - ext_len;
-
-		if(strcmp(pfn, _g_mime_map_[n].ext) == 0) {
-			r = _g_mime_map_[n].type;
-			break;
+	if(_g_is_init_mime_type_resolver_) {
+		for(; i && fname[i] != '.'; i--);
+		if(i) {
+			_u32 sz;
+			r = (_cstr_t)_g_map_->get((fname+i), (_u32)strlen(fname + i), &sz);
 		}
+	} else {
+		_u32 n = 0;
 
-		n++;
+
+		while(_g_mime_map_[n].ext) {
+			_u32 ext_len = strlen(_g_mime_map_[n].ext);
+			_cstr_t pfn = fname + fn_len - ext_len;
+
+			if(strcmp(pfn, _g_mime_map_[n].ext) == 0) {
+				r = _g_mime_map_[n].type;
+				break;
+			}
+
+			n++;
+		}
 	}
 
 	return r;

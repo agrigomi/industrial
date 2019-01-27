@@ -107,7 +107,7 @@ public:
 				mpi_heap = dynamic_cast<iHeap *>(pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL));
 				mpi_net = NULL;
 				mpi_fs = NULL;
-
+				init_mime_type_resolver();
 				if(mpi_map && mpi_log && mpi_bmap && mpi_heap) {
 					pi_repo->monitoring_add(NULL, I_NET, NULL, this, SCAN_ORIGINAL);
 					pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
@@ -131,6 +131,7 @@ public:
 				pi_repo->object_release(mpi_log);
 				pi_repo->object_release(mpi_bmap);
 				pi_repo->object_release(mpi_heap);
+				uninit_mime_type_resolver();
 				r = true;
 			} break;
 			case OCTL_NOTIFY: {

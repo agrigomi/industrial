@@ -59,6 +59,8 @@ typedef struct {
 	void			*udata;
 }_event_data_t;
 
+void init_mime_type_resolver(void);
+void uninit_mime_type_resolver(void);
 _cstr_t resolve_mime_type(_cstr_t fname);
 
 struct server: public _server_t {
