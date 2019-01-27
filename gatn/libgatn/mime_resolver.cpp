@@ -604,7 +604,7 @@ _cstr_t resolve_mime_type(_cstr_t fname) {
 
 	if(_g_is_init_mime_type_resolver_) {
 		for(; i && fname[i] != '.'; i--);
-		if(i) {
+		if(fname[i] == '.') {
 			_u32 sz;
 			r = (_cstr_t)_g_map_->get((fname+i), (_u32)strlen(fname + i), &sz);
 		}
