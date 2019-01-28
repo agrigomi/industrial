@@ -67,8 +67,8 @@ private:
 								pi_httpc->res_content_len(sz);
 								pi_httpc->res_code(HTTPRC_OK);
 								pi_httpc->res_mtime(p_srv->p_http_host->mpi_fcache->mtime(fc));
-								pi_httpc->set_udata((_ulong)fc); // keep file cache
 								pi_httpc->res_write(ptr, sz);
+								p_srv->p_http_host->mpi_fcache->close(fc);
 							} else { // can't get pointer to file content
 								pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
 								p_srv->p_http_host->mpi_fcache->close(fc);
@@ -137,18 +137,39 @@ private:
 
 		p_srv->pi_http_server->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpConnection *pi_httpc, void *udata) {
 			_server_t *p_srv = (_server_t *)udata;
-			HFCACHE fc = (HFCACHE)pi_httpc->get_udata(); // restore file cache
 			_ulong sz = 0;
+			iLog *pi_log = p_srv->p_http_host->mpi_log;
+			_char_t doc[1024]="";
+			_cstr_t url = pi_httpc->req_url();
+			_char_t req_ip[32]="";
 
-			if(fc) {
-				_u8 *ptr = (_u8 *)p_srv->p_http_host->mpi_fcache->ptr(fc, &sz);
+			pi_httpc->peer_ip(req_ip, sizeof(req_ip));
 
-				if(ptr) {
-					_u32 res_sent = pi_httpc->res_content_sent();
-					_u32 res_remainder = pi_httpc->res_remainder();
+			if((url && strlen(url) + strlen(p_srv->doc_root) < sizeof(doc)-1)) {
+				snprintf(doc, sizeof(doc), "%s%s",
+					p_srv->doc_root,
+					(strcmp(url, "/") == 0) ? "/index.html" : url);
 
-					pi_httpc->res_write(ptr + res_sent, res_remainder);
+				if(p_srv->p_http_host->mpi_fcache) {
+					HFCACHE fc = p_srv->p_http_host->mpi_fcache->open(doc);
+					if(fc) { // open file cache
+						_u8 *ptr = (_u8 *)p_srv->p_http_host->mpi_fcache->ptr(fc, &sz);
+
+						if(ptr) {
+							_u32 res_sent = pi_httpc->res_content_sent();
+							_u32 res_remainder = pi_httpc->res_remainder();
+
+							pi_httpc->res_write(ptr + res_sent, res_remainder);
+						}
+
+						p_srv->p_http_host->mpi_fcache->close(fc);
+					}
 				}
+			} else {
+				pi_httpc->res_code(HTTPRC_BAD_REQUEST);
+				pi_log->fwrite(LMT_ERROR, "Invalid request URI (%s)", req_ip);
+				if(url)
+					pi_log->write(LMT_TEXT, url);
 			}
 		}, p_srv);
 
@@ -171,11 +192,7 @@ private:
 		}, p_srv);
 
 		p_srv->pi_http_server->on_event(HTTP_ON_CLOSE, [](iHttpConnection *pi_httpc, void *udata) {
-			_server_t *p_srv = (_server_t *)udata;
-			HFCACHE fc = (HFCACHE)pi_httpc->get_udata();
-
-			if(fc) // close file cache
-				p_srv->p_http_host->mpi_fcache->close(fc);
+			//...
 		}, p_srv);
 	}
 
