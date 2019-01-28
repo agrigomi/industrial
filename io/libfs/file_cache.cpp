@@ -43,6 +43,7 @@ private:
 		if(pfce->pi_fio) {
 			mpi_fs->close(pfce->pi_fio);
 			pfce->pi_fio = NULL;
+			pfce->ptr = NULL;
 		}
 
 		_char_t cache_path[MAX_FCACHE_PATH*2]="";
@@ -256,14 +257,6 @@ public:
 		pfce->mutex.lock();
 		if(pfce->refc)
 			pfce->refc--;
-		if(!pfce->refc) {
-			if(pfce->pi_fio) {
-				if(pfce->ptr) {
-					pfce->pi_fio->unmap();
-					pfce->ptr = NULL;
-				}
-			}
-		}
 		pfce->mutex.unlock();
 		remove_cache(pfce);
 	}
