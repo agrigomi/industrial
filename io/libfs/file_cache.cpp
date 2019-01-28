@@ -106,9 +106,12 @@ private:
 
 			pfce->mutex.lock();
 			if(pfce->pi_fio) {
+				if(pfce->ptr) {
+					pfce->pi_fio->unmap();
+					pfce->ptr = NULL;
+				}
 				mpi_fs->close(pfce->pi_fio);
 				pfce->pi_fio = NULL;
-				pfce->ptr = NULL;
 			}
 			pfce->mutex.unlock();
 			mpi_map->del(pfce->sha_fname, strlen(pfce->sha_fname), hm);
@@ -256,14 +259,14 @@ public:
 		pfce->mutex.lock();
 		if(pfce->refc)
 			pfce->refc--;
-		if(!pfce->refc) {
+		/*if(!pfce->refc) {
 			if(pfce->pi_fio) {
 				if(pfce->ptr) {
 					pfce->pi_fio->unmap();
 					pfce->ptr = NULL;
 				}
 			}
-		}
+		}*/
 		pfce->mutex.unlock();
 		remove_cache(pfce);
 	}
