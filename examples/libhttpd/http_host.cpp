@@ -137,7 +137,6 @@ private:
 		p_srv->pi_http_server->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpConnection *pi_httpc, void *udata) {
 			_server_t *p_srv = (_server_t *)udata;
 			_ulong sz = 0;
-			iLog *pi_log = p_srv->p_http_host->mpi_log;
 			_char_t doc[1024]="";
 			_cstr_t url = pi_httpc->req_url();
 			_char_t req_ip[32]="";
