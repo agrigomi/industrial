@@ -280,6 +280,7 @@ public:
 	void status(_bmap_status_t *p_st) {
 		HMUTEX hm = mpi_list->lock();
 
+		p_st->b_size = size();
 		mpi_list->col(BFREE, hm);
 		p_st->b_free = mpi_list->cnt(hm);
 		mpi_list->col(BBUSY, hm);
