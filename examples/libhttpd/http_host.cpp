@@ -68,12 +68,11 @@ private:
 								pi_httpc->res_code(HTTPRC_OK);
 								pi_httpc->res_mtime(p_srv->p_http_host->mpi_fcache->mtime(fc));
 								pi_httpc->res_write(ptr, sz);
-								p_srv->p_http_host->mpi_fcache->close(fc);
 							} else { // can't get pointer to file content
 								pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
-								p_srv->p_http_host->mpi_fcache->close(fc);
 								pi_log->fwrite(LMT_ERROR, "%s: Internal error", p_srv->name);
 							}
+							p_srv->p_http_host->mpi_fcache->close(fc);
 						} else {
 							pi_httpc->res_code(HTTPRC_NOT_FOUND);
 							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found (%s)", p_srv->name, doc, req_ip);
