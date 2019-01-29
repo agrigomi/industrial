@@ -276,6 +276,20 @@ public:
 
 		mpi_list->unlock(hm);
 	}
+
+	void status(_bmap_status_t *p_st) {
+		HMUTEX hm = mpi_list->lock();
+
+		mpi_list->col(BFREE, hm);
+		p_st->b_free = mpi_list->cnt(hm);
+		mpi_list->col(BBUSY, hm);
+		p_st->b_busy = mpi_list->cnt(hm);
+		mpi_list->col(BDIRTY, hm);
+		p_st->b_dirty = mpi_list->cnt(hm);
+		p_st->b_all = p_st->b_free + p_st->b_busy + p_st->b_dirty;
+
+		mpi_list->unlock(hm);
+	}
 };
 
 static cBufferMap _g_buffer_map_;
