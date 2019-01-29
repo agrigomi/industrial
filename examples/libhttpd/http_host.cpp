@@ -164,11 +164,6 @@ private:
 						p_srv->p_http_host->mpi_fcache->close(fc);
 					}
 				}
-			} else {
-				pi_httpc->res_code(HTTPRC_BAD_REQUEST);
-				pi_log->fwrite(LMT_ERROR, "Invalid request URI (%s)", req_ip);
-				if(url)
-					pi_log->write(LMT_TEXT, url);
 			}
 		}, p_srv);
 
