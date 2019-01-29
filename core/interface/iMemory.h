@@ -38,6 +38,12 @@ public:
 
 typedef void*	_map_enum_t;
 
+typedef struct {
+	_u32	capacity; // current map capacity
+	_u32	count; // number of objects
+	_u32	collisions; // number of colisions
+}_map_status_t;
+
 class iMap: public iBase {
 public:
 	INTERFACE(iMap, I_MAP);
@@ -54,6 +60,7 @@ public:
 	virtual void *enum_next(_map_enum_t en, _u32 *sz_data, HMUTEX hlock=0)=0;
 	virtual void *enum_current(_map_enum_t en, _u32 *sz_data, HMUTEX hlock=0)=0;
 	virtual void enum_del(_map_enum_t en, HMUTEX hlock=0)=0;
+	virtual void status(_map_status_t *)=0;
 };
 
 #define LL_VECTOR	1
