@@ -4,7 +4,6 @@
 #include "iNet.h"
 #include "iFS.h"
 #include "iLog.h"
-#include "iMemory.h"
 #include "iArgs.h"
 
 #define DEFAULT_HTTP_PORT	8080

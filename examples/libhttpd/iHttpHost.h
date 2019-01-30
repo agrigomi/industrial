@@ -1,4 +1,5 @@
 #include "iBase.h"
+#include "iMemory.h"
 
 #define I_HTTP_HOST	"iHttpHost"
 
@@ -6,11 +7,7 @@ typedef void _enum_http_t(bool running, _cstr_t name, _u32 port, _cstr_t root, v
 
 typedef struct {
 	// buffers
-	_u32	b_size;	// buffer size
-	_u32	b_all;	// total number of buffers
-	_u32	b_free; // number of free buffers
-	_u32	b_busy; // number of busy buffers
-	_u32	b_dirty; // number of dirty buffers
+	_bmap_status_t	bmap_status;
 	// file cache
 
 }_httpd_status_t;
