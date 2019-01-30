@@ -1,16 +1,12 @@
+#include <stdio.h>
 #include <string.h>
 #include <limits.h>
 #include "iRepository.h"
 #include "iMemory.h"
 #include "iTaskMaker.h"
-#include "iLog.h"
 #include "private.h"
 
-#define LOG(lmt, fmt, ...) {\
-	iLog *pi_log = get_log();\
-	if(pi_log) \
-		pi_log->fwrite(lmt, fmt, __VA_ARGS__); \
-}
+#define LOG	printf
 
 typedef struct {
 	iBase	*monitored;
@@ -24,8 +20,8 @@ private:
 	iLlist *mpi_cxt_list; // context list
 	iLlist *mpi_ext_list; // extensions list
 	iLlist *mpi_notify_list;
+	iHeap  *mpi_heap;
 	iTaskMaker *mpi_tmaker;
-	iLog   *mpi_log;
 	_cstr_t	m_ext_dir;
 
 	iRepoExtension *get_extension(_cstr_t file, _cstr_t alias) {
@@ -180,9 +176,7 @@ private:
 
 	void remove_notifications(iBase *handler) {
 		if(mpi_notify_list) {
-			iHeap *pi_heap = (iHeap *)object_by_iname(I_HEAP, RF_ORIGINAL);
-
-			if(pi_heap) {
+			if(mpi_heap) {
 				_u32 sz = 0;
 				HMUTEX hm = mpi_notify_list->lock();
 				_notify_t *rec = (_notify_t *)mpi_notify_list->first(&sz, hm);
@@ -190,9 +184,9 @@ private:
 				while(rec) {
 					if(rec->handler == handler) {
 						if(rec->iname)
-							pi_heap->free(rec->iname, strlen(rec->iname)+1);
+							mpi_heap->free(rec->iname, strlen(rec->iname)+1);
 						if(rec->cname)
-							pi_heap->free(rec->cname, strlen(rec->cname)+1);
+							mpi_heap->free(rec->cname, strlen(rec->cname)+1);
 
 						mpi_notify_list->del(hm);
 						rec = (_notify_t *)mpi_notify_list->current(&sz, hm);
@@ -200,7 +194,6 @@ private:
 						rec = (_notify_t *)mpi_notify_list->next(&sz, hm);
 				}
 
-				object_release(pi_heap);
 				mpi_notify_list->unlock(hm);
 			}
 		}
@@ -258,7 +251,7 @@ private:
 				notify(flags, pi);
 			} else {
 				pi->object_ctl(OCTL_UNINIT, this);
-				LOG(LMT_ERROR, "REPOSITORY: Unable to init object(iname='%s'; cname='%s')",
+				LOG("REPOSITORY: Unable to init object(iname='%s'; cname='%s')\n",
 						info->iname, info->cname);
 			}
 		} else
@@ -308,7 +301,7 @@ private:
 		if(mpi_cxt_list->sel(obj, hm))
 			mpi_cxt_list->del(hm);
 		else
-			LOG(LMT_ERROR, "REPOSITORY: Trying to remove invalid context %p", obj);
+			LOG("REPOSITORY: Trying to remove invalid context %p\n", obj);
 		mpi_cxt_list->unlock(hm);
 	}
 
@@ -484,10 +477,6 @@ private:
 		}
 	}
 
-	iLog *get_log(void) {
-		return (mpi_log) ? mpi_log : (mpi_log = (iLog *)object_by_iname(I_LOG, RF_ORIGINAL));
-	}
-
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 1, 0, 0);
 
@@ -533,10 +522,8 @@ public:
 						}
 					} else {
 						// here we needed of heap
-						_object_request_t req = {RQ_INTERFACE, 0, I_HEAP};
-						iHeap *pi_heap = (iHeap*)object_request(&req, RF_ORIGINAL);
-						if(pi_heap) {
-							r = (iBase *)pi_heap->alloc(size);
+						if(mpi_heap) {
+							r = (iBase *)mpi_heap->alloc(size);
 							_u8 *state = (_u8 *)r;
 							state += size;
 							*state = 0;
@@ -544,12 +531,10 @@ public:
 							memcpy((void *)r, (void *)bentry->pi_base, info.size);
 
 							if(!init_object(r, state, &info)) {
-								pi_heap->free(r, size);
+								mpi_heap->free(r, size);
 								r = 0;
 							} else
 								bentry->ref_cnt++;
-
-							object_release(pi_heap);
 						}
 					}
 				} else if((info.flags & rf) & RF_ORIGINAL) {
@@ -570,10 +555,8 @@ public:
 
 		if(bentry)
 			r = object_by_handle(bentry, rf);
-		 else {
-			if(mpi_log)
-				mpi_log->fwrite(LMT_ERROR, "REPOSITORY: Unable to find object(iname='%s'; cname='%s')", req->iname, req->cname);
-		}
+		 else
+			LOG("REPOSITORY: Unable to find object(iname='%s'; cname='%s')\n", req->iname, req->cname);
 
 		return r;
 	}
@@ -620,7 +603,7 @@ public:
 		_object_request_t req = {RQ_INTERFACE, NULL, iname};
 
 		if(!(r = find(&req)))
-			LOG(LMT_ERROR, "REPOSITORY: Unable to find object(iname='%s')", iname);
+			LOG("REPOSITORY: Unable to find object(iname='%s')\n", iname);
 
 		return r;
 	}
@@ -630,7 +613,7 @@ public:
 		_object_request_t req = {RQ_NAME, cname, NULL};
 
 		if(!(r = find(&req)))
-			LOG(LMT_ERROR, "REPOSITORY: Unable to find object(cname='%s')", cname);
+			LOG("REPOSITORY: Unable to find object(cname='%s')\n", cname);
 
 		return r;
 	}
@@ -712,15 +695,13 @@ public:
 
 			n.monitored = mon_obj;
 
-			iHeap *pi_heap = (iHeap *)object_by_iname(I_HEAP, RF_ORIGINAL);
-
 		 	if(mon_iname) {
-				if((n.iname = (_str_t)pi_heap->alloc(strlen(mon_iname)+1)))
+				if((n.iname = (_str_t)mpi_heap->alloc(strlen(mon_iname)+1)))
 					strcpy(n.iname, mon_iname);
 			}
 
 		 	if(mon_cname) {
-				if((n.cname = (_str_t)pi_heap->alloc(strlen(mon_cname)+1)))
+				if((n.cname = (_str_t)mpi_heap->alloc(strlen(mon_cname)+1)))
 					strcpy(n.cname, mon_cname);
 			}
 
@@ -729,12 +710,10 @@ public:
 					scan_for_notifications(&n, scan_flags);
 			} else {
 				if(n.iname)
-					pi_heap->free(n.iname, strlen(n.iname)+1);
+					mpi_heap->free(n.iname, strlen(n.iname)+1);
 				if(n.cname)
-					pi_heap->free(n.cname, strlen(n.cname)+1);
+					mpi_heap->free(n.cname, strlen(n.cname)+1);
 			}
-
-			object_release(pi_heap);
 		}
 
 		return r;
@@ -746,18 +725,16 @@ public:
 		if(mpi_notify_list) {
 			_u32 sz = 0;
 			HMUTEX hm = mpi_notify_list->lock();
-			iHeap *pi_heap = (iHeap *)object_by_iname(I_HEAP, RF_ORIGINAL);
 
 			if(mpi_notify_list->sel(rec, hm)) {
 				_notify_t *pn = (_notify_t *)mpi_notify_list->current(&sz, hm);
 				if(pn->iname)
-					pi_heap->free(pn->iname, strlen(pn->iname)+1);
+					mpi_heap->free(pn->iname, strlen(pn->iname)+1);
 				if(pn->cname)
-					pi_heap->free(pn->cname, strlen(pn->cname)+1);
+					mpi_heap->free(pn->cname, strlen(pn->cname)+1);
 				mpi_notify_list->del(hm);
 			}
 
-			object_release(pi_heap);
 			mpi_notify_list->unlock(hm);
 		}
 	}
@@ -770,12 +747,12 @@ public:
 				mpi_cxt_list = mpi_ext_list = mpi_notify_list = 0;
 				mpi_tmaker = 0;
 				m_ext_dir = "";
+				mpi_heap = (iHeap *)object_by_iname(I_HEAP, RF_ORIGINAL);
 				if((mpi_cxt_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE)))
 					mpi_cxt_list->init(LL_VECTOR, 1);
 				mpi_ext_list = (iLlist*)object_by_iname(I_LLIST, RF_CLONE);
 				mpi_tmaker = (iTaskMaker*)object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
 				mpi_notify_list = (iLlist *)object_by_iname(I_LLIST, RF_CLONE);
-				mpi_log = 0;
 				if(mpi_cxt_list && mpi_ext_list && mpi_tmaker && mpi_notify_list) {
 					mpi_ext_list->init(LL_VECTOR, 1);
 					mpi_notify_list->init(LL_VECTOR, 1);
