@@ -180,26 +180,29 @@ private:
 
 	void remove_notifications(iBase *handler) {
 		if(mpi_notify_list) {
-			HMUTEX hm = mpi_notify_list->lock();
 			iHeap *pi_heap = (iHeap *)object_by_iname(I_HEAP, RF_ORIGINAL);
-			_u32 sz = 0;
-			_notify_t *rec = (_notify_t *)mpi_notify_list->first(&sz, hm);
 
-			while(rec) {
-				if(rec->handler == handler) {
-					if(rec->iname)
-						pi_heap->free(rec->iname, strlen(rec->iname)+1);
-					if(rec->cname)
-						pi_heap->free(rec->cname, strlen(rec->cname)+1);
+			if(pi_heap) {
+				_u32 sz = 0;
+				HMUTEX hm = mpi_notify_list->lock();
+				_notify_t *rec = (_notify_t *)mpi_notify_list->first(&sz, hm);
 
-					mpi_notify_list->del(hm);
-					rec = (_notify_t *)mpi_notify_list->current(&sz, hm);
-				} else
-					rec = (_notify_t *)mpi_notify_list->next(&sz, hm);
+				while(rec) {
+					if(rec->handler == handler) {
+						if(rec->iname)
+							pi_heap->free(rec->iname, strlen(rec->iname)+1);
+						if(rec->cname)
+							pi_heap->free(rec->cname, strlen(rec->cname)+1);
+
+						mpi_notify_list->del(hm);
+						rec = (_notify_t *)mpi_notify_list->current(&sz, hm);
+					} else
+						rec = (_notify_t *)mpi_notify_list->next(&sz, hm);
+				}
+
+				object_release(pi_heap);
+				mpi_notify_list->unlock(hm);
 			}
-
-			object_release(pi_heap);
-			mpi_notify_list->unlock(hm);
 		}
 	}
 
@@ -567,8 +570,10 @@ public:
 
 		if(bentry)
 			r = object_by_handle(bentry, rf);
-		 else
-			LOG(LMT_ERROR, "REPOSITORY: Unable to find object(iname='%s'; cname='%s')", req->iname, req->cname);
+		 else {
+			if(mpi_log)
+				mpi_log->fwrite(LMT_ERROR, "REPOSITORY: Unable to find object(iname='%s'; cname='%s')", req->iname, req->cname);
+		}
 
 		return r;
 	}

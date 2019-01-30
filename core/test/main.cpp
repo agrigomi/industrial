@@ -99,6 +99,8 @@ _err_t main(int argc, char *argv[]) {
 				while(getchar() != 'q');
 			} else
 				pi_log->write(LMT_ERROR, "Failed to create Gatn server\n");
+
+			pi_repo->object_release(pi_gatn);
 		}
 /*
 		iFileCache *pifsc = (iFileCache *)pi_repo->object_by_iname(I_FILE_CACHE, RF_CLONE);
