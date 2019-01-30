@@ -172,6 +172,12 @@ public:
 		map_enum_del(en);
 		unlock(hm);
 	}
+
+	void status(_map_status_t *p_st) {
+		p_st->capacity = map_cxt.capacity;
+		p_st->count = map_cxt.records;
+		p_st->collisions = map_cxt.collisions;
+	}
 };
 
 static cMap _g_map_;

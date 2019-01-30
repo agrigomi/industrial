@@ -100,6 +100,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			mp_sio = NULL;
 			mpi_bmap = NULL;
 			memset(m_udata, 0, sizeof(m_udata));
+			m_ibuffer = m_oheader = m_obuffer = 0;
 			mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
 			mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
 			if(mpi_str && mpi_map) {
@@ -122,7 +123,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 
 void cHttpConnection::clean_members(void) {
 	m_state = 0;
-	m_ibuffer = m_oheader = m_obuffer = 0;
+	release_buffers();
 	m_ibuffer_offset = m_oheader_offset = m_obuffer_offset = 0;
 	m_response_code = 0;
 	m_error_code = 0;
@@ -156,6 +157,11 @@ void cHttpConnection::close(void) {
 		_gpi_repo_->object_release(mp_sio);
 		mp_sio = NULL;
 	}
+
+	release_buffers();
+}
+
+void cHttpConnection::release_buffers(void) {
 	if(m_ibuffer) {
 		mpi_bmap->free(m_ibuffer);
 		m_ibuffer = 0;

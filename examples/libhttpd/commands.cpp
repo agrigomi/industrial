@@ -10,6 +10,7 @@
 #define ACT_START	"start"
 #define ACT_STOP	"stop"
 #define ACT_LIST	"list"
+#define ACT_STATUS	"status"
 
 #define OPT_HTTPD_NAME	"name"
 #define OPT_HTTPD_PORT	"port"
@@ -130,12 +131,25 @@ static void cmd_httpd_list(iCmd *pi_cmd, // interface to command object
 	}, pi_io);
 }
 
+static void cmd_httpd_status(iCmd *pi_cmd, // interface to command object
+			iCmdHost *pi_cmd_host, // interface to command host
+			iIO *pi_io, // interface to I/O object
+			_cmd_opt_t *p_opt, // options array
+			_u32 argc, // number of arguments
+			_cstr_t argv[] // arguments
+			) {
+	iHttpHost *pi_http_host = get_httpd();
+
+	//...
+}
+
 static _cmd_action_t _g_cmd_httpd_actions_[]={
 	{ ACT_CREATE,		cmd_httpd_create },
 	{ ACT_REMOVE,		cmd_httpd_remove },
 	{ ACT_START,		cmd_httpd_start },
 	{ ACT_STOP,		cmd_httpd_stop },
 	{ ACT_LIST,		cmd_httpd_list },
+	{ ACT_STATUS,		cmd_httpd_status },
 	{ 0,			0 }
 };
 
