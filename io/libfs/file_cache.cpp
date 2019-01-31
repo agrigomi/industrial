@@ -3,7 +3,6 @@
 #include <openssl/sha.h>
 #include <mutex>
 #include "iFS.h"
-#include "iMemory.h"
 #include "iRepository.h"
 
 typedef struct { // file cache entry
@@ -275,6 +274,11 @@ public:
 
 		pfce->remove = true;
 		remove_cache(pfce);
+	}
+
+	void status(_fcache_status_t *p_st) {
+		p_st->path = m_cache_path;
+		mpi_map->status(&p_st->st_map);
 	}
 };
 

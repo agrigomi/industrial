@@ -9,6 +9,7 @@
 #include <dirent.h>
 #include <time.h>
 #include "iIO.h"
+#include "iMemory.h"
 
 #define I_FILE_IO	"iFileIO"
 #define I_FS		"iFS"
@@ -50,6 +51,11 @@ public:
 
 #define HFCACHE	void*
 
+typedef struct {
+	_cstr_t		path;
+	_map_status_t	st_map;
+}_fcache_status_t;
+
 class iFileCache: public iBase {
 public:
 	INTERFACE(iFileCache, I_FILE_CACHE);
@@ -65,6 +71,7 @@ public:
 	virtual time_t mtime(HFCACHE hfc)=0;
 	// remove cache
 	virtual void remove(HFCACHE hfc)=0;
+	virtual void status(_fcache_status_t *)=0;
 };
 
 class iFS: public iBase {
