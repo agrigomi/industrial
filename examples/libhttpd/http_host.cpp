@@ -2,7 +2,6 @@
 #include "iHttpHost.h"
 #include "iRepository.h"
 #include "iNet.h"
-#include "iFS.h"
 #include "iLog.h"
 #include "iArgs.h"
 
@@ -404,6 +403,10 @@ public:
 
 			mpi_map->enum_close(me);
 		}
+	}
+
+	void status(_httpd_status_t *p_st) {
+		//...
 	}
 };
 
