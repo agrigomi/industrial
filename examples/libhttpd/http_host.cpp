@@ -404,10 +404,6 @@ public:
 			mpi_map->enum_close(me);
 		}
 	}
-
-	void status(_httpd_status_t *p_st) {
-		//...
-	}
 };
 
 static cHttpHost _g_http_host_;
