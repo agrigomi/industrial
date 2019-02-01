@@ -3,7 +3,7 @@
 #include "sha1.h"
 #include "map_alg.h"
 
-#define INITIAL_CAPACITY	256
+#define INITIAL_CAPACITY	255
 
 class cMap: public iMap {
 private:
