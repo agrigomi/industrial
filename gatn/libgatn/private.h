@@ -31,6 +31,7 @@ struct response: public _response_t {
 		return mpi_httpc;
 	}
 	bool alloc_buffer(void);
+	void clear(void);
 	_u32 capacity(void);
 	_u32 remainder(void);
 	bool resize_array(void);

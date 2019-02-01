@@ -43,6 +43,18 @@ bool response::alloc_buffer(void) {
 	return r;
 }
 
+void response::clear(void) {
+	for(_u32 i = 0; i < m_buffers; i++) {
+		if(mp_hbarray[i]) {
+			mpi_bmap->free(mp_hbarray[i]);
+			mp_hbarray[i] = NULL;
+		}
+	}
+
+	m_content_len = 0;
+	m_buffers = 0;
+}
+
 _u32 response::capacity(void) {
 	return mpi_bmap->size() * m_hbcount;
 }
