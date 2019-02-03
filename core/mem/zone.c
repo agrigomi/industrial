@@ -89,10 +89,64 @@ int zone_init(_zone_context_t *p_zcxt) {
 	return r;
 }
 
+/* returns unit as result and bit number in 'bit' parameter
+	'bit' parameter must contains a requested bit
+*/
+static unsigned long long *_bitmap_unit_bit(_zone_context_t *p_zcxt, _zone_entry_t *p_entry,
+					unsigned int aligned_size,
+					unsigned char *bit // [in / out]
+					) {
+	unsigned long long *r = (unsigned long long *)0;
+	unsigned int max_bits = ZONE_PAGE_SIZE / aligned_size;
+
+	if(*bit < max_bits) {
+		unsigned char unit = *bit / ZONE_BITMAP_UNIT_BITS;
+		*bit = *bit % ZONE_BITMAP_UNIT_BITS;
+		r = &p_entry->bitmap[unit];
+	}
+
+	return r;
+}
+
 static void *_zone_entry_alloc(_zone_context_t *p_zcxt, _zone_entry_t *p_entry, unsigned int aligned_size, unsigned long long limit) {
 	void *r = (void *)0;
 
-	//...
+	if(aligned_size < ZONE_PAGE_SIZE) {
+		unsigned int unit = 0;
+		unsigned int bit = 0, unit_bit = 0;
+		unsigned int max_bits = ZONE_PAGE_SIZE / aligned_size;
+		unsigned long long mask = ((unsigned long long)1 << (ZONE_BITMAP_UNIT_BITS -1));
+
+		while(bit < max_bits) {
+			if(unit_bit >= ZONE_BITMAP_UNIT_BITS) {
+				unit_bit = 0;
+				unit++;
+			}
+
+			if(!(p_entry->bitmap[unit] & (mask >> unit_bit)))
+				break;
+
+			bit++;
+			unit_bit++;
+		}
+
+		if(bit < max_bits) {
+			unsigned char *data = (unsigned char *)p_entry->data;
+
+			if(!data) {
+				data = (unsigned char *)p_zcxt->pf_page_alloc(1, limit, p_zcxt->user_data);
+				p_entry->data = (unsigned long long)data;
+			}
+
+			if(data) {
+				r = data + (bit * aligned_size);
+				p_entry->bitmap[unit] |= (mask >> unit_bit);
+				p_entry->objects++;
+			}
+		}
+	} else {
+		/* one object per entry */
+	}
 
 	return r;
 }

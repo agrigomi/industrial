@@ -6,6 +6,7 @@
 #define ZONE_MAX_ENTRIES	63
 #define ZONE_BITMAP_SIZE	(ZONE_PAGE_SIZE / ZONE_MIN_ALLOC / 8) /* in bytes */
 #define ZONE_BITMAP_UNIT	sizeof(long long)
+#define ZONE_BITMAP_UNIT_BITS	64
 #define ZONE_MAX_ZONES		(ZONE_PAGE_SIZE / sizeof(_zone_page_t *))
 #define ZONE_DEFAULT_LIMIT	0xffffffffffffffffLLU
 
