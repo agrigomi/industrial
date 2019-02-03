@@ -92,7 +92,7 @@ int zone_init(_zone_context_t *p_zcxt) {
 /* returns unit as result and bit number in 'bit' parameter
 	'bit' parameter must contains a requested bit
 */
-static unsigned long long *_bitmap_unit_bit(_zone_context_t *p_zcxt, _zone_entry_t *p_entry,
+static unsigned long long *_bitmap_unit_bit(_zone_entry_t *p_entry,
 					unsigned int aligned_size,
 					unsigned char *bit // [in / out]
 					) {
@@ -250,7 +250,23 @@ void zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
 
 	if(pp_zone) {
 		_zone_page_t *p_zone = *pp_zone;
-		//...
+
+		while(p_zone) {
+			unsigned int i = 0;
+
+			while(i < ZONE_MAX_ENTRIES) {
+				_zone_entry_t *p_entry = &p_zone->array[i];
+				void *data = (void *)p_entry->data;
+
+				if(ptr >= data && ptr < (data + ZONE_PAGE_SIZE)) {
+					//...
+				}
+
+				i++;
+			}
+
+			p_zone = p_zone->header.next;
+		}
 	}
 }
 
