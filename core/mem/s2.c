@@ -8,7 +8,7 @@
 static _u64 _allign(_u32 sz, _u32 page_size) {
 	_u64 r = (sz < S2_MIN_ALLOC)?S2_MIN_ALLOC:sz;
 	if(r < page_size) {
-		_u64 m = (1L << 31);
+		_u64 m = page_size;
 		while(!(m & r))
 			m >>= 1;
 		_u64 n = m >> 1;
