@@ -1,5 +1,6 @@
 core/mem/ll_alg.c
 core/mem/s2.c
+core/mem/zone.c
 core/mem/rb_alg.c
 core/mem/sha1.c
 core/mem/map_alg.c
