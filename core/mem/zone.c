@@ -146,6 +146,20 @@ static void *_zone_entry_alloc(_zone_context_t *p_zcxt, _zone_entry_t *p_entry, 
 		}
 	} else {
 		/* one object per entry */
+		if(p_entry->objects == 0) {
+			unsigned char *data = (unsigned char *)p_entry->data;
+
+			if(!data) {
+				data = (unsigned char *)p_zcxt->pf_page_alloc(aligned_size / ZONE_PAGE_SIZE, limit, p_zcxt->user_data);
+				p_entry->data = (unsigned long long)data;
+			}
+
+			if(data) {
+				r = data;
+				p_entry->objects = 1;
+				p_entry->data_size = aligned_size;
+			}
+		}
 	}
 
 	return r;
@@ -231,7 +245,13 @@ void *zone_alloc(_zone_context_t *p_zcxt, unsigned int size, unsigned long long 
 
 /* Deallocate memory chunk */
 void zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
-	//...
+	unsigned int aligned_size = 0;
+	_zone_page_t **pp_zone = _zone_page(p_zcxt, size, &aligned_size);
+
+	if(pp_zone) {
+		_zone_page_t *p_zone = *pp_zone;
+		//...
+	}
 }
 
 /* Destroy zone context */
