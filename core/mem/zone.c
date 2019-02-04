@@ -54,10 +54,14 @@ static void _unlock(_zone_context_t *p_zcxt, unsigned long long mutex_handle) {
 
 static unsigned int _bit_number(unsigned int x) {
 	unsigned int r = 0;
-	unsigned int mask = 1;
+	unsigned int mask_h = ((unsigned int)1 << 31);
+	unsigned int mask_l = 1;
 
-	while(!(mask & x)) {
-		mask <<= 1;
+	while(!(mask_h & x))
+		mask_h >>= 1;
+
+	while(!(mask_l & mask_h)) {
+		mask_l <<= 1;
 		r++;
 	}
 
