@@ -275,7 +275,15 @@ int zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
 						r = 0;
 						goto _zone_free_end_;
 					} else {
-						//...
+						if(p_entry->objects) {
+							p_zcxt->pf_page_free(data, aligned_size / ZONE_PAGE_SIZE, p_zcxt->user_data);
+							p_entry->data_size = 0;
+							p_entry->data = 0;
+							p_entry->objects = 0;
+							p_zone->header.objects--;
+						}
+						r = 0;
+						goto _zone_free_end_;
 					}
 				}
 
