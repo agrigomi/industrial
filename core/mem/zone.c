@@ -247,10 +247,12 @@ void *zone_alloc(_zone_context_t *p_zcxt, unsigned int size, unsigned long long 
 void zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
 	unsigned int aligned_size = 0;
 	_zone_page_t **pp_zone = _zone_page(p_zcxt, size, &aligned_size);
+	unsigned long long mutex_handle = 0;
 
 	if(pp_zone) {
 		_zone_page_t *p_zone = *pp_zone;
 
+		mutex_handle = _lock(p_zcxt, mutex_handle);
 		while(p_zone) {
 			unsigned int i = 0;
 
@@ -259,7 +261,20 @@ void zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
 				void *data = (void *)p_entry->data;
 
 				if(ptr >= data && ptr < (data + ZONE_PAGE_SIZE)) {
-					//...
+					if(aligned_size < ZONE_PAGE_SIZE) {
+						unsigned char bit = (ptr - data) / aligned_size;
+						unsigned long long *unit = _bitmap_unit_bit(p_entry, aligned_size, &bit);
+						unsigned long long mask = ((unsigned long long)1 << (ZONE_BITMAP_UNIT_BITS -1));
+
+						if(unit && (p_entry->bitmap[*unit] & (mask >> bit))) {
+							p_entry->bitmap[*unit] &= ~(mask >> bit);
+							p_entry->objects--;
+							p_zone->header.objects--;
+						}
+						goto _zone_free_end_;
+					} else {
+						//...
+					}
 				}
 
 				i++;
@@ -267,6 +282,8 @@ void zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
 
 			p_zone = p_zone->header.next;
 		}
+_zone_free_end_:
+		_unlock(p_zcxt, mutex_handle);
 	}
 }
 
