@@ -63,8 +63,8 @@ extern "C" {
 int zone_init(_zone_context_t *p_zcxt);
 /* Allocates chunk of memory and returns pointer or NULL */
 void *zone_alloc(_zone_context_t *p_zcxt, unsigned int size, unsigned long long limit);
-/* Deallocate memory chunk */
-void zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size);
+/* Deallocate memory chunk and returns 0 for siccess */
+int zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size);
 /* Destroy zone context */
 void zone_destroy(_zone_context_t *p_zcxt);
 #ifdef __cplusplus

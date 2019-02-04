@@ -244,7 +244,8 @@ void *zone_alloc(_zone_context_t *p_zcxt, unsigned int size, unsigned long long 
 }
 
 /* Deallocate memory chunk */
-void zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
+int zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
+	int r = 1;
 	unsigned int aligned_size = 0;
 	_zone_page_t **pp_zone = _zone_page(p_zcxt, size, &aligned_size);
 	unsigned long long mutex_handle = 0;
@@ -271,6 +272,7 @@ void zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
 							p_entry->objects--;
 							p_zone->header.objects--;
 						}
+						r = 0;
 						goto _zone_free_end_;
 					} else {
 						//...
@@ -285,6 +287,8 @@ void zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
 _zone_free_end_:
 		_unlock(p_zcxt, mutex_handle);
 	}
+
+	return r;
 }
 
 /* Destroy zone context */
