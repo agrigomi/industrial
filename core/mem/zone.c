@@ -53,19 +53,15 @@ static void _unlock(_zone_context_t *p_zcxt, unsigned long long mutex_handle) {
 }
 
 static unsigned int _bit_number(unsigned int x) {
-	unsigned int r = 0;
 	unsigned int mask_h = ((unsigned int)1 << 31);
-	unsigned int mask_l = 1;
+	unsigned int h2l_pos = 0;
 
-	while(!(mask_h & x))
+	while(!(mask_h & x)) {
 		mask_h >>= 1;
-
-	while(!(mask_l & mask_h)) {
-		mask_l <<= 1;
-		r++;
+		h2l_pos++;
 	}
 
-	return r;
+	return (sizeof(unsigned int) << 3) - h2l_pos;
 }
 
 static _zone_page_t **_zone_page(_zone_context_t *p_zcxt, unsigned int size, unsigned int *aligned_size) {
