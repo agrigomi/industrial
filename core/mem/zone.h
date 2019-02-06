@@ -15,9 +15,9 @@ typedef struct zone_page	_zone_page_t;
 typedef struct zone_entry	_zone_entry_t;
 
 struct zone_header {
-	_zone_page_t *next; /* pointer to next zone page */
+	unsigned long long next; /* pointer to next zone page */
 	unsigned int objects; /* number of objects in zone page */
-	unsigned int object_size; /* max. object size in bytes */
+	unsigned int object_size; /* (max. or first) object size in bytes */
 	unsigned char reserved[48]; /* unused */
 }__attribute__((packed));
 

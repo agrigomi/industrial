@@ -185,11 +185,11 @@ static void *_zone_page_alloc(_zone_context_t *p_zcxt, _zone_page_t *p_zone, uns
 				p_new_page->header.object_size = aligned_size;
 			}
 
-			p_current_page->header.next = p_new_page;
+			p_current_page->header.next = (unsigned long long)p_new_page;
 		}
 
 		/* swith to next page */
-		p_current_page = p_current_page->header.next;
+		p_current_page = (_zone_page_t *)p_current_page->header.next;
 	}
 
 	if(p_current_page) {
@@ -290,7 +290,7 @@ int zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
 				i++;
 			}
 
-			p_zone = p_zone->header.next;
+			p_zone = (_zone_page_t *)p_zone->header.next;
 		}
 _zone_free_end_:
 		_unlock(p_zcxt, mutex_handle);
@@ -299,7 +299,50 @@ _zone_free_end_:
 	return r;
 }
 
+static void destroy_zone_page(_zone_context_t *p_zcxt, _zone_page_t *p_zone) {
+	unsigned int idx = 0;
+	_zone_page_t *p_current_zone = p_zone;
+
+	while(p_current_zone) {
+		_zone_page_t *p_next_zone = (_zone_page_t *)p_current_zone->header.next;
+
+		while(idx < ZONE_MAX_ENTRIES) {
+			_zone_entry_t *p_entry = &p_current_zone->array[idx];
+
+			if(p_entry->data) {
+				unsigned int data_pages = 1;
+
+				if(p_zone->header.object_size > ZONE_PAGE_SIZE)
+					data_pages = p_entry->data_size / ZONE_PAGE_SIZE;
+
+				p_zcxt->pf_page_free((void *)p_entry->data, data_pages, p_zcxt->user_data);
+			}
+
+			idx++;
+		}
+
+		p_zcxt->pf_page_free(p_current_zone, 1, p_zcxt->user_data);
+		p_current_zone = p_next_zone;
+	}
+}
+
 /* Destroy zone context */
 void zone_destroy(_zone_context_t *p_zcxt) {
-	//...
+	_zone_page_t *p_zone = (_zone_page_t *)0;
+	unsigned int idx = 0;
+	unsigned int max_zones = ZONE_PAGE_SIZE / sizeof(_zone_page_t *);
+	unsigned long long mutex_handle = _lock(p_zcxt, 0);
+
+	if(p_zcxt->zones) {
+		while(idx < max_zones) {
+			if((p_zone = p_zcxt->zones[idx]))
+				destroy_zone_page(p_zcxt, p_zone);
+
+			idx++;
+		}
+
+		p_zcxt->pf_page_free(p_zcxt->zones, 1, p_zcxt->user_data);
+	}
+
+	_unlock(p_zcxt, mutex_handle);
 }
