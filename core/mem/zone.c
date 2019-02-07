@@ -299,6 +299,52 @@ _zone_free_end_:
 	return r;
 }
 
+/* Verify pointer. Returns 1 if pointer belongs to active object */
+int zone_verify(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
+	int r = 0;
+	unsigned int aligned_size = 0;
+	_zone_page_t **pp_zone = _zone_page(p_zcxt, size, &aligned_size);
+	unsigned long long mutex_handle = 0;
+
+	if(pp_zone) {
+		_zone_page_t *p_zone = *pp_zone;
+
+		mutex_handle = _lock(p_zcxt, mutex_handle);
+		while(p_zone) {
+			unsigned int i = 0;
+
+			while(i < ZONE_MAX_ENTRIES) {
+				_zone_entry_t *p_entry = &p_zone->array[i];
+				void *data = (void *)p_entry->data;
+
+				if(ptr >= data && ptr < (data + ZONE_PAGE_SIZE)) {
+					if(aligned_size < ZONE_PAGE_SIZE) {
+						unsigned char bit = (ptr - data) / aligned_size;
+						unsigned long long *unit = _bitmap_unit_bit(p_entry, aligned_size, &bit);
+						unsigned long long mask = ((unsigned long long)1 << (ZONE_BITMAP_UNIT_BITS -1));
+
+						if(unit && (p_entry->bitmap[*unit] & (mask >> bit)))
+							r = 1;
+						goto _zone_verify_end_;
+					} else {
+						if(p_entry->objects && p_entry->data_size == aligned_size)
+							r = 1;
+						goto _zone_verify_end_;
+					}
+				}
+
+				i++;
+			}
+
+			p_zone = (_zone_page_t *)p_zone->header.next;
+		}
+_zone_verify_end_:
+		_unlock(p_zcxt, mutex_handle);
+	}
+
+	return r;
+}
+
 static void destroy_zone_page(_zone_context_t *p_zcxt, _zone_page_t *p_zone) {
 	unsigned int idx = 0;
 	_zone_page_t *p_current_zone = p_zone;

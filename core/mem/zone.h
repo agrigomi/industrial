@@ -65,6 +65,8 @@ int zone_init(_zone_context_t *p_zcxt);
 void *zone_alloc(_zone_context_t *p_zcxt, unsigned int size, unsigned long long limit);
 /* Deallocate memory chunk and returns 0 for siccess */
 int zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size);
+/* Verify pointer. Returns 1 if pointer and size, belongs to active object */
+int zone_verify(_zone_context_t *p_zcxt, void *ptr, unsigned int size);
 /* Destroy zone context */
 void zone_destroy(_zone_context_t *p_zcxt);
 #ifdef __cplusplus
