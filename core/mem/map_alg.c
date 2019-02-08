@@ -146,13 +146,15 @@ void *map_add(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 s
 		r = (p_rec + 1);
 	else {
 		if(p_mcxt->pf_mem_alloc && p_mcxt->pf_mem_free) {
-			_u32 sz_rec = sizeof(_map_rec_hdr_t) + sz_data + 1;
+			_u32 data_size = sz_data + 1; // the last byte, should be 0 always
+			_u32 sz_rec = sizeof(_map_rec_hdr_t) + data_size;
+
 			if((p_rec = p_mcxt->pf_mem_alloc(sz_rec, p_mcxt->udata))) {
 				memset(p_rec, 0, sz_rec);
 				r = (p_rec + 1);
 				memcpy(r, data, sz_data);
 				memcpy(p_rec->key, hash_key, sizeof(p_rec->key));
-				p_rec->sz_rec = sz_data + 1;
+				p_rec->sz_rec = data_size;
 				p_rec->next = NULL;
 
 				if(add_record(p_rec, p_mcxt->pp_list, p_mcxt->capacity, &p_mcxt->collisions)) {
