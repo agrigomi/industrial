@@ -1,4 +1,5 @@
 #include <malloc.h>
+#include <assert.h>
 #include <mutex>
 #include "iMemory.h"
 #include "zone.h"
@@ -60,7 +61,7 @@ public:
 	}
 
 	void free(void *ptr, _u32 size) {
-		zone_free(&m_zone, ptr, size);
+		assert(!zone_free(&m_zone, ptr, size));
 	}
 
 	bool verify(void *ptr, _u32 size) {
