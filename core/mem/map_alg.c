@@ -152,7 +152,7 @@ void *map_add(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 s
 				r = (p_rec + 1);
 				memcpy(r, data, sz_data);
 				memcpy(p_rec->key, hash_key, sizeof(p_rec->key));
-				p_rec->sz_rec = sz_data;
+				p_rec->sz_rec = sz_data + 1;
 				p_rec->next = NULL;
 
 				if(add_record(p_rec, p_mcxt->pp_list, p_mcxt->capacity, &p_mcxt->collisions)) {
