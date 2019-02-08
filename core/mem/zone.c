@@ -267,8 +267,8 @@ int zone_free(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
 						unsigned long long *unit = _bitmap_unit_bit(p_entry, aligned_size, &bit);
 						unsigned long long mask = ((unsigned long long)1 << (ZONE_BITMAP_UNIT_BITS -1));
 
-						if(unit && (p_entry->bitmap[*unit] & (mask >> bit))) {
-							p_entry->bitmap[*unit] &= ~(mask >> bit);
+						if(unit && (*unit & (mask >> bit))) {
+							*unit &= ~(mask >> bit);
 							p_entry->objects--;
 							p_zone->header.objects--;
 							r = 0;
@@ -323,7 +323,7 @@ int zone_verify(_zone_context_t *p_zcxt, void *ptr, unsigned int size) {
 						unsigned long long *unit = _bitmap_unit_bit(p_entry, aligned_size, &bit);
 						unsigned long long mask = ((unsigned long long)1 << (ZONE_BITMAP_UNIT_BITS -1));
 
-						if(unit && (p_entry->bitmap[*unit] & (mask >> bit)))
+						if(unit && (*unit & (mask >> bit)))
 							r = 1;
 						goto _zone_verify_end_;
 					} else {

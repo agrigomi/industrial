@@ -1,4 +1,4 @@
-core/mem/s2_heap.cpp
+core/mem/zone_heap.cpp
 core/mem/llist.cpp
 core/mem/rbuffer.cpp
 core/mem/map.cpp
