@@ -84,6 +84,7 @@ _err_t main(int argc, char *argv[]) {
 
 	if(r == ERR_NONE) {
 		handle(SIGSEGV); // Set signal action to our handler.
+		handle(SIGABRT);
 
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = dynamic_cast<iLog*>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
