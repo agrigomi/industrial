@@ -44,6 +44,17 @@ bool server::create_connection(iHttpConnection *p_httpc) {
 	return r;
 }
 
+void server::destroy_connection(iHttpConnection *p_httpc) {
+	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
+
+	if(pc) {
+		// release connection memory
+		pc->req.destroy();
+		pc->res.destroy();
+		mpi_heap->free(pc, sizeof(_connection_t));
+	}
+}
+
 void server::set_handlers(void) {
 	mpi_server->on_event(HTTP_ON_OPEN, [](iHttpConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
@@ -98,7 +109,6 @@ void server::set_handlers(void) {
 
 	mpi_server->on_event(HTTP_ON_CLOSE, [](iHttpConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
-		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 		HFCACHE fc = (HFCACHE)p_httpc->get_udata(IDX_FCACHE);
 
 		p_srv->call_handler(HTTP_ON_CLOSE, p_httpc);
@@ -107,12 +117,7 @@ void server::set_handlers(void) {
 		if(fc)
 			p_srv->mpi_fcache->close(fc);
 
-		if(pc) {
-			// release connection memory
-			pc->req.destroy();
-			pc->res.destroy();
-			p_srv->mpi_heap->free(pc, sizeof(_connection_t));
-		}
+		p_srv->destroy_connection(p_httpc);
 	}, this);
 }
 

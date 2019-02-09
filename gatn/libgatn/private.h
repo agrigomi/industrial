@@ -92,6 +92,7 @@ struct server: public _server_t {
 		return m_port;
 	}
 	bool create_connection(iHttpConnection *p_httpc);
+	void destroy_connection(iHttpConnection *p_httpc);
 	_cstr_t resolve_content_type(_cstr_t doc_name);
 	void set_handlers(void);
 	void call_handler(_u8 evt, iHttpConnection *p_httpc);
