@@ -52,6 +52,7 @@ void server::destroy_connection(iHttpConnection *p_httpc) {
 		pc->req.destroy();
 		pc->res.destroy();
 		mpi_heap->free(pc, sizeof(_connection_t));
+		p_httpc->set_udata((_ulong)NULL, IDX_CONNECTION);
 	}
 }
 
