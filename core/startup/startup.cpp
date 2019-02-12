@@ -1,7 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <signal.h>
 #include <execinfo.h>
 #include "startup.h"
 #include "iMemory.h"
@@ -31,9 +30,10 @@ void _LOCAL_ register_object(iBase *pi_base) {
 }
 
 #ifdef _CORE_
+
 #define BT_BUF_SIZE 100
 
-static void signal_handler(int signum, siginfo_t *info, void *) {
+void _EXPORT_ dump_stack(void) {
 	int j, nptrs;
 	void *buffer[BT_BUF_SIZE];
 	char **strings;
@@ -49,6 +49,10 @@ static void signal_handler(int signum, siginfo_t *info, void *) {
 
 		free(strings);
 	}
+}
+
+static void signal_action(int signum, siginfo_t *info, void *) {
+	dump_stack();
 
 	// info->si_addr holds the dereferenced pointer address
 	if (info->si_addr == NULL) {
@@ -63,10 +67,10 @@ static void signal_handler(int signum, siginfo_t *info, void *) {
 	}
 }
 
-void handle(int sig) {
+void _EXPORT_ handle(int sig, _sig_action_t *pf_action) {
 	struct sigaction act; // Signal structure
 
-	act.sa_sigaction = signal_handler; // Set the action to our function.
+	act.sa_sigaction = (pf_action) ? pf_action : signal_action; // Set the action to our function.
 	sigemptyset(&act.sa_mask); // Initialise signal set.
 	act.sa_flags = SA_SIGINFO|SA_NODEFER; // Our handler takes 3 par.
 	sigaction(sig, &act, NULL);

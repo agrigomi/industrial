@@ -40,8 +40,8 @@ _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
 
 	if(r == ERR_NONE) {
-		handle(SIGSEGV); // Set signal action to our handler.
-		handle(SIGABRT);
+		handle(SIGSEGV, NULL); // Set signal action to our handler.
+		handle(SIGABRT, NULL);
 
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = dynamic_cast<iLog*>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));

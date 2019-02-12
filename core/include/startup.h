@@ -2,6 +2,7 @@
 #define __STARTUP_H__
 
 #include <stdio.h>
+#include <signal.h>
 #include "iRepository.h"
 
 #define _EXPORT_ __attribute__ ((visibility ("default")))
@@ -9,9 +10,12 @@
 
 extern "C" {
 #ifdef _CORE_
+typedef void _sig_action_t(int signum, siginfo_t *info, void *);
+
 _err_t init(int argc, char *argv[]);
 void uninit(void);
-void handle(int sig);
+void dump_stack(void);
+void handle(int sig, _sig_action_t *pf_action);
 #else
 _err_t init(iRepository *pi_repo);
 #endif

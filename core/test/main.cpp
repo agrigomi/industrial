@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
+#include <assert.h>
 #include "startup.h"
 #include "iRepository.h"
 #include "iLog.h"
@@ -25,8 +26,11 @@ Select image to upload:\
 _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
 	if(r == ERR_NONE) {
-		handle(SIGSEGV); // Set signal action to our handler.
-		handle(SIGABRT);
+		handle(SIGSEGV, [](int sig, siginfo_t *info, void*) {
+			dump_stack();
+			exit(1);
+		});
+		handle(SIGABRT, NULL);
 
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
@@ -65,6 +69,13 @@ _err_t main(int argc, char *argv[]) {
 				p_srv->on_route(HTTP_METHOD_GET, "/file/", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
 					if(evt == HTTP_ON_REQUEST)
 						res->end(HTTPRC_OK, g_body);
+				}, p_srv);
+
+				p_srv->on_route(HTTP_METHOD_GET, "/crash/", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
+					if(evt == HTTP_ON_REQUEST) {
+						int *p = NULL;
+						*p = 0;
+					}
 				}, p_srv);
 
 				p_srv->on_route(HTTP_METHOD_GET, "/oland/", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
