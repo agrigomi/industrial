@@ -11,6 +11,7 @@ extern "C" {
 #ifdef _CORE_
 _err_t init(int argc, char *argv[]);
 void uninit(void);
+void handle(int sig);
 #else
 _err_t init(iRepository *pi_repo);
 #endif

@@ -1,4 +1,8 @@
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include <execinfo.h>
 #include "startup.h"
 #include "iMemory.h"
 #include "iLog.h"
@@ -27,6 +31,47 @@ void _LOCAL_ register_object(iBase *pi_base) {
 }
 
 #ifdef _CORE_
+#define BT_BUF_SIZE 100
+
+static void signal_handler(int signum, siginfo_t *info, void *) {
+	int j, nptrs;
+	void *buffer[BT_BUF_SIZE];
+	char **strings;
+
+	nptrs = backtrace(buffer, BT_BUF_SIZE);
+
+	/* The call backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO)
+	would produce similar output to the following: */
+
+	if((strings = backtrace_symbols(buffer, nptrs))) {
+		for (j = 0; j < nptrs; j++)
+			printf("%s\n", strings[j]);
+
+		free(strings);
+	}
+
+	// info->si_addr holds the dereferenced pointer address
+	if (info->si_addr == NULL) {
+		// This will be thrown at the point in the code
+		// where the exception was caused.
+		printf("signal %d\n", signum);
+	} else {
+		// Now restore default behaviour for this signal,
+		// and send signal to self.
+		signal(signum, SIG_DFL);
+		kill(getpid(), signum);
+	}
+}
+
+void handle(int sig) {
+	struct sigaction act; // Signal structure
+
+	act.sa_sigaction = signal_handler; // Set the action to our function.
+	sigemptyset(&act.sa_mask); // Initialise signal set.
+	act.sa_flags = SA_SIGINFO|SA_NODEFER; // Our handler takes 3 par.
+	sigaction(sig, &act, NULL);
+}
+
 typedef struct {
 	_cstr_t iname;
 	_base_entry_t  *p_entry;
