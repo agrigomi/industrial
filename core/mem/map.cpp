@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "iRepository.h"
 #include "iMemory.h"
 #include "sha1.h"
@@ -11,7 +12,7 @@ private:
 	iMutex *mpi_mutex;
 	_map_context_t map_cxt;
 	SHA1Context sha1_cxt;
-
+	bool m_is_init;
 	static void *_alloc(_u32 size, void *udata) {
 		void *r = 0;
 		cMap *pobj = (cMap *)udata;
@@ -45,18 +46,11 @@ public:
 			case OCTL_INIT: {
 				iRepository *pi_repo = (iRepository *)arg;
 
+				m_is_init = false;
 				mpi_mutex = (iMutex *)pi_repo->object_by_iname(I_MUTEX, RF_CLONE);
 				mpi_heap = (iHeap *)pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
 
-				map_cxt.records = map_cxt.collisions = 0;
-				map_cxt.capacity = INITIAL_CAPACITY;
-				map_cxt.pf_mem_alloc = _alloc;
-				map_cxt.pf_mem_free = _free;
-				map_cxt.pf_hash = _hash;
-				map_cxt.pp_list = 0;
-				map_cxt.udata = this;
-
-				if(map_init(&map_cxt) == _true)
+				if(mpi_mutex && mpi_heap)
 					r = true;
 			} break;
 			case OCTL_UNINIT: {
@@ -68,6 +62,23 @@ public:
 				r = true;
 			} break;
 		}
+
+		return r;
+	}
+
+	bool init(_u32 calacity) {
+		bool r = false;
+
+		map_cxt.records = map_cxt.collisions = 0;
+		map_cxt.capacity = INITIAL_CAPACITY;
+		map_cxt.pf_mem_alloc = _alloc;
+		map_cxt.pf_mem_free = _free;
+		map_cxt.pf_hash = _hash;
+		map_cxt.pp_list = 0;
+		map_cxt.udata = this;
+
+		if(map_init(&map_cxt) == _true)
+			m_is_init = r = true;
 
 		return r;
 	}
@@ -92,6 +103,7 @@ public:
 
 	void *add(const void *key, _u32 sz_key, const void *data, _u32 sz_data, HMUTEX hlock=0) {
 		void *r = 0;
+		assert(m_is_init);
 		HMUTEX hm = lock(hlock);
 
 		r = map_add(&map_cxt, (void *)key, sz_key, (void *)data, sz_data);
@@ -101,6 +113,7 @@ public:
 	}
 
 	void del(const void *key, _u32 sz_key, HMUTEX hlock=0) {
+		assert(m_is_init);
 		HMUTEX hm = lock(hlock);
 
 		map_del(&map_cxt, (void *)key, sz_key);
@@ -113,6 +126,7 @@ public:
 
 	void *get(const void *key, _u32 sz_key, _u32 *sz_data, HMUTEX hlock=0) {
 		void *r = 0;
+		assert(m_is_init);
 		HMUTEX hm = lock(hlock);
 
 		r = map_get(&map_cxt, (void *)key, sz_key, sz_data);
@@ -122,6 +136,7 @@ public:
 	}
 
 	void clr(HMUTEX hlock=0) {
+		assert(m_is_init);
 		HMUTEX hm = lock(hlock);
 
 		map_clr(&map_cxt);
@@ -129,6 +144,7 @@ public:
 	}
 
 	_map_enum_t enum_open(void) {
+		assert(m_is_init);
 		return map_enum_open(&map_cxt);
 	}
 

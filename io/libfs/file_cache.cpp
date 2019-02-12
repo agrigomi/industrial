@@ -160,7 +160,7 @@ public:
 				mpi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
 
 				if(mpi_map)
-					r = true;
+					r = mpi_map->init(127);
 			} break;
 			case OCTL_UNINIT: {
 				iRepository *pi_repo = (iRepository *)arg;

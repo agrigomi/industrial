@@ -579,10 +579,12 @@ void init_mime_type_resolver(void) {
 
 	if(!_g_is_init_mime_type_resolver_) {
 		if((_g_map_ = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE)))) {
-			while(_g_mime_map_[n].ext) {
-				_g_map_->add(_g_mime_map_[n].ext, strlen(_g_mime_map_[n].ext),
-						_g_mime_map_[n].type, strlen(_g_mime_map_[n].type));
-				n++;
+			if(_g_map_->init(255)) {
+				while(_g_mime_map_[n].ext) {
+					_g_map_->add(_g_mime_map_[n].ext, strlen(_g_mime_map_[n].ext),
+							_g_mime_map_[n].type, strlen(_g_mime_map_[n].type));
+					n++;
+				}
 			}
 			_g_is_init_mime_type_resolver_ = true;
 		}

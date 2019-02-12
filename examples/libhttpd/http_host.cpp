@@ -254,7 +254,7 @@ public:
 				pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
 
 				if(mpi_log && mpi_map)
-					r = true;
+					r = mpi_map->init(31);
 
 				if(mpi_net && mpi_fs && mpi_fcache)
 					create_first_server();

@@ -104,7 +104,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
 			mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
 			if(mpi_str && mpi_map) {
-				r = true;
+				r = mpi_map->init(31);
 				clean_members();
 			}
 		} break;

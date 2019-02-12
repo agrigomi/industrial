@@ -101,7 +101,8 @@ public:
 			case OCTL_INIT: {
 				iRepository *pi_repo = (iRepository *)arg;
 
-				mpi_map = dynamic_cast<iMap *>(pi_repo->object_by_iname(I_MAP, RF_CLONE));
+				if((mpi_map = dynamic_cast<iMap *>(pi_repo->object_by_iname(I_MAP, RF_CLONE))))
+					mpi_map->init(31);
 				mpi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
 				mpi_bmap = dynamic_cast<iBufferMap *>(pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE));
 				mpi_heap = dynamic_cast<iHeap *>(pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL));
@@ -193,7 +194,8 @@ public:
 				srv.m_autorestore = false;
 				srv.mpi_bmap = mpi_bmap;
 				if((srv.mpi_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE))))
-					r = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(server));
+					if(srv.mpi_map->init(63))
+						r = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(server));
 
 				if(r)
 					r->start();

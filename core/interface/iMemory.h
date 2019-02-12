@@ -49,6 +49,7 @@ public:
 	INTERFACE(iMap, I_MAP);
 	virtual HMUTEX lock(HMUTEX hlock=0)=0;
 	virtual void unlock(HMUTEX hlock)=0;
+	virtual bool init(_u32 calacity)=0;
 	virtual void *add(const void *key, _u32 sz_key, const void *data, _u32 sz_data, HMUTEX hlock=0)=0;
 	virtual void del(const void *key, _u32 sz_key, HMUTEX hlock=0)=0;
 	virtual _u32 cnt(void)=0;
