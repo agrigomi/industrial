@@ -12,9 +12,12 @@
 #define ACT_LIST	"list"
 #define ACT_STATUS	"status"
 
-#define OPT_HTTPD_NAME	"name"
-#define OPT_HTTPD_PORT	"port"
-#define OPT_HTTPD_ROOT	"root"
+#define OPT_HTTPD_NAME		"name"
+#define OPT_HTTPD_PORT		"port"
+#define OPT_HTTPD_ROOT		"root"
+#define OPT_HTTPD_THREADS	"max-threads"
+#define OPT_HTTPD_CONNECTIONS	"max-connections"
+#define OPT_HTTPD_TIMEOUT	"connection-timeout"
 
 typedef struct {
 	_cstr_t	a_name;
@@ -57,9 +60,12 @@ static void cmd_httpd_create(iCmd *pi_cmd, // interface to command object
 		_cstr_t name = pi_cmd_host->option_value(OPT_HTTPD_NAME, p_opt);
 		_cstr_t port = pi_cmd_host->option_value(OPT_HTTPD_PORT, p_opt);
 		_cstr_t root = pi_cmd_host->option_value(OPT_HTTPD_ROOT, p_opt);
+		_cstr_t threads = pi_cmd_host->option_value(OPT_HTTPD_THREADS, p_opt);
+		_cstr_t connections = pi_cmd_host->option_value(OPT_HTTPD_CONNECTIONS, p_opt);
+		_cstr_t timeout = pi_cmd_host->option_value(OPT_HTTPD_TIMEOUT, p_opt);
 
 		if(name && port && root) {
-			if(!pi_httpd->create(name, atoi(port), root))
+			if(!pi_httpd->create(name, atoi(port), root, atoi(threads), atoi(connections), atoi(timeout)))
 				fout(pi_io, "Failed to create http server '%s'\n", name);
 		} else
 			fout(pi_io, "usage: httpd create --name=... --port=... --root=...\n");
@@ -169,10 +175,13 @@ static void httpd_handler(iCmd *pi_cmd, // interface to command object
 }
 
 static _cmd_opt_t _g_opt[] = {
-	{ OPT_HTTPD_PORT,	OF_LONG|OF_VALUE,	0,	"Listen port number"},
-	{ OPT_HTTPD_NAME,	OF_LONG|OF_VALUE,	0,	"Name of http server" },
-	{ OPT_HTTPD_ROOT,	OF_LONG|OF_VALUE,	0,	"Documents root directory" },
-	{ 0,			0,			0,	0 } // terminate options list
+	{ OPT_HTTPD_PORT,		OF_LONG|OF_VALUE,		0,		"Listen port number"},
+	{ OPT_HTTPD_NAME,		OF_LONG|OF_VALUE,		0,		"Name of http server" },
+	{ OPT_HTTPD_ROOT,		OF_LONG|OF_VALUE,		0,		"Documents root directory" },
+	{ OPT_HTTPD_THREADS,		OF_LONG|OF_VALUE|OF_PRESENT,	(_str_t)"16",	"Max. number of http worker threads" },
+	{ OPT_HTTPD_CONNECTIONS,	OF_LONG|OF_VALUE|OF_PRESENT,	(_str_t)"200",	"Max. number of connections" },
+	{ OPT_HTTPD_TIMEOUT,		OF_LONG|OF_VALUE|OF_PRESENT,	(_str_t)"10",	"Connection timeout in seconds" },
+	{ 0,				0,				0,	0 } // terminate options list
 };
 
 static _cmd_t _g_cmd[] = {

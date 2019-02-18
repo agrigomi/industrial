@@ -198,6 +198,10 @@ private:
 		_str_t arg_port = mpi_args->value("httpd-port");
 		_str_t arg_name = mpi_args->value("httpd-name");
 		_str_t arg_root = mpi_args->value("httpd-root");
+		_str_t arg_max_threads = mpi_args->value("httpd-max-threads");
+		_str_t arg_max_conn = mpi_args->value("httpd-max-connections");
+		_str_t arg_conn_timeout = mpi_args->value("httpd-connection-timeout");
+
 		_char_t name[256]="";
 
 		if(arg_port && arg_root) {
@@ -206,7 +210,10 @@ private:
 			else
 				snprintf(name, sizeof(name)-1, "%s%d", DEFAULT_HTTPD_PREFIX, httpd_index);
 
-			create(name, atoi(arg_port), arg_root);
+			_u32 max_threads = (arg_max_threads) ? atoi(arg_max_threads) : 16;
+			_u32 max_conn = (arg_max_conn) ? atoi(arg_max_conn) : 200;
+			_u32 conn_timeout = (arg_conn_timeout) ? atoi(arg_conn_timeout) : 10;
+			create(name, atoi(arg_port), arg_root, max_threads, max_conn, conn_timeout);
 		}
 	}
 
@@ -308,7 +315,8 @@ public:
 		return r;
 	}
 
-	bool create(_cstr_t name, _u32 port, _cstr_t doc_root) {
+	bool create(_cstr_t name, _u32 port, _cstr_t doc_root, _u32 max_threads=32,
+				_u32 max_connections=200, _u32 connection_timeout=10) {
 		bool r = false;
 		_server_t srv;
 
@@ -324,7 +332,8 @@ public:
 				srv.port = port;
 				srv.p_http_host = this;
 
-				if((srv.pi_http_server = mpi_net->create_http_server(port, BUFFER_SIZE))) {
+				if((srv.pi_http_server = mpi_net->create_http_server(port, BUFFER_SIZE,
+								max_threads, max_connections, connection_timeout))) {
 					_server_t *p_srv = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(srv));
 					if(p_srv) {
 						set_handlers(p_srv);
