@@ -179,7 +179,10 @@ public:
 	virtual void close_socket(iSocketIO *p_sio)=0;
 	virtual iTCPServer *create_tcp_server(_u32 port)=0;
 	virtual iSocketIO *create_tcp_client(_cstr_t host, _u32 port, SSL_CTX *ssl_context=NULL)=0;
-	virtual iHttpServer *create_http_server(_u32 port, _u32 buffer_size=8192)=0;
+	virtual iHttpServer *create_http_server(_u32 port, _u32 buffer_size=8192,
+						_u32 max_workers=32,
+						_u32 max_connections=500,
+						_u32 connection_timeout=10)=0;
 };
 
 #endif

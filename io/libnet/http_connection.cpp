@@ -87,7 +87,6 @@ static _http_method_map _g_method_map[] = {
 #define VAR_REQ_URN		"req-URN"
 #define VAR_REQ_PROTOCOL	"req-Protocol"
 
-#define TIMEOUT_SEC	10
 #define USE_CONNECTION_TIMEOUT
 
 bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
@@ -139,12 +138,13 @@ void cHttpConnection::clean_members(void) {
 	mpi_map->clr();
 }
 
-bool cHttpConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap) {
+bool cHttpConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap, _u32 timeout) {
 	bool r = false;
 
 	if(!mp_sio && p_sio && (r = p_sio->alive())) {
 		mp_sio = p_sio;
 		mpi_bmap = pi_bmap;
+		m_timeout = timeout;
 		// use non blocking mode
 		mp_sio->blocking(false);
 	}
@@ -581,7 +581,7 @@ _u8 cHttpConnection::process(void) {
 				m_state = HTTPC_PARSE_HEADER;
 			else {
 #ifdef USE_CONNECTION_TIMEOUT
-				if((time(NULL) - m_stime) > TIMEOUT_SEC) {
+				if((time(NULL) - m_stime) > m_timeout) {
 					m_state = HTTPC_SEND_HEADER;
 					m_error_code = HTTPRC_REQUEST_TIMEOUT;
 					r = HTTP_ON_ERROR;

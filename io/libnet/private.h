@@ -99,6 +99,7 @@ private:
 	_u16		m_response_code;
 	_u16		m_state;
 	time_t		m_stime;
+	_u32		m_timeout;
 	_ulong		m_udata[HTTPC_MAX_UDATA_INDEX];
 	_char_t		m_res_protocol[16];
 
@@ -120,7 +121,7 @@ private:
 public:
 	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
-	bool _init(cSocketIO *p_sio, iBufferMap *pi_bmap);
+	bool _init(cSocketIO *p_sio, iBufferMap *pi_bmap, _u32 timeout);
 	void close(void);
 	bool alive(void);
 	_u8 process(void);
@@ -217,6 +218,10 @@ private:
 	volatile _u32 		m_active_workers;
 	_http_event_t		m_event[HTTP_MAX_EVENTS];
 	HOBJECT			m_hconnection;
+	_u32			m_max_workers;
+	_u32			m_max_connections;
+	_u32			m_connection_timeout;
+	_u32			m_num_connections;
 
 	friend void *http_worker_thread(void *);
 
@@ -232,7 +237,11 @@ private:
 	bool call_event_handler(_u8 evt, iHttpConnection *pi_httpc);
 public:
 	BASE(cHttpServer, CLASS_NAME_HTTP_SERVER, RF_CLONE | RF_TASK, 1,0,0);
-	bool _init(_u32 port, _u32 buffer_size=8192);
+	bool _init(_u32 port,
+			_u32 buffer_size=8192,
+			_u32 max_workers=32,
+			_u32 max_connections=500,
+			_u32 connection_timeout=10);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	void on_event(_u8 evt, _on_http_event_t *handler, void *udata=NULL);

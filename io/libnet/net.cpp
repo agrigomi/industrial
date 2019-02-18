@@ -180,12 +180,15 @@ public:
 		return r;
 	}
 
-	iHttpServer *create_http_server(_u32 port, _u32 buffer_size) {
+	iHttpServer *create_http_server(_u32 port, _u32 buffer_size,
+					_u32 max_workers,
+					_u32 max_connections,
+					_u32 connection_timeout) {
 		iHttpServer *r = 0;
 		cHttpServer *chttps = (cHttpServer *)_gpi_repo_->object_by_cname(CLASS_NAME_HTTP_SERVER, RF_CLONE);
 
 		if(chttps) {
-			if(chttps->_init(port, buffer_size))
+			if(chttps->_init(port, buffer_size, max_workers, max_connections, connection_timeout))
 				r = chttps;
 			else
 				_gpi_repo_->object_release(chttps);
