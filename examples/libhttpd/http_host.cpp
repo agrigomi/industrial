@@ -68,11 +68,15 @@ private:
 								pi_httpc->res_write(ptr, sz);
 							} else { // can't get pointer to file content
 								pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
+								pi_httpc->res_write((_u8 *)"Internal server error", 21);
+								pi_httpc->res_content_len(21);
 								pi_log->fwrite(LMT_ERROR, "%s: Internal error", p_srv->name);
 							}
 							p_srv->p_http_host->mpi_fcache->close(fc);
 						} else {
 							pi_httpc->res_code(HTTPRC_NOT_FOUND);
+							pi_httpc->res_write((_u8 *)"Not Found", 9);
+							pi_httpc->res_content_len(9);
 							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found (%s)", p_srv->name, doc, req_ip);
 						}
 					} else
@@ -90,6 +94,8 @@ private:
 
 							pi_httpc->peer_ip(req_ip, sizeof(req_ip));
 							pi_httpc->res_code(HTTPRC_NOT_FOUND);
+							pi_httpc->res_write((_u8 *)"Not Found", 9);
+							pi_httpc->res_content_len(9);
 							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found (%s)", p_srv->name, doc, req_ip);
 						}
 					} else {
@@ -101,6 +107,8 @@ private:
 
 					pi_httpc->peer_ip(req_ip, sizeof(req_ip));
 					pi_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
+					pi_httpc->res_write((_u8 *)"Method not allowed", 18);
+					pi_httpc->res_content_len(18);
 					pi_log->fwrite(LMT_ERROR, "%s: Method not allowed (%s)", p_srv->name, req_ip);
 					pi_log->write(LMT_TEXT, pi_httpc->req_header());
 
@@ -113,6 +121,8 @@ private:
 				}
 			} else {
 				pi_httpc->res_code(HTTPRC_BAD_REQUEST);
+				pi_httpc->res_write((_u8 *)"Invalid request", 15);
+				pi_httpc->res_content_len(15);
 				pi_log->fwrite(LMT_ERROR, "Invalid request URI (%s)", req_ip);
 				if(url)
 					pi_log->write(LMT_TEXT, url);
