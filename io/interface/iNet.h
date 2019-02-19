@@ -145,6 +145,7 @@ public:
 	virtual _u32 res_remainder(void)=0;
 	// write response
 	virtual _u32 res_write(_u8 *data, _u32 size)=0;
+	virtual _u32 res_write(_cstr_t str)=0;
 };
 
 // HTTP event prototype

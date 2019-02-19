@@ -189,6 +189,7 @@ public:
 	_u32 res_remainder(void);
 	// write response
 	_u32 res_write(_u8 *data, _u32 size);
+	_u32 res_write(_cstr_t str);
 };
 
 typedef struct {

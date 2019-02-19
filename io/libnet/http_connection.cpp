@@ -686,6 +686,10 @@ _u32 cHttpConnection::res_write(_u8 *data, _u32 size) {
 	return r;
 }
 
+_u32 cHttpConnection::res_write(_cstr_t str) {
+	return res_write((_u8 *)str, strlen(str));
+}
+
 _u8 cHttpConnection::req_method(void) {
 	_u8 r = 0;
 	_cstr_t sm = req_var(VAR_REQ_METHOD);
