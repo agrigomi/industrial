@@ -23,6 +23,8 @@ typedef struct json_string	_json_number_t;
 typedef struct json_pair	_json_pair_t;
 typedef struct json_object	_json_object_t;
 
+typedef int _json_err_t;
+
 struct json_string {
 	unsigned int	size; /* data size in symbols */
 	char		*data;
@@ -55,7 +57,7 @@ struct json_pair {
 
 typedef struct {
 	_ht_context_t	*p_htc; /* hypertext context */
-	_jspn_object_t	*p_root; /* root object */
+	_json_object_t	*p_root; /* root object */
 	unsigned long	err_pos; /* error position */
 }_json_context_t;
 
@@ -64,6 +66,15 @@ extern "C" {
 #endif
 /* Allocate memory for new JSON context */
 _json_context_t *json_create_context(_mem_alloc_t *, _mem_free_t *);
+/* Pasrse JSON content */
+_json_err_t json_parse(_json_context_t *p_jxc, /* JSON context */
+			unsigned char *p_content,
+			unsigned long content_size);
+_json_value_t *json_select(_json_context_t *p_jxc,
+			const char *jpath,
+			_json_string_t **pp_name, /* Can be NULL */
+			_json_value_t *p_start_point, /* Can be NULL */
+			unsigned int index);
 /*...*/
 #ifdef __cplusplus
 }
