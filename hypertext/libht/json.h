@@ -28,17 +28,17 @@ typedef int _json_err_t;
 struct json_string {
 	unsigned int	size; /* data size in symbols */
 	char		*data;
-};
+}__attribute__((packed));
 
 struct json_array {
 	unsigned int	size; /* number of elements  */
 	_json_value_t	**pp_values;
-};
+}__attribute__((packed));
 
 struct json_object {
 	unsigned int	size; /* number of pairs */
 	_json_pair_t	**pp_pairs;
-};
+}__attribute__((packed));
 
 struct json_value {
 	unsigned char	jvt; /* JSON value type */
@@ -48,12 +48,12 @@ struct json_value {
 		_json_object_t	object;
 		_json_number_t	number;
 	};
-};
+}__attribute__((packed));
 
 struct json_pair {
 	_json_string_t	name;
 	_json_value_t	value;
-};
+}__attribute__((packed));
 
 typedef struct {
 	_ht_context_t	*p_htc; /* hypertext context */

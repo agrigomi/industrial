@@ -36,6 +36,8 @@ extern "C" {
 _ht_context_t *ht_create_context(_mem_alloc_t *, _mem_free_t *);
 /* initialize context with content and size of hypertext */
 void ht_init_context(_ht_context_t *, void *, unsigned long);
+/* Reset context */
+void ht_reset_context(_ht_context_t *);
 unsigned long ht_position(_ht_context_t *);
 unsigned char *ht_ptr(_ht_context_t *);
 /* compare memory with taking care about document encoding */

@@ -151,6 +151,11 @@ void ht_init_context(_ht_context_t *p_htc, void *p_content, unsigned long sz_con
 	}
 }
 
+void ht_reset_context(_ht_context_t *p_htc) {
+	memset(&p_htc->ht_content, 0, sizeof(_ht_content_t));
+	p_htc->pf_read = NULL;
+}
+
 unsigned long ht_position(_ht_context_t *p_htc) {
 	return p_htc->ht_content.c_pos;
 }
