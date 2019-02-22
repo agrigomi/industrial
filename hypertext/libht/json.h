@@ -66,6 +66,8 @@ extern "C" {
 #endif
 /* Allocate memory for new JSON context */
 _json_context_t *json_create_context(_mem_alloc_t *, _mem_free_t *);
+/* Reset context */
+void json_reset_context(_json_context_t *);
 /* Pasrse JSON content */
 _json_err_t json_parse(_json_context_t *p_jxc, /* JSON context */
 			unsigned char *p_content,
