@@ -72,7 +72,6 @@ _json_err_t json_parse(_json_context_t *p_jxc, /* JSON context */
 			unsigned long content_size);
 _json_value_t *json_select(_json_context_t *p_jxc,
 			const char *jpath,
-			_json_string_t **pp_name, /* Can be NULL */
 			_json_value_t *p_start_point, /* Can be NULL */
 			unsigned int index);
 /*...*/
