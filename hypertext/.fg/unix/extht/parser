@@ -1,3 +1,4 @@
 hypertext/libht/xml.c
 hypertext/libht/context.c
+hypertext/libht/json.c
 
