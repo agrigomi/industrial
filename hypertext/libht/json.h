@@ -57,7 +57,7 @@ struct json_pair {
 
 typedef struct {
 	_ht_context_t	*p_htc; /* hypertext context */
-	_json_object_t	*p_root; /* root object */
+	_json_object_t	root; /* root object */
 	unsigned long	err_pos; /* error position */
 }_json_context_t;
 
@@ -69,10 +69,10 @@ _json_context_t *json_create_context(_mem_alloc_t *, _mem_free_t *);
 /* Reset context */
 void json_reset_context(_json_context_t *);
 /* Pasrse JSON content */
-_json_err_t json_parse(_json_context_t *p_jxc, /* JSON context */
+_json_err_t json_parse(_json_context_t *p_jcxt, /* JSON context */
 			unsigned char *p_content,
 			unsigned long content_size);
-_json_value_t *json_select(_json_context_t *p_jxc,
+_json_value_t *json_select(_json_context_t *p_jcxt,
 			const char *jpath,
 			_json_value_t *p_start_point, /* Can be NULL */
 			unsigned int index);
