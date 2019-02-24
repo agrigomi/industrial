@@ -126,8 +126,47 @@ _add_object_pair_:
 
 static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum) {
 	_json_err_t r = JSON_OK;
+	unsigned int c = 0;
+	unsigned int _c = 0;
+	unsigned long pos = ht_position(p_jcxt->p_htc);
+	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
+	unsigned char flags = 0;
+#define NUM_DEC (1<<0)
+#define NUM_HEX	(1<<1)
 
-	/*...*/
+	if(p_jnum->data == NULL)
+		p_jnum->data = (char *)ht_ptr(p_jcxt->p_htc);
+
+	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
+		if(c >= '0' && c <= '9') {
+			/* decimal digit */
+			if(c != '0')
+				flags |= NUM_DEC;
+		} else if((c == 'x' || c == 'X') && _c == '0' && !(flags & (NUM_DEC|NUM_HEX)))
+			/* expect HEX digits */
+			flags |= NUM_HEX;
+		else if((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+			if(!(flags & NUM_HEX)) {
+				r = JSON_PARSE_ERROR;
+				break;
+			}
+		} else if(c == ' ' || c == ',' || c == '\n' || c == '\t' || c == '\r') {
+			break;
+		} else if((c == '+' || c == '-') && !(flags & (NUM_HEX|NUM_DEC))) {
+			;
+		} else if(c == '.' && !(flags & NUM_HEX)) {
+			;
+		} else {
+			r = JSON_PARSE_ERROR;
+			break;
+		}
+		_c = c;
+	}
+
+	if(r == JSON_OK)
+		p_jnum->size = ht_symbols(p_jcxt->p_htc,
+					(unsigned char *)p_jnum->data,
+					(unsigned char *)p_jnum->data + pos);
 
 	return r;
 }
