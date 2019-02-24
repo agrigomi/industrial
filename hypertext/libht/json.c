@@ -171,7 +171,15 @@ static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum)
 	return r;
 }
 
-static _json_err_t parse_string(_json_context_t *p_jcxt, _json_string_t *p_jstr) {
+static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_jstr) {
+	_json_err_t r = JSON_OK;
+
+	/*...*/
+
+	return r;
+}
+
+static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p_jstr) {
 	_json_err_t r = JSON_OK;
 
 	/*...*/
