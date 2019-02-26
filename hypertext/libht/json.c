@@ -30,11 +30,12 @@ void json_reset_context(_json_context_t *p_jcxt) {
 	ht_reset_context(p_jcxt->p_htc);
 }
 
-static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb, unsigned int C);
-static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray, unsigned int C);
-static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb, unsigned int C);
-static _json_err_t parse_string(_json_context_t *p_jcxt, _json_string_t *p_jstr, unsigned int C);
-static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum, unsigned int C);
+static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb, unsigned int *C);
+static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray, unsigned int *C);
+static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb, unsigned int *C);
+static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_jstr, unsigned int *C);
+static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p_jstr, unsigned int *C);
+static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum, unsigned int *C);
 
 static _json_err_t alloc_array_values(_json_context_t *p_jcxt, _json_array_t *p_jarray) {
 	_json_err_t r = JSON_OK;
@@ -124,10 +125,10 @@ _add_object_pair_:
 	return r;
 }
 
-static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum, unsigned int C) {
+static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum, unsigned int *C) {
 	_json_err_t r = JSON_OK;
 	unsigned int c = 0;
-	unsigned int _c = C;
+	unsigned int _c = *C;
 	unsigned long pos = ht_position(p_jcxt->p_htc);
 	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
 	unsigned char flags = 0;
@@ -167,11 +168,12 @@ static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum,
 		p_jnum->size = ht_symbols(p_jcxt->p_htc,
 					(unsigned char *)p_jnum->data,
 					(unsigned char *)p_jnum->data + pos);
+	*C = _c;
 
 	return r;
 }
 
-static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_jstr, unsigned int C) {
+static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_jstr, unsigned int *C) {
 	_json_err_t r = JSON_OK;
 
 	/*...*/
@@ -179,7 +181,7 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 	return r;
 }
 
-static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p_jstr, unsigned int C) {
+static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p_jstr, unsigned int *C) {
 	_json_err_t r = JSON_OK;
 
 	/*...*/
@@ -187,7 +189,7 @@ static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p
 	return r;
 }
 
-static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray, unsigned int C) {
+static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray, unsigned int *C) {
 	_json_err_t r = JSON_OK;
 
 	/*...*/
@@ -195,7 +197,7 @@ static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray,
 	return r;
 }
 
-static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue, unsigned int C) {
+static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue, unsigned int *C) {
 	_json_err_t r = JSON_OK;
 
 	/*...*/
@@ -203,7 +205,7 @@ static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue,
 	return r;
 }
 
-static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb, unsigned int C) {
+static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb, unsigned int *C) {
 	_json_err_t r = JSON_OK;
 
 	/*...*/
@@ -219,7 +221,7 @@ _json_err_t json_parse(_json_context_t *p_jcxt, /* JSON context */
 
 	if(p_jcxt->p_htc) {
 		ht_init_context(p_jcxt->p_htc, p_content, content_size);
-		r = parse_object(p_jcxt, &p_jcxt->root, 0);
+		r = parse_object(p_jcxt, &p_jcxt->root, NULL);
 	} else
 		r = JSON_PARSE_ERROR;
 
