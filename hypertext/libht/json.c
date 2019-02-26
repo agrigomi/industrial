@@ -168,7 +168,7 @@ static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum,
 		p_jnum->size = ht_symbols(p_jcxt->p_htc,
 					(unsigned char *)p_jnum->data,
 					(unsigned char *)p_jnum->data + pos);
-	*C = _c;
+	*C = c;
 
 	return r;
 }
