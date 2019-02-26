@@ -151,7 +151,13 @@ static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum,
 				r = JSON_PARSE_ERROR;
 				break;
 			}
-		} else if(c == ' ' || c == ',' || c == '\n' || c == '\t' || c == '\r') {
+		} else if(c == ' ' ||
+				c == ',' ||
+				c == '\n' ||
+				c == '\t' ||
+				c == '\r' ||
+				c == ']' ||
+				c == '}') {
 			break;
 		} else if((c == '+' || c == '-') && !(flags & (NUM_HEX|NUM_DEC))) {
 			;
