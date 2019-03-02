@@ -143,11 +143,12 @@ static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum,
 			/* decimal digit */
 			if(c != '0')
 				flags |= NUM_DEC;
-		} else if((c == 'x' || c == 'X') && _c == '0' && !(flags & (NUM_DEC|NUM_HEX)))
+		} else if((c == 'x' || c == 'X') && _c == '0' && !(flags & (NUM_DEC | NUM_HEX)))
 			/* expect HEX digits */
 			flags |= NUM_HEX;
 		else if((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
 			if(!(flags & NUM_HEX)) {
+				p_jcxt->err_pos = pos;
 				r = JSON_PARSE_ERROR;
 				break;
 			}
@@ -158,12 +159,14 @@ static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum,
 				c == '\r' ||
 				c == ']' ||
 				c == '}') {
-			break;
-		} else if((c == '+' || c == '-') && !(flags & (NUM_HEX|NUM_DEC))) {
+			if(flags & (NUM_HEX | NUM_DEC))
+				break;
+		} else if((c == '+' || c == '-') && !(flags & (NUM_HEX | NUM_DEC))) {
 			;
-		} else if(c == '.' && !(flags & NUM_HEX)) {
+		} else if(c == '.' && !(flags & NUM_HEX) && (flags & NUM_DEC)) {
 			;
 		} else {
+			p_jcxt->err_pos = pos;
 			r = JSON_PARSE_ERROR;
 			break;
 		}
