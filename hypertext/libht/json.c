@@ -224,12 +224,13 @@ static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb,
 
 /* Pasrse JSON content */
 _json_err_t json_parse(_json_context_t *p_jcxt, /* JSON context */
-			unsigned char *p_content,
-			unsigned long content_size) {
+			const unsigned char *p_content, /* text content */
+			unsigned long content_size /* size of text content in bytes */
+			) {
 	_json_err_t r = JSON_OK;
 
 	if(p_jcxt->p_htc) {
-		ht_init_context(p_jcxt->p_htc, p_content, content_size);
+		ht_init_context(p_jcxt->p_htc, (void *)p_content, content_size);
 		r = parse_object(p_jcxt, &p_jcxt->root, NULL);
 	} else
 		r = JSON_PARSE_ERROR;

@@ -70,8 +70,9 @@ _json_context_t *json_create_context(_mem_alloc_t *, _mem_free_t *);
 void json_reset_context(_json_context_t *);
 /* Pasrse JSON content */
 _json_err_t json_parse(_json_context_t *p_jcxt, /* JSON context */
-			unsigned char *p_content,
-			unsigned long content_size);
+			const unsigned char *p_content, /* text content */
+			unsigned long content_size /* size of text content in bytes */
+			);
 _json_value_t *json_select(_json_context_t *p_jcxt,
 			const char *jpath,
 			_json_value_t *p_start_point, /* Can be NULL */
