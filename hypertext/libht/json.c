@@ -1,7 +1,7 @@
 #include <string.h>
 #include "json.h"
 
-#define INITIAL_SIZE	16;
+#define INITIAL_SIZE	16
 
 _json_context_t *json_create_context(_mem_alloc_t *pf_alloc, _mem_free_t *pf_free) {
 	_json_context_t *r = NULL;
