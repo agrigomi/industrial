@@ -42,18 +42,6 @@ public:
 	virtual bool object_ctl(_u32 cmd, void *arg, ...)=0;
 };
 
-// notification flags
-#define NF_INIT		(1<<0)
-#define NF_START	(1<<1)
-#define NF_STOP		(1<<2)
-#define NF_UNINIT	(1<<3)
-#define NF_REMOVE	(1<<4)
-
-typedef struct {
-	_u32	flags;
-	iBase	*object;
-}_notification_t;
-
 // object controll
 #define OCTL_INIT	10 // arg: iRepository*
 #define OCTL_UNINIT	11 // arg: iRepository*

@@ -35,6 +35,21 @@ typedef void* _enum_ext_t;
 #define SCAN_ORIGINAL	1
 #define SCAN_CLONE	2
 
+// notification flags
+#define NF_LOAD		(1<<0)
+#define NF_INIT		(1<<1)
+#define NF_START	(1<<2)
+#define NF_STOP		(1<<3)
+#define NF_UNINIT	(1<<4)
+#define NF_REMOVE	(1<<5)
+#define NF_UNLOAD	(1<<6)
+
+typedef struct {
+	_u32	flags;
+	HOBJECT	hobj;
+	iBase	*object;
+}_notification_t;
+
 class iRepository: public iBase {
 public:
 	INTERFACE(iRepository, I_REPOSITORY);

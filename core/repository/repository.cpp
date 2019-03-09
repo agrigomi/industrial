@@ -199,12 +199,17 @@ private:
 		}
 	}
 
-	void notify(_u32 flags, iBase *mon_obj) {
+	void notify(_u32 flags, iBase *mon_obj, _base_entry_t *mon_entry) {
 		if(mpi_notify_list) {
-			_notification_t msg = {flags, mon_obj};
+			_notification_t msg = {flags, mon_entry, mon_obj};
 			_object_info_t info;
 
-			mon_obj->object_info(&info);
+			if(mon_obj)
+				mon_obj->object_info(&info);
+			else if(mon_entry)
+					mon_entry->pi_base->object_info(&info);
+			else
+				return;
 
 			HMUTEX hm = mpi_notify_list->lock();
 			bool send = false;
@@ -236,7 +241,7 @@ private:
 		}
 	}
 
-	bool init_object(iBase *pi, _u8 *state, _object_info_t *info) {
+	bool init_object(iBase *pi, _u8 *state, _object_info_t *info, _base_entry_t *hobj) {
 		bool r = false;
 
 		if(!(*state & ST_INITIALIZED)) {
@@ -248,7 +253,7 @@ private:
 						flags |= NF_START;
 				}
 
-				notify(flags, pi);
+				notify(flags, pi, hobj);
 			} else {
 				pi->object_ctl(OCTL_UNINIT, this);
 				LOG("REPOSITORY: Unable to init object(iname='%s'; cname='%s')\n",
@@ -260,7 +265,7 @@ private:
 		return r;
 	}
 
-	bool uninit_object(iBase *pi, _u8 *state, _u32 *ref_cnt, _object_info_t *info, _u32 f=0) {
+	bool uninit_object(iBase *pi, _base_entry_t *hobj, _u8 *state, _u32 *ref_cnt, _object_info_t *info, _u32 f=0) {
 		bool r = false;
 		_u32 flags = f;
 
@@ -269,7 +274,7 @@ private:
 			if(info->flags & RF_TASK)
 				flags |= NF_STOP;
 
-			notify(flags, pi);
+			notify(flags, pi, hobj);
 
 			if(!(*state & ST_INITIALIZED))
 				// removed
@@ -317,9 +322,11 @@ private:
 		while(array && it < count && (flags & UNINIT_STATIC)) {
 			_base_entry_t *pe = &array[it];
 
+			notify(NF_UNLOAD, pe->pi_base, pe);
+
 			pe->pi_base->object_info(&oi);
 			if(oi.flags & RF_ORIGINAL)
-				uninit_object(pe->pi_base, &pe->state, &pe->ref_cnt, &oi, NF_REMOVE);
+				uninit_object(pe->pi_base, pe, &pe->state, &pe->ref_cnt, &oi, NF_REMOVE);
 			it++;
 		}
 
@@ -343,7 +350,7 @@ private:
 							strcmp(oi.cname, info.cname) == 0 &&
 							oi.version.version == info.version.version) {
 						mpi_cxt_list->unlock(hm);
-						bool r = uninit_object(obj, state, &pe->ref_cnt, &info, NF_REMOVE);
+						bool r = uninit_object(obj, pe, state, &pe->ref_cnt, &info, NF_REMOVE);
 						hm = mpi_cxt_list->lock();
 						if(r && (flags & UNINIT_REMOVE_CONTEXT)) {
 							remove_context(obj, hm);
@@ -396,21 +403,22 @@ private:
 				bool send = false;
 
 				array[i].pi_base->object_info(&oi);
-				if(oi.flags & RF_ORIGINAL) {
-					if(array[i].pi_base == pn->monitored)
-						send = true;
-					else if(pn->iname && strcmp(pn->iname, oi.iname) == 0)
-						send = true;
-					else if(pn->cname && strcmp(pn->cname, oi.cname) == 0)
-						send = true;
+				if(array[i].pi_base == pn->monitored)
+					send = true;
+				else if(pn->iname && strcmp(pn->iname, oi.iname) == 0)
+					send = true;
+				else if(pn->cname && strcmp(pn->cname, oi.cname) == 0)
+					send = true;
 
-					if(send) {
-						msg.flags = NF_INIT;
-						msg.object = array[i].pi_base;
+				if(send) {
+					msg.flags = NF_LOAD;
+					if(oi.flags & RF_ORIGINAL)
+						msg.flags |= NF_INIT;
+					msg.hobj = &array[i];
+					msg.object = array[i].pi_base;
 
-						pn->handler->object_ctl(OCTL_NOTIFY, &msg);
-						send = false;
-					}
+					pn->handler->object_ctl(OCTL_NOTIFY, &msg);
+					send = false;
 				}
 			}
 		}
@@ -490,8 +498,11 @@ public:
 				_object_info_t oi;
 
 				pe->pi_base->object_info(&oi);
+
+				notify(NF_LOAD, pe->pi_base, pe);
+
 				if(oi.flags & RF_ORIGINAL)
-					init_object(pe->pi_base, &pe->state, &oi);
+					init_object(pe->pi_base, &pe->state, &oi, pe);
 			}
 			it++;
 		}
@@ -515,7 +526,7 @@ public:
 							_u8 *state = (_u8 *)r;
 							state += size;
 							*state = 0;
-							if(!init_object(r, state, &info))
+							if(!init_object(r, state, &info, bentry))
 								remove_context(r);
 							else
 								bentry->ref_cnt++;
@@ -530,7 +541,7 @@ public:
 
 							memcpy((void *)r, (void *)bentry->pi_base, info.size);
 
-							if(!init_object(r, state, &info)) {
+							if(!init_object(r, state, &info, bentry)) {
 								mpi_heap->free(r, size);
 								r = 0;
 							} else
@@ -538,7 +549,7 @@ public:
 						}
 					}
 				} else if((info.flags & rf) & RF_ORIGINAL) {
-					if(init_object(bentry->pi_base, &bentry->state, &info)) {
+					if(init_object(bentry->pi_base, &bentry->state, &info, bentry)) {
 						r = bentry->pi_base;
 						bentry->ref_cnt++;
 					}
@@ -578,7 +589,7 @@ public:
 					_u8 *state = (_u8 *)ptr;
 					state += info.size+1;
 
-					if((unref = uninit_object(ptr, state, &bentry->ref_cnt, &info)))
+					if((unref = uninit_object(ptr, bentry, state, &bentry->ref_cnt, &info)))
 						remove_context(ptr);
 				}
 
