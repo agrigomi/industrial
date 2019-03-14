@@ -189,16 +189,16 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 	unsigned char flags = 0;
 	unsigned long pos = ht_position(p_jcxt->p_htc);
 	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
-#define NAME_QUOTES	(1<<0)
-#define NAME_STROPHE	(1<<1)
-#define NAME_SYMBOL	(1<<3)
+#define STRNAME_QUOTES	(1<<0)
+#define STRNAME_STROPHE	(1<<1)
+#define STRNAME_SYMBOL	(1<<3)
 
 	if(_c == '\'')
-		flags |= NAME_STROPHE;
+		flags |= STRNAME_STROPHE;
 	else if(_c == '"')
-		flags |= NAME_QUOTES;
+		flags |= STRNAME_QUOTES;
 	else if((_c >= 'A' && _c <= 'Z') || (_c >= 'a' && _c <='z'))
-		flags |= NAME_SYMBOL;
+		flags |= STRNAME_SYMBOL;
 	else {
 		r = JSON_PARSE_ERROR;
 		p_jcxt->err_pos = pos;
@@ -211,7 +211,7 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 		else if(c >= 'a' && c <= 'z')
 			;
 		else if(c == '\'') {
-			if(flags & NAME_STROPHE)
+			if(flags & STRNAME_STROPHE)
 				break;
 			else {
 				r = JSON_PARSE_ERROR;
@@ -219,7 +219,7 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 				break;
 			}
 		} else if(c == '"') {
-			if(flags & NAME_QUOTES)
+			if(flags & STRNAME_QUOTES)
 				break;
 			else {
 				r = JSON_PARSE_ERROR;
@@ -227,13 +227,13 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 				break;
 			}
 		} else if(c >= '0' && c <= '9') {
-			if(!(flags & NAME_SYMBOL)) {
+			if(!(flags & STRNAME_SYMBOL)) {
 				r = JSON_PARSE_ERROR;
 				p_jcxt->err_pos = pos;
 				break;
 			}
 		} else if(c == ':' || c == ' ' || c == '\t' || c == '\n' || c == '\r') {
-			if((flags & NAME_SYMBOL) && !(flags & (NAME_QUOTES | NAME_STROPHE)))
+			if((flags & STRNAME_SYMBOL) && !(flags & (STRNAME_QUOTES | STRNAME_STROPHE)))
 				break;
 			else {
 				r = JSON_PARSE_ERROR;
@@ -246,7 +246,7 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 			break;
 		}
 
-		flags |= NAME_SYMBOL;
+		flags |= STRNAME_SYMBOL;
 		_c = c;
 	}
 
@@ -261,8 +261,38 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 
 static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p_jstr, unsigned int *C) {
 	_json_err_t r = JSON_OK;
+	unsigned int c = 0;
+	unsigned int _c = *C;
+	unsigned char flags = 0;
+	unsigned long pos = ht_position(p_jcxt->p_htc);
+	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
+#define STRVALUE_QUOTES		(1<<0)
+#define STRVALUE_STROPHE	(1<<1)
+#define STRVALUE_SYMBOL		(1<<2)
+#define STRVALUE_EXCL		(1<<3)
 
-	/*...*/
+	if(_c == '\'')
+		flags |= STRVALUE_STROPHE;
+	else if(_c == '"')
+		flags |= STRVALUE_QUOTES;
+	else {
+		r = JSON_PARSE_ERROR;
+		p_jcxt->err_pos = pos;
+		return r;
+	}
+
+	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
+		/*...*/
+
+		flags |= STRNAME_SYMBOL;
+		_c = c;
+	}
+
+	if(r == JSON_OK)
+		p_jstr->size = ht_symbols(p_jcxt->p_htc,
+					(unsigned char *)p_jstr->data,
+					(unsigned char *)p_jstr->data + pos);
+	*C = c;
 
 	return r;
 }
