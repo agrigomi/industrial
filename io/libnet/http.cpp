@@ -71,7 +71,7 @@ void cHttpServer::http_server_thread(void) {
 	m_is_stopped = true;
 }
 
-void *http_worker_thread(void *udata) {
+void *_http_worker_thread(void *udata) {
 	void *r = 0;
 	cHttpServer *p_https = static_cast<cHttpServer *>(udata);
 	volatile _u32 num = p_https->m_active_workers++;
@@ -181,7 +181,7 @@ bool cHttpServer::start_worker(void) {
 	bool r = false;
 	HTASK ht = 0;
 
-	if((ht = mpi_tmaker->start(http_worker_thread, this))) {
+	if((ht = mpi_tmaker->start(_http_worker_thread, this))) {
 		mpi_tmaker->set_name(ht, "http worker");
 		r = true;
 	}

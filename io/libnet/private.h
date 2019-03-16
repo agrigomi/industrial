@@ -224,7 +224,7 @@ private:
 	_u32			m_connection_timeout;
 	_u32			m_num_connections;
 
-	friend void *http_worker_thread(void *);
+	friend void *_http_worker_thread(void *);
 	friend void *_http_server_thread(void *);
 
 	void http_server_thread(void);
