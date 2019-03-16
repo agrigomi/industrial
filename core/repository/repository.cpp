@@ -241,7 +241,7 @@ private:
 		}
 	}
 
-	bool init_object(iBase *pi, _u8 *state, _object_info_t *info, _base_entry_t *hobj) {
+	bool init_object(iBase *pi, _u8 *state, _object_info_t *info, _base_entry_t *hobj, bool notification=true) {
 		bool r = false;
 
 		if(!(*state & ST_INITIALIZED)) {
@@ -253,7 +253,8 @@ private:
 						flags |= NF_START;
 				}
 
-				notify(flags, pi, hobj);
+				if(notification)
+					notify(flags, pi, hobj);
 			} else {
 				pi->object_ctl(OCTL_UNINIT, this);
 				LOG("REPOSITORY: Unable to init object(iname='%s'; cname='%s')\n",
@@ -265,7 +266,7 @@ private:
 		return r;
 	}
 
-	bool uninit_object(iBase *pi, _base_entry_t *hobj, _u8 *state, _u32 *ref_cnt, _object_info_t *info, _u32 f=0) {
+	bool uninit_object(iBase *pi, _base_entry_t *hobj, _u8 *state, _u32 *ref_cnt, _object_info_t *info, _u32 f=0, bool notification=true) {
 		bool r = false;
 		_u32 flags = f;
 
@@ -274,7 +275,8 @@ private:
 			if(info->flags & RF_TASK)
 				flags |= NF_STOP;
 
-			notify(flags, pi, hobj);
+			if(notification)
+				notify(flags, pi, hobj);
 
 			if(!(*state & ST_INITIALIZED))
 				// removed
@@ -526,7 +528,7 @@ public:
 							_u8 *state = (_u8 *)r;
 							state += size;
 							*state = 0;
-							if(!init_object(r, state, &info, bentry))
+							if(!init_object(r, state, &info, bentry, (rf & RF_NONOTIFY) ? false : true))
 								remove_context(r);
 							else
 								bentry->ref_cnt++;
@@ -541,7 +543,7 @@ public:
 
 							memcpy((void *)r, (void *)bentry->pi_base, info.size);
 
-							if(!init_object(r, state, &info, bentry)) {
+							if(!init_object(r, state, &info, bentry, (rf & RF_NONOTIFY) ? false : true)) {
 								mpi_heap->free(r, size);
 								r = 0;
 							} else
@@ -572,7 +574,7 @@ public:
 		return r;
 	}
 
-	void object_release(iBase *ptr) {
+	void object_release(iBase *ptr, bool notify=true) {
 		_object_info_t info;
 
 		if(ptr) {
@@ -589,7 +591,7 @@ public:
 					_u8 *state = (_u8 *)ptr;
 					state += info.size+1;
 
-					if((unref = uninit_object(ptr, bentry, state, &bentry->ref_cnt, &info)))
+					if((unref = uninit_object(ptr, bentry, state, &bentry->ref_cnt, &info, notify)))
 						remove_context(ptr);
 				}
 

@@ -25,7 +25,7 @@ typedef _u8 	_rf_t;
 #define RF_CLONE     (1<<0)
 #define RF_ORIGINAL  (1<<1)
 #define RF_TASK      (1<<2)
-
+#define RF_NONOTIFY  (1<<3)
 
 typedef struct {
 	_cstr_t		iname;   // interface name

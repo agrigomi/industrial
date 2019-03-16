@@ -54,7 +54,7 @@ class iRepository: public iBase {
 public:
 	INTERFACE(iRepository, I_REPOSITORY);
 	virtual iBase *object_request(_object_request_t *, _rf_t)=0;
-	virtual void   object_release(iBase *)=0;
+	virtual void   object_release(iBase *, bool notify=true)=0;
 	virtual iBase *object_by_cname(_cstr_t cname, _rf_t)=0;
 	virtual iBase *object_by_iname(_cstr_t iname, _rf_t)=0;
 	virtual iBase *object_by_handle(HOBJECT, _rf_t)=0;
