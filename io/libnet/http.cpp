@@ -128,18 +128,18 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 		case OCTL_UNINIT: {
 			iRepository *pi_repo = (iRepository *)arg;
 
+			// trop server listen thread
+			if(m_is_running) {
+				m_is_running = false;
+				while(!m_is_stopped)
+					usleep(10000);
+			}
 			// stop all workers
 			m_active_workers = 0;
 			_u32 t = 1000;
 			while(m_num_workers && t) {
 				usleep(10000);
 				t--;
-			}
-			// trop server listen thread
-			if(m_is_running) {
-				m_is_running = false;
-				while(!m_is_stopped)
-					usleep(10000);
 			}
 
 			remove_all_connections();
