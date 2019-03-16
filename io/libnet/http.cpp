@@ -202,7 +202,7 @@ _http_connection_t *cHttpServer::add_connection(void) {
 	if(p_sio) {
 		_http_connection_t rec;
 
-		if((rec.p_httpc = (cHttpConnection *)_gpi_repo_->object_by_handle(m_hconnection, RF_CLONE))) {
+		if((rec.p_httpc = (cHttpConnection *)_gpi_repo_->object_by_handle(m_hconnection, RF_CLONE|RF_NONOTIFY))) {
 			_u32 nfhttpc = 0;
 			_u32 nbhttpc = 0;
 
@@ -267,7 +267,7 @@ void cHttpServer::remove_connection(_http_connection_t *rec) {
 	mpi_list->col(rec->state, hm);
 	if(mpi_list->sel(rec, hm)) {
 		if(rec->p_httpc)
-			_gpi_repo_->object_release(rec->p_httpc);
+			_gpi_repo_->object_release(rec->p_httpc, false);
 		mpi_list->del(hm);
 		mpi_list->col(CFREE, hm);
 		m_num_connections = mpi_list->cnt(hm);
@@ -284,7 +284,7 @@ void cHttpServer::clear_column(_u8 col, HMUTEX hlock) {
 	while((rec = (_http_connection_t *)mpi_list->first(&sz, hlock))) {
 		if(rec->p_httpc) {
 			call_event_handler(HTTP_ON_CLOSE, rec->p_httpc);
-			_gpi_repo_->object_release(rec->p_httpc);
+			_gpi_repo_->object_release(rec->p_httpc, false);
 		}
 		mpi_list->del(hlock);
 	}

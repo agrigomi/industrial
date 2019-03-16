@@ -150,7 +150,7 @@ iSocketIO *cTCPServer::listen(void) {
 		_s32 connect_socket = accept(m_server_socket, (struct sockaddr *)&caddr, &addrlen);
 
 		if(connect_socket > 0) {
-			cSocketIO *psio = (cSocketIO *)_gpi_repo_->object_by_handle(m_hsio, RF_CLONE);
+			cSocketIO *psio = (cSocketIO *)_gpi_repo_->object_by_handle(m_hsio, RF_CLONE|RF_NONOTIFY);
 			if(psio) {
 				if(psio->_init(0, &caddr, connect_socket,
 						(m_use_ssl && mp_sslcxt) ? SOCKET_IO_SSL_SERVER : SOCKET_IO_TCP,
@@ -158,7 +158,7 @@ iSocketIO *cTCPServer::listen(void) {
 					r = psio;
 				else
 					/* we assume that socket I/O object should close socket handle */
-					_gpi_repo_->object_release(psio);
+					_gpi_repo_->object_release(psio, false);
 			} else
 				::close(connect_socket);
 		}
@@ -182,7 +182,7 @@ void cTCPServer::close(iSocketIO *p_io) {
 
 	if(pcsio) {
 		pcsio->_close();
-		_gpi_repo_->object_release(p_io);
+		_gpi_repo_->object_release(p_io, false);
 	}
 }
 
