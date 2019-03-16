@@ -225,6 +225,7 @@ private:
 	_u32			m_num_connections;
 
 	friend void *http_worker_thread(void *);
+	friend void *_http_server_thread(void *);
 
 	void http_server_thread(void);
 	bool start_worker(void);
@@ -237,7 +238,7 @@ private:
 	void remove_all_connections(void);
 	bool call_event_handler(_u8 evt, iHttpConnection *pi_httpc);
 public:
-	BASE(cHttpServer, CLASS_NAME_HTTP_SERVER, RF_CLONE | RF_TASK, 1,0,0);
+	BASE(cHttpServer, CLASS_NAME_HTTP_SERVER, RF_CLONE, 1,0,0);
 	bool _init(_u32 port,
 			_u32 buffer_size=8192,
 			_u32 max_workers=32,

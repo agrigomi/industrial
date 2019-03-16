@@ -20,6 +20,12 @@ _u32 buffer_io(_u8 op, void *ptr, _u32 size, void *udata) {
 	return r;
 }
 
+void *_http_server_thread(void *arg) {
+	cHttpServer *srv = (cHttpServer *)arg;
+	srv->http_server_thread();
+	return NULL;
+}
+
 bool cHttpServer::_init(_u32 port,
 			_u32 buffer_size,
 			_u32 max_workers,
@@ -28,12 +34,14 @@ bool cHttpServer::_init(_u32 port,
 	bool r = false;
 
 	if(p_tcps && !m_is_init) {
-		mpi_bmap->init(buffer_size, buffer_io);
-		m_max_workers = max_workers;
-		m_max_connections = max_connections;
-		m_connection_timeout = connection_timeout;
-		m_is_init = r = p_tcps->_init(port);
-		p_tcps->blocking(false);
+		if((m_is_init = r = p_tcps->_init(port))) {
+			mpi_bmap->init(buffer_size, buffer_io);
+			m_max_workers = max_workers;
+			m_max_connections = max_connections;
+			m_connection_timeout = connection_timeout;
+			p_tcps->blocking(false);
+			mpi_tmaker->start(_http_server_thread, this);
+		}
 	}
 
 	return r;
@@ -50,7 +58,7 @@ void cHttpServer::http_server_thread(void) {
 	m_is_running = true;
 	m_is_stopped = false;
 
-	HTASK ht = mpi_tmaker->handle(this);
+	HTASK ht = mpi_tmaker->handle(_http_server_thread);
 	if(ht)
 		mpi_tmaker->set_name(ht, "http server");
 
@@ -103,6 +111,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			iRepository *pi_repo = (iRepository *)arg;
 
 			m_is_init = m_is_running = m_use_ssl = false;
+			m_is_stopped = true;
 			m_num_connections = m_num_workers = m_active_workers = 0;
 			memset(m_event, 0, sizeof(m_event));
 			mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
@@ -126,6 +135,12 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 				usleep(10000);
 				t--;
 			}
+			// trop server listen thread
+			if(m_is_running) {
+				m_is_running = false;
+				while(!m_is_stopped)
+					usleep(10000);
+			}
 
 			remove_all_connections();
 			_close();
@@ -137,14 +152,6 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			p_tcps = 0;
 			r = true;
 		} break;
-		case OCTL_START:
-			http_server_thread();
-			break;
-		case OCTL_STOP:
-			m_is_running = false;
-			while(!m_is_stopped)
-				usleep(10000);
-			break;
 	}
 
 	return r;
