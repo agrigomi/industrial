@@ -645,7 +645,7 @@ _u8 cHttpConnection::process(void) {
 					} else {
 						_cstr_t ctype = req_var("Connection");
 
-						if(ctype && strcmp(ctype, "keep-alive") == 0) { // reuse connection
+						if(ctype && strcasecmp(ctype, "keep-alive") == 0) { // reuse connection
 							clean_members();
 							m_state = HTTPC_RECEIVE_HEADER;
 						} else

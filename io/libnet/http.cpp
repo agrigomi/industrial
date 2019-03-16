@@ -128,7 +128,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 		case OCTL_UNINIT: {
 			iRepository *pi_repo = (iRepository *)arg;
 
-			// trop server listen thread
+			// stop server listen thread
 			if(m_is_running) {
 				m_is_running = false;
 				while(!m_is_stopped)
