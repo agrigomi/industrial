@@ -551,7 +551,7 @@ public:
 						}
 					}
 				} else if((info.flags & rf) & RF_ORIGINAL) {
-					if(init_object(bentry->pi_base, &bentry->state, &info, bentry)) {
+					if(init_object(bentry->pi_base, &bentry->state, &info, bentry, (rf & RF_NONOTIFY) ? false : true)) {
 						r = bentry->pi_base;
 						bentry->ref_cnt++;
 					}
