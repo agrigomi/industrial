@@ -68,6 +68,8 @@ extern "C" {
 _json_context_t *json_create_context(_mem_alloc_t *, _mem_free_t *);
 /* Reset context */
 void json_reset_context(_json_context_t *);
+/* Destroy context */
+void json_destroy_context(_json_context_t *);
 /* Pasrse JSON content */
 _json_err_t json_parse(_json_context_t *p_jcxt, /* JSON context */
 			const unsigned char *p_content, /* text content */

@@ -30,6 +30,14 @@ void json_reset_context(_json_context_t *p_jcxt) {
 	ht_reset_context(p_jcxt->p_htc);
 }
 
+void json_destroy_context(_json_context_t *p_jcxt) {
+	_ht_context_t *p_htc = p_jcxt->p_htc;
+
+	destroy_object(p_jcxt, &p_jcxt->root);
+	p_jcxt->p_htc->pf_mem_free(p_jcxt, sizeof(_json_context_t));
+	ht_destroy_context(p_htc);
+}
+
 static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb, unsigned int *C);
 static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray, unsigned int *C);
 static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb, unsigned int *C);
