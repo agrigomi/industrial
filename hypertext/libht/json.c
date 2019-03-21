@@ -207,9 +207,11 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 
 	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
 		if(c >= 'A' && c <= 'Z')
-			continue;
+			;
 		else if(c >= 'a' && c <= 'z')
-			continue;
+			;
+		else if(c == '-' || c == '_')
+			;
 		else if(c == '\'') {
 			if(flags & STRNAME_STROPHE)
 				break;
