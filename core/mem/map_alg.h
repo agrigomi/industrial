@@ -32,11 +32,19 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif
+/* Initialize hash table context */
 _bool map_init(_map_context_t *p_mcxt);
+/* Add record to hash table and returns pointer to data */
 void *map_add(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 sz_data);
+/* Same as map_add, but overwrite record data, if already exists */
+void *map_set(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 sz_data);
+/* Get record by key */
 void *map_get(_map_context_t *p_mcxt, void *key, _u32 sz_key, _u32 *sz_data);
+/* delete record by key */
 void map_del(_map_context_t *p_mcxt, void *key, _u32 sz_key);
+/* clear entire map */
 void map_clr(_map_context_t *p_mcxt);
+/* Clear entire map and destroy context */
 void map_destroy(_map_context_t *p_mcxt);
 MAPENUM map_enum_open(_map_context_t *p_mcxt_);
 void *map_enum_first(MAPENUM h, _u32 *sz_data);

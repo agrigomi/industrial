@@ -49,11 +49,19 @@ public:
 	INTERFACE(iMap, I_MAP);
 	virtual HMUTEX lock(HMUTEX hlock=0)=0;
 	virtual void unlock(HMUTEX hlock)=0;
+	// init hash-table context
 	virtual bool init(_u32 calacity)=0;
+	// add new record (if already exists, returns pointer to existing one)
 	virtual void *add(const void *key, _u32 sz_key, const void *data, _u32 sz_data, HMUTEX hlock=0)=0;
+	// Same as add, but overwrite existing record and returns pointer to new one
+	virtual void *set(const void *key, _u32 sz_key, const void *data, _u32 sz_data, HMUTEX hlock=0)=0;
+	// remove record
 	virtual void del(const void *key, _u32 sz_key, HMUTEX hlock=0)=0;
+	// returns the number of records
 	virtual _u32 cnt(void)=0;
+	// Return pointer to record data if exists, othrewise NULL
 	virtual void *get(const void *key, _u32 sz_key, _u32 *sz_data, HMUTEX hlock=0)=0;
+	// Clear entire hash-table
 	virtual void clr(HMUTEX hlock=0)=0;
 	virtual _map_enum_t enum_open(void)=0;
 	virtual void enum_close(_map_enum_t en)=0;

@@ -135,6 +135,27 @@ void *map_get(_map_context_t *p_mcxt, void *key, _u32 sz_key, _u32 *sz_data) {
 	return r;
 }
 
+static _map_rec_hdr_t *alloc_record(_map_context_t *p_mcxt, _u8 *hash_key, void *data, _u32 sz_data) {
+	_map_rec_hdr_t *p_rec = NULL;
+
+	if(p_mcxt->pf_mem_alloc && p_mcxt->pf_mem_free) {
+		_u32 data_size = sz_data + 1; // the last byte, should be 0 always
+		_u32 sz_rec = sizeof(_map_rec_hdr_t) + data_size;
+		void *p_data = NULL;
+
+		if((p_rec = p_mcxt->pf_mem_alloc(sz_rec, p_mcxt->udata))) {
+			memset(p_rec, 0, sz_rec);
+			p_data = (p_rec + 1);
+			memcpy(p_data, data, sz_data);
+			memcpy(p_rec->key, hash_key, sizeof(p_rec->key));
+			p_rec->sz_rec = data_size;
+			p_rec->next = NULL;
+		}
+	}
+
+	return p_rec;
+}
+
 void *map_add(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 sz_data) {
 	void *r = NULL;
 	_u8 hash_key[HASH_SIZE]="";
@@ -145,27 +166,43 @@ void *map_add(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 s
 	if(p_rec)
 		r = (p_rec + 1);
 	else {
-		if(p_mcxt->pf_mem_alloc && p_mcxt->pf_mem_free) {
-			_u32 data_size = sz_data + 1; // the last byte, should be 0 always
-			_u32 sz_rec = sizeof(_map_rec_hdr_t) + data_size;
-
-			if((p_rec = p_mcxt->pf_mem_alloc(sz_rec, p_mcxt->udata))) {
-				memset(p_rec, 0, sz_rec);
+		if((p_rec = alloc_record(p_mcxt, hash_key, data, sz_data))) {
+			if(add_record(p_rec, p_mcxt->pp_list, p_mcxt->capacity, &p_mcxt->collisions)) {
+				p_mcxt->records++;
+				if(p_mcxt->records >= p_mcxt->capacity)
+					remap(p_mcxt);
 				r = (p_rec + 1);
-				memcpy(r, data, sz_data);
-				memcpy(p_rec->key, hash_key, sizeof(p_rec->key));
-				p_rec->sz_rec = data_size;
-				p_rec->next = NULL;
-
-				if(add_record(p_rec, p_mcxt->pp_list, p_mcxt->capacity, &p_mcxt->collisions)) {
-					p_mcxt->records++;
-					if(p_mcxt->records >= p_mcxt->capacity)
-						remap(p_mcxt);
-				} else {
-					p_mcxt->pf_mem_free(p_rec, sizeof(_map_rec_hdr_t) + sz_data, p_mcxt->udata);
-					r = NULL;
-				}
+			} else {
+				p_mcxt->pf_mem_free(p_rec, sizeof(_map_rec_hdr_t) + sz_data, p_mcxt->udata);
+				r = NULL;
 			}
+		}
+	}
+
+	return r;
+}
+
+void *map_set(_map_context_t *p_mcxt, void *key, _u32 sz_key, void *data, _u32 sz_data) {
+	void *r = NULL;
+	_u8 hash_key[HASH_SIZE]="";
+	_map_rec_hdr_t *p_rec = NULL;
+
+	map_del(p_mcxt, key, sz_key);
+
+	if(p_mcxt->pf_hash)
+		p_mcxt->pf_hash((_u8 *)key, sz_key, hash_key, p_mcxt->udata);
+	else
+		memcpy(hash_key, key, (sz_key < HASH_SIZE) ? sz_key : HASH_SIZE);
+
+	if((p_rec = alloc_record(p_mcxt, hash_key, data, sz_data))) {
+		if(add_record(p_rec, p_mcxt->pp_list, p_mcxt->capacity, &p_mcxt->collisions)) {
+			p_mcxt->records++;
+			if(p_mcxt->records >= p_mcxt->capacity)
+				remap(p_mcxt);
+			r = (p_rec + 1);
+		} else {
+			p_mcxt->pf_mem_free(p_rec, sizeof(_map_rec_hdr_t) + sz_data, p_mcxt->udata);
+			r = NULL;
 		}
 	}
 

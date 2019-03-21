@@ -112,6 +112,17 @@ public:
 		return r;
 	}
 
+	void *set(const void *key, _u32 sz_key, const void *data, _u32 sz_data, HMUTEX hlock=0) {
+		void *r = 0;
+		assert(m_is_init);
+		HMUTEX hm = lock(hlock);
+
+		r = map_set(&map_cxt, (void *)key, sz_key, (void *)data, sz_data);
+		unlock(hm);
+
+		return r;
+	}
+
 	void del(const void *key, _u32 sz_key, HMUTEX hlock=0) {
 		assert(m_is_init);
 		HMUTEX hm = lock(hlock);
