@@ -207,9 +207,9 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 
 	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
 		if(c >= 'A' && c <= 'Z')
-			;
+			continue;
 		else if(c >= 'a' && c <= 'z')
-			;
+			continue;
 		else if(c == '\'') {
 			if(flags & STRNAME_STROPHE)
 				break;
@@ -263,18 +263,12 @@ static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p
 	_json_err_t r = JSON_OK;
 	unsigned int c = 0;
 	unsigned int _c = *C;
-	unsigned char flags = 0;
 	unsigned long pos = ht_position(p_jcxt->p_htc);
 	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
-#define STRVALUE_QUOTES		(1<<0)
-#define STRVALUE_STROPHE	(1<<1)
-#define STRVALUE_SYMBOL		(1<<2)
-#define STRVALUE_EXCL		(1<<3)
+	unsigned char term = '"';
 
-	if(_c == '\'')
-		flags |= STRVALUE_STROPHE;
-	else if(_c == '"')
-		flags |= STRVALUE_QUOTES;
+	if(_c == '\'' || _c == '"')
+		term = _c;
 	else {
 		r = JSON_PARSE_ERROR;
 		p_jcxt->err_pos = pos;
@@ -282,9 +276,9 @@ static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p
 	}
 
 	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
-		/*...*/
+		if(c == term && _c != '\\')
+			break;
 
-		flags |= STRNAME_SYMBOL;
 		_c = c;
 	}
 
