@@ -44,7 +44,7 @@ bool cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
 	setsockopt(m_socket, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
 
 	struct timeval timeout;
-	timeout.tv_sec = 20;
+	timeout.tv_sec = 10;
 	timeout.tv_usec = 0;
 
 	setsockopt(m_socket, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
@@ -77,13 +77,22 @@ struct sockaddr_in *cSocketIO::clientaddr(void) {
 
 void cSocketIO::_close(void) {
 	if(m_socket) {
-		blocking(false);
-		if(::close(m_socket) >= 0) {
-			m_socket = 0;
+		_s32 err = 1;
+		socklen_t len = sizeof(err);
+		_char_t discard[256];
 
-			if(mp_cSSL)
-				SSL_free(mp_cSSL);
-		}
+		blocking(false);
+		::read(m_socket, discard, sizeof(discard));
+
+		getsockopt(m_socket, SOL_SOCKET, SO_ERROR, (char *)&err, &len);
+
+		shutdown(m_socket, SHUT_RDWR);
+		::close(m_socket);
+
+		m_socket = 0;
+
+		if(mp_cSSL)
+			SSL_free(mp_cSSL);
 	}
 }
 

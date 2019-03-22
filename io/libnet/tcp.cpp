@@ -29,7 +29,14 @@ bool cTCPServer::_init(_u32 port) {
 
 void cTCPServer::_close(void) {
 	if(m_server_socket) {
+		_s32 err = 1;
+		socklen_t len = sizeof(err);
+
+		getsockopt(m_server_socket, SOL_SOCKET, SO_ERROR, (char *)&err, &len);
+
+		shutdown(m_server_socket, SHUT_RDWR);
 		::close(m_server_socket);
+
 		m_server_socket = 0;
 		destroy_ssl();
 	}

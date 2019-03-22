@@ -11,7 +11,7 @@
 
 IMPLEMENT_BASE_ARRAY("netcmd", 1);
 
-#define DEFAULT_PORT	3000
+#define DEFAULT_PORT	3001
 #define NC_LOG_PREFIX	"netcmd: "
 
 typedef struct {
