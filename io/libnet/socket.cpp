@@ -42,12 +42,17 @@ bool cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
 
 	_s32 opt = 1;
 	setsockopt(m_socket, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
+	opt = 10;
+	setsockopt(m_socket, SOL_TCP, TCP_KEEPIDLE, &opt, sizeof(opt));
+	opt = 3;
+	setsockopt(m_socket, SOL_TCP, TCP_KEEPCNT, &opt, sizeof(opt));
 
 	struct timeval timeout;
 	timeout.tv_sec = 10;
 	timeout.tv_usec = 0;
 
 	setsockopt(m_socket, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
+	setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
 
 	if((m_mode == SOCKET_IO_SSL_SERVER || m_mode == SOCKET_IO_SSL_CLIENT) && p_ssl_cxt) {
 		if((mp_cSSL = SSL_new(p_ssl_cxt))) {
@@ -82,7 +87,7 @@ void cSocketIO::_close(void) {
 		_char_t discard[256];
 
 		blocking(false);
-		::read(m_socket, discard, sizeof(discard));
+		while(::read(m_socket, discard, sizeof(discard)) > 0);
 
 		getsockopt(m_socket, SOL_SOCKET, SO_ERROR, (char *)&err, &len);
 

@@ -10,9 +10,18 @@ bool cTCPServer::_init(_u32 port) {
 
 	if((m_server_socket = socket(AF_INET, SOCK_STREAM, 0)) > 0) {
 		m_port = port;
+
+		_s32 opt = 1;
+		setsockopt(m_server_socket, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
+		opt = 10;
+		setsockopt(m_server_socket, SOL_TCP, TCP_KEEPIDLE, &opt, sizeof(opt));
+		opt = 3;
+		setsockopt(m_server_socket, SOL_TCP, TCP_KEEPCNT, &opt, sizeof(opt));
+
 		m_serveraddr.sin_family = AF_INET;
 		m_serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
 		m_serveraddr.sin_port = htons((unsigned short)port);
+
 		if(bind(m_server_socket, (struct sockaddr *)&m_serveraddr, sizeof(m_serveraddr)) >= 0) {
 			if(::listen(m_server_socket, 10) >= 0)
 				r = true;
