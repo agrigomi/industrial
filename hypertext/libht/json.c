@@ -213,6 +213,9 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 		return r;
 	}
 
+	if(p_jstr->data == NULL)
+		p_jstr->data = (char *)ht_ptr(p_jcxt->p_htc);
+
 	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
 		if(c >= 'A' && c <= 'Z')
 			;
@@ -285,6 +288,9 @@ static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p
 		return r;
 	}
 
+	if(p_jstr->data == NULL)
+		p_jstr->data = (char *)ht_ptr(p_jcxt->p_htc);
+
 	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
 		if(c == term && _c != '\\')
 			break;
@@ -315,34 +321,33 @@ static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue,
 	unsigned int _c = *C;
 	unsigned long pos = ht_position(p_jcxt->p_htc);
 	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
+	unsigned int *p_size = NULL;
+	char *vdata = (char *)ht_ptr(p_jcxt->p_htc);
+
+	switch(p_jvalue->jvt) {
+		case JSON_STRING:
+			p_size = &p_jvalue->string.size;
+			p_jvalue->string.data = vdata;
+			break;
+		case JSON_NUMBER:
+			p_size = &p_jvalue->number.size;
+			p_jvalue->number.data = vdata;
+			break;
+		case JSON_OBJECT:
+			p_size = &p_jvalue->object.size;
+			p_jvalue->object.data = vdata;
+			break;
+		case JSON_ARRAY:
+			p_size = &p_jvalue->array.size;
+			p_jvalue->array.data = vdata;
+			break;
+	}
 
 	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
 		/*...*/
 	}
 
 	if(r == JSON_OK) {
-		unsigned int *p_size = 0;
-		char *vdata = NULL;
-
-		switch(p_jvalue->jvt) {
-			case JSON_STRING:
-				p_size = &p_jvalue->string.size;
-				vdata = p_jvalue->string.data;
-				break;
-			case JSON_NUMBER:
-				p_size = &p_jvalue->number.size;
-				vdata = p_jvalue->number.data;
-				break;
-			case JSON_OBJECT:
-				p_size = &p_jvalue->object.size;
-				vdata = p_jvalue->object.data;
-				break;
-			case JSON_ARRAY:
-				p_size = &p_jvalue->array.size;
-				vdata = p_jvalue->array.data;
-				break;
-		}
-
 		if(p_size && vdata)
 			*p_size = ht_symbols(p_jcxt->p_htc,
 					(unsigned char *)vdata,
