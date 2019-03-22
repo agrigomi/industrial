@@ -311,8 +311,45 @@ static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray,
 
 static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue, unsigned int *C) {
 	_json_err_t r = JSON_OK;
+	unsigned int c = 0;
+	unsigned int _c = *C;
+	unsigned long pos = ht_position(p_jcxt->p_htc);
+	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
 
-	/*...*/
+	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
+		/*...*/
+	}
+
+	if(r == JSON_OK) {
+		unsigned int *p_size = 0;
+		char *vdata = NULL;
+
+		switch(p_jvalue->jvt) {
+			case JSON_STRING:
+				p_size = &p_jvalue->string.size;
+				vdata = p_jvalue->string.data;
+				break;
+			case JSON_NUMBER:
+				p_size = &p_jvalue->number.size;
+				vdata = p_jvalue->number.data;
+				break;
+			case JSON_OBJECT:
+				p_size = &p_jvalue->object.size;
+				vdata = p_jvalue->object.data;
+				break;
+			case JSON_ARRAY:
+				p_size = &p_jvalue->array.size;
+				vdata = p_jvalue->array.data;
+				break;
+		}
+
+		if(p_size && vdata)
+			*p_size = ht_symbols(p_jcxt->p_htc,
+					(unsigned char *)vdata,
+					(unsigned char *)vdata + pos);
+	}
+
+	*C = c;
 
 	return r;
 }
