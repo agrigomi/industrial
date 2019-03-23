@@ -49,18 +49,18 @@ static _json_err_t alloc_array_values(_json_context_t *p_jcxt, _json_array_t *p_
 	_json_err_t r = JSON_OK;
 	_ht_context_t *p_htc = p_jcxt->p_htc;
 	_json_value_t **pp_old_jv = p_jarray->pp_values;
-	unsigned int new_size = p_jarray->size + INITIAL_SIZE;
+	unsigned int new_size = p_jarray->num + INITIAL_SIZE;
 	_json_value_t **pp_new_jv = (_json_value_t **)p_jcxt->p_htc->pf_mem_alloc(new_size * sizeof(_json_value_t *));
 
 	if(pp_new_jv) {
 		memset(pp_new_jv, 0, new_size * sizeof(_json_value_t *));
 		if(pp_old_jv) {
 			/* copy to new one */
-			memcpy(pp_new_jv, pp_old_jv, p_jarray->size * sizeof(_json_value_t *));
+			memcpy(pp_new_jv, pp_old_jv, p_jarray->num * sizeof(_json_value_t *));
 			/* release old one */
-			p_htc->pf_mem_free(pp_old_jv, p_jarray->size * sizeof(_json_value_t *));
+			p_htc->pf_mem_free(pp_old_jv, p_jarray->num * sizeof(_json_value_t *));
 		}
-		p_jarray->size = new_size;
+		p_jarray->num = new_size;
 		p_jarray->pp_values = pp_new_jv;
 	} else
 		r = JSON_MEMORY_ERROR;
@@ -72,18 +72,18 @@ static _json_err_t alloc_object_pairs(_json_context_t *p_jcxt, _json_object_t *p
 	_json_err_t r = JSON_OK;
 	_ht_context_t *p_htc = p_jcxt->p_htc;
 	_json_pair_t **pp_old_jp = p_jobj->pp_pairs;
-	unsigned int new_size = p_jobj->size + INITIAL_SIZE;
+	unsigned int new_size = p_jobj->num + INITIAL_SIZE;
 	_json_pair_t **pp_new_jp = (_json_pair_t **)p_htc->pf_mem_alloc(new_size * sizeof(_json_pair_t *));
 
 	if(pp_new_jp) {
 		if(pp_old_jp) {
 			memset(pp_new_jp, 0, new_size * sizeof(_json_pair_t *));
 			/* copy to new one */
-			memcpy(pp_new_jp, pp_old_jp, p_jobj->size * sizeof(_json_pair_t *));
+			memcpy(pp_new_jp, pp_old_jp, p_jobj->num * sizeof(_json_pair_t *));
 			/* release old one */
-			p_htc->pf_mem_free(pp_old_jp, p_jobj->size * sizeof(_json_pair_t *));
+			p_htc->pf_mem_free(pp_old_jp, p_jobj->num * sizeof(_json_pair_t *));
 		}
-		p_jobj->size = new_size;
+		p_jobj->num = new_size;
 		p_jobj->pp_pairs = pp_new_jp;
 	} else
 		r = JSON_MEMORY_ERROR;
@@ -96,7 +96,7 @@ static _json_value_t *add_array_value(_json_context_t *p_jcxt, _json_array_t *p_
 	unsigned int i = 0;
 
 _add_array_value_:
-	for(; i < p_jarray->size; i++) {
+	for(; i < p_jarray->num; i++) {
 		if(p_jarray->pp_values[i] == NULL) {
 			if((p_jarray->pp_values[i] = r = p_jcxt->p_htc->pf_mem_alloc(sizeof(_json_value_t))))
 				memcpy(r, p_jvalue, sizeof(_json_value_t));
@@ -104,7 +104,7 @@ _add_array_value_:
 		}
 	}
 
-	if(i == p_jarray->size && r == NULL) {
+	if(i == p_jarray->num && r == NULL) {
 		if(alloc_array_values(p_jcxt, p_jarray) == JSON_OK)
 			goto _add_array_value_;
 	}
@@ -117,7 +117,7 @@ static _json_pair_t *add_object_pair(_json_context_t *p_jcxt, _json_object_t *p_
 	unsigned int i = 0;
 
 _add_object_pair_:
-	for(; i < p_jobj->size; i++) {
+	for(; i < p_jobj->num; i++) {
 		if(p_jobj->pp_pairs[i] == NULL) {
 			if((p_jobj->pp_pairs[i] = r = p_jcxt->p_htc->pf_mem_alloc(sizeof(_json_pair_t))))
 				memcpy(r, p_jpair, sizeof(_json_pair_t));
@@ -125,7 +125,7 @@ _add_object_pair_:
 		}
 	}
 
-	if(i == p_jobj->size && r == NULL) {
+	if(i == p_jobj->num && r == NULL) {
 		if(alloc_object_pairs(p_jcxt, p_jobj) == JSON_OK)
 			goto _add_object_pair_;
 	}
@@ -318,40 +318,32 @@ static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray,
 static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue, unsigned int *C) {
 	_json_err_t r = JSON_OK;
 	unsigned int c = 0;
-	unsigned int _c = *C;
 	unsigned long pos = ht_position(p_jcxt->p_htc);
 	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
-	unsigned int *p_size = NULL;
-	char *vdata = (char *)ht_ptr(p_jcxt->p_htc);
-
-	switch(p_jvalue->jvt) {
-		case JSON_STRING:
-			p_size = &p_jvalue->string.size;
-			p_jvalue->string.data = vdata;
-			break;
-		case JSON_NUMBER:
-			p_size = &p_jvalue->number.size;
-			p_jvalue->number.data = vdata;
-			break;
-		case JSON_OBJECT:
-			p_size = &p_jvalue->object.size;
-			p_jvalue->object.data = vdata;
-			break;
-		case JSON_ARRAY:
-			p_size = &p_jvalue->array.size;
-			p_jvalue->array.data = vdata;
-			break;
-	}
 
 	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
-		/*...*/
-	}
-
-	if(r == JSON_OK) {
-		if(p_size && vdata)
-			*p_size = ht_symbols(p_jcxt->p_htc,
-					(unsigned char *)vdata,
-					(unsigned char *)vdata + pos);
+		/* looking for something after ':' to (',' or '}' or ']') */
+		if(c == '"' || c == '\'') {
+			r = parse_string_value(p_jcxt, &p_jvalue->string, &c);
+			break;
+		} else if(c == '[') {
+			r = parse_array(p_jcxt, &p_jvalue->array, &c);
+			break;
+		} else if(c == '{') {
+			r = parse_object(p_jcxt, &p_jvalue->object, &c);
+			break;
+		} else if(c >= '0' && c <= '9') {
+			r = parse_number(p_jcxt, &p_jvalue->number, &c);
+			break;
+		} else if(c == ',' || c == '}' || c == ']')
+			break;
+		else if(c == ' ' || c == '\t' || c == '\n' || c == '\r')
+			;
+		else {
+			r = JSON_PARSE_ERROR;
+			p_jcxt->err_pos = pos;
+			break;
+		}
 	}
 
 	*C = c;

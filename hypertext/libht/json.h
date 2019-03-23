@@ -31,15 +31,11 @@ struct json_string {
 }__attribute__((packed));
 
 struct json_array {
-	unsigned int	size; /* data size in symbols  */
-	char		*data;
 	unsigned int	num; /* number of elements */
 	_json_value_t	**pp_values;
 }__attribute__((packed));
 
 struct json_object {
-	unsigned int	size; /* data size in symbols */
-	char		*data;
 	unsigned int	num; /* number of pairs */
 	_json_pair_t	**pp_pairs;
 }__attribute__((packed));
