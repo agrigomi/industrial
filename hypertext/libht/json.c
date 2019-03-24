@@ -324,15 +324,19 @@ static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue,
 	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
 		/* looking for something after ':' to (',' or '}' or ']') */
 		if(c == '"' || c == '\'') {
+			p_jvalue->jvt = JSON_STRING;
 			r = parse_string_value(p_jcxt, &p_jvalue->string, &c);
 			break;
 		} else if(c == '[') {
+			p_jvalue->jvt = JSON_ARRAY;
 			r = parse_array(p_jcxt, &p_jvalue->array, &c);
 			break;
 		} else if(c == '{') {
+			p_jvalue->jvt = JSON_OBJECT;
 			r = parse_object(p_jcxt, &p_jvalue->object, &c);
 			break;
 		} else if(c >= '0' && c <= '9') {
+			p_jvalue->jvt = JSON_NUMBER;
 			r = parse_number(p_jcxt, &p_jvalue->number, &c);
 			break;
 		} else if(c == ',' || c == '}' || c == ']')
