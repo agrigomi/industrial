@@ -402,8 +402,43 @@ static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue,
 
 static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb, unsigned int *C) {
 	_json_err_t r = JSON_OK;
+	unsigned int c = (C) ? *C : '{';
+	unsigned long pos = ht_position(p_jcxt->p_htc);
+	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
+	_json_pair_t jpair;
+	unsigned char flags = 0;
 
-	/*...*/
+#define JPAIR_NAME	(1<<0)
+#define JPAIR_VALUE	(1<<1)
+
+	if(c != '{') {
+		r = JSON_PARSE_ERROR;
+		p_jcxt->err_pos = pos;
+		return r;
+	}
+
+	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
+		if(!(flags & JPAIR_NAME) && !(flags & JPAIR_VALUE)) {
+			if(c == '"' || c == '\'' ||
+					(c >= 'A' && c <= 'Z') ||
+					(c >= 'a' && c <= 'z') ||
+					c == '_') {
+				flags |= JPAIR_NAME;
+				if((r = parse_string_name(p_jcxt, &jpair.name, &c)) != JSON_OK)
+					break;
+			} else if(c == ' ' || c == '\t' || c == '\n' || c == '\r')
+				;
+			else {
+				r = JSON_PARSE_ERROR;
+				p_jcxt->err_pos = pos;
+				break;
+			}
+		}
+
+		/*...*/
+	}
+
+	*C = c;
 
 	return r;
 }
