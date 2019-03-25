@@ -400,7 +400,7 @@ static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue,
 	return r;
 }
 
-static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb, unsigned int *C) {
+static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jobj, unsigned int *C) {
 	_json_err_t r = JSON_OK;
 	unsigned int c = (C) ? *C : '{';
 	unsigned long pos = ht_position(p_jcxt->p_htc);
@@ -428,14 +428,47 @@ static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb,
 					break;
 			} else if(c == ' ' || c == '\t' || c == '\n' || c == '\r')
 				;
+			else if( c == '}')
+				break;
+			else {
+				r = JSON_PARSE_ERROR;
+				p_jcxt->err_pos = pos;
+				break;
+			}
+		} else if((flags & JPAIR_NAME) && !(flags & JPAIR_VALUE)) {
+			if(c == ':') {
+				flags |= JPAIR_VALUE;
+				/* dummy read */
+				c = p_jcxt->p_htc->pf_read(p_hc, &pos);
+				if((r = parse_value(p_jcxt, &jpair.value, &c)) != JSON_OK)
+					break;
+				if(!add_object_pair(p_jcxt, p_jobj, &jpair)) {
+					r = JSON_MEMORY_ERROR;
+					break;
+				}
+
+				if(c == '}')
+					break;
+			} else if(c == ' ' || c == '\t' || c == '\n' || c == '\r')
+				;
+			else {
+				r = JSON_PARSE_ERROR;
+				p_jcxt->err_pos = pos;
+				break;
+			}
+		} else if((flags & JPAIR_NAME) && (flags & JPAIR_VALUE)) {
+			if(c == ',')
+				flags = 0;
+			else if(c == ' ' || c == '\t' || c == '\n' || c == '\r')
+				;
+			else if(c == '}')
+				break;
 			else {
 				r = JSON_PARSE_ERROR;
 				p_jcxt->err_pos = pos;
 				break;
 			}
 		}
-
-		/*...*/
 	}
 
 	*C = c;
