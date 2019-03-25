@@ -21,6 +21,13 @@ _json_context_t *json_create_context(_mem_alloc_t *pf_alloc, _mem_free_t *pf_fre
 	return r;
 }
 
+static void destroy_object(_json_context_t *p_jcxt, _json_object_t *p_jobj);
+static void destroy_array(_json_context_t *p_jcxt, _json_object_t *p_jobj);
+
+static void destroy_array(_json_context_t *p_jcxt, _json_object_t *p_jobj) {
+	/*...*/
+}
+
 static void destroy_object(_json_context_t *p_jcxt, _json_object_t *p_jobj) {
 	/*...*/
 }
