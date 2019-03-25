@@ -44,6 +44,7 @@ static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jogb,
 static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_jstr, unsigned int *C);
 static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p_jstr, unsigned int *C);
 static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum, unsigned int *C);
+static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue, unsigned int *C);
 
 static _json_err_t alloc_array_values(_json_context_t *p_jcxt, _json_array_t *p_jarray) {
 	_json_err_t r = JSON_OK;
@@ -309,19 +310,63 @@ static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p
 
 static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray, unsigned int *C) {
 	_json_err_t r = JSON_OK;
+	unsigned int c = *C;
+	unsigned long pos = ht_position(p_jcxt->p_htc);
+	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
+	_json_value_t jvalue;
 
-	/*...*/
+	if(c != '[') {
+		r = JSON_PARSE_ERROR;
+		p_jcxt->err_pos = pos;
+		return r;
+	}
+
+	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
+		memset(&jvalue, 0, sizeof(_json_value_t));
+
+		if((r = parse_value(p_jcxt, &jvalue, &c)) == JSON_OK) {
+			if(jvalue.jvt) {
+				if(jvalue.jvt == JSON_STRING && (c == '"' || c == '\''))
+					;
+				else if(jvalue.jvt == JSON_ARRAY && c == ']')
+					;
+				else if(jvalue.jvt == JSON_OBJECT && c == '}')
+					;
+				else if(jvalue.jvt == JSON_NUMBER &&
+						(c == ',' || c == ' ' || c == '\r' ||
+						 c == ']' || c == '\n' || c == '\t'))
+					;
+				else {
+					r = JSON_PARSE_ERROR;
+					p_jcxt->err_pos = ht_position(p_jcxt->p_htc);
+					break;
+				}
+				if(!add_array_value(p_jcxt, p_jarray, &jvalue)) {
+					r = JSON_MEMORY_ERROR;
+					break;
+				}
+			}
+		} else {
+			p_jcxt->err_pos = ht_position(p_jcxt->p_htc);
+			break;
+		}
+
+		if(c == ']')
+			break;
+	}
+
+	*C = c;
 
 	return r;
 }
 
 static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue, unsigned int *C) {
 	_json_err_t r = JSON_OK;
-	unsigned int c = 0;
+	unsigned int c = *C;
 	unsigned long pos = ht_position(p_jcxt->p_htc);
 	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
 
-	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
+	do {
 		/* looking for something after ':' to (',' or '}' or ']') */
 		if(c == '"' || c == '\'') {
 			p_jvalue->jvt = JSON_STRING;
@@ -348,7 +393,7 @@ static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue,
 			p_jcxt->err_pos = pos;
 			break;
 		}
-	}
+	} while((c = p_jcxt->p_htc->pf_read(p_hc, &pos)));
 
 	*C = c;
 
