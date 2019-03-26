@@ -222,7 +222,7 @@ static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum,
 	if(r == JSON_OK)
 		p_jnum->size = ht_symbols(p_jcxt->p_htc,
 					(unsigned char *)p_jnum->data,
-					(unsigned char *)p_jnum->data + pos);
+					(unsigned char *)p_hc->p_content + pos);
 	*C = c;
 
 	return r;
@@ -304,7 +304,7 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 	if(r == JSON_OK)
 		p_jstr->size = ht_symbols(p_jcxt->p_htc,
 					(unsigned char *)p_jstr->data,
-					(unsigned char *)p_jstr->data + pos);
+					(unsigned char *)p_hc->p_content + pos);
 	*C = c;
 
 	return r;
@@ -339,7 +339,7 @@ static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p
 	if(r == JSON_OK)
 		p_jstr->size = ht_symbols(p_jcxt->p_htc,
 					(unsigned char *)p_jstr->data,
-					(unsigned char *)p_jstr->data + pos);
+					(unsigned char *)p_hc->p_content + pos);
 	*C = c;
 
 	return r;
@@ -454,6 +454,8 @@ static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jobj,
 		return r;
 	}
 
+	memset(&jpair, 0, sizeof(_json_pair_t));
+
 	while((c = p_jcxt->p_htc->pf_read(p_hc, &pos))) {
 		if(!(flags & JPAIR_NAME) && !(flags & JPAIR_VALUE)) {
 			if(c == '"' || c == '\'' ||
@@ -463,7 +465,7 @@ static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jobj,
 				flags |= JPAIR_NAME;
 				if((r = parse_string_name(p_jcxt, &jpair.name, &c)) != JSON_OK)
 					break;
-			} else if(c == ' ' || c == '\t' || c == '\n' || c == '\r')
+			} else if(c == '{' || c == ' ' || c == '\t' || c == '\n' || c == '\r')
 				;
 			else if( c == '}')
 				break;
@@ -484,8 +486,7 @@ static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jobj,
 					break;
 				}
 
-				if(c == '}')
-					break;
+				memset(&jpair, 0, sizeof(_json_pair_t));
 			} else if(c == ' ' || c == '\t' || c == '\n' || c == '\r')
 				;
 			else {
@@ -494,9 +495,10 @@ static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jobj,
 				break;
 			}
 		} else if((flags & JPAIR_NAME) && (flags & JPAIR_VALUE)) {
-			if(c == ',')
+			if(c == ',') {
 				flags = 0;
-			else if(c == ' ' || c == '\t' || c == '\n' || c == '\r')
+				memset(&jpair, 0, sizeof(_json_pair_t));
+			} else if(c == ' ' || c == '\t' || c == '\n' || c == '\r')
 				;
 			else if(c == '}')
 				break;
@@ -508,7 +510,8 @@ static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jobj,
 		}
 	}
 
-	*C = c;
+	if(C)
+		*C = c;
 
 	return r;
 }
