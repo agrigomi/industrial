@@ -22,14 +22,44 @@ _json_context_t *json_create_context(_mem_alloc_t *pf_alloc, _mem_free_t *pf_fre
 }
 
 static void destroy_object(_json_context_t *p_jcxt, _json_object_t *p_jobj);
-static void destroy_array(_json_context_t *p_jcxt, _json_object_t *p_jobj);
+static void destroy_array(_json_context_t *p_jcxt, _json_array_t *p_jarray);
 
-static void destroy_array(_json_context_t *p_jcxt, _json_object_t *p_jobj) {
-	/*...*/
+static void destroy_array(_json_context_t *p_jcxt, _json_array_t *p_jarray) {
+	unsigned int i = 0;
+
+	if(p_jarray) {
+		for(; i < p_jarray->num; i++) {
+			_json_value_t *p_jvalue = p_jarray->pp_values[i];
+
+			if(p_jvalue) {
+				if(p_jvalue->jvt == JSON_ARRAY)
+					destroy_array(p_jcxt, &p_jvalue->array);
+				else if(p_jvalue->jvt == JSON_OBJECT)
+					destroy_object(p_jcxt, &p_jvalue->object);
+
+				p_jcxt->p_htc->pf_mem_free(p_jvalue, sizeof(_json_value_t));
+			}
+		}
+	}
 }
 
 static void destroy_object(_json_context_t *p_jcxt, _json_object_t *p_jobj) {
-	/*...*/
+	unsigned int i = 0;
+
+	if(p_jobj) {
+		for(; i < p_jobj->num; i++) {
+			_json_pair_t *p_jpair = p_jobj->pp_pairs[i];
+
+			if(p_jpair) {
+				if(p_jpair->value.jvt == JSON_OBJECT)
+					destroy_object(p_jcxt, &p_jpair->value.object);
+				else if(p_jpair->value.jvt == JSON_ARRAY)
+					destroy_array(p_jcxt, &p_jpair->value.array);
+
+				p_jcxt->p_htc->pf_mem_free(p_jpair, sizeof(_json_pair_t));
+			}
+		}
+	}
 }
 
 void json_reset_context(_json_context_t *p_jcxt) {
