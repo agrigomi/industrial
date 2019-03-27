@@ -462,6 +462,11 @@ static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jobj,
 				flags |= JPAIR_NAME;
 				if((r = parse_string_name(p_jcxt, &jpair.name, &c, pos)) != JSON_OK)
 					break;
+				if(c != '"' && c != '\'') {
+					r = JSON_PARSE_ERROR;
+					p_jcxt->err_pos = pos;
+					break;
+				}
 			} else if((c >= 'A' && c <= 'Z') ||
 					(c >= 'a' && c <= 'z') ||
 					c == '_') {
