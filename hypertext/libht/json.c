@@ -247,7 +247,7 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 	} else if(c == '"') {
 		flags |= STRNAME_QUOTES;
 		c = p_jcxt->p_htc->pf_read(p_hc, &pos);
-	} else if((c >= 'A' && c <= 'Z') || (c >= 'a' && c <='z'))
+	} else if((c >= 'A' && c <= 'Z') || (c >= 'a' && c <='z') || c == '_')
 		flags |= STRNAME_SYMBOL;
 	else {
 		r = JSON_PARSE_ERROR;
