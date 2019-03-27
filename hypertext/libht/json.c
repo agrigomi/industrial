@@ -495,13 +495,14 @@ _pair_value_:
 				c = p_jcxt->p_htc->pf_read(p_hc, &pos);
 				if((r = parse_value(p_jcxt, &jpair.value, &c, pos)) != JSON_OK)
 					break;
-				if(c == ',')
-					flags = 0;
 				if(!add_object_pair(p_jcxt, p_jobj, &jpair)) {
 					r = JSON_MEMORY_ERROR;
 					break;
 				}
-
+				if(c == ',')
+					flags = 0;
+				else if(c == '}')
+					break;
 				memset(&jpair, 0, sizeof(_json_pair_t));
 			} else if(c == ' ' || c == '\t' || c == '\n' || c == '\r')
 				;
