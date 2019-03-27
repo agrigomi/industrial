@@ -365,26 +365,32 @@ static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray,
 		memset(&jvalue, 0, sizeof(_json_value_t));
 
 		if((r = parse_value(p_jcxt, &jvalue, &c, pos)) == JSON_OK) {
-			if(jvalue.jvt) {
-				if(jvalue.jvt == JSON_STRING && (c == '"' || c == '\''))
-					;
-				else if(jvalue.jvt == JSON_ARRAY && c == ']')
-					;
-				else if(jvalue.jvt == JSON_OBJECT && c == '}')
-					;
-				else if(jvalue.jvt == JSON_NUMBER &&
-						(c == ',' || c == ' ' || c == '\r' ||
-						 c == ']' || c == '\n' || c == '\t'))
-					;
-				else {
-					r = JSON_PARSE_ERROR;
-					p_jcxt->err_pos = ht_position(p_jcxt->p_htc);
-					break;
-				}
-				if(!add_array_value(p_jcxt, p_jarray, &jvalue)) {
+			if(jvalue.jvt == 0 && c == ',')
+				;
+			else if(jvalue.jvt == 0 && c == ']')
+				break;
+			else if(jvalue.jvt == JSON_STRING && (c == '"' || c == '\''))
+				;
+			else if(jvalue.jvt == JSON_ARRAY && c == ']')
+				;
+			else if(jvalue.jvt == JSON_OBJECT && c == '}')
+				;
+			else if(jvalue.jvt == JSON_NUMBER &&
+					(c == ',' || c == ' ' || c == '\r' ||
+					 c == '\n' || c == '\t'))
+				;
+			else if(jvalue.jvt == JSON_NUMBER && c == ']') {
+				if(!add_array_value(p_jcxt, p_jarray, &jvalue))
 					r = JSON_MEMORY_ERROR;
-					break;
-				}
+				break;
+			} else {
+				r = JSON_PARSE_ERROR;
+				p_jcxt->err_pos = ht_position(p_jcxt->p_htc);
+				break;
+			}
+			if(!add_array_value(p_jcxt, p_jarray, &jvalue)) {
+				r = JSON_MEMORY_ERROR;
+				break;
 			}
 		} else {
 			p_jcxt->err_pos = ht_position(p_jcxt->p_htc);
@@ -478,7 +484,7 @@ static _json_err_t parse_object(_json_context_t *p_jcxt, _json_object_t *p_jobj,
 					break;
 				if(c == ':')
 					goto _pair_value_;
-			} else if(c == '{' || c == ' ' || c == '\t' || c == '\n' || c == '\r')
+			} else if(c == ',' || c == '{' || c == ' ' || c == '\t' || c == '\n' || c == '\r')
 				;
 			else if( c == '}')
 				break;
@@ -495,14 +501,34 @@ _pair_value_:
 				c = p_jcxt->p_htc->pf_read(p_hc, &pos);
 				if((r = parse_value(p_jcxt, &jpair.value, &c, pos)) != JSON_OK)
 					break;
-				if(!add_object_pair(p_jcxt, p_jobj, &jpair)) {
+				if(jpair.value.jvt == 0 && c == ',')
+					flags = 0;
+				else if(jpair.value.jvt == JSON_STRING && (c == '"' || c == '\''))
+					;
+				else if(jpair.value.jvt == JSON_ARRAY && c == ']')
+					;
+				else if(jpair.value.jvt == JSON_OBJECT && c == '}')
+					;
+				else if(jpair.value.jvt == JSON_NUMBER &&
+						(c == ' ' || c == '\r' ||
+						 c == '\n' || c == '\t'))
+					;
+				else if(jpair.value.jvt == JSON_NUMBER && c == ',')
+					flags = 0;
+				else if(jpair.value.jvt == JSON_NUMBER && c == '}') {
+					if(!add_object_pair(p_jcxt, p_jobj, &jpair))
+						r = JSON_MEMORY_ERROR;
+					break;
+				} else {
+					r = JSON_PARSE_ERROR;
+					p_jcxt->err_pos = ht_position(p_jcxt->p_htc);
+					break;
+				}
+				if(jpair.value.jvt && !add_object_pair(p_jcxt, p_jobj, &jpair)) {
 					r = JSON_MEMORY_ERROR;
 					break;
 				}
-				if(c == ',')
-					flags = 0;
-				else if(c == '}')
-					break;
+
 				memset(&jpair, 0, sizeof(_json_pair_t));
 			} else if(c == ' ' || c == '\t' || c == '\n' || c == '\r')
 				;
