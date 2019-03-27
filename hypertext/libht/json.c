@@ -174,26 +174,29 @@ _add_object_pair_:
 static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum, unsigned int *C, unsigned long cpos) {
 	_json_err_t r = JSON_OK;
 	unsigned int c = *C;
-	unsigned int _c = *C;
+	unsigned int i = 0;
 	unsigned long pos = cpos;
 	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
-	unsigned char flags = 0;
-#define NUM_DEC (1<<0)
-#define NUM_HEX	(1<<1)
+	unsigned char nt = 0;
+
+#define NUM_OCT	1
+#define NUM_DEC	2
+#define NUM_HEX	3
 
 	if(p_jnum->data == NULL)
 		p_jnum->data = (char *)p_hc->p_content + pos;
 
+	if(c == '0')
+		nt = NUM_OCT;
+
 	do {
 		if(c >= '0' && c <= '9') {
-			/* decimal digit */
-			if(c != '0')
-				flags |= NUM_DEC;
-		} else if((c == 'x' || c == 'X') && _c == '0' && !(flags & (NUM_DEC | NUM_HEX)))
-			/* expect HEX digits */
-			flags |= NUM_HEX;
+			if(!nt)
+				nt = NUM_DEC;
+		} else if((c == 'x' || c == 'X') && i == 1)
+			nt = NUM_HEX;
 		else if((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
-			if(!(flags & NUM_HEX)) {
+			if(nt != NUM_HEX) {
 				p_jcxt->err_pos = pos;
 				r = JSON_PARSE_ERROR;
 				break;
@@ -205,18 +208,18 @@ static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum,
 				c == '\r' ||
 				c == ']' ||
 				c == '}') {
-			if(flags & (NUM_HEX | NUM_DEC))
+			if(nt)
 				break;
-		} else if((c == '+' || c == '-') && !(flags & (NUM_HEX | NUM_DEC))) {
+		} else if((c == '+' || c == '-') && !nt) {
 			;
-		} else if(c == '.' && !(flags & NUM_HEX) && (flags & NUM_DEC)) {
+		} else if(c == '.' && (nt == NUM_DEC || nt == NUM_OCT)) {
 			;
 		} else {
 			p_jcxt->err_pos = pos;
 			r = JSON_PARSE_ERROR;
 			break;
 		}
-		_c = c;
+		i++;
 	} while((c = p_jcxt->p_htc->pf_read(p_hc, &pos)));
 
 	if(r == JSON_OK)
@@ -417,7 +420,7 @@ static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue,
 			p_jvalue->jvt = JSON_OBJECT;
 			r = parse_object(p_jcxt, &p_jvalue->object, &c);
 			break;
-		} else if(c >= '0' && c <= '9') {
+		} else if((c >= '0' && c <= '9') || c == '-' || c == '+' || c == '.') {
 			p_jvalue->jvt = JSON_NUMBER;
 			r = parse_number(p_jcxt, &p_jvalue->number, &c, pos);
 			break;
@@ -492,6 +495,8 @@ _pair_value_:
 				c = p_jcxt->p_htc->pf_read(p_hc, &pos);
 				if((r = parse_value(p_jcxt, &jpair.value, &c, pos)) != JSON_OK)
 					break;
+				if(c == ',')
+					flags = 0;
 				if(!add_object_pair(p_jcxt, p_jobj, &jpair)) {
 					r = JSON_MEMORY_ERROR;
 					break;
