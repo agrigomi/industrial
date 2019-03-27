@@ -114,8 +114,8 @@ static _json_err_t alloc_object_pairs(_json_context_t *p_jcxt, _json_object_t *p
 	_json_pair_t **pp_new_jp = (_json_pair_t **)p_htc->pf_mem_alloc(new_size * sizeof(_json_pair_t *));
 
 	if(pp_new_jp) {
+		memset(pp_new_jp, 0, new_size * sizeof(_json_pair_t *));
 		if(pp_old_jp) {
-			memset(pp_new_jp, 0, new_size * sizeof(_json_pair_t *));
 			/* copy to new one */
 			memcpy(pp_new_jp, pp_old_jp, p_jobj->num * sizeof(_json_pair_t *));
 			/* release old one */
