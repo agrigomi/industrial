@@ -551,9 +551,10 @@ _json_err_t json_parse(_json_context_t *p_jcxt, /* JSON context */
 
 _json_value_t *json_select(_json_context_t *p_jcxt,
 			const char *jpath,
-			_json_value_t *p_start_point, /* Can be NULL */
+			_json_object_t *p_start_point, /* Can be NULL */
 			unsigned int index) {
 	_json_value_t *r = NULL;
+	_json_object_t *p_start = (p_start_point) ? p_start_point : &p_jcxt->root;
 
 	/*...*/
 
