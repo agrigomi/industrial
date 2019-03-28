@@ -388,7 +388,7 @@ static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray,
 				p_jcxt->err_pos = ht_position(p_jcxt->p_htc);
 				break;
 			}
-			if(!add_array_value(p_jcxt, p_jarray, &jvalue)) {
+			if(jvalue.jvt && !add_array_value(p_jcxt, p_jarray, &jvalue)) {
 				r = JSON_MEMORY_ERROR;
 				break;
 			}
