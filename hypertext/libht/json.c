@@ -567,6 +567,7 @@ _json_err_t json_parse(_json_context_t *p_jcxt, /* JSON context */
 	_json_err_t r = JSON_OK;
 
 	if(p_jcxt->p_htc) {
+		json_reset_context(p_jcxt);
 		ht_init_context(p_jcxt->p_htc, (void *)p_content, content_size);
 		r = parse_object(p_jcxt, &p_jcxt->root, NULL);
 	} else
