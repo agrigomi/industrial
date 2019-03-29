@@ -582,8 +582,12 @@ _json_value_t *json_select(_json_context_t *p_jcxt,
 			unsigned int index) {
 	_json_value_t *r = NULL;
 	_json_object_t *p_start = (p_start_point) ? p_start_point : &p_jcxt->root;
+	unsigned int i = 0;
+	unsigned int l = strlen(jpath);
 
-	/*...*/
+	for(; i < l; i++) {
+		/*...*/
+	}
 
 	return r;
 }
