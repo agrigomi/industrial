@@ -576,6 +576,22 @@ _json_err_t json_parse(_json_context_t *p_jcxt, /* JSON context */
 	return r;
 }
 
+static _json_value_t *object_pair_by_name(_json_object_t *p_jobj, const char *name, unsigned int sz_name) {
+	_json_value_t *r = NULL;
+
+	/* ... */
+
+	return r;
+}
+
+static _json_value_t *array_element_by_index(_json_array_t *p_jarray, unsigned int index) {
+	_json_value_t *r = NULL;
+
+	/* ... */
+
+	return r;
+}
+
 _json_value_t *json_select(_json_context_t *p_jcxt,
 			const char *jpath,
 			_json_object_t *p_start_point, /* Can be NULL */
