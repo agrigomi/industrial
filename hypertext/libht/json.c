@@ -578,8 +578,19 @@ _json_err_t json_parse(_json_context_t *p_jcxt, /* JSON context */
 
 static _json_value_t *object_pair_by_name(_json_object_t *p_jobj, const char *name, unsigned int sz_name) {
 	_json_value_t *r = NULL;
+	unsigned int i = 0;
+	_json_pair_t *p_jpair = NULL;
 
-	/* ... */
+	for(; i < p_jobj->num; i++) {
+		if((p_jpair = p_jobj->pp_pairs[i])) {
+			if(p_jpair->name.size == sz_name && p_jpair->name.data) {
+				if(memcmp(p_jpair->name.data, name, sz_name) == 0) {
+					r = &p_jpair->value;
+					break;
+				}
+			}
+		}
+	}
 
 	return r;
 }
@@ -587,7 +598,8 @@ static _json_value_t *object_pair_by_name(_json_object_t *p_jobj, const char *na
 static _json_value_t *array_element_by_index(_json_array_t *p_jarray, unsigned int index) {
 	_json_value_t *r = NULL;
 
-	/* ... */
+	if(index < p_jarray->num)
+		r = p_jarray->pp_values[index];
 
 	return r;
 }
