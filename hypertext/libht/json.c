@@ -193,7 +193,7 @@ static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum,
 		if(c >= '0' && c <= '9') {
 			if(!nt)
 				nt = NUM_DEC;
-		} else if((c == 'x' || c == 'X') && i == 1)
+		} else if((c == 'x' || c == 'X') && i == 1 && nt == NUM_OCT)
 			nt = NUM_HEX;
 		else if((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
 			if(nt != NUM_HEX) {
