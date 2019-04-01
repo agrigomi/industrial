@@ -620,13 +620,31 @@ _json_value_t *json_select(_json_context_t *p_jcxt,
 	for(; i < l; i++) {
 		c = *(jpath + i);
 
-		if(c == '.' || c == '/' || c == 0) {
-			/* ... */
+		if(c == '.' || c == '/') {
+			if(str) {
+				if((tmp = object_pair_by_name(p_jcxt->p_htc, p_start, str, sz)))
+					/* ... */;
+				else
+					break;
+			}
 
 			sz = 0;
 			str = NULL;
+		} else if(c == 0) {
+			if(str)
+				r = object_pair_by_name(p_jcxt->p_htc, p_start, str, sz);
+			else if(tmp)
+				r = tmp;
+
+			break;
 		} else if(c == '[') {
-			/* ... */
+			if(str) {
+				if((tmp = object_pair_by_name(p_jcxt->p_htc, p_start, str, sz)))
+					/* ... */;
+				else
+					break;
+			} else
+				break;
 
 			str = NULL;
 			sz = 0;
