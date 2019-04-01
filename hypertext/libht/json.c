@@ -576,7 +576,7 @@ _json_err_t json_parse(_json_context_t *p_jcxt, /* JSON context */
 	return r;
 }
 
-static _json_value_t *object_pair_by_name(_json_object_t *p_jobj, const char *name, unsigned int sz_name) {
+static _json_value_t *object_pair_by_name(_ht_context_t *p_htc, _json_object_t *p_jobj, const char *name, unsigned int sz_name) {
 	_json_value_t *r = NULL;
 	unsigned int i = 0;
 	_json_pair_t *p_jpair = NULL;
@@ -584,7 +584,7 @@ static _json_value_t *object_pair_by_name(_json_object_t *p_jobj, const char *na
 	for(; i < p_jobj->num; i++) {
 		if((p_jpair = p_jobj->pp_pairs[i])) {
 			if(p_jpair->name.size == sz_name && p_jpair->name.data) {
-				if(memcmp(p_jpair->name.data, name, sz_name) == 0) {
+				if(ht_compare(p_htc, (unsigned char *)p_jpair->name.data, (unsigned char *)name, sz_name) == 0) {
 					r = &p_jpair->value;
 					break;
 				}
@@ -609,12 +609,41 @@ _json_value_t *json_select(_json_context_t *p_jcxt,
 			_json_object_t *p_start_point, /* Can be NULL */
 			unsigned int index) {
 	_json_value_t *r = NULL;
+	_json_value_t *tmp = NULL;
 	_json_object_t *p_start = (p_start_point) ? p_start_point : &p_jcxt->root;
 	unsigned int i = 0;
-	unsigned int l = strlen(jpath);
+	unsigned int l = strlen(jpath) + i;
+	const char *str = NULL;
+	unsigned int sz = 0;
+	char c = 0, _c = 0;
 
 	for(; i < l; i++) {
-		/*...*/
+		c = *(jpath + i);
+
+		if(c == '.' || c == '/' || c == 0) {
+			/* ... */
+
+			sz = 0;
+			str = NULL;
+		} else if(c == '[') {
+			/* ... */
+
+			str = NULL;
+			sz = 0;
+		} else if(c == ']') {
+			/* ... */
+
+			str = NULL;
+			sz = 0;
+		} else if(c >= '0' && c <= '9') {
+			/* ... */
+		} else {
+			if(!str)
+				str = jpath + i;
+			sz++;
+		}
+
+		_c = c;
 	}
 
 	return r;
