@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include "json.h"
 
 #define INITIAL_SIZE	16
@@ -365,7 +366,9 @@ static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray,
 		memset(&jvalue, 0, sizeof(_json_value_t));
 
 		if((r = parse_value(p_jcxt, &jvalue, &c, pos)) == JSON_OK) {
-			if(jvalue.jvt == 0 && c == ',')
+			if(jvalue.jvt == 0 &&
+					(c == ',' || c == ' ' || c == '\r' ||
+					 c == '\n' || c == '\t'))
 				;
 			else if(jvalue.jvt == 0 && c == ']')
 				break;
@@ -650,13 +653,22 @@ _json_value_t *json_select(_json_context_t *p_jcxt,
 			str = NULL;
 			sz = 0;
 		} else if(c == ']') {
-			/* ... */
+			if(str && tmp->jvt == JSON_ARRAY) {
+				unsigned int aidx = atoi(str);
+
+				if((tmp = array_element_by_index(&tmp->array, aidx))) {
+					if(tmp->jvt == JSON_OBJECT)
+						p_start = &tmp->object;
+					else {
+						r = tmp;
+						break;
+					}
+				}
+			}
 
 			str = NULL;
 			sz = 0;
-		} else if(c >= '0' && c <= '9') {
-			/* ... */
-		if(c < 0x20)
+		} else if(c < 0x20) {
 			;
 		} else {
 			if(!str)
