@@ -612,19 +612,20 @@ _json_value_t *json_select(_json_context_t *p_jcxt,
 	_json_value_t *tmp = NULL;
 	_json_object_t *p_start = (p_start_point) ? p_start_point : &p_jcxt->root;
 	unsigned int i = 0;
-	unsigned int l = strlen(jpath) + i;
+	unsigned int l = strlen(jpath) + 1;
 	const char *str = NULL;
 	unsigned int sz = 0;
-	char c = 0, _c = 0;
+	char c = 0;
 
 	for(; i < l; i++) {
 		c = *(jpath + i);
 
 		if(c == '.' || c == '/') {
 			if(str) {
-				if((tmp = object_pair_by_name(p_jcxt->p_htc, p_start, str, sz)))
-					/* ... */;
-				else
+				if((tmp = object_pair_by_name(p_jcxt->p_htc, p_start, str, sz))) {
+					if(tmp->jvt == JSON_OBJECT)
+						p_start = &tmp->object;
+				} else
 					break;
 			}
 
@@ -635,13 +636,13 @@ _json_value_t *json_select(_json_context_t *p_jcxt,
 				r = object_pair_by_name(p_jcxt->p_htc, p_start, str, sz);
 			else if(tmp)
 				r = tmp;
-
 			break;
 		} else if(c == '[') {
 			if(str) {
-				if((tmp = object_pair_by_name(p_jcxt->p_htc, p_start, str, sz)))
-					/* ... */;
-				else
+				if((tmp = object_pair_by_name(p_jcxt->p_htc, p_start, str, sz))) {
+					if(tmp->jvt != JSON_ARRAY)
+						break;
+				} else
 					break;
 			} else
 				break;
@@ -655,13 +656,13 @@ _json_value_t *json_select(_json_context_t *p_jcxt,
 			sz = 0;
 		} else if(c >= '0' && c <= '9') {
 			/* ... */
+		if(c < 0x20)
+			;
 		} else {
 			if(!str)
 				str = jpath + i;
 			sz++;
 		}
-
-		_c = c;
 	}
 
 	return r;
