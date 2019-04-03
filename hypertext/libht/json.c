@@ -680,3 +680,25 @@ _json_value_t *json_select(_json_context_t *p_jcxt,
 	return r;
 }
 
+_json_value_t *json_array_element(_json_array_t *p_jarray, unsigned int index) {
+	return array_element_by_index(p_jarray, index);
+}
+
+_json_pair_t *json_object_pair(_json_object_t *p_jobj, unsigned int index) {
+	_json_pair_t *r = NULL;
+
+	if(index < p_jobj->num)
+		r = p_jobj->pp_pairs[index];
+
+	return r;
+}
+
+_json_value_t *json_object_value(_json_object_t *p_jobj, unsigned int index) {
+	_json_value_t *r = NULL;
+	_json_pair_t *p_jpair = json_object_pair(p_jobj, index);
+
+	if(p_jpair)
+		r = &p_jpair->value;
+
+	return r;
+}

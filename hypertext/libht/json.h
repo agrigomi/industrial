@@ -79,7 +79,9 @@ _json_value_t *json_select(_json_context_t *p_jcxt,
 			const char *jpath,
 			_json_object_t *p_start_point /* Can be NULL */
 			);
-/*...*/
+_json_value_t *json_array_element(_json_array_t *p_jarray, unsigned int index);
+_json_pair_t *json_object_pair(_json_object_t *p_jobj, unsigned int index);
+_json_value_t *json_object_value(_json_object_t *p_jobj, unsigned int index);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
