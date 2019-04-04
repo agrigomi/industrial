@@ -4,13 +4,13 @@
 #include "iBase.h"
 
 #define I_XML	"iXML"
+#define I_JSON	"iJSON"
 
 #define HTCONTEXT	void*
-#define HTTAG		void*
 
-class iXML:public iBase {
+class iHT: public iBase {
 public:
-	INTERFACE(iXML, I_XML);
+	INTERFACE(iHT, "iHT");
 	// Create parser context
 	virtual HTCONTEXT create_context(void)=0;
 	// destroy parser context
@@ -20,6 +20,13 @@ public:
 			_cstr_t, // Content of hypertext
 			_ulong // Size of hypertext content
 			)=0;
+};
+
+#define HTTAG		void*
+
+class iXML:public iHT {
+public:
+	INTERFACE(iXML, I_XML);
 	// Select hypertext tag
 	virtual HTTAG select(HTCONTEXT, // parser context
 			_cstr_t xpath, // path to tag (or NULL for inddex only enumeration)
@@ -46,6 +53,11 @@ public:
 			_str_t, // string 2
 			_u32 // size
 			)=0;
+};
+
+class iJSON: public iHT {
+public:
+	INTERFACE(iJSON, I_JSON);
 };
 
 #endif
