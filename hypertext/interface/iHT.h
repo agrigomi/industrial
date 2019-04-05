@@ -57,7 +57,7 @@ public:
 };
 
 // JSON value types
-#define JVY_STRING	1
+#define JVT_STRING	1
 #define JVT_NUMBER	2
 #define JVT_OBJECT	3
 #define JVT_ARRAY	4
@@ -75,9 +75,12 @@ public:
 				HTVALUE start // Start point (can be NULL)
 				)=0;
 	virtual _u8 type(HTVALUE)=0;
-	virtual _cstr_t data(HTVALUE, _u32 *)=0; // for JVT_STRING and JVT_NUMBER only
-	virtual HTVALUE by_index(HTVALUE, _u32)=0; // for JVT_ARRAY and JVT_OBJECT only
-	virtual HTVALUE by_name(HTCONTEXT, HTVALUE, _cstr_t)=0; // for JVT_OBJECT only
+	virtual _cstr_t data(HTVALUE, // value handle
+			_u32 * // [out] size
+			)=0; // for JVT_STRING and JVT_NUMBER only
+	virtual HTVALUE by_index(HTVALUE, // value handle
+				 _u32 // index
+				 )=0; // for JVT_ARRAY and JVT_OBJECT only
 };
 
 #endif
