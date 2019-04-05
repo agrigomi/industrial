@@ -30,14 +30,14 @@ public:
 
 	// Create parser context
 	HTCONTEXT create_context(void) {
-		_json_context_t *r = json_create_context([](_u32 size, void *udata)->void* {
+		_json_context_t *r = json_create_context([](_u32 size, void *udata)->void* { // alloc
 			void *r = 0;
 			cJSON *pobj = (cJSON *)udata;
 
 			if(pobj->mpi_heap)
 				r = pobj->mpi_heap->alloc(size);
 			return r;
-		}, [](void *ptr, _u32 size, void *udata) {
+		}, [](void *ptr, _u32 size, void *udata) { // free
 			cJSON *pobj = (cJSON *)udata;
 
 			if(pobj->mpi_heap)

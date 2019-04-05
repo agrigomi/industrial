@@ -28,6 +28,7 @@ public:
 			)=0;
 };
 
+// XML tag handle
 #define HTTAG		void*
 
 class iXML:public iHT {
@@ -55,12 +56,28 @@ public:
 			)=0;
 };
 
+// JSON value types
+#define JVY_STRING	1
+#define JVT_NUMBER	2
+#define JVT_OBJECT	3
+#define JVT_ARRAY	4
+
+// JSON value handle
+#define HTVALUE		void*
 
 /* JSON value types */
 class iJSON: public iHT {
 public:
 	INTERFACE(iJSON, I_JSON);
 	// Select value
+	virtual HTVALUE select(HTCONTEXT,
+				_cstr_t jpath, // path to value
+				HTVALUE start // Start point (can be NULL)
+				)=0;
+	virtual _u8 type(HTVALUE)=0;
+	virtual _cstr_t data(HTVALUE, _u32 *)=0; // for JVT_STRING and JVT_NUMBER only
+	virtual HTVALUE by_index(HTVALUE, _u32)=0; // for JVT_ARRAY and JVT_OBJECT only
+	virtual HTVALUE by_name(HTCONTEXT, HTVALUE, _cstr_t)=0; // for JVT_OBJECT only
 };
 
 #endif
