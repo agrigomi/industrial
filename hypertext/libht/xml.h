@@ -50,13 +50,14 @@ typedef struct {
 	_tag_def_t	**pp_tdef;	/* array of tag_definitions */
 	unsigned int	num_tdefs;	/* number of tag definitions */
 	unsigned long	err_pos;	/* error position */
+	void		*udata;
 } _xml_context_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 /* allocate memory for XML context */
-_xml_context_t *xml_create_context(_mem_alloc_t *, _mem_free_t *);
+_xml_context_t *xml_create_context(_mem_alloc_t *, _mem_free_t *, void *);
 /* parse XML content */
 _xml_err_t xml_parse(_xml_context_t *p_xc, /* XML context */
 			unsigned char *p_xml_content, /* XML content */

@@ -3,15 +3,15 @@
 #include "iHT.h"
 #include "xml.h"
 
-static void *_mem_alloc(unsigned int);
-static void _mem_free(void *, unsigned int);
+static void *_mem_alloc(unsigned int, void *);
+static void _mem_free(void *, unsigned int, void *);
 
 class cXML: public iXML {
 private:
 	iHeap *mpi_heap;
 
-	friend void *_mem_alloc(unsigned int);
-	friend void _mem_free(void *, unsigned int);
+	friend void *_mem_alloc(unsigned int, void *);
+	friend void _mem_free(void *, unsigned int, void *);
 public:
 	BASE(cXML, "cXML", RF_ORIGINAL, 1,0,0);
 
@@ -39,7 +39,7 @@ public:
 	}
 
 	HTCONTEXT create_context(void) {
-		return xml_create_context(_mem_alloc, _mem_free);
+		return xml_create_context(_mem_alloc, _mem_free, this);
 	}
 
 	void destroy_context(HTCONTEXT hc) {
@@ -82,7 +82,7 @@ public:
 
 static cXML _g_xml_;
 
-static void *_mem_alloc(unsigned int sz) {
+static void *_mem_alloc(unsigned int sz, void *udata) {
 	void *r = NULL;
 
 	if(_g_xml_.mpi_heap)
@@ -91,7 +91,7 @@ static void *_mem_alloc(unsigned int sz) {
 	return r;
 }
 
-static void _mem_free(void *ptr, unsigned int sz) {
+static void _mem_free(void *ptr, unsigned int sz, void *udata) {
 	if(_g_xml_.mpi_heap)
 		_g_xml_.mpi_heap->free(ptr, sz);
 }

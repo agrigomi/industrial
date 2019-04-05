@@ -18,8 +18,8 @@ typedef struct { /* hypertext content info. */
 	unsigned char	machine_order;
 } _ht_content_t;
 
-typedef void *_mem_alloc_t(unsigned int nbytes);
-typedef void _mem_free_t(void *ptr, unsigned int nbytes);
+typedef void *_mem_alloc_t(unsigned int nbytes, void *udata);
+typedef void _mem_free_t(void *ptr, unsigned int nbytes, void *udata);
 typedef unsigned int _read_t(_ht_content_t *p_ht_content, unsigned long *pos);
 
 typedef struct { /* context of hypertext parser */
@@ -27,13 +27,14 @@ typedef struct { /* context of hypertext parser */
 	_mem_alloc_t	*pf_mem_alloc; /* pinter to memory allocation */
 	_mem_free_t	*pf_mem_free; /* pointer to memory free */
 	_read_t		*pf_read; /* pointer to read symbol */
+	void		*udata;
 } _ht_context_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 /* allocate memory for hypertext context */
-_ht_context_t *ht_create_context(_mem_alloc_t *, _mem_free_t *);
+_ht_context_t *ht_create_context(_mem_alloc_t *, _mem_free_t *, void *);
 /* initialize context with content and size of hypertext */
 void ht_init_context(_ht_context_t *, void *, unsigned long);
 /* Reset context */

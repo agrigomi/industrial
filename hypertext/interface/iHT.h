@@ -55,29 +55,12 @@ public:
 			)=0;
 };
 
+
 /* JSON value types */
-#define JVT_STRING	1
-#define JVT_NUMBER	2
-#define JVT_OBJECT	3
-#define JVT_ARRAY	4
-
-typedef struct i_json_value _i_json_value_t;
-
-struct i_json_value {
-	virtual _u8 type(void)=0; // returns JASON value type
-	virtual _i_json_value_t *by_index(_u32 index)=0; // for arrays and objects
-	virtual _cstr_t data(_u32 *size)=0; // for strings and numbers
-};
-
 class iJSON: public iHT {
 public:
 	INTERFACE(iJSON, I_JSON);
 	// Select value
-	virtual _i_json_value_t *select(HTCONTEXT, // parser context
-					_cstr_t jpath, // path to value
-					_i_json_value_t * // start point JVT_OBJECT only (can be NULL)
-					)=0;
-	virtual _i_json_value_t *root(HTCONTEXT)=0; // returns ROOT object (JVT_OBJECT)
 };
 
 #endif

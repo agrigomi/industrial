@@ -4,18 +4,20 @@
 
 #define INITIAL_SIZE	16
 
-_json_context_t *json_create_context(_mem_alloc_t *pf_alloc, _mem_free_t *pf_free) {
+_json_context_t *json_create_context(_mem_alloc_t *pf_alloc, _mem_free_t *pf_free, void *udata) {
 	_json_context_t *r = NULL;
 
 	if(pf_alloc && pf_free) {
-		if((r = (_json_context_t *)pf_alloc(sizeof(_json_context_t)))) {
+		if((r = (_json_context_t *)pf_alloc(sizeof(_json_context_t), udata))) {
 			memset(r, 0, sizeof(_json_context_t));
 
 			/* create hypertext context */
-			if(!(r->p_htc = ht_create_context(pf_alloc, pf_free))) {
-				pf_free(r, sizeof(_json_context_t));
+			if(!(r->p_htc = ht_create_context(pf_alloc, pf_free, udata))) {
+				pf_free(r, sizeof(_json_context_t), udata);
 				r = NULL;
 			}
+
+			r->udata = udata;
 		}
 	}
 
@@ -38,7 +40,7 @@ static void destroy_array(_json_context_t *p_jcxt, _json_array_t *p_jarray) {
 				else if(p_jvalue->jvt == JSON_OBJECT)
 					destroy_object(p_jcxt, &p_jvalue->object);
 
-				p_jcxt->p_htc->pf_mem_free(p_jvalue, sizeof(_json_value_t));
+				p_jcxt->p_htc->pf_mem_free(p_jvalue, sizeof(_json_value_t), p_jcxt->udata);
 			}
 		}
 	}
@@ -57,7 +59,7 @@ static void destroy_object(_json_context_t *p_jcxt, _json_object_t *p_jobj) {
 				else if(p_jpair->value.jvt == JSON_ARRAY)
 					destroy_array(p_jcxt, &p_jpair->value.array);
 
-				p_jcxt->p_htc->pf_mem_free(p_jpair, sizeof(_json_pair_t));
+				p_jcxt->p_htc->pf_mem_free(p_jpair, sizeof(_json_pair_t), p_jcxt->udata);
 			}
 		}
 	}
@@ -72,7 +74,7 @@ void json_destroy_context(_json_context_t *p_jcxt) {
 	_ht_context_t *p_htc = p_jcxt->p_htc;
 
 	destroy_object(p_jcxt, &p_jcxt->root);
-	p_htc->pf_mem_free(p_jcxt, sizeof(_json_context_t));
+	p_htc->pf_mem_free(p_jcxt, sizeof(_json_context_t), p_jcxt->udata);
 	ht_destroy_context(p_htc);
 }
 
@@ -89,7 +91,7 @@ static _json_err_t alloc_array_values(_json_context_t *p_jcxt, _json_array_t *p_
 	_ht_context_t *p_htc = p_jcxt->p_htc;
 	_json_value_t **pp_old_jv = p_jarray->pp_values;
 	unsigned int new_size = p_jarray->num + INITIAL_SIZE;
-	_json_value_t **pp_new_jv = (_json_value_t **)p_jcxt->p_htc->pf_mem_alloc(new_size * sizeof(_json_value_t *));
+	_json_value_t **pp_new_jv = (_json_value_t **)p_jcxt->p_htc->pf_mem_alloc(new_size * sizeof(_json_value_t *), p_jcxt->udata);
 
 	if(pp_new_jv) {
 		memset(pp_new_jv, 0, new_size * sizeof(_json_value_t *));
@@ -97,7 +99,7 @@ static _json_err_t alloc_array_values(_json_context_t *p_jcxt, _json_array_t *p_
 			/* copy to new one */
 			memcpy(pp_new_jv, pp_old_jv, p_jarray->num * sizeof(_json_value_t *));
 			/* release old one */
-			p_htc->pf_mem_free(pp_old_jv, p_jarray->num * sizeof(_json_value_t *));
+			p_htc->pf_mem_free(pp_old_jv, p_jarray->num * sizeof(_json_value_t *), p_jcxt->udata);
 		}
 		p_jarray->num = new_size;
 		p_jarray->pp_values = pp_new_jv;
@@ -112,7 +114,7 @@ static _json_err_t alloc_object_pairs(_json_context_t *p_jcxt, _json_object_t *p
 	_ht_context_t *p_htc = p_jcxt->p_htc;
 	_json_pair_t **pp_old_jp = p_jobj->pp_pairs;
 	unsigned int new_size = p_jobj->num + INITIAL_SIZE;
-	_json_pair_t **pp_new_jp = (_json_pair_t **)p_htc->pf_mem_alloc(new_size * sizeof(_json_pair_t *));
+	_json_pair_t **pp_new_jp = (_json_pair_t **)p_htc->pf_mem_alloc(new_size * sizeof(_json_pair_t *), p_jcxt->udata);
 
 	if(pp_new_jp) {
 		memset(pp_new_jp, 0, new_size * sizeof(_json_pair_t *));
@@ -120,7 +122,7 @@ static _json_err_t alloc_object_pairs(_json_context_t *p_jcxt, _json_object_t *p
 			/* copy to new one */
 			memcpy(pp_new_jp, pp_old_jp, p_jobj->num * sizeof(_json_pair_t *));
 			/* release old one */
-			p_htc->pf_mem_free(pp_old_jp, p_jobj->num * sizeof(_json_pair_t *));
+			p_htc->pf_mem_free(pp_old_jp, p_jobj->num * sizeof(_json_pair_t *), p_jcxt->udata);
 		}
 		p_jobj->num = new_size;
 		p_jobj->pp_pairs = pp_new_jp;
@@ -137,7 +139,7 @@ static _json_value_t *add_array_value(_json_context_t *p_jcxt, _json_array_t *p_
 _add_array_value_:
 	for(; i < p_jarray->num; i++) {
 		if(p_jarray->pp_values[i] == NULL) {
-			if((p_jarray->pp_values[i] = r = p_jcxt->p_htc->pf_mem_alloc(sizeof(_json_value_t))))
+			if((p_jarray->pp_values[i] = r = p_jcxt->p_htc->pf_mem_alloc(sizeof(_json_value_t), p_jcxt->udata)))
 				memcpy(r, p_jvalue, sizeof(_json_value_t));
 			break;
 		}
@@ -158,7 +160,7 @@ static _json_pair_t *add_object_pair(_json_context_t *p_jcxt, _json_object_t *p_
 _add_object_pair_:
 	for(; i < p_jobj->num; i++) {
 		if(p_jobj->pp_pairs[i] == NULL) {
-			if((p_jobj->pp_pairs[i] = r = p_jcxt->p_htc->pf_mem_alloc(sizeof(_json_pair_t))))
+			if((p_jobj->pp_pairs[i] = r = p_jcxt->p_htc->pf_mem_alloc(sizeof(_json_pair_t), p_jcxt->udata)))
 				memcpy(r, p_jpair, sizeof(_json_pair_t));
 			break;
 		}

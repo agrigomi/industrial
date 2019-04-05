@@ -53,6 +53,19 @@ _err_t main(int argc, char *argv[]) {
 		pi_repo->extension_load("extnet.so");
 		pi_repo->extension_load("extgatn.so");
 
+		iJSON *pi_json = (iJSON *)_gpi_repo_->object_by_iname(I_JSON, RF_ORIGINAL);
+
+		if(pi_json) {
+			HTCONTEXT htc = pi_json->create_context();
+			_char_t *json = "{ v1: 123, v2: { _v1: 456}}";
+			if(pi_json->parse(htc, json, strlen(json))) {
+			//	_i_json_value_t *v2 = pi_json->select(htc, "v1.v2", 0);
+			//	_u8 jvt = v2->type();
+				asm("nop");
+			}
+
+		}
+
 		iGatn *pi_gatn = (iGatn *)pi_repo->object_by_iname(I_GATN, RF_ORIGINAL);
 		if(pi_gatn) {
 			_server_t *p_srv = pi_gatn->create_server("gatn-1 (proholic)", 8081, "../test/original", "/tmp");

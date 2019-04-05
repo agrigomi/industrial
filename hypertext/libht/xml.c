@@ -20,18 +20,20 @@
 #define PI		2048	/* <? */
 
 /* allocate memory for XML context */
-_xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free) {
+_xml_context_t *xml_create_context(_mem_alloc_t *p_malloc, _mem_free_t *p_free, void *udata) {
 	_xml_context_t *r = NULL;
 
 	if(p_malloc && p_free) {
-		if((r = p_malloc(sizeof(_xml_context_t)))) {
+		if((r = p_malloc(sizeof(_xml_context_t), udata))) {
 			memset(r, 0, sizeof(_xml_context_t));
 
 			/* create hypertext context */
-			if(!(r->p_htc = ht_create_context(p_malloc, p_free))) {
-				p_free(r, sizeof(_xml_context_t));
+			if(!(r->p_htc = ht_create_context(p_malloc, p_free, udata))) {
+				p_free(r, sizeof(_xml_context_t), udata);
 				r = NULL;
 			}
+
+			r->udata = udata;
 		}
 	}
 
@@ -76,34 +78,34 @@ _find_empty_:
 			if(n == p_parent->num_childs) {
 				/* the tag list must be expanded */
 				unsigned int size = p_parent->num_childs + INITIAL_TAG_LIST;
-				_ht_tag_t **pp_new_list = p_xc->p_htc->pf_mem_alloc(size * sizeof(_ht_tag_t *));
+				_ht_tag_t **pp_new_list = p_xc->p_htc->pf_mem_alloc(size * sizeof(_ht_tag_t *), p_xc->udata);
 
 				if(pp_new_list) {
 					memset(pp_new_list, 0, size * sizeof(_ht_tag_t *));
 					memcpy(pp_new_list, p_parent->pp_childs, p_parent->num_childs * sizeof(_ht_tag_t *));
-					p_xc->p_htc->pf_mem_free(p_parent->pp_childs, p_parent->num_childs * sizeof(_ht_tag_t *));
+					p_xc->p_htc->pf_mem_free(p_parent->pp_childs, p_parent->num_childs * sizeof(_ht_tag_t *), p_xc->udata);
 					p_parent->pp_childs = pp_new_list;
 					p_parent->num_childs = size;
 					goto _find_empty_;
 				}
 			} else {
 				/* alloc tag in position n of parent list */
-				if((r = p_parent->pp_childs[n] = p_xc->p_htc->pf_mem_alloc(sizeof(_ht_tag_t))))
+				if((r = p_parent->pp_childs[n] = p_xc->p_htc->pf_mem_alloc(sizeof(_ht_tag_t), p_xc->udata)))
 					memset(r, 0, sizeof(_ht_tag_t));
 			}
 		} else {
 			/* alloc tag list */
-			if((p_parent->pp_childs = p_xc->p_htc->pf_mem_alloc(INITIAL_TAG_LIST * sizeof(_ht_tag_t *)))) {
+			if((p_parent->pp_childs = p_xc->p_htc->pf_mem_alloc(INITIAL_TAG_LIST * sizeof(_ht_tag_t *), p_xc->udata))) {
 				memset(p_parent->pp_childs, 0, INITIAL_TAG_LIST * sizeof(_ht_tag_t *));
 				p_parent->num_childs = INITIAL_TAG_LIST;
 				/* alloc tag in position 0 of parent list */
-				if((r = p_parent->pp_childs[0] = p_xc->p_htc->pf_mem_alloc(sizeof(_ht_tag_t))))
+				if((r = p_parent->pp_childs[0] = p_xc->p_htc->pf_mem_alloc(sizeof(_ht_tag_t), p_xc->udata)))
 					memset(r, 0, sizeof(_ht_tag_t));
 			}
 		}
 	} else {
 		/* alloc tag */
-		if((r = p_xc->p_htc->pf_mem_alloc(sizeof(_ht_tag_t))))
+		if((r = p_xc->p_htc->pf_mem_alloc(sizeof(_ht_tag_t), p_xc->udata)))
 			memset(r, 0, sizeof(_ht_tag_t));
 	}
 
@@ -572,12 +574,12 @@ static void xml_destroy_tag(_xml_context_t *p_xc, _ht_tag_t *p_tag) {
 		if(p_tag->pp_childs[i]) {
 			xml_destroy_tag(p_xc, p_tag->pp_childs[i]);
 			/* deallocate child tag */
-			p_xc->p_htc->pf_mem_free(p_tag->pp_childs[i], sizeof(_ht_tag_t));
+			p_xc->p_htc->pf_mem_free(p_tag->pp_childs[i], sizeof(_ht_tag_t), p_xc->udata);
 		}
 	}
 
 	/* deallocate array for child tags */
-	p_xc->p_htc->pf_mem_free(p_tag->pp_childs, p_tag->num_childs * sizeof(_ht_tag_t *));
+	p_xc->p_htc->pf_mem_free(p_tag->pp_childs, p_tag->num_childs * sizeof(_ht_tag_t *), p_xc->udata);
 }
 
 void xml_destroy_context(_xml_context_t *p_xc) {
@@ -587,10 +589,10 @@ void xml_destroy_context(_xml_context_t *p_xc) {
 		xml_destroy_tag(p_xc, p_xc->p_root);
 
 	if(p_xc->pp_tdef) /* release tag definitions */
-		p_htc->pf_mem_free(p_xc->pp_tdef, p_xc->num_tdefs * sizeof(_tag_def_t *));
+		p_htc->pf_mem_free(p_xc->pp_tdef, p_xc->num_tdefs * sizeof(_tag_def_t *), p_xc->udata);
 
 	/* deallocate XML context */
-	p_htc->pf_mem_free(p_xc, sizeof(_xml_context_t));
+	p_htc->pf_mem_free(p_xc, sizeof(_xml_context_t), p_xc->udata);
 	/* destroy hypertext context */
 	ht_destroy_context(p_htc);
 }
@@ -608,13 +610,13 @@ void xml_add_tdef(_xml_context_t *p_xc, /* XML context */
 	if(i == p_xc->num_tdefs) {
 		/* need to expand */
 		unsigned int new_blen = (INITIAL_TDEF_ARRAY + p_xc->num_tdefs) * sizeof(_tag_def_t *);
-		_tag_def_t **p_new = p_xc->p_htc->pf_mem_alloc(new_blen);
+		_tag_def_t **p_new = p_xc->p_htc->pf_mem_alloc(new_blen, p_xc->udata);
 
 		if(p_new) {
 			memset(p_new, 0, new_blen);
 			if(p_xc->pp_tdef) {
 				memcpy(p_new, p_xc->pp_tdef, p_xc->num_tdefs * sizeof(_tag_def_t *));
-				p_xc->p_htc->pf_mem_free(p_xc->pp_tdef, p_xc->num_tdefs * sizeof(_tag_def_t *));
+				p_xc->p_htc->pf_mem_free(p_xc->pp_tdef, p_xc->num_tdefs * sizeof(_tag_def_t *), p_xc->udata);
 			}
 
 			p_xc->pp_tdef = p_new;

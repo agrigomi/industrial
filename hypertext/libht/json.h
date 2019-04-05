@@ -59,13 +59,14 @@ typedef struct {
 	_ht_context_t	*p_htc; /* hypertext context */
 	_json_object_t	root; /* root object */
 	unsigned long	err_pos; /* error position */
+	void		*udata;
 }_json_context_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 /* Allocate memory for new JSON context */
-_json_context_t *json_create_context(_mem_alloc_t *, _mem_free_t *);
+_json_context_t *json_create_context(_mem_alloc_t *, _mem_free_t *, void *udata);
 /* Reset context */
 void json_reset_context(_json_context_t *);
 /* Destroy context */
