@@ -59,7 +59,7 @@ private:
 						if(fc) { // open file cache
 							_ulong sz = 0;
 
-							pi_log->fwrite(LMT_INFO, "GET '%s' (%s)", doc, req_ip);
+							pi_log->fwrite(LMT_INFO, "GET '%s' (%s)", pi_httpc->req_uri(), req_ip);
 							_u8 *ptr = (_u8 *)p_srv->p_http_host->mpi_fcache->ptr(fc, &sz);
 							if(ptr) {
 								pi_httpc->res_content_len(sz);
@@ -75,7 +75,7 @@ private:
 						} else {
 							pi_httpc->res_code(HTTPRC_NOT_FOUND);
 							pi_httpc->res_content_len(pi_httpc->res_write("Not Found"));
-							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found (%s)", p_srv->name, doc, req_ip);
+							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found (%s)", p_srv->name, pi_httpc->req_uri(), req_ip);
 						}
 					} else
 						pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
@@ -93,7 +93,7 @@ private:
 							pi_httpc->peer_ip(req_ip, sizeof(req_ip));
 							pi_httpc->res_code(HTTPRC_NOT_FOUND);
 							pi_httpc->res_content_len(pi_httpc->res_write("Not Found"));
-							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found (%s)", p_srv->name, doc, req_ip);
+							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found (%s)", p_srv->name, pi_httpc->req_uri(), req_ip);
 						}
 					} else {
 						pi_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
