@@ -63,7 +63,8 @@ _err_t main(int argc, char *argv[]) {
 			//	_u8 jvt = v2->type();
 				asm("nop");
 			}
-
+			pi_json->destroy_context(htc);
+			_gpi_repo_->object_release(pi_json);
 		}
 
 		iGatn *pi_gatn = (iGatn *)pi_repo->object_by_iname(I_GATN, RF_ORIGINAL);
