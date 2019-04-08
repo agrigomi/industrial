@@ -76,7 +76,7 @@ public:
 				)=0;
 	virtual _u8 type(HTVALUE)=0;
 	virtual _cstr_t data(HTVALUE, // value handle
-			_u32 * // [out] size
+			_u32 * // [out] size (in symbols)
 			)=0; // for JVT_STRING and JVT_NUMBER only
 	virtual HTVALUE by_index(HTVALUE, // value handle
 				 _u32 // index

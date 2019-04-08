@@ -109,10 +109,13 @@ public:
 		_cstr_t r = 0;
 		_json_value_t *p_jv = (_json_value_t *)hjv;
 
-		if(p_jv->jvt == JSON_STRING)
+		if(p_jv->jvt == JSON_STRING) {
 			r = p_jv->string.data;
-		else if(p_jv->jvt == JSON_NUMBER)
+			*size = p_jv->string.size;
+		} else if(p_jv->jvt == JSON_NUMBER) {
 			r = p_jv->number.data;
+			*size = p_jv->number.size;
+		}
 
 		return r;
 	}
