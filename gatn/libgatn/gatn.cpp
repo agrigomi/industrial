@@ -193,6 +193,7 @@ public:
 				srv.mpi_heap = mpi_heap;
 				srv.m_autorestore = false;
 				srv.mpi_bmap = mpi_bmap;
+				srv.mpi_fcache = NULL;
 				if((srv.mpi_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE))))
 					if(srv.mpi_map->init(63))
 						r = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(server));
