@@ -68,7 +68,7 @@ static void cmd_httpd_create(iCmd *pi_cmd, // interface to command object
 			if(!pi_httpd->create(name, atoi(port), root, atoi(threads), atoi(connections), atoi(timeout)))
 				fout(pi_io, "Failed to create http server '%s'\n", name);
 		} else
-			fout(pi_io, "usage: httpd create --name=... --port=... --root=...\n");
+			fout(pi_io, "usage: httpd create --name=... --port=... --root=... [--max-threads=... --max-connections=... --connection-timeout=...]\n");
 	}
 }
 
