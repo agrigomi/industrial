@@ -59,8 +59,12 @@ _err_t main(int argc, char *argv[]) {
 			HTCONTEXT htc = pi_json->create_context();
 			_char_t *json = "{ v1: 123, v2: { _v1: 456}}";
 			if(pi_json->parse(htc, json, strlen(json))) {
-				HTVALUE v2 = pi_json->select(htc, "v1.v2._v1", 0);
-				_u8 jvt = pi_json->type(v2);
+				HTVALUE v2 = pi_json->select(htc, "v1.v2", 0);
+				HTVALUE _v1 = pi_json->select(htc, "_v1", v2);
+				_u8 jvt_v2 = pi_json->type(v2);
+				_u8 jvt_v1 = pi_json->type(_v1);
+				_u32 sz = 0;
+				_cstr_t _v1_data = pi_json->data(_v1, &sz);
 				asm("nop");
 			}
 			pi_json->destroy_context(htc);
