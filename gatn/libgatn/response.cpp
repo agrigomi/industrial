@@ -206,7 +206,7 @@ bool response::render(_cstr_t fname) {
 	bool r = false;
 	_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
 
-	snprintf(doc, sizeof(doc), "%s%s", m_doc_root, fname);
+	snprintf(doc, sizeof(doc), "%s/%s", m_doc_root, fname);
 
 	HFCACHE fc = mpi_fcache->open(doc);
 
@@ -215,9 +215,11 @@ bool response::render(_cstr_t fname) {
 		_u8 *ptr = (_u8 *)mpi_fcache->ptr(fc, &doc_sz);
 
 		if(ptr) { // found in cache
-			write(ptr, (_u32)doc_sz);
+			end(HTTPRC_OK, ptr, (_u32)doc_sz);
 			r = true;
 		}
+
+		mpi_fcache->close(fc);
 	}
 
 	return r;
