@@ -26,6 +26,8 @@ struct response: public _response_t {
 	_u32 m_hbcount; // array capacity
 	_u32 m_buffers; // allocated buffers
 	_u32 m_content_len;
+	_cstr_t m_doc_root;
+	iFileCache *mpi_fcache;
 
 	iHttpConnection *connection(void) {
 		return mpi_httpc;
@@ -46,6 +48,7 @@ struct response: public _response_t {
 	void destroy(void);
 	void process_content(void);
 	void redirect(_cstr_t uri);
+	bool render(_cstr_t fname);
 };
 
 #define MAX_SERVER_NAME		32

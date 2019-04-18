@@ -201,3 +201,24 @@ void response::redirect(_cstr_t uri) {
 	var("Content-Type", "text/html");
 	_end(HTTPRC_OK, "<meta http-equiv=\"refresh\" content=\"0; url=%s\"/>", uri);
 }
+
+bool response::render(_cstr_t fname) {
+	bool r = false;
+	_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
+
+	snprintf(doc, sizeof(doc), "%s%s", m_doc_root, fname);
+
+	HFCACHE fc = mpi_fcache->open(doc);
+
+	if(fc) {
+		_ulong doc_sz = 0;
+		_u8 *ptr = (_u8 *)mpi_fcache->ptr(fc, &doc_sz);
+
+		if(ptr) { // found in cache
+			write(ptr, (_u32)doc_sz);
+			r = true;
+		}
+	}
+
+	return r;
+}
