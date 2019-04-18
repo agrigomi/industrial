@@ -114,6 +114,20 @@ _err_t main(int argc, char *argv[]) {
 					}
 				}, p_srv);
 
+				p_srv->on_route(HTTP_METHOD_GET, "/about", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
+					printf(">> render/about\n");
+
+					if(evt == HTTP_ON_REQUEST)
+						res->render("about-us.html");
+				}, p_srv);
+
+				p_srv->on_route(HTTP_METHOD_GET, "/home", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
+					printf(">> render/home\n");
+
+					if(evt == HTTP_ON_REQUEST)
+						res->render("index.html");
+				}, p_srv);
+
 				p_srv->on_route(HTTP_METHOD_GET, "/login/", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
 					if(evt == HTTP_ON_REQUEST) {
 						_cstr_t auth = req->var("Authorization");
