@@ -10,7 +10,7 @@
 #define I_NET			"iNet"
 #define I_TCP_SERVER		"iTCPServer"
 #define I_HTTP_SERVER		"iHttpServer"
-#define I_HTTP_CONNECTION	"iHttpConnection"
+#define I_HTTP_CONNECTION	"iHttpServerConnection"
 
 class iSocketIO: public iIO {
 public:
@@ -92,9 +92,9 @@ public:
 #define HTTP_METHOD_OPTIONS	7
 #define HTTP_METHOD_TRACE	8
 
-class iHttpConnection: public iBase {
+class iHttpServerConnection: public iBase {
 public:
-	INTERFACE(iHttpConnection, I_HTTP_CONNECTION);
+	INTERFACE(iHttpServerConnection, I_HTTP_CONNECTION);
 	// verify I/O
 	virtual bool alive(void)=0;
 	// close connection
@@ -149,7 +149,7 @@ public:
 };
 
 // HTTP event prototype
-typedef void _on_http_event_t(iHttpConnection *, void *);
+typedef void _on_http_event_t(iHttpServerConnection *, void *);
 
 // http events
 #define HTTP_ON_OPEN		1

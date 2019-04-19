@@ -18,7 +18,7 @@
 #define CLASS_NAME_SOCKET_IO		"cSocketIO"
 #define CLASS_NAME_TCP_SERVER		"cTCPServer"
 #define CLASS_NAME_HTTP_SERVER		"cHttpServer"
-#define CLASS_NAME_HTTP_CONNECTION	"cHttpConnection"
+#define CLASS_NAME_HTTP_CONNECTION	"cHttpServerConnection"
 
 // socket I/O mode
 #define SOCKET_IO_UDP		1
@@ -77,7 +77,7 @@ public:
 
 #define HTTPC_MAX_UDATA_INDEX	8
 
-class cHttpConnection: public iHttpConnection {
+class cHttpServerConnection: public iHttpServerConnection {
 private:
 	cSocketIO	*mp_sio;
 	iStr		*mpi_str;
@@ -120,7 +120,7 @@ private:
 	void release_buffers(void);
 
 public:
-	BASE(cHttpConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
+	BASE(cHttpServerConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	bool _init(cSocketIO *p_sio, iBufferMap *pi_bmap, _u32 timeout);
 	void close(void);
@@ -194,7 +194,7 @@ public:
 };
 
 typedef struct {
-	cHttpConnection *p_httpc;
+	cHttpServerConnection *p_httpc;
 	_u8 state;
 }_http_connection_t;
 
@@ -237,7 +237,7 @@ private:
 	void remove_connection(_http_connection_t *rec);
 	void clear_column(_u8 col, HMUTEX hlock);
 	void remove_all_connections(void);
-	bool call_event_handler(_u8 evt, iHttpConnection *pi_httpc);
+	bool call_event_handler(_u8 evt, iHttpServerConnection *pi_httpc);
 public:
 	BASE(cHttpServer, CLASS_NAME_HTTP_SERVER, RF_CLONE, 1,0,0);
 	bool _init(_u32 port,
