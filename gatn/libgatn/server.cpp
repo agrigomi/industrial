@@ -23,7 +23,7 @@ typedef struct {
 	response	res;
 }_connection_t;
 
-bool server::create_connection(iHttpConnection *p_httpc) {
+bool server::create_connection(iHttpServerConnection *p_httpc) {
 	bool r = false;
 	_connection_t tmp;
 	_connection_t *p_cnt = (_connection_t *)mpi_heap->alloc(sizeof(_connection_t));
@@ -46,7 +46,7 @@ bool server::create_connection(iHttpConnection *p_httpc) {
 	return r;
 }
 
-void server::destroy_connection(iHttpConnection *p_httpc) {
+void server::destroy_connection(iHttpServerConnection *p_httpc) {
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
 	if(pc) {
@@ -59,14 +59,14 @@ void server::destroy_connection(iHttpConnection *p_httpc) {
 }
 
 void server::set_handlers(void) {
-	mpi_server->on_event(HTTP_ON_OPEN, [](iHttpConnection *p_httpc, void *udata) {
+	mpi_server->on_event(HTTP_ON_OPEN, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
 		p_srv->create_connection(p_httpc);
 		p_srv->call_handler(HTTP_ON_OPEN, p_httpc);
 	}, this);
 
-	mpi_server->on_event(HTTP_ON_REQUEST, [](iHttpConnection *p_httpc, void *udata) {
+	mpi_server->on_event(HTTP_ON_REQUEST, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
 		/************************************
@@ -89,28 +89,28 @@ void server::set_handlers(void) {
 		p_srv->call_route_handler(HTTP_ON_REQUEST, p_httpc);
 	}, this);
 
-	mpi_server->on_event(HTTP_ON_REQUEST_DATA, [](iHttpConnection *p_httpc, void *udata) {
+	mpi_server->on_event(HTTP_ON_REQUEST_DATA, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
 		p_srv->call_handler(HTTP_ON_REQUEST_DATA, p_httpc);
 		p_srv->call_route_handler(HTTP_ON_REQUEST_DATA, p_httpc);
 	}, this);
 
-	mpi_server->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpConnection *p_httpc, void *udata) {
+	mpi_server->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
 		p_srv->call_handler(HTTP_ON_RESPONSE_DATA, p_httpc);
 		p_srv->update_response(p_httpc);
 	}, this);
 
-	mpi_server->on_event(HTTP_ON_ERROR, [](iHttpConnection *p_httpc, void *udata) {
+	mpi_server->on_event(HTTP_ON_ERROR, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
 		p_srv->call_handler(HTTP_ON_ERROR, p_httpc);
 		p_srv->call_route_handler(HTTP_ON_ERROR, p_httpc);
 	}, this);
 
-	mpi_server->on_event(HTTP_ON_CLOSE, [](iHttpConnection *p_httpc, void *udata) {
+	mpi_server->on_event(HTTP_ON_CLOSE, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 		HFCACHE fc = (HFCACHE)p_httpc->get_udata(IDX_FCACHE);
 
@@ -155,7 +155,7 @@ void server::stop(void) {
 	}
 }
 
-void server::call_handler(_u8 evt, iHttpConnection *p_httpc) {
+void server::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	if(evt < HTTP_MAX_EVENTS) {
 		if(m_event[evt].pcb)
 			m_event[evt].pcb(p_httpc, m_event[evt].udata);
@@ -167,7 +167,7 @@ _cstr_t server::resolve_content_type(_cstr_t doc_name) {
 	return (r) ? r : "";
 }
 
-void server::call_route_handler(_u8 evt, iHttpConnection *p_httpc) {
+void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_route_key_t key;
 	_u32 sz=0;
 	_cstr_t url = p_httpc->req_url();
@@ -226,7 +226,7 @@ void server::call_route_handler(_u8 evt, iHttpConnection *p_httpc) {
 	}
 }
 
-void server::update_response(iHttpConnection *p_httpc) {
+void server::update_response(iHttpServerConnection *p_httpc) {
 	// write response remainder
 	HFCACHE fc = (HFCACHE)p_httpc->get_udata(IDX_FCACHE);
 
@@ -277,7 +277,7 @@ void server::remove_route(_u8 method, _cstr_t path) {
 		mpi_map->del(&key, sizeof(_route_key_t));
 }
 
-_request_t *server::get_request(iHttpConnection *pi_httpc) {
+_request_t *server::get_request(iHttpServerConnection *pi_httpc) {
 	_request_t *r = NULL;
 	_connection_t *pc = (_connection_t *)pi_httpc->get_udata(IDX_CONNECTION);
 
@@ -287,7 +287,7 @@ _request_t *server::get_request(iHttpConnection *pi_httpc) {
 	return r;
 }
 
-_response_t *server::get_response(iHttpConnection *pi_httpc) {
+_response_t *server::get_response(iHttpServerConnection *pi_httpc) {
 	_response_t *r = NULL;
 
 	_connection_t *pc = (_connection_t *)pi_httpc->get_udata(IDX_CONNECTION);

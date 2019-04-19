@@ -89,7 +89,7 @@ static _http_method_map _g_method_map[] = {
 
 #define USE_CONNECTION_TIMEOUT
 
-bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
+bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
 
 	switch(cmd) {
@@ -120,7 +120,7 @@ bool cHttpConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	return r;
 }
 
-void cHttpConnection::clean_members(void) {
+void cHttpServerConnection::clean_members(void) {
 	m_state = 0;
 	release_buffers();
 	m_ibuffer_offset = m_oheader_offset = m_obuffer_offset = 0;
@@ -138,7 +138,7 @@ void cHttpConnection::clean_members(void) {
 	mpi_map->clr();
 }
 
-bool cHttpConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap, _u32 timeout) {
+bool cHttpServerConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap, _u32 timeout) {
 	bool r = false;
 
 	if(!mp_sio && p_sio && (r = p_sio->alive())) {
@@ -152,7 +152,7 @@ bool cHttpConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap, _u32 timeout)
 	return r;
 }
 
-void cHttpConnection::close(void) {
+void cHttpServerConnection::close(void) {
 	if(mp_sio) {
 		_gpi_repo_->object_release(mp_sio);
 		mp_sio = NULL;
@@ -161,7 +161,7 @@ void cHttpConnection::close(void) {
 	release_buffers();
 }
 
-void cHttpConnection::release_buffers(void) {
+void cHttpServerConnection::release_buffers(void) {
 	if(m_ibuffer) {
 		mpi_bmap->free(m_ibuffer);
 		m_ibuffer = 0;
@@ -176,7 +176,7 @@ void cHttpConnection::release_buffers(void) {
 	}
 }
 
-bool cHttpConnection::alive(void) {
+bool cHttpServerConnection::alive(void) {
 	bool r = false;
 
 	if(mp_sio)
@@ -185,7 +185,7 @@ bool cHttpConnection::alive(void) {
 	return r;
 }
 
-_u32 cHttpConnection::peer_ip(void) {
+_u32 cHttpServerConnection::peer_ip(void) {
 	_u32 r = 0;
 
 	if(mp_sio)
@@ -194,7 +194,7 @@ _u32 cHttpConnection::peer_ip(void) {
 	return r;
 }
 
-bool cHttpConnection::peer_ip(_str_t strip, _u32 len) {
+bool cHttpServerConnection::peer_ip(_str_t strip, _u32 len) {
 	bool r = false;
 
 	if(mp_sio)
@@ -204,7 +204,7 @@ bool cHttpConnection::peer_ip(_str_t strip, _u32 len) {
 }
 
 
-_cstr_t cHttpConnection::get_rc_text(_u16 rc) {
+_cstr_t cHttpServerConnection::get_rc_text(_u16 rc) {
 	_cstr_t r = "...";
 	_u32 n = 0;
 
@@ -219,7 +219,7 @@ _cstr_t cHttpConnection::get_rc_text(_u16 rc) {
 	return r;
 }
 
-_u32 cHttpConnection::receive(void) {
+_u32 cHttpServerConnection::receive(void) {
 	_u32 r = 0;
 
 	if(alive()) {
@@ -240,7 +240,7 @@ _u32 cHttpConnection::receive(void) {
 	return r;
 }
 
-bool cHttpConnection::complete_req_header(void) {
+bool cHttpServerConnection::complete_req_header(void) {
 	bool r = false;
 
 	if(m_ibuffer_offset) {
@@ -264,7 +264,7 @@ bool cHttpConnection::complete_req_header(void) {
 	return r;
 }
 
-bool cHttpConnection::add_req_variable(_cstr_t name, _cstr_t value, _u32 sz_value) {
+bool cHttpServerConnection::add_req_variable(_cstr_t name, _cstr_t value, _u32 sz_value) {
 	bool r = false;
 
 	if(mpi_map->add(name, mpi_str->str_len(name),
@@ -275,7 +275,7 @@ bool cHttpConnection::add_req_variable(_cstr_t name, _cstr_t value, _u32 sz_valu
 	return r;
 }
 
-_u32 cHttpConnection::parse_url(_str_t url, _u32 sz_max) {
+_u32 cHttpServerConnection::parse_url(_str_t url, _u32 sz_max) {
 	_u32 r = 0;
 	HBUFFER hburl = mpi_bmap->alloc();
 
@@ -339,7 +339,7 @@ _u32 cHttpConnection::parse_url(_str_t url, _u32 sz_max) {
 	return r;
 }
 
-_u32 cHttpConnection::parse_request_line(_str_t req, _u32 sz_max) {
+_u32 cHttpServerConnection::parse_request_line(_str_t req, _u32 sz_max) {
 	_u32 r = 0;
 	_char_t c = 0;
 	_char_t _c = 0;
@@ -387,7 +387,7 @@ _u32 cHttpConnection::parse_request_line(_str_t req, _u32 sz_max) {
 	return r;
 }
 
-_u32 cHttpConnection::parse_var_line(_str_t var, _u32 sz_max) {
+_u32 cHttpServerConnection::parse_var_line(_str_t var, _u32 sz_max) {
 	_u32 r = 0;
 	_str_t fld[3] = {var, 0, 0};
 	_u32 fld_sz[3] = {0, 0, 0};
@@ -439,7 +439,7 @@ _u32 cHttpConnection::parse_var_line(_str_t var, _u32 sz_max) {
 	return r;
 }
 
-bool cHttpConnection::parse_req_header(void) {
+bool cHttpServerConnection::parse_req_header(void) {
 	bool r = false;
 
 	if(m_ibuffer && m_ibuffer_offset) {
@@ -475,7 +475,7 @@ bool cHttpConnection::parse_req_header(void) {
 	return r;
 }
 
-_u32 cHttpConnection::res_remainder(void) {
+_u32 cHttpServerConnection::res_remainder(void) {
 	_u32 r = 0;
 
 	if(m_content_sent < m_res_content_len)
@@ -484,7 +484,7 @@ _u32 cHttpConnection::res_remainder(void) {
 	return r;
 }
 
-void cHttpConnection::clear_ibuffer(void) {
+void cHttpServerConnection::clear_ibuffer(void) {
 	if(m_ibuffer) {
 		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_ibuffer);
 
@@ -497,7 +497,7 @@ void cHttpConnection::clear_ibuffer(void) {
 	}
 }
 
-_u32 cHttpConnection::send_header(void) {
+_u32 cHttpServerConnection::send_header(void) {
 	_u32 r = 0;
 	_char_t rs[128]="";
 
@@ -535,7 +535,7 @@ _u32 cHttpConnection::send_header(void) {
 	return r;
 }
 
-_u32 cHttpConnection::receive_content(void) {
+_u32 cHttpServerConnection::receive_content(void) {
 	_u32 r = receive();
 
 	m_req_content_rcv += r;
@@ -543,7 +543,7 @@ _u32 cHttpConnection::receive_content(void) {
 	return r;
 }
 
-_u32 cHttpConnection::send_content(void) {
+_u32 cHttpServerConnection::send_content(void) {
 	_u32 r = 0;
 
 	if(m_res_content_len && m_content_sent < m_res_content_len) {
@@ -560,7 +560,7 @@ _u32 cHttpConnection::send_content(void) {
 	return r;
 }
 
-_u8 cHttpConnection::process(void) {
+_u8 cHttpServerConnection::process(void) {
 	_u8 r = 0;
 
 	switch(m_state) {
@@ -663,7 +663,7 @@ _u8 cHttpConnection::process(void) {
 	return r;
 }
 
-_u32 cHttpConnection::res_write(_u8 *data, _u32 size) {
+_u32 cHttpServerConnection::res_write(_u8 *data, _u32 size) {
 	_u32 r = 0;
 
 	if(!m_obuffer)
@@ -686,11 +686,11 @@ _u32 cHttpConnection::res_write(_u8 *data, _u32 size) {
 	return r;
 }
 
-_u32 cHttpConnection::res_write(_cstr_t str) {
+_u32 cHttpServerConnection::res_write(_cstr_t str) {
 	return res_write((_u8 *)str, strlen(str));
 }
 
-_u8 cHttpConnection::req_method(void) {
+_u8 cHttpServerConnection::req_method(void) {
 	_u8 r = 0;
 	_cstr_t sm = req_var(VAR_REQ_METHOD);
 
@@ -710,29 +710,29 @@ _u8 cHttpConnection::req_method(void) {
 	return r;
 }
 
-_cstr_t cHttpConnection::req_header(void) {
+_cstr_t cHttpServerConnection::req_header(void) {
 	return req_var(VAR_REQ_HEADER);
 }
 
-_cstr_t cHttpConnection::req_uri(void) {
+_cstr_t cHttpServerConnection::req_uri(void) {
 	return req_var(VAR_REQ_URI);
 }
 
-_cstr_t cHttpConnection::req_url(void) {
+_cstr_t cHttpServerConnection::req_url(void) {
 	return req_var(VAR_REQ_URL);
 }
 
-_cstr_t cHttpConnection::req_urn(void) {
+_cstr_t cHttpServerConnection::req_urn(void) {
 	return req_var(VAR_REQ_URN);
 }
 
-_cstr_t cHttpConnection::req_var(_cstr_t name) {
+_cstr_t cHttpServerConnection::req_var(_cstr_t name) {
 	_u32 sz = 0;
 	_str_t vn = (_str_t)name;
 	return (_str_t)mpi_map->get(vn, strlen(vn), &sz);
 }
 
-_u8 *cHttpConnection::req_data(_u32 *size) {
+_u8 *cHttpServerConnection::req_data(_u32 *size) {
 	_u8 *r = 0;
 
 	if(m_ibuffer) {
@@ -743,11 +743,11 @@ _u8 *cHttpConnection::req_data(_u32 *size) {
 	return r;
 }
 
-_cstr_t cHttpConnection::req_protocol(void) {
+_cstr_t cHttpServerConnection::req_protocol(void) {
 	return req_var(VAR_REQ_PROTOCOL);
 }
 
-bool cHttpConnection::res_var(_cstr_t name, _cstr_t value) {
+bool cHttpServerConnection::res_var(_cstr_t name, _cstr_t value) {
 	bool r = false;
 
 	if(!m_oheader)
@@ -771,11 +771,11 @@ bool cHttpConnection::res_var(_cstr_t name, _cstr_t value) {
 	return r;
 }
 
- void cHttpConnection::res_protocol(_cstr_t protocol) {
+ void cHttpServerConnection::res_protocol(_cstr_t protocol) {
 	strncpy(m_res_protocol, protocol, sizeof(m_res_protocol)-1);
  }
 
-bool cHttpConnection::res_content_len(_u32 content_len) {
+bool cHttpServerConnection::res_content_len(_u32 content_len) {
 	_char_t cl[32]="";
 
 	sprintf(cl, "%u", content_len);
@@ -783,7 +783,7 @@ bool cHttpConnection::res_content_len(_u32 content_len) {
 	return res_var("Content-Length", cl);
 }
 
-void cHttpConnection::res_mtime(time_t mtime) {
+void cHttpServerConnection::res_mtime(time_t mtime) {
 	_char_t value[128]="";
 	tm *_tm = gmtime(&mtime);
 	strftime(value, sizeof(value), "%a, %d %b %Y %H:%M:%S GMT", _tm);
@@ -791,4 +791,4 @@ void cHttpConnection::res_mtime(time_t mtime) {
 	res_var("Last-Modified", value);
 }
 
-static cHttpConnection _g_httpc_;
+static cHttpServerConnection _g_httpc_;

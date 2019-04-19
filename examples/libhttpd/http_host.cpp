@@ -31,11 +31,11 @@ private:
 	}_server_t;
 
 	void set_handlers(_server_t *p_srv) {
-		p_srv->pi_http_server->on_event(HTTP_ON_OPEN, [](iHttpConnection *pi_httpc, void *udata) {
+		p_srv->pi_http_server->on_event(HTTP_ON_OPEN, [](iHttpServerConnection *pi_httpc, void *udata) {
 			//...
 		}, p_srv);
 
-		p_srv->pi_http_server->on_event(HTTP_ON_REQUEST, [](iHttpConnection *pi_httpc, void *udata) {
+		p_srv->pi_http_server->on_event(HTTP_ON_REQUEST, [](iHttpServerConnection *pi_httpc, void *udata) {
 			_server_t *p_srv = (_server_t *)udata;
 			_u8 method = pi_httpc->req_method();
 			_cstr_t url = pi_httpc->req_url();
@@ -125,7 +125,7 @@ private:
 			}
 		}, p_srv);
 
-		p_srv->pi_http_server->on_event(HTTP_ON_REQUEST_DATA, [](iHttpConnection *pi_httpc, void *udata) {
+		p_srv->pi_http_server->on_event(HTTP_ON_REQUEST_DATA, [](iHttpServerConnection *pi_httpc, void *udata) {
 			_server_t *p_srv = (_server_t *)udata;
 			iLog *pi_log = p_srv->p_http_host->mpi_log;
 			_u32 sz = 0;
@@ -138,7 +138,7 @@ private:
 			}
 		}, p_srv);
 
-		p_srv->pi_http_server->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpConnection *pi_httpc, void *udata) {
+		p_srv->pi_http_server->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpServerConnection *pi_httpc, void *udata) {
 			_server_t *p_srv = (_server_t *)udata;
 			_ulong sz = 0;
 			_char_t doc[1024]="";
@@ -170,7 +170,7 @@ private:
 			}
 		}, p_srv);
 
-		p_srv->pi_http_server->on_event(HTTP_ON_ERROR, [](iHttpConnection *pi_httpc, void *udata) {
+		p_srv->pi_http_server->on_event(HTTP_ON_ERROR, [](iHttpServerConnection *pi_httpc, void *udata) {
 			_server_t *p_srv = (_server_t *)udata;
 			iLog *pi_log = p_srv->p_http_host->mpi_log;
 			_char_t req_ip[32]="";
@@ -188,7 +188,7 @@ private:
 			pi_httpc->res_var("Server", SERVER_NAME);
 		}, p_srv);
 
-		p_srv->pi_http_server->on_event(HTTP_ON_CLOSE, [](iHttpConnection *pi_httpc, void *udata) {
+		p_srv->pi_http_server->on_event(HTTP_ON_CLOSE, [](iHttpServerConnection *pi_httpc, void *udata) {
 			//...
 		}, p_srv);
 	}

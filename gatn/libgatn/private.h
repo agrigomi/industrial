@@ -3,9 +3,9 @@
 #include "iLog.h"
 
 struct request: public _request_t{
-	iHttpConnection *mpi_httpc;
+	iHttpServerConnection *mpi_httpc;
 
-	iHttpConnection *connection(void) {
+	iHttpServerConnection *connection(void) {
 		return mpi_httpc;
 	}
 	_u8 method(void);
@@ -19,7 +19,7 @@ struct request: public _request_t{
 };
 
 struct response: public _response_t {
-	iHttpConnection *mpi_httpc;
+	iHttpServerConnection *mpi_httpc;
 	iHeap *mpi_heap;
 	iBufferMap *mpi_bmap;
 	HBUFFER	*mp_hbarray;
@@ -29,7 +29,7 @@ struct response: public _response_t {
 	_cstr_t m_doc_root;
 	iFileCache *mpi_fcache;
 
-	iHttpConnection *connection(void) {
+	iHttpServerConnection *connection(void) {
 		return mpi_httpc;
 	}
 	bool alloc_buffer(void);
@@ -94,16 +94,16 @@ struct server: public _server_t {
 	_u32 port(void) {
 		return m_port;
 	}
-	bool create_connection(iHttpConnection *p_httpc);
-	void destroy_connection(iHttpConnection *p_httpc);
+	bool create_connection(iHttpServerConnection *p_httpc);
+	void destroy_connection(iHttpServerConnection *p_httpc);
 	_cstr_t resolve_content_type(_cstr_t doc_name);
 	void set_handlers(void);
-	void call_handler(_u8 evt, iHttpConnection *p_httpc);
-	void call_route_handler(_u8 evt, iHttpConnection *p_httpc);
-	void update_response(iHttpConnection *p_httpc);
+	void call_handler(_u8 evt, iHttpServerConnection *p_httpc);
+	void call_route_handler(_u8 evt, iHttpServerConnection *p_httpc);
+	void update_response(iHttpServerConnection *p_httpc);
 	void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata);
 	void on_event(_u8 evt, _on_http_event_t *pcb, void *udata);
 	void remove_route(_u8 method, _cstr_t path);
-	_request_t *get_request(iHttpConnection *pi_httpc);
-	_response_t *get_response(iHttpConnection *pi_httpc);
+	_request_t *get_request(iHttpServerConnection *pi_httpc);
+	_response_t *get_response(iHttpServerConnection *pi_httpc);
 };

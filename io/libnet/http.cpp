@@ -164,7 +164,7 @@ void cHttpServer::on_event(_u8 evt, _on_http_event_t *handler, void *udata) {
 	}
 }
 
-bool cHttpServer::call_event_handler(_u8 evt, iHttpConnection *pi_httpc) {
+bool cHttpServer::call_event_handler(_u8 evt, iHttpServerConnection *pi_httpc) {
 	bool r = false;
 
 	if(evt && evt < HTTP_MAX_EVENTS && pi_httpc) {
@@ -209,7 +209,7 @@ _http_connection_t *cHttpServer::add_connection(void) {
 	if(p_sio) {
 		_http_connection_t rec;
 
-		if((rec.p_httpc = (cHttpConnection *)_gpi_repo_->object_by_handle(m_hconnection, RF_CLONE|RF_NONOTIFY))) {
+		if((rec.p_httpc = (cHttpServerConnection *)_gpi_repo_->object_by_handle(m_hconnection, RF_CLONE|RF_NONOTIFY))) {
 			_u32 nfhttpc = 0;
 			_u32 nbhttpc = 0;
 

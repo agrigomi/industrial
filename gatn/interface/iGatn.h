@@ -7,7 +7,7 @@
 #define I_GATN	"iGatn"
 
 typedef struct {
-	virtual iHttpConnection *connection(void)=0;
+	virtual iHttpServerConnection *connection(void)=0;
 	virtual _u8 method(void)=0;
 	virtual _cstr_t header(void)=0;
 	virtual _cstr_t utl(void)=0;
@@ -19,7 +19,7 @@ typedef struct {
 }_request_t;
 
 typedef struct {
-	virtual iHttpConnection *connection(void)=0;
+	virtual iHttpServerConnection *connection(void)=0;
 	virtual void var(_cstr_t name, _cstr_t value)=0;
 	virtual void _var(_cstr_t name, _cstr_t fmt, ...)=0;
 	virtual _u32 write(void *data, _u32 size)=0;
@@ -52,8 +52,8 @@ typedef struct {
 	virtual void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata)=0;
 	virtual void on_event(_u8 evt, _on_http_event_t *pcb, void *udata)=0;
 	virtual void remove_route(_u8 method, _cstr_t path)=0;
-	virtual _request_t *get_request(iHttpConnection *pi_httpc)=0;
-	virtual _response_t *get_response(iHttpConnection *pi_httpc)=0;
+	virtual _request_t *get_request(iHttpServerConnection *pi_httpc)=0;
+	virtual _response_t *get_response(iHttpServerConnection *pi_httpc)=0;
 }_server_t;
 
 class iGatn: public iBase {
