@@ -215,6 +215,9 @@ bool response::render(_cstr_t fname) {
 		_u8 *ptr = (_u8 *)mpi_fcache->ptr(fc, &doc_sz);
 
 		if(ptr) { // found in cache
+			_cstr_t ct = resolve_mime_type(doc);
+
+			var("Content-Type", (ct) ? ct : "");
 			end(HTTPRC_OK, ptr, (_u32)doc_sz);
 			r = true;
 		}
