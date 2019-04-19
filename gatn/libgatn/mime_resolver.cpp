@@ -613,7 +613,6 @@ _cstr_t resolve_mime_type(_cstr_t fname) {
 	} else {
 		_u32 n = 0;
 
-
 		while(_g_mime_map_[n].ext) {
 			_u32 ext_len = strlen(_g_mime_map_[n].ext);
 			_cstr_t pfn = fname + fn_len - ext_len;
