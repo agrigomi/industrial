@@ -146,21 +146,23 @@ public:
 					if(pn->flags & NF_INIT) { // catch
 						if(strcmp(oi.iname, I_NET) == 0) {
 							mpi_log->write(LMT_INFO, "Gatn: catch networking");
-							mpi_net = (iNet *)pn->object;
+							mpi_net = (iNet *)_gpi_repo_->object_by_handle(pn->hobj, RF_ORIGINAL|RF_NONOTIFY);
 							restore();
 						} else if(strcmp(oi.iname, I_FS) == 0) {
 							mpi_log->write(LMT_INFO, "Gatn: catch FS support");
-							mpi_fs = (iFS *)pn->object;
+							mpi_fs = (iFS *)_gpi_repo_->object_by_handle(pn->hobj, RF_ORIGINAL|RF_NONOTIFY);
 							restore();
 						}
 					} else if(pn->flags & (NF_UNINIT | NF_REMOVE)) { // release
 						if(strcmp(oi.iname, I_NET) == 0) {
 							mpi_log->write(LMT_INFO, "Gatn: release networking");
 							stop(true);
+							_gpi_repo_->object_release(mpi_net);
 							mpi_net = NULL;
 						} else if(strcmp(oi.iname, I_FS) == 0) {
 							mpi_log->write(LMT_INFO, "Gatn: release FS support");
 							stop(true);
+							_gpi_repo_->object_release(mpi_fs);
 							mpi_fs = NULL;
 						}
 					}
