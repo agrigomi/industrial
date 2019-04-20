@@ -39,6 +39,7 @@ bool cHttpServer::_init(_u32 port,
 			m_max_workers = max_workers;
 			m_max_connections = max_connections;
 			m_connection_timeout = connection_timeout;
+			m_port = port;
 			p_tcps->blocking(false);
 			mpi_tmaker->start(_http_server_thread, this);
 		}
@@ -59,8 +60,12 @@ void cHttpServer::http_server_thread(void) {
 	m_is_stopped = false;
 
 	HTASK ht = mpi_tmaker->handle(_http_server_thread);
-	if(ht)
-		mpi_tmaker->set_name(ht, "http server");
+	if(ht) {
+		_char_t sname[17]="";
+
+		snprintf(sname, sizeof(sname) - 1, "http-s:%u", m_port);
+		mpi_tmaker->set_name(ht, sname);
+	}
 
 	while(m_is_running) {
 		if(m_is_init && m_num_connections < m_max_connections)
@@ -182,7 +187,10 @@ bool cHttpServer::start_worker(void) {
 	HTASK ht = 0;
 
 	if((ht = mpi_tmaker->start(_http_worker_thread, this))) {
-		mpi_tmaker->set_name(ht, "http worker");
+		_char_t wname[17]="";
+
+		snprintf(wname, sizeof(wname) - 1, "http-w:%u", m_port);
+		mpi_tmaker->set_name(ht, wname);
 		r = true;
 	}
 

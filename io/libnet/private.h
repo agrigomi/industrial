@@ -224,6 +224,7 @@ private:
 	_u32			m_max_connections;
 	_u32			m_connection_timeout;
 	_u32			m_num_connections;
+	_u32			m_port;
 
 	friend void *_http_worker_thread(void *);
 	friend void *_http_server_thread(void *);
