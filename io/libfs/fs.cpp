@@ -6,6 +6,8 @@
 IMPLEMENT_BASE_ARRAY("fs", 10);
 
 class cFS: public iFS {
+	HOBJECT	m_hfio;
+	HOBJECT m_hdir;
 public:
 	BASE(cFS, "cFS", RF_ORIGINAL, 1,0,0);
 
@@ -14,7 +16,11 @@ public:
 
 		switch(cmd) {
 			case OCTL_INIT:
-				r = true;
+				m_hfio = _gpi_repo_->handle_by_cname(FILE_IO_CLASS_NAME);
+				m_hdir = _gpi_repo_->handle_by_cname(DIR_CLASS_NAME);
+
+				if(m_hfio && m_hdir)
+					r = true;
 				break;
 			case OCTL_UNINIT:
 				r = true;
@@ -29,7 +35,7 @@ public:
 
 		_s32 fd = ::open(path, flags, mode);
 		if(fd > 0) {
-			cFileIO *_r = (cFileIO *)_gpi_repo_->object_by_cname(FILE_IO_CLASS_NAME, RF_CLONE);
+			cFileIO *_r = (cFileIO *)_gpi_repo_->object_by_handle(m_hfio, RF_CLONE);
 			if(_r) {
 				_r->m_fd = fd;
 				r = _r;
@@ -45,7 +51,7 @@ public:
 
 		_s32 fd = ::open(path, flags);
 		if(fd > 0) {
-			cFileIO *_r = (cFileIO *)_gpi_repo_->object_by_cname(FILE_IO_CLASS_NAME, RF_CLONE);
+			cFileIO *_r = (cFileIO *)_gpi_repo_->object_by_handle(m_hfio, RF_CLONE);
 			if(_r) {
 				_r->m_fd = fd;
 				r = _r;
@@ -69,7 +75,7 @@ public:
 		DIR *p_dir = opendir(path);
 
 		if(p_dir) {
-			cDir *pc_dir = (cDir *)_gpi_repo_->object_by_cname(DIR_CLASS_NAME, RF_CLONE);
+			cDir *pc_dir = (cDir *)_gpi_repo_->object_by_handle(m_hdir, RF_CLONE);
 			if(pc_dir) {
 				pc_dir->_init(p_dir);
 				r = pc_dir;
