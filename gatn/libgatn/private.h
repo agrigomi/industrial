@@ -28,6 +28,7 @@ struct response: public _response_t {
 	_u32 m_content_len;
 	_cstr_t m_doc_root;
 	iFileCache *mpi_fcache;
+	iFS *mpi_fs;
 
 	iHttpServerConnection *connection(void) {
 		return mpi_httpc;
@@ -48,7 +49,7 @@ struct response: public _response_t {
 	void destroy(void);
 	void process_content(void);
 	void redirect(_cstr_t uri);
-	bool render(_cstr_t fname);
+	bool render(_cstr_t fname, bool cache=true);
 };
 
 #define MAX_SERVER_NAME		32

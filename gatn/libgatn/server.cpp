@@ -39,6 +39,7 @@ bool server::create_connection(iHttpServerConnection *p_httpc) {
 		p_cnt->res.m_buffers = 0;
 		p_cnt->res.m_doc_root = m_doc_root;
 		p_cnt->res.mpi_fcache = mpi_fcache;
+		p_cnt->res.mpi_fs = mpi_fs;
 		p_httpc->set_udata((_ulong)p_cnt, IDX_CONNECTION);
 		r = true;
 	}

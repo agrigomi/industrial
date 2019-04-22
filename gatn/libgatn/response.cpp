@@ -202,27 +202,45 @@ void response::redirect(_cstr_t uri) {
 	_end(HTTPRC_OK, "<meta http-equiv=\"refresh\" content=\"0; url=%s\"/>", uri);
 }
 
-bool response::render(_cstr_t fname) {
+bool response::render(_cstr_t fname, bool cache) {
 	bool r = false;
 	_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
+	_ulong doc_sz = 0;
+	_u8 *ptr = NULL;
 
 	snprintf(doc, sizeof(doc), "%s/%s", m_doc_root, fname);
 
-	HFCACHE fc = mpi_fcache->open(doc);
+	_cstr_t ct = resolve_mime_type(doc);
 
-	if(fc) {
-		_ulong doc_sz = 0;
-		_u8 *ptr = (_u8 *)mpi_fcache->ptr(fc, &doc_sz);
+	var("Content-Type", (ct) ? ct : "");
 
-		if(ptr) { // found in cache
-			_cstr_t ct = resolve_mime_type(doc);
+	if(cache) { // cacheable
+		HFCACHE fc = mpi_fcache->open(doc);
 
-			var("Content-Type", (ct) ? ct : "");
-			end(HTTPRC_OK, ptr, (_u32)doc_sz);
-			r = true;
+		if(fc) {
+			ptr = (_u8 *)mpi_fcache->ptr(fc, &doc_sz);
+
+			if(ptr) { // found in cache
+				end(HTTPRC_OK, ptr, (_u32)doc_sz);
+				r = true;
+			}
+
+			mpi_fcache->close(fc);
 		}
+	} else { // non cacheable
+		iFileIO *fio = mpi_fs->open(doc, O_RDONLY);
 
-		mpi_fcache->close(fc);
+		if(fio) {
+			doc_sz = fio->size();
+			ptr = (_u8 *)fio->map(MPF_READ);
+
+			if(ptr) {
+				end(HTTPRC_OK, ptr, (_u32)doc_sz);
+				r = true;
+				fio->unmap();
+			}
+			mpi_fs->close(fio);
+		}
 	}
 
 	return r;

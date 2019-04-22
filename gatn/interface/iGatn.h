@@ -29,7 +29,7 @@ typedef struct {
 	virtual _u32 end(_u16 response_code, _cstr_t str)=0;
 	virtual _u32 _end(_u16 response_code, _cstr_t fmt, ...)=0;
 	virtual void redirect(_cstr_t uri)=0;
-	virtual bool render(_cstr_t fname)=0;
+	virtual bool render(_cstr_t fname, bool cache=true)=0;
 	//...
 }_response_t;
 
