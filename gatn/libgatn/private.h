@@ -107,4 +107,7 @@ struct server: public _server_t {
 	void remove_route(_u8 method, _cstr_t path);
 	_request_t *get_request(iHttpServerConnection *pi_httpc);
 	_response_t *get_response(iHttpServerConnection *pi_httpc);
+	iFileCache *get_file_cache(void) {
+		return mpi_fcache;
+	}
 };

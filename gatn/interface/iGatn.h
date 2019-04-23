@@ -54,6 +54,7 @@ typedef struct {
 	virtual void remove_route(_u8 method, _cstr_t path)=0;
 	virtual _request_t *get_request(iHttpServerConnection *pi_httpc)=0;
 	virtual _response_t *get_response(iHttpServerConnection *pi_httpc)=0;
+	virtual iFileCache *get_file_cache(void)=0;
 }_server_t;
 
 class iGatn: public iBase {
