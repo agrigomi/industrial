@@ -35,7 +35,7 @@ public:
 
 		_s32 fd = ::open(path, flags, mode);
 		if(fd > 0) {
-			cFileIO *_r = (cFileIO *)_gpi_repo_->object_by_handle(m_hfio, RF_CLONE);
+			cFileIO *_r = (cFileIO *)_gpi_repo_->object_by_handle(m_hfio, RF_CLONE | RF_NONOTIFY);
 			if(_r) {
 				_r->m_fd = fd;
 				r = _r;
@@ -51,7 +51,7 @@ public:
 
 		_s32 fd = ::open(path, flags);
 		if(fd > 0) {
-			cFileIO *_r = (cFileIO *)_gpi_repo_->object_by_handle(m_hfio, RF_CLONE);
+			cFileIO *_r = (cFileIO *)_gpi_repo_->object_by_handle(m_hfio, RF_CLONE | RF_NONOTIFY);
 			if(_r) {
 				_r->m_fd = fd;
 				r = _r;
@@ -75,7 +75,7 @@ public:
 		DIR *p_dir = opendir(path);
 
 		if(p_dir) {
-			cDir *pc_dir = (cDir *)_gpi_repo_->object_by_handle(m_hdir, RF_CLONE);
+			cDir *pc_dir = (cDir *)_gpi_repo_->object_by_handle(m_hdir, RF_CLONE | RF_NONOTIFY);
 			if(pc_dir) {
 				pc_dir->_init(p_dir);
 				r = pc_dir;
