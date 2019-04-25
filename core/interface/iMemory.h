@@ -139,6 +139,8 @@ public:
 #define BIO_WRITE	3
 #define BIO_UNINIT	4
 
+#define MAX_UDATA64_INDEX	3
+
 typedef void*	HBUFFER;
 typedef _u32 _buffer_io_t(_u8 op, void *buffer, _u32 size, void *udata);
 
@@ -162,6 +164,8 @@ public:
 	virtual void *get_udata(HBUFFER)=0;
 	virtual _u32 size(void)=0;
 	virtual void set_udata(HBUFFER, void *)=0;
+	virtual void set_udata64(HBUFFER, _u64 udata64, _u8 index)=0;
+	virtual _u64 get_udata64(HBUFFER, _u8 index)=0;
 	virtual void reset(HBUFFER=0)=0;
 	virtual void flush(HBUFFER=0)=0;
 	virtual void status(_bmap_status_t *)=0;

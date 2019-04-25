@@ -10,6 +10,7 @@ typedef struct __attribute__((packed)) {
 	_u8	state;
 	void	*ptr;
 	void	*udata;
+	_u64	udata64[MAX_UDATA64_INDEX];
 } _buffer_t;
 
 class cBufferMap: public iBufferMap {
@@ -186,6 +187,23 @@ public:
 
 		if(b)
 			r = b->udata;
+
+		return r;
+	}
+
+	void set_udata64(HBUFFER hb, _u64 udata64, _u8 index) {
+		_buffer_t *b = (_buffer_t *)hb;
+
+		if(index < MAX_UDATA64_INDEX)
+			b->udata64[index] = udata64;
+	}
+
+	_u64 get_udata64(HBUFFER hb, _u8 index) {
+		_u64 r = 0;
+		_buffer_t *b = (_buffer_t *)hb;
+
+		if(index < MAX_UDATA64_INDEX)
+			r = b->udata64[index];
 
 		return r;
 	}
