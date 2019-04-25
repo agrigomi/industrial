@@ -98,8 +98,19 @@ _err_t main(int argc, char *argv[]) {
 			for(;;) {
 				gpi_stdio->write((_str_t)"cmdex: ", 7);
 				if((n = gpi_stdio->reads(buffer, sizeof(buffer)))) {
-					if(n > 1)
+					if(n > 1) {
+						if(memcmp(buffer, "quit", 4) == 0) {
+							n = 0;
+
+							while(extensions[n]) {
+								pi_repo->extension_unload(extensions[n]);
+								n++;
+							}
+
+							break;
+						}
 						pi_cmd_host->exec(buffer, gpi_stdio);
+					}
 				}
 			}
 		}
