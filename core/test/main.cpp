@@ -106,7 +106,8 @@ _err_t main(int argc, char *argv[]) {
 					_u32 sz = 0;
 
 					if(evt == HTTP_ON_REQUEST)
-						res->end(HTTPRC_OK, g_body);
+						res->redirect("/file/");
+						//res->end(HTTPRC_OK, g_body);
 
 					_str_t data = (_str_t)req->data(&sz);
 					if(data) {
