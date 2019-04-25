@@ -132,6 +132,8 @@ public:
 				pi_repo->object_release(mpi_log);
 				pi_repo->object_release(mpi_bmap);
 				pi_repo->object_release(mpi_heap);
+				pi_repo->object_release(mpi_fs);
+				pi_repo->object_release(mpi_net);
 				uninit_mime_type_resolver();
 				r = true;
 			} break;
