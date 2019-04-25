@@ -89,6 +89,9 @@ static _http_method_map _g_method_map[] = {
 
 #define USE_CONNECTION_TIMEOUT
 
+static iStr *gpi_str = 0;
+static HOBJECT g_hmap = 0;
+
 bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
 
@@ -100,9 +103,15 @@ bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			mpi_bmap = NULL;
 			memset(m_udata, 0, sizeof(m_udata));
 			m_ibuffer = m_oheader = m_obuffer = 0;
-			mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
-			mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
-			if(mpi_str && mpi_map) {
+			if(!gpi_str)
+				gpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
+			if(g_hmap)
+				mpi_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
+			else {
+				if((g_hmap = pi_repo->handle_by_iname(I_MAP)))
+					mpi_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
+			}
+			if(gpi_str && mpi_map) {
 				r = mpi_map->init(31);
 				clean_members();
 			}
@@ -111,7 +120,7 @@ bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			iRepository *pi_repo = (iRepository *)arg;
 
 			close();
-			pi_repo->object_release(mpi_str);
+			pi_repo->object_release(gpi_str);
 			pi_repo->object_release(mpi_map);
 			r = true;
 		} break;
@@ -252,7 +261,7 @@ bool cHttpServerConnection::complete_req_header(void) {
 			_s32 hl = 0;
 
 			// !!! dangerous !!!
-			if((hl = mpi_str->nfind_string(ptr, sz, "\r\n\r\n")) != -1) {
+			if((hl = gpi_str->nfind_string(ptr, sz, "\r\n\r\n")) != -1) {
 				r = true;
 				add_req_variable(VAR_REQ_HEADER, ptr, hl);
 				m_header_len = hl + 4;
@@ -267,9 +276,9 @@ bool cHttpServerConnection::complete_req_header(void) {
 bool cHttpServerConnection::add_req_variable(_cstr_t name, _cstr_t value, _u32 sz_value) {
 	bool r = false;
 
-	if(mpi_map->add(name, mpi_str->str_len(name),
+	if(mpi_map->add(name, gpi_str->str_len(name),
 			value,
-			(sz_value) ? sz_value : mpi_str->str_len(value)))
+			(sz_value) ? sz_value : gpi_str->str_len(value)))
 		r = true;
 
 	return r;
@@ -457,7 +466,7 @@ bool cHttpServerConnection::parse_req_header(void) {
 				r = true;
 				if(m_ibuffer_offset > m_header_len) {
 					// have request data
-					mpi_str->mem_cpy(hdr, hdr + m_header_len, m_ibuffer_offset - m_header_len);
+					gpi_str->mem_cpy(hdr, hdr + m_header_len, m_ibuffer_offset - m_header_len);
 					m_ibuffer_offset -= m_header_len;
 				} else
 					m_ibuffer_offset = 0;
@@ -677,7 +686,7 @@ _u32 cHttpServerConnection::res_write(_u8 *data, _u32 size) {
 			_u32 brem = bsz - m_obuffer_offset;
 
 			if((r = (size < brem ) ? size : brem)) {
-				mpi_str->mem_cpy(ptr + m_obuffer_offset, data, r);
+				gpi_str->mem_cpy(ptr + m_obuffer_offset, data, r);
 				m_obuffer_offset += r;
 			}
 		}

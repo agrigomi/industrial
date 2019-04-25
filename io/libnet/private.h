@@ -80,7 +80,6 @@ public:
 class cHttpServerConnection: public iHttpServerConnection {
 private:
 	cSocketIO	*mp_sio;
-	iStr		*mpi_str;
 	iBufferMap	*mpi_bmap;
 	iMap		*mpi_map;  // request variables container
 	HBUFFER		m_ibuffer; // input buffer
