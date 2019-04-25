@@ -295,10 +295,10 @@ public:
 					if(pn->flags & NF_INIT) { // catch
 						if(strcmp(oi.iname, I_NET) == 0) {
 							mpi_log->write(LMT_INFO, "ExtHttp: catch networking");
-							mpi_net = (iNet *)pn->object;
+							mpi_net = dynamic_cast<iNet *>(_gpi_repo_->object_by_handle(pn->hobj, RF_ORIGINAL));
 						} else if(strcmp(oi.iname, I_FS) == 0) {
 							mpi_log->write(LMT_INFO, "ExtHttp: catch FS support");
-							mpi_fs = (iFS *)pn->object;
+							mpi_fs = dynamic_cast<iFS *>(_gpi_repo_->object_by_handle(pn->hobj, RF_ORIGINAL));
 							if((mpi_fcache = (iFileCache *)_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE)))
 								mpi_fcache->init("/tmp", "ExtHttp");
 						}
