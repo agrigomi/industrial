@@ -204,6 +204,10 @@ public:
 
 				if(r)
 					r->start();
+				else {
+					if(srv.mpi_map)
+						_gpi_repo_->object_release(srv.mpi_map);
+				}
 			}
 		}
 
