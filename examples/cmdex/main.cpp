@@ -43,6 +43,10 @@ _err_t main(int argc, char *argv[]) {
 		handle(SIGSEGV, NULL); // Set signal action to our handler.
 		handle(SIGABRT, NULL);
 
+		handle(SIGINT, [](int signum, siginfo_t *info, void *arg) {
+			printf("\n");
+		});
+
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = dynamic_cast<iLog*>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
 		gpi_stdio = dynamic_cast<iStdIO*>(pi_repo->object_by_iname(I_STD_IO, RF_ORIGINAL));
