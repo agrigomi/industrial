@@ -36,6 +36,8 @@ static _cstr_t extensions[] = {
 	0
 };
 
+static int g_signal = 0;
+
 _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
 
@@ -43,12 +45,15 @@ _err_t main(int argc, char *argv[]) {
 		handle(SIGSEGV, NULL); // Set signal action to our handler.
 		handle(SIGABRT, NULL);
 		handle(SIGINT, [](int signum, siginfo_t *info, void *arg) {
+			g_signal = signum;
 			printf("SIGINT\n");
 		});
 		handle(SIGQUIT, [](int signum, siginfo_t *info, void *arg) {
+			g_signal = signum;
 			printf("SIGQUIT\n");
 		});
 		handle(SIGTSTP, [](int signum, siginfo_t *info, void *arg) {
+			g_signal = signum;
 			printf("SITTSTP\n");
 		});
 
@@ -99,24 +104,29 @@ _err_t main(int argc, char *argv[]) {
 
 		if(pi_cmd_host && gpi_stdio) {
 			_char_t buffer[1024]="";
-			_u32 n = 0;
+
 			for(;;) {
 				gpi_stdio->write((_str_t)"cmdex: ", 7);
 				if((n = gpi_stdio->reads(buffer, sizeof(buffer)))) {
 					if(n > 1) {
-						if(memcmp(buffer, "quit", 4) == 0) {
-							n = 0;
-
-							while(extensions[n]) {
-								pi_repo->extension_unload(extensions[n]);
-								n++;
-							}
-
+						if(memcmp(buffer, "quit\n", 5) == 0)
 							break;
-						}
 						pi_cmd_host->exec(buffer, gpi_stdio);
 					}
+				} else {
+					if(!g_signal) // stdin closed
+						break;
 				}
+
+				g_signal = 0;
+			}
+
+			pi_repo->object_release(pi_cmd_host);
+
+			n = 0;
+			while(extensions[n]) {
+				pi_repo->extension_unload(extensions[n]);
+				n++;
 			}
 		}
 	}
