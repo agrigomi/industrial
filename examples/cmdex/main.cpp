@@ -42,9 +42,14 @@ _err_t main(int argc, char *argv[]) {
 	if(r == ERR_NONE) {
 		handle(SIGSEGV, NULL); // Set signal action to our handler.
 		handle(SIGABRT, NULL);
-
 		handle(SIGINT, [](int signum, siginfo_t *info, void *arg) {
-			printf("\n");
+			printf("SIGINT\n");
+		});
+		handle(SIGQUIT, [](int signum, siginfo_t *info, void *arg) {
+			printf("SIGQUIT\n");
+		});
+		handle(SIGTSTP, [](int signum, siginfo_t *info, void *arg) {
+			printf("SITTSTP\n");
 		});
 
 		iRepository *pi_repo = get_repository();
