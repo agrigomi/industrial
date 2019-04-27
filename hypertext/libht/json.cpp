@@ -16,7 +16,7 @@ public:
 
 		switch(cmd) {
 			case OCTL_INIT:
-				if((mpi_heap = (iHeap *)_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL)))
+				if((mpi_heap = (iHeap *)_gpi_repo_->object_by_iname(I_HEAP, RF_CLONE)))
 					r = true;
 				break;
 			case OCTL_UNINIT:
