@@ -155,7 +155,7 @@ typedef struct {
 class iBufferMap: public iBase {
 public:
 	INTERFACE(iBufferMap, I_BUFFER_MAP);
-	virtual void init(_u32 buffer_size, _buffer_io_t *pcb_bio)=0;
+	virtual void init(_u32 buffer_size, _buffer_io_t *pcb_bio, iHeap *pi_heap=0)=0;
 	virtual void uninit(void)=0;
 	virtual HBUFFER alloc(void *udata=0)=0;
 	virtual void free(HBUFFER)=0;

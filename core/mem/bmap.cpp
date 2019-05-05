@@ -49,14 +49,9 @@ public:
 			case OCTL_INIT: {
 				m_bsize = 0;
 				m_pcb_bio = 0;
-				iRepository *pi_repo = (iRepository *)arg;
-
-				mpi_heap = dynamic_cast<iHeap *>(pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL));
-				mpi_list = dynamic_cast<iLlist *>(pi_repo->object_by_iname(I_LLIST, RF_CLONE));
-				if(mpi_list && mpi_heap) {
-					mpi_list->init(LL_VECTOR, 3);
-					r = true;
-				}
+				mpi_heap = 0;
+				mpi_list = 0;
+				r = true;
 			} break;
 			case OCTL_UNINIT: {
 				iRepository *pi_repo = (iRepository *)arg;
@@ -72,8 +67,14 @@ public:
 		return r;
 	}
 
-	void init(_u32 buffer_size, _buffer_io_t *pcb_bio) {
+	void init(_u32 buffer_size, _buffer_io_t *pcb_bio, iHeap *pi_heap=0) {
 		if(!m_bsize) {
+			if(!(mpi_heap = pi_heap))
+				mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
+
+			if((mpi_list = dynamic_cast<iLlist *>(_gpi_repo_->object_by_iname(I_LLIST, RF_CLONE))))
+				mpi_list->init(LL_VECTOR, 3, mpi_heap);
+
 			m_bsize = buffer_size;
 			m_pcb_bio = pcb_bio;
 		}
