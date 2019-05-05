@@ -33,11 +33,7 @@ public:
 		switch(cmd) {
 			case OCTL_INIT: {
 				iRepository *p_repo = (iRepository *)arg;
-				if(!mpi_mutex)
-					mpi_mutex = (iMutex*)p_repo->object_by_iname(I_MUTEX, RF_CLONE);
-				if(!mpi_heap)
-					mpi_heap = (iHeap*)p_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
-				if(mpi_mutex && mpi_heap)
+				if((mpi_mutex = (iMutex*)p_repo->object_by_iname(I_MUTEX, RF_CLONE)))
 					r = true;
 				break;
 			}
@@ -56,7 +52,10 @@ public:
 		return r;
 	}
 
-	void init(_u8 mode, _u8 ncol) {
+	void init(_u8 mode, _u8 ncol, iHeap *pi_heap=0) {
+		if(!(mpi_heap = pi_heap))
+			mpi_heap = (iHeap *)_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL);
+
 		memset(&m_cxt, 0, sizeof(_ll_context_t));
 		m_cxt.mode = mode;
 		m_cxt.ccol = 0;

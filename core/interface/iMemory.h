@@ -50,7 +50,7 @@ public:
 	virtual HMUTEX lock(HMUTEX hlock=0)=0;
 	virtual void unlock(HMUTEX hlock)=0;
 	// init hash-table context
-	virtual bool init(_u32 calacity)=0;
+	virtual bool init(_u32 capacity, iHeap *pi_heap=0)=0;
 	// add new record (if already exists, returns pointer to existing one)
 	virtual void *add(const void *key, _u32 sz_key, const void *data, _u32 sz_data, HMUTEX hlock=0)=0;
 	// Same as add, but overwrite existing record and returns pointer to new one
@@ -78,7 +78,7 @@ public:
 class iLlist:public iBase {
 public:
 	INTERFACE(iLlist, I_LLIST);
-	virtual void init(_u8 mode, _u8 ncol)=0;
+	virtual void init(_u8 mode, _u8 ncol, iHeap *pi_heap=0)=0;
 	virtual void uninit(void)=0;
 
 	virtual HMUTEX lock(HMUTEX hlock=0)=0;

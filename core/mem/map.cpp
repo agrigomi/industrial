@@ -4,8 +4,6 @@
 #include "sha1.h"
 #include "map_alg.h"
 
-#define INITIAL_CAPACITY	255
-
 class cMap: public iMap {
 private:
 	iHeap *mpi_heap;
@@ -13,6 +11,7 @@ private:
 	_map_context_t map_cxt;
 	SHA1Context sha1_cxt;
 	bool m_is_init;
+
 	static void *_alloc(_u32 size, void *udata) {
 		void *r = 0;
 		cMap *pobj = (cMap *)udata;
@@ -47,10 +46,10 @@ public:
 				iRepository *pi_repo = (iRepository *)arg;
 
 				m_is_init = false;
+				mpi_heap = 0;
 				mpi_mutex = (iMutex *)pi_repo->object_by_iname(I_MUTEX, RF_CLONE);
-				mpi_heap = (iHeap *)pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
 
-				if(mpi_mutex && mpi_heap)
+				if(mpi_mutex)
 					r = true;
 			} break;
 			case OCTL_UNINIT: {
@@ -66,11 +65,14 @@ public:
 		return r;
 	}
 
-	bool init(_u32 calacity) {
+	bool init(_u32 capacity, iHeap *pi_heap=0) {
 		bool r = false;
 
+		if(!(mpi_heap = pi_heap))
+			mpi_heap = (iHeap *)_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL);
+
 		map_cxt.records = map_cxt.collisions = 0;
-		map_cxt.capacity = INITIAL_CAPACITY;
+		map_cxt.capacity = capacity;
 		map_cxt.pf_mem_alloc = _alloc;
 		map_cxt.pf_mem_free = _free;
 		map_cxt.pf_hash = _hash;
