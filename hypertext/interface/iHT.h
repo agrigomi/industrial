@@ -61,6 +61,9 @@ public:
 #define JVT_NUMBER	2
 #define JVT_OBJECT	3
 #define JVT_ARRAY	4
+#define JVT_TRUE	5
+#define JVT_FALSE	6
+#define JVT_NULL	7
 
 // JSON value handle
 #define HTVALUE		void*

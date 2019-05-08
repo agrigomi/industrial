@@ -85,6 +85,7 @@ static _json_err_t parse_string_name(_json_context_t *p_jcxt, _json_string_t *p_
 static _json_err_t parse_string_value(_json_context_t *p_jcxt, _json_string_t *p_jstr, unsigned int *C);
 static _json_err_t parse_number(_json_context_t *p_jcxt, _json_number_t *p_jnum, unsigned int *C, unsigned long cpos);
 static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue, unsigned int *C, unsigned long cpos);
+static _json_err_t parse_const(_json_context_t *p_jcxt, _json_value_t *p_jvalue, unsigned int *C, unsigned long cpos);
 
 static _json_err_t alloc_array_values(_json_context_t *p_jcxt, _json_array_t *p_jarray) {
 	_json_err_t r = JSON_OK;
@@ -380,11 +381,17 @@ static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray,
 				;
 			else if(jvalue.jvt == JSON_OBJECT && c == '}')
 				;
-			else if(jvalue.jvt == JSON_NUMBER &&
+			else if((jvalue.jvt == JSON_NUMBER ||
+				 jvalue.jvt == JSON_TRUE ||
+				 jvalue.jvt == JSON_FALSE ||
+				 jvalue.jvt == JSON_NULL) &&
 					(c == ',' || c == ' ' || c == '\r' ||
 					 c == '\n' || c == '\t'))
 				;
-			else if(jvalue.jvt == JSON_NUMBER && c == ']') {
+			else if((jvalue.jvt == JSON_NUMBER  ||
+				 jvalue.jvt == JSON_TRUE ||
+				 jvalue.jvt == JSON_FALSE ||
+				 jvalue.jvt == JSON_NULL) && c == ']') {
 				if(!add_array_value(p_jcxt, p_jarray, &jvalue))
 					r = JSON_MEMORY_ERROR;
 				break;
@@ -404,6 +411,34 @@ static _json_err_t parse_array(_json_context_t *p_jcxt, _json_array_t *p_jarray,
 
 		if(c == ']')
 			break;
+	}
+
+	*C = c;
+
+	return r;
+}
+
+static _json_err_t parse_const(_json_context_t *p_jcxt, _json_value_t *p_jvalue, unsigned int *C, unsigned long cpos) {
+	_json_err_t r = JSON_OK;
+	unsigned int c = *C;
+	_ht_content_t *p_hc = &p_jcxt->p_htc->ht_content;
+	unsigned long pos = cpos;
+	unsigned int sz = 0;
+
+	while(c >= 'a' && c <= 'z') {
+		c = p_jcxt->p_htc->pf_read(p_hc, &pos);
+		sz++;
+	}
+
+	if(ht_compare(p_jcxt->p_htc, (unsigned char *)"true", p_hc->p_content + cpos, sz) == 0)
+		p_jvalue->jvt = JSON_TRUE;
+	else if(ht_compare(p_jcxt->p_htc, (unsigned char *)"false", p_hc->p_content + cpos, sz) == 0)
+		p_jvalue->jvt = JSON_FALSE;
+	else if(ht_compare(p_jcxt->p_htc, (unsigned char *)"null", p_hc->p_content + cpos, sz) == 0)
+		p_jvalue->jvt = JSON_NULL;
+	else {
+		r = JSON_PARSE_ERROR;
+		p_jcxt->err_pos = cpos;
 	}
 
 	*C = c;
@@ -434,6 +469,9 @@ static _json_err_t parse_value(_json_context_t *p_jcxt, _json_value_t *p_jvalue,
 		} else if((c >= '0' && c <= '9') || c == '-' || c == '+' || c == '.') {
 			p_jvalue->jvt = JSON_NUMBER;
 			r = parse_number(p_jcxt, &p_jvalue->number, &c, pos);
+			break;
+		} else if(c >= 'a' && c <= 'z') {
+			r = parse_const(p_jcxt, p_jvalue, &c, pos);
 			break;
 		} else if(c == ',' || c == '}' || c == ']')
 			break;
@@ -514,13 +552,22 @@ _pair_value_:
 					;
 				else if(jpair.value.jvt == JSON_OBJECT && c == '}')
 					;
-				else if(jpair.value.jvt == JSON_NUMBER &&
+				else if((jpair.value.jvt == JSON_NUMBER ||
+					 jpair.value.jvt == JSON_TRUE ||
+					 jpair.value.jvt == JSON_FALSE ||
+					 jpair.value.jvt == JSON_NULL) &&
 						(c == ' ' || c == '\r' ||
 						 c == '\n' || c == '\t'))
 					;
-				else if(jpair.value.jvt == JSON_NUMBER && c == ',')
+				else if((jpair.value.jvt == JSON_NUMBER ||
+					 jpair.value.jvt == JSON_TRUE ||
+					 jpair.value.jvt == JSON_FALSE ||
+					 jpair.value.jvt == JSON_NULL) && c == ',')
 					flags = 0;
-				else if(jpair.value.jvt == JSON_NUMBER && c == '}') {
+				else if((jpair.value.jvt == JSON_NUMBER ||
+					 jpair.value.jvt == JSON_TRUE ||
+					 jpair.value.jvt == JSON_FALSE ||
+					 jpair.value.jvt == JSON_NULL) && c == '}') {
 					if(!add_object_pair(p_jcxt, p_jobj, &jpair))
 						r = JSON_MEMORY_ERROR;
 					break;

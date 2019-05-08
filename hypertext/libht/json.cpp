@@ -100,6 +100,15 @@ public:
 			case JSON_ARRAY:
 				r = JVT_ARRAY;
 				break;
+			case JSON_TRUE:
+				r = JVT_TRUE;
+				break;
+			case JSON_FALSE:
+				r = JVT_FALSE;
+				break;
+			case JSON_NULL:
+				r = JVT_NULL;
+				break;
 		}
 
 		return r;
