@@ -210,13 +210,18 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 							p_httpc->res_mtime(mpi_fcache->mtime(fc));
 							p_httpc->res_write(ptr, doc_sz);
 							p_httpc->set_udata((_ulong)fc, IDX_FCACHE);
-						} else
+						} else {
 							p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
+							mpi_fcache->close(fc);
+						}
 					} else if(key.method == HTTP_METHOD_HEAD) {
 						p_httpc->res_mtime(mpi_fcache->mtime(fc));
 						p_httpc->res_code(HTTPRC_OK);
-					} else
+						mpi_fcache->close(fc);
+					} else {
 						p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
+						mpi_fcache->close(fc);
+					}
 				} else {
 					p_httpc->res_code(HTTPRC_NOT_FOUND);
 					call_handler(ON_NOT_FOUND, p_httpc);
