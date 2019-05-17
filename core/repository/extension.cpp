@@ -55,8 +55,8 @@ public:
 			m_init = (_init_t *)dlsym(m_handle, "init");
 			m_get_base_array = (_get_base_array_t *)dlsym(m_handle, "get_base_array");
 			if(m_init) {
-				strncpy(m_file, file, sizeof(m_file));
-				strncpy(m_alias, (alias)?alias:basename(file), sizeof(m_alias));
+				strncpy(m_file, file, sizeof(m_file)-1);
+				strncpy(m_alias, (alias)?alias:basename(file), sizeof(m_alias)-1);
 				r = ERR_NONE;
 			} else {
 				dlclose(m_handle);

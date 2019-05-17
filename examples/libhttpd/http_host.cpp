@@ -208,7 +208,7 @@ private:
 		_str_t arg_max_conn = mpi_args->value("httpd-max-connections");
 		_str_t arg_conn_timeout = mpi_args->value("httpd-connection-timeout");
 
-		_char_t name[256]="";
+		_char_t name[32]="";
 
 		if(arg_port && arg_root) {
 			if(arg_name)

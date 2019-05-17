@@ -179,7 +179,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 
 		memset(&key, 0, sizeof(_route_key_t));
 		key.method = p_httpc->req_method();
-		strncpy(key.path, url, sizeof(key.path));
+		strncpy(key.path, url, sizeof(key.path)-1);
 
 		_route_data_t *prd = (_route_data_t *)mpi_map->get(&key, sizeof(_route_key_t), &sz);
 
