@@ -5,7 +5,7 @@ BUILD_FILE=.fg/compile.mk
 BUILD_DEPENDENCY=.fg/dependency.mk
 INSTALL_PROJECT=.fg/install.mk
 #--------------------------------------
-DEFAULT_CONFIG = unix
+DEFAULT_CONFIG = unix-x86_64-debug
 COMPILER=g++
 LINKER=g++
 ARCHIVER=ar

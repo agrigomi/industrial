@@ -1,0 +1,8 @@
+OUTDIR=bin
+SRCSUFFIX=.cpp
+COMPILER_FLAGS=-c -O2 -Wall -DBUILD_CONFIG="$(CONFIG)"
+INCLUDES=-Icore/include -Icore/interface -Ihypertext/interface
+COMPILER_FLAGS+=$(INCLUDES)
+LIBRARY += -lstdc++
+DEPENDENCY_FLAGS+=$(INCLUDES)
+
