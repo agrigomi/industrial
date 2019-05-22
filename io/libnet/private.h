@@ -57,7 +57,6 @@ private:
 	_u32 m_port;
 	struct sockaddr_in m_serveraddr;
 	_s32 m_server_socket;
-	bool m_use_ssl;
 	SSL_CTX *mp_sslcxt;
 	HOBJECT m_hsio;
 
@@ -65,11 +64,9 @@ private:
 	void destroy_ssl(void);
 public:
 	BASE(cTCPServer, CLASS_NAME_TCP_SERVER, RF_CLONE, 1,0,0);
-	bool _init(_u32 port);
+	bool _init(_u32 port, SSL_CTX *ssl_context=NULL);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
-	bool enable_ssl(bool, _ulong options=0);
-	bool ssl_use(_cstr_t str, _u32 type);
 	iSocketIO *listen(void);
 	void blocking(bool mode=true); /* blocking or nonblocking IO */
 	void close(iSocketIO *p_io);
@@ -244,12 +241,11 @@ public:
 			_u32 buffer_size=8192,
 			_u32 max_workers=32,
 			_u32 max_connections=500,
-			_u32 connection_timeout=10);
+			_u32 connection_timeout=10,
+			SSL_CTX *ssl_context=NULL);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	void on_event(_u8 evt, _on_http_event_t *handler, void *udata=NULL);
-	bool enable_ssl(bool, _ulong options=0);
-	bool ssl_use(_cstr_t str, _u32 type);
 	bool is_running(void) {
 		return m_is_running;
 	}

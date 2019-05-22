@@ -21,22 +21,10 @@ public:
 	virtual bool peer_ip(_str_t strip, _u32 len)=0;
 };
 
-#define SSL_CERT_ASN1		1
-#define SSL_CERT_PEM		2
-#define SSL_CERT_ASN1_FILE	3
-#define SSL_CERT_PEM_FILE	4
-#define SSL_CERT_CHAIN_FILE	5
-#define SSL_PKEY_ASN1		11
-#define SSL_PKEY_PEM		12
-#define SSL_PKEY_ASN1_FILE	13
-#define SSL_PKEY_PEM_FILE	14
-
 class iTCPServer: public iBase {
 public:
 	INTERFACE(iTCPServer, I_TCP_SERVER);
 	virtual iSocketIO *listen(void)=0;
-	virtual bool enable_ssl(bool, _ulong options=0)=0;
-	virtual bool ssl_use(_cstr_t str, _u32 type)=0;
 	virtual void blocking(bool)=0; /* blocking or nonblocking IO */
 	virtual void close(iSocketIO *p_io)=0;
 };
@@ -165,8 +153,6 @@ class iHttpServer: public iBase {
 public:
 	INTERFACE(iHttpServer, I_HTTP_SERVER);
 	virtual void on_event(_u8 evt, _on_http_event_t *handler, void *udata=NULL)=0;
-	virtual bool enable_ssl(bool, _ulong options=0)=0;
-	virtual bool ssl_use(_cstr_t str, _u32 type)=0;
 	virtual bool is_running(void)=0;
 };
 
@@ -178,12 +164,13 @@ public:
 	virtual iSocketIO *create_multicast_sender(_cstr_t group, _u32 port)=0;
 	virtual iSocketIO *create_multicast_listener(_cstr_t group, _u32 port)=0;
 	virtual void close_socket(iSocketIO *p_sio)=0;
-	virtual iTCPServer *create_tcp_server(_u32 port)=0;
+	virtual iTCPServer *create_tcp_server(_u32 port, SSL_CTX *ssl_context=NULL)=0;
 	virtual iSocketIO *create_tcp_client(_cstr_t host, _u32 port, SSL_CTX *ssl_context=NULL)=0;
 	virtual iHttpServer *create_http_server(_u32 port, _u32 buffer_size=8192,
 						_u32 max_workers=32,
 						_u32 max_connections=500,
-						_u32 connection_timeout=10)=0;
+						_u32 connection_timeout=10,
+						SSL_CTX *ssl_context=NULL)=0;
 };
 
 #endif

@@ -133,12 +133,12 @@ public:
 		}
 	}
 
-	iTCPServer *create_tcp_server(_u32 port) {
+	iTCPServer *create_tcp_server(_u32 port, SSL_CTX *ssl_context=NULL) {
 		iTCPServer *r = 0;
 
 		cTCPServer *pctcps = (cTCPServer *)_gpi_repo_->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE);
 		if(pctcps) {
-			if(pctcps->_init(port))
+			if(pctcps->_init(port, ssl_context))
 				r = pctcps;
 			else
 				_gpi_repo_->object_release(pctcps);
@@ -180,15 +180,16 @@ public:
 		return r;
 	}
 
-	iHttpServer *create_http_server(_u32 port, _u32 buffer_size,
-					_u32 max_workers,
-					_u32 max_connections,
-					_u32 connection_timeout) {
+	iHttpServer *create_http_server(_u32 port, _u32 buffer_size=8192,
+					_u32 max_workers=32,
+					_u32 max_connections=500,
+					_u32 connection_timeout=10,
+					SSL_CTX *ssl_context=NULL) {
 		iHttpServer *r = 0;
 		cHttpServer *chttps = (cHttpServer *)_gpi_repo_->object_by_cname(CLASS_NAME_HTTP_SERVER, RF_CLONE);
 
 		if(chttps) {
-			if(chttps->_init(port, buffer_size, max_workers, max_connections, connection_timeout))
+			if(chttps->_init(port, buffer_size, max_workers, max_connections, connection_timeout, ssl_context))
 				r = chttps;
 			else
 				_gpi_repo_->object_release(chttps);

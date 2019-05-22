@@ -30,11 +30,12 @@ bool cHttpServer::_init(_u32 port,
 			_u32 buffer_size,
 			_u32 max_workers,
 			_u32 max_connections,
-			_u32 connection_timeout) {
+			_u32 connection_timeout,
+			SSL_CTX *ssl_context) {
 	bool r = false;
 
 	if(p_tcps && !m_is_init) {
-		if((m_is_init = r = p_tcps->_init(port))) {
+		if((m_is_init = r = p_tcps->_init(port, ssl_context))) {
 			mpi_bmap->init(buffer_size, buffer_io);
 			m_max_workers = max_workers;
 			m_max_connections = max_connections;
@@ -312,26 +313,6 @@ void cHttpServer::remove_all_connections(void) {
 	clear_column(CBUSY, hm);
 
 	mpi_list->unlock(hm);
-}
-
-bool cHttpServer::enable_ssl(bool enable, _ulong options) {
-	bool r = false;
-
-	if(m_is_init && p_tcps) {
-		if((r = p_tcps->enable_ssl(enable, options)))
-			m_use_ssl = enable;
-	}
-
-	return r;
-}
-
-bool cHttpServer::ssl_use(_cstr_t str, _u32 type) {
-	bool r = false;
-
-	if(m_is_init && m_use_ssl && p_tcps)
-		r = p_tcps->ssl_use(str, type);
-
-	return r;
 }
 
 static cHttpServer _g_http_server_;

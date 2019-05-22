@@ -47,7 +47,9 @@ _err_t main(int argc, char *argv[]) {
 			printf("[%c] %s\n", pref, msg);
 		});
 
-		pi_repo->extension_dir("./bin/deploy/unix");
+		//pi_repo->extension_dir("./bin/deploy/unix-x86_64-debug");
+		pi_repo->extension_dir(getenv("LD_LIBRARY_PATH"));
+
 		pi_repo->extension_load("extht.so");
 		pi_repo->extension_load("extfs.so");
 		pi_repo->extension_load("extnet.so");
