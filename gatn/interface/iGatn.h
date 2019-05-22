@@ -61,7 +61,14 @@ class iGatn: public iBase {
 public:
 	INTERFACE(iGatn, I_GATN);
 
-	virtual _server_t *create_server(_cstr_t name, _u32 port, _cstr_t doc_root, _cstr_t cache_path)=0;
+	virtual _server_t *create_server(_cstr_t name, _u32 port,
+					_cstr_t doc_root,
+					_cstr_t cache_path,
+					_u32 buffer_size=8192,
+					_u32 max_workers=32,
+					_u32 max_connections=500,
+					_u32 connection_timeout=10,
+					SSL_CTX *ssl_context=NULL)=0;
 	virtual _server_t *server_by_name(_cstr_t name)=0;
 	virtual void remove_server(_server_t *p_srv)=0;
 	virtual bool stop_server(_server_t *p_srv)=0;

@@ -83,6 +83,11 @@ struct server: public _server_t {
 	iFileCache	*mpi_fcache;
 	_char_t		m_doc_root[MAX_DOC_ROOT_PATH];
 	_char_t		m_cache_path[MAX_CACHE_PATH];
+	_u32		m_buffer_size;
+	_u32		m_max_workers;
+	_u32		m_max_connections;
+	_u32		m_connection_timeout;
+	SSL_CTX		*m_ssl_context;
 
 	bool is_running(void) {
 		return (mpi_server) ? true : false;

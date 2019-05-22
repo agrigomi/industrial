@@ -175,7 +175,15 @@ public:
 		return r;
 	}
 
-	_server_t *create_server(_cstr_t name, _u32 port, _cstr_t doc_root, _cstr_t cache_path) {
+	_server_t *create_server(_cstr_t name, _u32 port,
+				_cstr_t doc_root,
+				_cstr_t cache_path,
+				_u32 buffer_size=8192,
+				_u32 max_workers=32,
+				_u32 max_connections=500,
+				_u32 connection_timeout=10,
+				SSL_CTX *ssl_context=NULL
+				) {
 		_server_t *r = NULL;
 		_u32 sz = 0;
 
@@ -197,7 +205,12 @@ public:
 				srv.mpi_heap = mpi_heap;
 				srv.m_autorestore = false;
 				srv.mpi_bmap = mpi_bmap;
+				srv.m_buffer_size = buffer_size;
 				srv.mpi_fcache = NULL;
+				srv.m_max_workers = max_workers;
+				srv.m_max_connections = max_connections;
+				srv.m_connection_timeout = connection_timeout;
+				srv.m_ssl_context = ssl_context;
 				if((srv.mpi_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE))))
 					if(srv.mpi_map->init(63))
 						r = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(server));

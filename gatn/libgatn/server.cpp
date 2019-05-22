@@ -134,7 +134,9 @@ bool server::start(void) {
 				mpi_fcache->init(m_cache_path, m_name);
 		}
 		if(!mpi_server)
-			mpi_server = mpi_net->create_http_server(m_port, SERVER_BUFFER_SIZE);
+			mpi_server = mpi_net->create_http_server(m_port, m_buffer_size, m_max_workers,
+								m_max_connections, m_connection_timeout,
+								m_ssl_context);
 
 		if(mpi_fcache && mpi_server) {
 			set_handlers();
