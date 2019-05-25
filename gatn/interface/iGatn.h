@@ -64,10 +64,10 @@ public:
 	virtual _server_t *create_server(_cstr_t name, _u32 port,
 					_cstr_t doc_root,
 					_cstr_t cache_path,
-					_u32 buffer_size=8192,
-					_u32 max_workers=32,
-					_u32 max_connections=500,
-					_u32 connection_timeout=10,
+					_u32 buffer_size=HTTP_BUFFER_SIZE,
+					_u32 max_workers=HTTP_MAX_WORKERS,
+					_u32 max_connections=HTTP_MAX_CONNECTIONS,
+					_u32 connection_timeout=HTTP_CONNECTION_TIMEOUT,
 					SSL_CTX *ssl_context=NULL)=0;
 	virtual _server_t *server_by_name(_cstr_t name)=0;
 	virtual void remove_server(_server_t *p_srv)=0;

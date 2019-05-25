@@ -178,10 +178,10 @@ public:
 	_server_t *create_server(_cstr_t name, _u32 port,
 				_cstr_t doc_root,
 				_cstr_t cache_path,
-				_u32 buffer_size=8192,
-				_u32 max_workers=32,
-				_u32 max_connections=500,
-				_u32 connection_timeout=10,
+				_u32 buffer_size=SERVER_BUFFER_SIZE,
+				_u32 max_workers=HTTP_MAX_WORKERS,
+				_u32 max_connections=HTTP_MAX_CONNECTIONS,
+				_u32 connection_timeout=HTTP_CONNECTION_TIMEOUT,
 				SSL_CTX *ssl_context=NULL
 				) {
 		_server_t *r = NULL;
