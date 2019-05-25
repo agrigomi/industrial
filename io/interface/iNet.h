@@ -156,6 +156,11 @@ public:
 	virtual bool is_running(void)=0;
 };
 
+#define HTTP_BUFFER_SIZE	8192
+#define HTTP_MAX_WORKERS	32
+#define HTTP_MAX_CONNECTIONS	500
+#define HTTP_CONNECTION_TIMEOUT	10 // in sec.
+
 class iNet: public iBase {
 public:
 	INTERFACE(iNet, I_NET);
@@ -167,10 +172,10 @@ public:
 	virtual iTCPServer *create_tcp_server(_u32 port, SSL_CTX *ssl_context=NULL)=0;
 	virtual iSocketIO *create_tcp_client(_cstr_t host, _u32 port, SSL_CTX *ssl_context=NULL)=0;
 	virtual iHttpServer *create_http_server(_u32 port,
-						_u32 buffer_size=8192,
-						_u32 max_workers=32,
-						_u32 max_connections=500,
-						_u32 connection_timeout=10,
+						_u32 buffer_size=HTTP_BUFFER_SIZE,
+						_u32 max_workers=HTTP_MAX_WORKERS,
+						_u32 max_connections=HTTP_MAX_CONNECTIONS,
+						_u32 connection_timeout=HTTP_CONNECTION_TIMEOUT,
 						SSL_CTX *ssl_context=NULL)=0;
 };
 

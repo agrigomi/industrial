@@ -238,10 +238,10 @@ private:
 public:
 	BASE(cHttpServer, CLASS_NAME_HTTP_SERVER, RF_CLONE, 1,0,0);
 	bool _init(_u32 port,
-			_u32 buffer_size=8192,
-			_u32 max_workers=32,
-			_u32 max_connections=500,
-			_u32 connection_timeout=10,
+			_u32 buffer_size=HTTP_BUFFER_SIZE,
+			_u32 max_workers=HTTP_MAX_WORKERS,
+			_u32 max_connections=HTTP_MAX_CONNECTIONS,
+			_u32 connection_timeout=HTTP_CONNECTION_TIMEOUT,
 			SSL_CTX *ssl_context=NULL);
 	void _close(void);
 	bool object_ctl(_u32 cmd, void *arg, ...);
