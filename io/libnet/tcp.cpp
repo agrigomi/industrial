@@ -13,6 +13,8 @@ bool cTCPServer::_init(_u32 port, SSL_CTX *ssl_context) {
 		mp_sslcxt = ssl_context;
 
 		_s32 opt = 1;
+		setsockopt(m_server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+		setsockopt(m_server_socket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
 		setsockopt(m_server_socket, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
 		opt = 10;
 		setsockopt(m_server_socket, SOL_TCP, TCP_KEEPIDLE, &opt, sizeof(opt));
