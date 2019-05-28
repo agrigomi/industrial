@@ -260,10 +260,6 @@ public:
 	BASE(cHttpClientConnection, CLASS_NAME_HTTP_CLIENT_CONNECTION, RF_CLONE, 1,0,0);
 	bool _init(iSocketIO *pi_sio, _u32 buffer_size, SSL_CTX *ssl_context);
 	bool object_ctl(_u32 cmd, void *arg, ...);
-	// connect to host
-	bool connect(void);
-	// disconnect from host
-	void disconnect(void);
 	// reset object members
 	void reset(void);
 	// check connection

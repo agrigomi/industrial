@@ -162,10 +162,6 @@ typedef void _on_http_response_t(void *data, _u32 size, void *udata);
 class iHttpClientConnection: public iBase {
 public:
 	INTERFACE(iHttpClientConnection, I_HTTP_CLIENT_CONNECTION);
-	// connect to host
-	virtual bool connect(void)=0;
-	// disconnect from host
-	virtual void disconnect(void)=0;
 	// reset object members
 	virtual void reset(void)=0;
 	// check connection
