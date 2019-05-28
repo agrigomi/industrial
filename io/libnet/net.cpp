@@ -197,6 +197,14 @@ public:
 
 		return r;
 	}
+
+	iHttpClientConnection *create_http_client(_cstr_t host, _u32 port, SSL_CTX *ssl_context=NULL) {
+		iHttpClientConnection *r = 0;
+
+		//...
+
+		return r;
+	}
 };
 
 static cNet _g_net_;

@@ -6,11 +6,12 @@
 #include <openssl/err.h>
 #include "iIO.h"
 
-#define I_SOCKET_IO		"iSocketIO"
-#define I_NET			"iNet"
-#define I_TCP_SERVER		"iTCPServer"
-#define I_HTTP_SERVER		"iHttpServer"
-#define I_HTTP_CONNECTION	"iHttpServerConnection"
+#define I_SOCKET_IO			"iSocketIO"
+#define I_NET				"iNet"
+#define I_TCP_SERVER			"iTCPServer"
+#define I_HTTP_SERVER			"iHttpServer"
+#define I_HTTP_CLIENT_CONNECTION	"iHttpClientConnection"
+#define I_HTTP_SERVER_CONNECTION	"iHttpServerConnection"
 
 class iSocketIO: public iIO {
 public:
@@ -82,7 +83,7 @@ public:
 
 class iHttpServerConnection: public iBase {
 public:
-	INTERFACE(iHttpServerConnection, I_HTTP_CONNECTION);
+	INTERFACE(iHttpServerConnection, I_HTTP_SERVER_CONNECTION);
 	// verify I/O
 	virtual bool alive(void)=0;
 	// close connection
@@ -156,6 +157,41 @@ public:
 	virtual bool is_running(void)=0;
 };
 
+typedef void _on_http_response_t(void *data, _u32 size, void *udata);
+
+class iHttpClientConnection: public iBase {
+public:
+	INTERFACE(iHttpClientConnection, I_HTTP_CLIENT_CONNECTION);
+	// connect to host
+	virtual bool connect(void)=0;
+	// disconnect from host
+	virtual void disconnect(void)=0;
+	// reset object members
+	virtual void reset(void)=0;
+	// check connection
+	virtual bool alive(void)=0;
+	// set request method
+	virtual void req_method(_u8 method)=0;
+	// set request URL
+	virtual void req_url(_cstr_t url)=0;
+	// set request variable
+	virtual void req_var(_cstr_t name, _cstr_t value)=0;
+	// Write request content
+	virtual _u32 req_write(_u8 *data, _u32 size)=0;
+	virtual _u32 req_write(_cstr_t str)=0;
+	virtual _u32 req_write(_cstr_t fmt, ...)=0;
+	// send request with timeout in milliseconds
+	virtual bool send(_u32 timeout_ms, _on_http_response_t *p_cb_resp=NULL, void *udata=NULL)=0;
+	// get response code
+	virtual _u16 res_code(void)=0;
+	// get value from response variable
+	virtual _cstr_t res_var(_cstr_t name, _u32 *sz)=0;
+	// get response content len
+	virtual _u32 res_content_len(void)=0;
+	// get response content
+	virtual void res_content(_on_http_response_t *p_cb_resp, void *udata=NULL)=0;
+};
+
 #define HTTP_BUFFER_SIZE	8192
 #define HTTP_MAX_WORKERS	32
 #define HTTP_MAX_CONNECTIONS	500
@@ -176,6 +212,10 @@ public:
 						_u32 max_workers=HTTP_MAX_WORKERS,
 						_u32 max_connections=HTTP_MAX_CONNECTIONS,
 						_u32 connection_timeout=HTTP_CONNECTION_TIMEOUT,
+						SSL_CTX *ssl_context=NULL)=0;
+	virtual iHttpClientConnection *create_http_client(_cstr_t host,
+						_u32 port,
+						_u32 buffer_size=HTTP_BUFFER_SIZE,
 						SSL_CTX *ssl_context=NULL)=0;
 };
 
