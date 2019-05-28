@@ -198,7 +198,10 @@ public:
 		return r;
 	}
 
-	iHttpClientConnection *create_http_client(_cstr_t host, _u32 port, SSL_CTX *ssl_context=NULL) {
+	iHttpClientConnection *create_http_client(_cstr_t host,
+						_u32 port,
+						_u32 buffer_size=HTTP_BUFFER_SIZE,
+						SSL_CTX *ssl_context=NULL) {
 		iHttpClientConnection *r = 0;
 
 		//...
