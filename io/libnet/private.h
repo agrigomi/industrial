@@ -15,11 +15,11 @@
 #include "iLog.h"
 #include "iStr.h"
 
-#define CLASS_NAME_SOCKET_IO		"cSocketIO"
-#define CLASS_NAME_TCP_SERVER		"cTCPServer"
-#define CLASS_NAME_HTTP_SERVER		"cHttpServer"
-#define CLASS_NAME_HTTP_CONNECTION	"cHttpServerConnection"
-
+#define CLASS_NAME_SOCKET_IO			"cSocketIO"
+#define CLASS_NAME_TCP_SERVER			"cTCPServer"
+#define CLASS_NAME_HTTP_SERVER			"cHttpServer"
+#define CLASS_NAME_HTTP_SERVER_CONNECTION	"cHttpServerConnection"
+#define CLASS_NAME_HTTP_CLIENT_CONNECTION	"cHttpClientConnection"
 // socket I/O mode
 #define SOCKET_IO_UDP		1
 #define SOCKET_IO_TCP		2
@@ -116,7 +116,7 @@ private:
 	void release_buffers(void);
 
 public:
-	BASE(cHttpServerConnection, CLASS_NAME_HTTP_CONNECTION, RF_CLONE, 1,0,0);
+	BASE(cHttpServerConnection, CLASS_NAME_HTTP_SERVER_CONNECTION, RF_CLONE, 1,0,0);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	bool _init(cSocketIO *p_sio, iBufferMap *pi_bmap, _u32 timeout);
 	void close(void);
@@ -249,6 +249,45 @@ public:
 	bool is_running(void) {
 		return m_is_running;
 	}
+};
+
+class cHttpClientConnection: public iHttpClientConnection {
+private:
+	iSocketIO	*mpi_sio;
+	iBufferMap	*mpi_bmap;
+	iMap		*mpi_map;
+public:
+	BASE(cHttpClientConnection, CLASS_NAME_HTTP_CLIENT_CONNECTION, RF_CLONE, 1,0,0);
+	bool _init(iSocketIO *pi_sio, _u32 buffer_size, SSL_CTX *ssl_context);
+	bool object_ctl(_u32 cmd, void *arg, ...);
+	// connect to host
+	bool connect(void);
+	// disconnect from host
+	void disconnect(void);
+	// reset object members
+	void reset(void);
+	// check connection
+	bool alive(void);
+	// set request method
+	void req_method(_u8 method);
+	// set request URL
+	void req_url(_cstr_t url);
+	// set request variable
+	void req_var(_cstr_t name, _cstr_t value);
+	// Write request content
+	_u32 req_write(_u8 *data, _u32 size);
+	_u32 req_write(_cstr_t str);
+	_u32 req_write(_cstr_t fmt, ...);
+	// send request with timeout in milliseconds
+	bool send(_u32 timeout_ms, _on_http_response_t *p_cb_resp=NULL, void *udata=NULL);
+	// get response code
+	_u16 res_code(void);
+	// get value from response variable
+	_cstr_t res_var(_cstr_t name, _u32 *sz);
+	// get response content len
+	_u32 res_content_len(void);
+	// get response content
+	void res_content(_on_http_response_t *p_cb_resp, void *udata=NULL);
 };
 
 #endif

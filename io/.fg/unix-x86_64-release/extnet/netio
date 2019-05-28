@@ -2,6 +2,7 @@ io/libnet/net.cpp
 io/libnet/socket.cpp
 io/libnet/tcp.cpp
 io/libnet/http.cpp
-io/libnet/http_connection.cpp
+io/libnet/http_client_connection.cpp
+io/libnet/http_server_connection.cpp
 io/libnet/url-codec.cpp
 

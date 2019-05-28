@@ -125,7 +125,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			mpi_bmap = (iBufferMap *)pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE);
 			mpi_tmaker = (iTaskMaker *)pi_repo->object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
 			mpi_list = (iLlist *)pi_repo->object_by_iname(I_LLIST, RF_CLONE);
-			m_hconnection = pi_repo->handle_by_cname(CLASS_NAME_HTTP_CONNECTION);
+			m_hconnection = pi_repo->handle_by_cname(CLASS_NAME_HTTP_SERVER_CONNECTION);
 			if(p_tcps && mpi_bmap && mpi_tmaker && mpi_list && m_hconnection) {
 				mpi_list->init(LL_VECTOR, 2);
 				r = true;
