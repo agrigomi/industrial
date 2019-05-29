@@ -171,7 +171,7 @@ public:
 	// set request URL
 	virtual void req_url(_cstr_t url)=0;
 	// set request variable
-	virtual void req_var(_cstr_t name, _cstr_t value)=0;
+	virtual bool req_var(_cstr_t name, _cstr_t value)=0;
 	// Write request content
 	virtual _u32 req_write(_u8 *data, _u32 size)=0;
 	virtual _u32 req_write(_cstr_t str)=0;

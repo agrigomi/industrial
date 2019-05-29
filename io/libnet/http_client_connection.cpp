@@ -30,6 +30,8 @@ bool cHttpClientConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			if(mpp_buffer_array && m_sz_barray)
 				mpi_heap->free(mpp_buffer_array, m_sz_barray * sizeof(void *));
 
+			if(mp_bheader)
+				mpi_heap->free(mp_bheader, m_buffer_size);
 			_gpi_repo_->object_release(mpi_heap);
 			r = true;
 		} break;
@@ -39,14 +41,19 @@ bool cHttpClientConnection::object_ctl(_u32 cmd, void *arg, ...) {
 }
 
 bool cHttpClientConnection::_init(iSocketIO *pi_sio, _u32 buffer_size) {
-	bool r = true;
+	bool r = false;
 
 	mpi_sio = pi_sio;
 	m_buffer_size = buffer_size;
 	mpp_buffer_array = NULL;
+	if((mp_bheader = (_char_t *)mpi_heap->alloc(m_buffer_size))) {
+		memset(mp_bheader, 0, m_buffer_size);
+		r = true;
+	}
 	m_sz_barray = 0;
 	m_req_method = 0;
 	m_content_len = 0;
+	m_header_len = 0;
 	m_res_code = 0;
 	return r;
 }
@@ -83,9 +90,12 @@ _alloc_buffer_:
 
 void cHttpClientConnection::reset(void) {
 	m_content_len = 0;
+	m_header_len = 0;
 	m_req_method = 0;
 	m_res_code = 0;
 	mpi_map->clr();
+	if(mp_bheader)
+		memset(mp_bheader, 0, m_buffer_size);
 }
 
 bool cHttpClientConnection::alive(void) {
@@ -101,14 +111,28 @@ void cHttpClientConnection::req_url(_cstr_t url) {
 	mpi_map->set(KEY_REQ_URL, strlen(KEY_REQ_URL), url, strlen(url));
 }
 
-void cHttpClientConnection::req_var(_cstr_t name, _cstr_t value) {
-	mpi_map->set(name, strlen(name), value, strlen(value));
+bool cHttpClientConnection::req_var(_cstr_t name, _cstr_t value) {
+	bool r = false;
+
+	if(write_header(name, value))
+		r = true;
+
+	return r;
 }
 
 void *cHttpClientConnection::calc_buffer(_u32 *sz) {
 	void *r = NULL;
 
 	//...
+
+	return r;
+}
+
+_u32 cHttpClientConnection::write_header(_cstr_t name, _cstr_t value) {
+	_u32 r = 0;
+
+	r = snprintf(mp_bheader + m_header_len, m_buffer_size - m_header_len - 2, "%s: %s\r\n", name, value);
+	m_header_len += r;
 
 	return r;
 }
