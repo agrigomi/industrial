@@ -175,7 +175,7 @@ public:
 	// Write request content
 	virtual _u32 req_write(_u8 *data, _u32 size)=0;
 	virtual _u32 req_write(_cstr_t str)=0;
-	virtual _u32 req_write(_cstr_t fmt, ...)=0;
+	virtual _u32 _req_write(_cstr_t fmt, ...)=0;
 	// send request with timeout in milliseconds
 	virtual bool send(_u32 timeout_ms, _on_http_response_t *p_cb_resp=NULL, void *udata=NULL)=0;
 	// get response code

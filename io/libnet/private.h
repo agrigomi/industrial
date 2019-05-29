@@ -261,8 +261,10 @@ private:
 	_u32		m_sz_barray;
 	_u8		m_req_method;
 	_u32		m_content_len;
+	_u16		m_res_code;
 
 	void *alloc_buffer(void);
+	_u32 write_buffer(void *data, _u32 size);
 public:
 	BASE(cHttpClientConnection, CLASS_NAME_HTTP_CLIENT_CONNECTION, RF_CLONE, 1,0,0);
 	bool _init(iSocketIO *pi_sio, _u32 buffer_size);
@@ -272,7 +274,9 @@ public:
 	// check connection
 	bool alive(void);
 	// set request method
-	void req_method(_u8 method);
+	void req_method(_u8 method) {
+		m_req_method = method;
+	}
 	// set request URL
 	void req_url(_cstr_t url);
 	// set request variable
@@ -280,15 +284,19 @@ public:
 	// Write request content
 	_u32 req_write(_u8 *data, _u32 size);
 	_u32 req_write(_cstr_t str);
-	_u32 req_write(_cstr_t fmt, ...);
-	// send request with timeout in milliseconds
-	bool send(_u32 timeout_ms, _on_http_response_t *p_cb_resp=NULL, void *udata=NULL);
+	_u32 _req_write(_cstr_t fmt, ...);
+	// send request with timeout in seconds
+	bool send(_u32 timeout_s, _on_http_response_t *p_cb_resp=NULL, void *udata=NULL);
 	// get response code
-	_u16 res_code(void);
+	_u16 res_code(void) {
+		return m_res_code;
+	}
 	// get value from response variable
 	_cstr_t res_var(_cstr_t name, _u32 *sz);
 	// get response content len
-	_u32 res_content_len(void);
+	_u32 res_content_len(void) {
+		return m_content_len;
+	}
 	// get response content
 	void res_content(_on_http_response_t *p_cb_resp, void *udata=NULL);
 };
