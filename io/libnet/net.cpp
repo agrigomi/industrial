@@ -10,6 +10,7 @@ IMPLEMENT_BASE_ARRAY("net", 10)
 class cNet: public iNet {
 private:
 	_s32	m_optval;
+	HOBJECT mh_sio;
 public:
 	BASE(cNet, "cNet", RF_ORIGINAL, 1,0,0);
 
@@ -18,7 +19,8 @@ public:
 
 		switch(cmd) {
 			case OCTL_INIT: {
-				r = true;
+				if((mh_sio = _gpi_repo_->handle_by_cname(CLASS_NAME_SOCKET_IO)))
+					r = true;
 			} break;
 			case OCTL_UNINIT: {
 				r = true;
@@ -33,7 +35,7 @@ public:
 		_s32 sfd = socket(AF_INET, SOCK_DGRAM, 0);
 
 		if(sfd > 0) {
-			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
+			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_handle(mh_sio, RF_CLONE | RF_NONOTIFY);
 			if(pcsio) {
 				m_optval = 1;
 				struct sockaddr_in saddr;
@@ -65,7 +67,7 @@ public:
 		_s32 sfd = socket(AF_INET, SOCK_DGRAM, 0);
 
 		if(sfd > 0) {
-			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
+			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_handle(mh_sio, RF_CLONE | RF_NONOTIFY);
 			if(pcsio) {
 				struct sockaddr_in caddr;
 
@@ -93,7 +95,7 @@ public:
 
 		if(sfd > 0) {
 			struct sockaddr_in caddr;
-			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
+			cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_handle(mh_sio, RF_CLONE | RF_NONOTIFY);
 
 			if(pcsio) {
 				_u32 opt = 1;
@@ -136,7 +138,7 @@ public:
 	iTCPServer *create_tcp_server(_u32 port, SSL_CTX *ssl_context=NULL) {
 		iTCPServer *r = 0;
 
-		cTCPServer *pctcps = (cTCPServer *)_gpi_repo_->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE);
+		cTCPServer *pctcps = (cTCPServer *)_gpi_repo_->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE | RF_NONOTIFY);
 		if(pctcps) {
 			if(pctcps->_init(port, ssl_context))
 				r = pctcps;
@@ -162,7 +164,7 @@ public:
 				saddr.sin_addr = *((struct in_addr *)server->h_addr);
 				saddr.sin_port = htons(port);
 				if(connect(sfd, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in)) >= 0) {
-					cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_cname(CLASS_NAME_SOCKET_IO, RF_CLONE);
+					cSocketIO *pcsio = (cSocketIO *)_gpi_repo_->object_by_handle(mh_sio, RF_CLONE | RF_NONOTIFY);
 					if(pcsio) {
 						if(ssl_context)
 							pcsio->_init(&saddr, 0, sfd, SOCKET_IO_SSL_CLIENT, ssl_context);
@@ -186,7 +188,7 @@ public:
 					_u32 connection_timeout=HTTP_CONNECTION_TIMEOUT,
 					SSL_CTX *ssl_context=NULL) {
 		iHttpServer *r = 0;
-		cHttpServer *chttps = (cHttpServer *)_gpi_repo_->object_by_cname(CLASS_NAME_HTTP_SERVER, RF_CLONE);
+		cHttpServer *chttps = (cHttpServer *)_gpi_repo_->object_by_cname(CLASS_NAME_HTTP_SERVER, RF_CLONE | RF_NONOTIFY);
 
 		if(chttps) {
 			if(chttps->_init(port, buffer_size, max_workers, max_connections, connection_timeout, ssl_context))
@@ -203,8 +205,21 @@ public:
 						_u32 buffer_size=HTTP_BUFFER_SIZE,
 						SSL_CTX *ssl_context=NULL) {
 		iHttpClientConnection *r = 0;
+		iSocketIO *pi_tcpc = create_tcp_client(host, port, ssl_context);
 
-		//...
+		if(pi_tcpc) {
+			cHttpClientConnection *_r = 0;
+
+			if((_r = dynamic_cast<cHttpClientConnection *>(_gpi_repo_->object_by_cname(CLASS_NAME_HTTP_CLIENT_CONNECTION, RF_CLONE | RF_NONOTIFY)))) {
+				if(_r->_init(pi_tcpc, buffer_size))
+					r = _r;
+				else {
+					_gpi_repo_->object_release(_r);
+					_gpi_repo_->object_release(pi_tcpc);
+				}
+			} else
+				_gpi_repo_->object_release(pi_tcpc);
+		}
 
 		return r;
 	}

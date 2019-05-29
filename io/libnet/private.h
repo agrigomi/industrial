@@ -254,11 +254,18 @@ public:
 class cHttpClientConnection: public iHttpClientConnection {
 private:
 	iSocketIO	*mpi_sio;
-	iBufferMap	*mpi_bmap;
 	iMap		*mpi_map;
+	iHeap		*mpi_heap;
+	_u32		m_buffer_size;
+	void		**mpp_buffer_array;
+	_u32		m_sz_barray;
+	_u8		m_req_method;
+	_u32		m_content_len;
+
+	void *alloc_buffer(void);
 public:
 	BASE(cHttpClientConnection, CLASS_NAME_HTTP_CLIENT_CONNECTION, RF_CLONE, 1,0,0);
-	bool _init(iSocketIO *pi_sio, _u32 buffer_size, SSL_CTX *ssl_context);
+	bool _init(iSocketIO *pi_sio, _u32 buffer_size);
 	bool object_ctl(_u32 cmd, void *arg, ...);
 	// reset object members
 	void reset(void);
