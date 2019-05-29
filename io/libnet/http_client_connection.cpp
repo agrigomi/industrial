@@ -105,6 +105,14 @@ void cHttpClientConnection::req_var(_cstr_t name, _cstr_t value) {
 	mpi_map->set(name, strlen(name), value, strlen(value));
 }
 
+void *cHttpClientConnection::calc_buffer(_u32 *sz) {
+	void *r = NULL;
+
+	//...
+
+	return r;
+}
+
 _u32 cHttpClientConnection::write_buffer(void *data, _u32 size) {
 	_u32 r = 0;
 

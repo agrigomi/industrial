@@ -264,6 +264,7 @@ private:
 	_u16		m_res_code;
 
 	void *alloc_buffer(void);
+	void *calc_buffer(_u32 *sz);
 	_u32 write_buffer(void *data, _u32 size);
 public:
 	BASE(cHttpClientConnection, CLASS_NAME_HTTP_CLIENT_CONNECTION, RF_CLONE, 1,0,0);
