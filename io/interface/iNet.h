@@ -168,6 +168,8 @@ public:
 	virtual bool alive(void)=0;
 	// set request method
 	virtual void req_method(_u8 method)=0;
+	// set protocol
+	virtual void req_protocol(_cstr_t protocol)=0;
 	// set request URL
 	virtual void req_url(_cstr_t url)=0;
 	// set request variable

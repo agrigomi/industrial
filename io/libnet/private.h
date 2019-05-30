@@ -268,6 +268,7 @@ private:
 	void *alloc_buffer(void);
 	void *calc_buffer(_u32 *sz);
 	_u32 write_buffer(void *data, _u32 size);
+	bool prepare_req_header(void);
 public:
 	BASE(cHttpClientConnection, CLASS_NAME_HTTP_CLIENT_CONNECTION, RF_CLONE, 1,0,0);
 	bool _init(iSocketIO *pi_sio, _u32 buffer_size);
@@ -280,6 +281,8 @@ public:
 	void req_method(_u8 method) {
 		m_req_method = method;
 	}
+	// set protocol
+	void req_protocol(_cstr_t protocol);
 	// set request URL
 	void req_url(_cstr_t url);
 	// set request variable

@@ -4,8 +4,8 @@
 #define INITIAL_BUFFER_ARRAY	16
 #define MAX_VAR_LEN		1024
 
-#define KEY_REQ_URL	"key-req-url"
-
+#define KEY_REQ_URL		"key-req-url"
+#define KEY_REQ_PROTOCOL	"key-req-protocol"
 
 typedef struct {
 	_char_t pair[MAX_VAR_LEN];
@@ -122,6 +122,10 @@ void cHttpClientConnection::req_url(_cstr_t url) {
 	req_var(KEY_REQ_URL, url);
 }
 
+void cHttpClientConnection::req_protocol(_cstr_t protocol) {
+	req_var(KEY_REQ_PROTOCOL, protocol);
+}
+
 bool cHttpClientConnection::req_var(_cstr_t name, _cstr_t value) {
 	bool r = false;
 	_hdr_pair_t hp;
@@ -196,10 +200,90 @@ _u32 cHttpClientConnection::_req_write(_cstr_t fmt, ...) {
 	return r;
 }
 
+bool cHttpClientConnection::prepare_req_header(void) {
+	bool r = false;
+	_cstr_t rurl = res_var(KEY_REQ_URL);
+	_cstr_t rprotocol = res_var(KEY_REQ_PROTOCOL);
+	static _cstr_t http_1_1 = "HTTP/1.1";
+	typedef struct {
+		_u8 	im;
+		_cstr_t	sm;
+	}_http_method_map;
+
+	static _http_method_map _method_map[] = {
+		{HTTP_METHOD_GET,	"GET"},
+		{HTTP_METHOD_HEAD,	"HEAD"},
+		{HTTP_METHOD_POST,	"POST"},
+		{HTTP_METHOD_PUT,	"PUT"},
+		{HTTP_METHOD_DELETE,	"DELETE"},
+		{HTTP_METHOD_CONNECT,	"CONNECT"},
+		{HTTP_METHOD_OPTIONS,	"OPTIONS"},
+		{HTTP_METHOD_TRACE,	"TRACE"},
+		{0,			NULL}
+	};
+
+	_cstr_t str_method = NULL;
+
+	_u32 n = 0;
+	while(_method_map[n].im) {
+		if(m_req_method == _method_map[n].im) {
+			str_method = _method_map[n].sm;
+			break;
+		}
+		n++;
+	}
+
+	if(!rprotocol)
+		rprotocol = http_1_1;
+
+	if(str_method && rurl) {
+		m_header_len = snprintf(mp_bheader, m_buffer_size, "%s %s %s\r\n", str_method, rurl, rprotocol);
+		mpi_map->del(KEY_REQ_URL, strlen(KEY_REQ_URL));
+		mpi_map->del(KEY_REQ_PROTOCOL, strlen(KEY_REQ_PROTOCOL));
+
+		_map_enum_t me = mpi_map->enum_open();
+
+		if(me) {
+			_u32 sz = 0;
+
+			HMUTEX hm = mpi_map->lock();
+			_hdr_pair_t *p_hp = (_hdr_pair_t *)mpi_map->enum_first(me, &sz, hm);
+
+			while(p_hp) {
+				m_header_len += snprintf(mp_bheader + m_header_len,
+							m_buffer_size - m_header_len,
+							"%s: %s\r\n",
+							p_hp->pair, p_hp->pair + (strlen(p_hp->pair) + 1));
+				p_hp = (_hdr_pair_t *)mpi_map->enum_next(me, &sz, hm);
+			}
+
+			mpi_map->unlock(hm);
+			mpi_map->enum_close(me);
+		}
+
+		if(m_content_len)
+			m_header_len += snprintf(mp_bheader + m_header_len,
+						m_buffer_size - m_header_len,
+						"Content-Length: %u\r\n", m_content_len);
+
+		m_header_len += snprintf(mp_bheader + m_header_len, m_buffer_size - m_header_len, "\r\n");
+		r = true;
+	}
+
+	return r;
+}
+
 bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp, void *udata) {
 	bool r = false;
 
-	//...
+	if(prepare_req_header()) {
+		mpi_sio->blocking(true);
+		mpi_sio->write(mp_bheader, m_header_len);
+
+		reset();
+
+		//...
+	}
 
 	return r;
 }
