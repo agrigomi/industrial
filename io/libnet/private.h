@@ -295,7 +295,7 @@ public:
 		return m_res_code;
 	}
 	// get value from response variable
-	_cstr_t res_var(_cstr_t name, _u32 *sz);
+	_cstr_t res_var(_cstr_t name);
 	// get response content len
 	_u32 res_content_len(void) {
 		return m_content_len;

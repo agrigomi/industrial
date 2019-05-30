@@ -2,10 +2,10 @@
 #include "private.h"
 
 #define INITIAL_BUFFER_ARRAY	16
+#define MAX_VAR_LEN		1024
 
 #define KEY_REQ_URL	"key-req-url"
 
-#define MAX_VAR_LEN	1024
 
 typedef struct {
 	_char_t pair[MAX_VAR_LEN];
@@ -139,8 +139,15 @@ bool cHttpClientConnection::req_var(_cstr_t name, _cstr_t value) {
 
 void *cHttpClientConnection::calc_buffer(_u32 *sz) {
 	void *r = NULL;
+	_u32 bi = m_content_len / m_buffer_size; // buffer index
+	_u32 bo = m_content_len % m_buffer_size; // buffer offset
 
-	//...
+	if(bi < m_sz_barray) {
+		if((r = mpp_buffer_array[bi])) {
+			r = (_u8 *)r + bo;
+			*sz = m_buffer_size - bo;
+		}
+	}
 
 	return r;
 }
@@ -148,20 +155,32 @@ void *cHttpClientConnection::calc_buffer(_u32 *sz) {
 _u32 cHttpClientConnection::write_buffer(void *data, _u32 size) {
 	_u32 r = 0;
 
-	//...
+	while(r < size) {
+		_u32 sz = 0;
+		void *buffer = calc_buffer(&sz);
 
-	return r;
-}
+		if(buffer) {
+			_u32 _sz = ((size - r) < sz) ? (size - r) : sz;
 
-_u32 cHttpClientConnection::req_write(_u8 *data, _u32 size) {
-	_u32 r = write_buffer(data, size);
+			memcpy(buffer, (_u8 *)data + r, _sz);
+			r += _sz;
+		} else {
+			if(!alloc_buffer())
+				break;
+		}
+	}
+
 	m_content_len += r;
 
 	return r;
 }
 
+_u32 cHttpClientConnection::req_write(_u8 *data, _u32 size) {
+	return write_buffer(data, size);
+}
+
 _u32 cHttpClientConnection::req_write(_cstr_t str) {
-	return req_write((_u8 *)str, strlen(str));
+	return write_buffer((_str_t)str, strlen(str));
 }
 
 _u32 cHttpClientConnection::_req_write(_cstr_t fmt, ...) {
@@ -171,7 +190,7 @@ _u32 cHttpClientConnection::_req_write(_cstr_t fmt, ...) {
 
 	va_start(args, fmt);
 	r = vsnprintf(lb, sizeof(lb), fmt, args);
-	r = req_write((_u8 *)lb, r);
+	r = write_buffer(lb, r);
 	va_end(args);
 
 	return r;
@@ -185,7 +204,7 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 	return r;
 }
 
-_cstr_t cHttpClientConnection::res_var(_cstr_t name, _u32 *sz) {
+_cstr_t cHttpClientConnection::res_var(_cstr_t name) {
 	_cstr_t r = NULL;
 	_u32 _sz = 0;
 	_hdr_pair_t *p_hp = (_hdr_pair_t *)mpi_map->get(name, strlen(name), &_sz);

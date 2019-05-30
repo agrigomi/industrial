@@ -181,7 +181,7 @@ public:
 	// get response code
 	virtual _u16 res_code(void)=0;
 	// get value from response variable
-	virtual _cstr_t res_var(_cstr_t name, _u32 *sz)=0;
+	virtual _cstr_t res_var(_cstr_t name)=0;
 	// get response content len
 	virtual _u32 res_content_len(void)=0;
 	// get response content
