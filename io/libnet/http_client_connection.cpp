@@ -24,7 +24,8 @@ bool cHttpClientConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			mpi_sio = NULL;
 			mpi_map = dynamic_cast <iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE | RF_NONOTIFY));
 			mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
-			if(mpi_map && mpi_heap) {
+			mpi_str = dynamic_cast<iStr *>(_gpi_repo_->object_by_iname(I_STR, RF_ORIGINAL));
+			if(mpi_map && mpi_heap && mpi_str) {
 				if(mpi_map->init(31))
 					r = true;
 			}
@@ -32,6 +33,7 @@ bool cHttpClientConnection::object_ctl(_u32 cmd, void *arg, ...) {
 		case OCTL_UNINIT: {
 			_gpi_repo_->object_release(mpi_sio);
 			_gpi_repo_->object_release(mpi_map);
+			_gpi_repo_->object_release(mpi_str);
 
 			for(_u32 i = 0; i < m_sz_barray; i++) {
 				if(mpp_buffer_array[i])
@@ -277,12 +279,39 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 	bool r = false;
 
 	if(prepare_req_header()) {
+		time_t now = time(NULL);
+
 		mpi_sio->blocking(true);
+
+		// send header
 		mpi_sio->write(mp_bheader, m_header_len);
+
+		// send content
+		_u32 sent = 0;
+
+		while(sent < m_content_len) {
+			_u32 bi = sent / m_buffer_size;
+			_u32 bo = sent % m_buffer_size;
+			_u32 rem = m_content_len - sent;
+
+			if(bi >= m_sz_barray)
+				break;
+
+			void *buffer = mpp_buffer_array[bi];
+
+			if(buffer) {
+				_u32 sz = ((m_buffer_size - bo) < rem) ? (m_buffer_size - bo) : rem;
+
+				sent += mpi_sio->write((_u8 *)buffer + bo,  sz);
+			} else
+				break;
+		}
 
 		reset();
 
-		//...
+		if(alive()) {
+			//...
+		}
 	}
 
 	return r;

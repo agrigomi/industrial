@@ -256,6 +256,7 @@ private:
 	iSocketIO	*mpi_sio;
 	iMap		*mpi_map;
 	iHeap		*mpi_heap;
+	iStr		*mpi_str;
 	_u32		m_buffer_size;
 	void		**mpp_buffer_array;
 	_char_t		*mp_bheader;
