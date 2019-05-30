@@ -268,7 +268,6 @@ private:
 	void *alloc_buffer(void);
 	void *calc_buffer(_u32 *sz);
 	_u32 write_buffer(void *data, _u32 size);
-	_u32 write_header(_cstr_t name, _cstr_t value);
 public:
 	BASE(cHttpClientConnection, CLASS_NAME_HTTP_CLIENT_CONNECTION, RF_CLONE, 1,0,0);
 	bool _init(iSocketIO *pi_sio, _u32 buffer_size);

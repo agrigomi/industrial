@@ -5,6 +5,17 @@
 
 #define KEY_REQ_URL	"key-req-url"
 
+#define MAX_VAR_LEN	1024
+
+typedef struct {
+	_char_t pair[MAX_VAR_LEN];
+
+	_u32 size(void) {
+		_u8 key_len = (_u8)strlen(pair) + 1;
+		return (key_len + strlen(pair + key_len) + 1);
+	}
+}_hdr_pair_t;
+
 bool cHttpClientConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
 
@@ -108,13 +119,19 @@ bool cHttpClientConnection::alive(void) {
 }
 
 void cHttpClientConnection::req_url(_cstr_t url) {
-	mpi_map->set(KEY_REQ_URL, strlen(KEY_REQ_URL), url, strlen(url));
+	req_var(KEY_REQ_URL, url);
 }
 
 bool cHttpClientConnection::req_var(_cstr_t name, _cstr_t value) {
 	bool r = false;
+	_hdr_pair_t hp;
+	_u8 key_len = snprintf(hp.pair, sizeof(hp.pair), "%s", name) + 1;
 
-	if(write_header(name, value))
+	snprintf(hp.pair + key_len,
+		sizeof(hp.pair) - key_len - 1,
+		"%s", value);
+
+	if(mpi_map->set(name, strlen(name), &hp, hp.size()))
 		r = true;
 
 	return r;
@@ -124,15 +141,6 @@ void *cHttpClientConnection::calc_buffer(_u32 *sz) {
 	void *r = NULL;
 
 	//...
-
-	return r;
-}
-
-_u32 cHttpClientConnection::write_header(_cstr_t name, _cstr_t value) {
-	_u32 r = 0;
-
-	r = snprintf(mp_bheader + m_header_len, m_buffer_size - m_header_len - 2, "%s: %s\r\n", name, value);
-	m_header_len += r;
 
 	return r;
 }
@@ -178,7 +186,17 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 }
 
 _cstr_t cHttpClientConnection::res_var(_cstr_t name, _u32 *sz) {
-	return (_cstr_t)mpi_map->get(name, strlen(name), sz);
+	_cstr_t r = NULL;
+	_u32 _sz = 0;
+	_hdr_pair_t *p_hp = (_hdr_pair_t *)mpi_map->get(name, strlen(name), &_sz);
+
+	if(p_hp) {
+		_u32 key_len = strlen(p_hp->pair) + 1;
+
+		r = p_hp->pair + key_len;
+	}
+
+	return r;
 }
 
 void cHttpClientConnection::res_content(_on_http_response_t *p_cb_resp, void *udata) {
