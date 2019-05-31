@@ -3,9 +3,10 @@
 
 #define INITIAL_BUFFER_ARRAY	16
 #define MAX_VAR_LEN		1024
+#define MAX_KEY_LEN		256
 
-#define KEY_REQ_URL		"key-req-url"
-#define KEY_REQ_PROTOCOL	"key-req-protocol"
+#define KEY_REQ_URL		"KEY-REQ-URL"
+#define KEY_REQ_PROTOCOL	"KEY-REQ-PROTOCOL"
 
 typedef struct {
 	_char_t pair[MAX_VAR_LEN];
@@ -131,13 +132,17 @@ void cHttpClientConnection::req_protocol(_cstr_t protocol) {
 bool cHttpClientConnection::req_var(_cstr_t name, _cstr_t value) {
 	bool r = false;
 	_hdr_pair_t hp;
+	_char_t key[MAX_KEY_LEN]="";
 	_u8 key_len = snprintf(hp.pair, sizeof(hp.pair), "%s", name) + 1;
+
+	strncpy(key, name, sizeof(key)-1);
+	mpi_str->toupper(key);
 
 	snprintf(hp.pair + key_len,
 		sizeof(hp.pair) - key_len - 1,
 		"%s", value);
 
-	if(mpi_map->set(name, strlen(name), &hp, hp.size()))
+	if(mpi_map->set(key, strlen(key), &hp, hp.size()))
 		r = true;
 
 	return r;
@@ -287,12 +292,12 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 		mpi_sio->write(mp_bheader, m_header_len);
 
 		// send content
-		_u32 sent = 0;
+		_u32 bytes = 0;
 
-		while(sent < m_content_len) {
-			_u32 bi = sent / m_buffer_size;
-			_u32 bo = sent % m_buffer_size;
-			_u32 rem = m_content_len - sent;
+		while(bytes < m_content_len && alive()) {
+			_u32 bi = bytes / m_buffer_size;
+			_u32 bo = bytes % m_buffer_size;
+			_u32 rem = m_content_len - bytes;
 
 			if(bi >= m_sz_barray)
 				break;
@@ -302,25 +307,68 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 			if(buffer) {
 				_u32 sz = ((m_buffer_size - bo) < rem) ? (m_buffer_size - bo) : rem;
 
-				sent += mpi_sio->write((_u8 *)buffer + bo,  sz);
+				bytes += mpi_sio->write((_u8 *)buffer + bo,  sz);
 			} else
 				break;
 		}
 
-		reset();
+		bool complete_header=false, complete_content=false;
 
-		if(alive()) {
-			//...
+		reset();
+		bytes = 0;
+		mpi_sio->blocking(false);
+
+		// receive header ...
+		while(!complete_header && time(NULL) < (now + timeout_s) && alive()) {
+			_u32 n = mpi_sio->read(mp_bheader + bytes, m_buffer_size - bytes);
+
+			if(n) {
+				bytes += n;
+
+				_s32 hdr_end = mpi_str->nfind_string((_str_t)mp_bheader, bytes, "\r\n\r\n");
+
+				if(hdr_end != -1) {
+					m_header_len = hdr_end + 4;
+					complete_header = true;
+				}
+			}
 		}
+
+		if(complete_header) {
+			parse_response_header();
+
+			// receive content ...
+			if(!m_content_len && bytes > m_header_len)
+				m_content_len = bytes - m_header_len;
+
+			if(bytes < m_buffer_size) {
+				// receive the rest of content in header buffer
+				while(!complete_content && time(NULL) < (now + timeout_s) && alive()) {
+					_u32 n = mpi_sio->read(mp_bheader + bytes, m_buffer_size - bytes);
+					//...
+				}
+			}
+		}
+
+		r = complete_header && complete_content;
 	}
 
 	return r;
 }
 
+void cHttpClientConnection::parse_response_header(void) {
+	//...
+}
+
 _cstr_t cHttpClientConnection::res_var(_cstr_t name) {
 	_cstr_t r = NULL;
 	_u32 _sz = 0;
-	_hdr_pair_t *p_hp = (_hdr_pair_t *)mpi_map->get(name, strlen(name), &_sz);
+	_char_t key[MAX_KEY_LEN]="";
+
+	strncpy(key, name, sizeof(key) - 1);
+	mpi_str->toupper(key);
+
+	_hdr_pair_t *p_hp = (_hdr_pair_t *)mpi_map->get(key, strlen(key), &_sz);
 
 	if(p_hp) {
 		_u32 key_len = strlen(p_hp->pair) + 1;
