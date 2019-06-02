@@ -341,12 +341,17 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 			if(!m_content_len && bytes > m_header_len)
 				m_content_len = bytes - m_header_len;
 
-			if(bytes < m_buffer_size) {
 				// receive the rest of content in header buffer
-				while(!complete_content && time(NULL) < (now + timeout_s) && alive()) {
-					_u32 n = mpi_sio->read(mp_bheader + bytes, m_buffer_size - bytes);
+			while(!complete_content && time(NULL) < (now + timeout_s) && alive() && (bytes < m_buffer_size)) {
+				_u32 n = mpi_sio->read(mp_bheader + bytes, m_buffer_size - bytes);
+
+				if(n) {
+					//...
+				} else {
 					//...
 				}
+
+				bytes += n;
 			}
 		}
 
