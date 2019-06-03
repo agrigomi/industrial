@@ -366,7 +366,8 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 				_u32 buffer_idx = 0;
 				_u32 buffer_off = 0;
 
-				while(((bytes - m_header_len) < m_content_len) && alive() && !complete_content) {
+				while(((bytes - m_header_len) < m_content_len) &&
+						alive() && !complete_content && time(NULL) < (now + timeout_s)) {
 					void *buffer = mpp_buffer_array[buffer_idx];
 
 					if(!buffer)
