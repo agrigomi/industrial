@@ -55,22 +55,17 @@ _err_t main(int argc, char *argv[]) {
 		pi_repo->extension_load("extnet.so");
 		pi_repo->extension_load("extgatn.so");
 
-		iJSON *pi_json = (iJSON *)_gpi_repo_->object_by_iname(I_JSON, RF_ORIGINAL);
-
-		if(pi_json) {
-			HTCONTEXT htc = pi_json->create_context();
-			_char_t *json = "{ v1: 123, v2: { _v1: 456}}";
-			if(pi_json->parse(htc, json, strlen(json))) {
-				HTVALUE v2 = pi_json->select(htc, "v1.v2", 0);
-				HTVALUE _v1 = pi_json->select(htc, "_v1", v2);
-				_u8 jvt_v2 = pi_json->type(v2);
-				_u8 jvt_v1 = pi_json->type(_v1);
-				_u32 sz = 0;
-				_cstr_t _v1_data = pi_json->data(_v1, &sz);
-				asm("nop");
+		iNet *pi_net = (iNet *)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
+		if(pi_net) {
+			iHttpClientConnection *pi_httpc = pi_net->create_http_client("google.com", 80);
+			if(pi_httpc) {
+				pi_httpc->req_method(HTTP_METHOD_GET);
+				pi_httpc->req_url("/");
+				pi_httpc->req_var("Connection", "Keep-Alive");
+				pi_httpc->send(10, [](void *data, _u32 size, void *udata) {
+					asm("nop");
+				}, NULL);
 			}
-			pi_json->destroy_context(htc);
-			_gpi_repo_->object_release(pi_json);
 		}
 
 		iGatn *pi_gatn = (iGatn *)pi_repo->object_by_iname(I_GATN, RF_ORIGINAL);
