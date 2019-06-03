@@ -1,4 +1,5 @@
 #include <string.h>
+#include <unistd.h>
 #include "private.h"
 
 #define INITIAL_BUFFER_ARRAY	16
@@ -294,7 +295,7 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 		// send content
 		_u32 bytes = 0;
 
-		while(bytes < m_content_len && alive()) {
+		while(bytes < m_content_len) {
 			_u32 bi = bytes / m_buffer_size;
 			_u32 bo = bytes % m_buffer_size;
 			_u32 rem = m_content_len - bytes;
@@ -331,27 +332,62 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 					m_header_len = hdr_end + 4;
 					complete_header = true;
 				}
-			}
+			} else
+				usleep(10000);
 		}
 
 		if(complete_header) {
 			parse_response_header();
 
 			// receive content ...
-			if(!m_content_len && bytes > m_header_len)
-				m_content_len = bytes - m_header_len;
+			if(!m_content_len) {
+				if(bytes > m_header_len)
+					m_content_len = bytes - m_header_len;
+			} else {
+				if(m_content_len <= (bytes - m_header_len))
+					complete_content = true;
+			}
 
-				// receive the rest of content in header buffer
-			while(!complete_content && time(NULL) < (now + timeout_s) && alive() && (bytes < m_buffer_size)) {
+			// receive the rest of content in header buffer
+			while(!complete_content && time(NULL) < (now + timeout_s) && alive() &&
+					((bytes < m_buffer_size) || (m_content_len <= (bytes - m_header_len)))) {
 				_u32 n = mpi_sio->read(mp_bheader + bytes, m_buffer_size - bytes);
 
 				if(n) {
-					//...
-				} else {
-					//...
-				}
+					bytes += n;
+					if(m_content_len <= (bytes - m_header_len))
+						complete_content = true;
+				} else
+					usleep(10000);
+			}
 
-				bytes += n;
+			// receive the rest of content in buffers
+			if(bytes == m_buffer_size) {
+				_u32 buffer_idx = 0;
+				_u32 buffer_off = 0;
+
+				while(((bytes - m_header_len) < m_content_len) && alive() && !complete_content) {
+					void *buffer = mpp_buffer_array[buffer_idx];
+
+					if(!buffer)
+						buffer = alloc_buffer();
+
+					_u32 n = mpi_sio->read((_u8 *)buffer + buffer_off, m_buffer_size - buffer_off);
+
+					if(n) {
+						bytes += n;
+						buffer_off += n;
+
+						if(buffer_off == m_buffer_size) {
+							buffer_off = 0;
+							buffer_idx++;
+						}
+
+						if((bytes - m_header_len) >= m_content_len)
+							complete_content = true;
+					} else
+						usleep(10000);
+				}
 			}
 		}
 
@@ -385,7 +421,10 @@ _cstr_t cHttpClientConnection::res_var(_cstr_t name) {
 }
 
 void cHttpClientConnection::res_content(_on_http_response_t *p_cb_resp, void *udata) {
-	_u32 content = 0;
+	_u32 content = (m_content_len <= (m_buffer_size - m_header_len)) ? m_content_len : m_buffer_size - m_header_len;
+
+	if(content)
+		p_cb_resp(mp_bheader + m_header_len, content, udata);
 
 	for(_u32 i = 0; i < m_sz_barray; i++) {
 		_u32 rem_sz = m_content_len - content;
@@ -404,3 +443,5 @@ void cHttpClientConnection::res_content(_on_http_response_t *p_cb_resp, void *ud
 			break;
 	}
 }
+
+static cHttpClientConnection _g_http_client_;
