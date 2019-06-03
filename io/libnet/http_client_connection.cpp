@@ -336,13 +336,13 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 				usleep(10000);
 		}
 
-		if(complete_header) {
-			parse_response_header();
-
+		if(complete_header && parse_response_header()) {
 			// receive content ...
 			if(!m_content_len) {
-				if(bytes > m_header_len)
+				if(bytes > m_header_len && bytes < m_buffer_size) {
 					m_content_len = bytes - m_header_len;
+					complete_content = true;
+				}
 			} else {
 				if(m_content_len <= (bytes - m_header_len))
 					complete_content = true;
@@ -398,8 +398,12 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 	return r;
 }
 
-void cHttpClientConnection::parse_response_header(void) {
+bool cHttpClientConnection::parse_response_header(void) {
+	bool r = false;
+
 	//...
+
+	return r;
 }
 
 _cstr_t cHttpClientConnection::res_var(_cstr_t name) {

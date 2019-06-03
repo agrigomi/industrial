@@ -270,7 +270,7 @@ private:
 	void *calc_buffer(_u32 *sz);
 	_u32 write_buffer(void *data, _u32 size);
 	bool prepare_req_header(void);
-	void parse_response_header(void);
+	bool parse_response_header(void);
 public:
 	BASE(cHttpClientConnection, CLASS_NAME_HTTP_CLIENT_CONNECTION, RF_CLONE, 1,0,0);
 	bool _init(iSocketIO *pi_sio, _u32 buffer_size);
