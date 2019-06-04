@@ -57,13 +57,15 @@ _err_t main(int argc, char *argv[]) {
 
 		iNet *pi_net = (iNet *)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
 		if(pi_net) {
-			iHttpClientConnection *pi_httpc = pi_net->create_http_client("google.com", 80);
+			iHttpClientConnection *pi_httpc = pi_net->create_http_client("dropbox.com", 80, 1024);
 			if(pi_httpc) {
 				pi_httpc->req_method(HTTP_METHOD_GET);
 				pi_httpc->req_url("/");
-				pi_httpc->req_var("Connection", "Keep-Alive");
+				//pi_httpc->req_var("Connection", "Keep-Alive");
 				pi_httpc->send(10, [](void *data, _u32 size, void *udata) {
-					asm("nop");
+					fprintf(stdout, "\n------ %u -----\n", size);
+					fwrite(data, size, 1, stdout);
+					fflush(stdout);
 				}, NULL);
 			}
 		}
