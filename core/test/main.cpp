@@ -67,6 +67,8 @@ _err_t main(int argc, char *argv[]) {
 					fwrite(data, size, 1, stdout);
 					fflush(stdout);
 				}, NULL);
+
+				pi_repo->object_release(pi_httpc);
 			}
 		}
 
