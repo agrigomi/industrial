@@ -79,8 +79,12 @@ void *cHttpClientConnection::alloc_buffer(void) {
 
 _alloc_buffer_:
 	for(; i < m_sz_barray; i++) {
-		if(mpp_buffer_array[i] == NULL)
-			r = mpp_buffer_array[i] = mpi_heap->alloc(m_buffer_size);
+		if(mpp_buffer_array[i] == NULL) {
+			if((r = mpp_buffer_array[i] = mpi_heap->alloc(m_buffer_size)))
+				break;
+			else
+				return r;
+		}
 	}
 
 	if(!r && i == m_sz_barray) {
@@ -281,6 +285,30 @@ bool cHttpClientConnection::prepare_req_header(void) {
 	return r;
 }
 
+_u32 cHttpClientConnection::receive_buffer(void *buffer, time_t now, _u32 timeout_s) {
+	_u32 r = 0;
+	_u32 n = 0;
+	_u32 t = 10;
+
+	while(t && r < m_buffer_size && time(NULL) < (now + timeout_s)) {
+		n = mpi_sio->read((_u8 *)buffer + r, m_buffer_size - r);
+
+		if(n) {
+			r += n;
+			t = 10;
+		} else {
+			if(alive()) {
+				if(r)
+					t--;
+				usleep(10000);
+			} else
+				break;
+		}
+	}
+
+	return r;
+}
+
 bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp, void *udata) {
 	bool r = false;
 
@@ -320,86 +348,63 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 		mpi_sio->blocking(false);
 
 		// receive header ...
-		while(!complete_header && time(NULL) < (now + timeout_s) && alive()) {
-			_u32 n = mpi_sio->read(mp_bheader + bytes, m_buffer_size - bytes);
+		if((bytes = receive_buffer(mp_bheader, now, timeout_s))) {
+			_s32 hdr_end = mpi_str->nfind_string((_str_t)mp_bheader, bytes, "\r\n\r\n");
 
-			if(n) {
-				bytes += n;
-
-				_s32 hdr_end = mpi_str->nfind_string((_str_t)mp_bheader, bytes, "\r\n\r\n");
-
-				if(hdr_end != -1) {
-					m_header_len = hdr_end + 4;
-					complete_header = true;
-				}
-			} else
-				usleep(10000);
+			if(hdr_end != -1) {
+				m_header_len = hdr_end + 4;
+				complete_header = true;
+			}
 		}
 
-		if(complete_header && parse_response_header()) {
-			// receive content ...
-			if(!m_content_len) {
-				if(bytes > m_header_len && bytes < m_buffer_size) {
-					m_content_len = bytes - m_header_len;
-					complete_content = true;
-				}
-			} else {
+		// receive the rest of content
+		if(bytes == m_buffer_size) {
+			_u32 buffer_idx = 0;
+
+			while(alive() && time(NULL) < (now + timeout_s)) {
+				void *buffer = NULL;
+
+				if(mpp_buffer_array)
+					buffer = mpp_buffer_array[buffer_idx];
+				_u32 n = 0;
+
+				if(!buffer)
+					buffer = alloc_buffer();
+
+				if(buffer) {
+					if((n = receive_buffer(buffer, now, timeout_s))) {
+						bytes += n;
+						if(n < m_buffer_size)
+							break;
+						else
+							buffer_idx++;
+					}
+				} else
+					break;
+			}
+		}
+
+		if(parse_response_header()) {
+			if(m_content_len) {
 				if(m_content_len <= (bytes - m_header_len))
 					complete_content = true;
-			}
-
-			// receive the rest of content in header buffer
-			while(!complete_content && time(NULL) < (now + timeout_s) && alive() &&
-					((bytes < m_buffer_size) || (m_content_len <= (bytes - m_header_len)))) {
-				_u32 n = mpi_sio->read(mp_bheader + bytes, m_buffer_size - bytes);
-
-				if(n) {
-					bytes += n;
-					if(m_content_len <= (bytes - m_header_len))
-						complete_content = true;
-				} else
-					usleep(10000);
-			}
-
-			// receive the rest of content in buffers
-			if(bytes == m_buffer_size) {
-				_u32 buffer_idx = 0;
-				_u32 buffer_off = 0;
-
-				while(((bytes - m_header_len) < m_content_len) &&
-						alive() && !complete_content && time(NULL) < (now + timeout_s)) {
-					void *buffer = mpp_buffer_array[buffer_idx];
-
-					if(!buffer)
-						buffer = alloc_buffer();
-
-					_u32 n = mpi_sio->read((_u8 *)buffer + buffer_off, m_buffer_size - buffer_off);
-
-					if(n) {
-						bytes += n;
-						buffer_off += n;
-
-						if(buffer_off == m_buffer_size) {
-							buffer_off = 0;
-							buffer_idx++;
-						}
-
-						if((bytes - m_header_len) >= m_content_len)
-							complete_content = true;
-					} else
-						usleep(10000);
-				}
+			} else {
+				m_content_len = bytes - m_header_len;
+				complete_content = true;
 			}
 		}
 
-		r = complete_header && complete_content;
+		if((r = complete_header && complete_content)) {
+			if(p_cb_resp)
+				res_content(p_cb_resp, udata);
+		}
 	}
 
 	return r;
 }
 
 bool cHttpClientConnection::parse_response_header(void) {
-	bool r = false;
+	bool r = true;
 
 	//...
 
