@@ -3,7 +3,7 @@
 #include "private.h"
 
 #define INITIAL_BUFFER_ARRAY	16
-#define MAX_VAR_LEN		1024
+#define MAX_VAR_LEN		4096
 #define MAX_KEY_LEN		256
 
 #define KEY_REQ_URL		"KEY-REQ-URL"
@@ -132,6 +132,26 @@ void cHttpClientConnection::req_url(_cstr_t url) {
 
 void cHttpClientConnection::req_protocol(_cstr_t protocol) {
 	req_var(KEY_REQ_PROTOCOL, protocol);
+}
+
+bool cHttpClientConnection::req_var(_char_t *vname, _u32 sz_vname, _char_t *vvalue, _u32 sz_vvalue) {
+	bool r = false;
+	_hdr_pair_t hp;
+	_char_t key[MAX_KEY_LEN]="";
+
+	strncpy(key, vname, (sz_vname < MAX_KEY_LEN -1) ? sz_vname : MAX_KEY_LEN -1);
+	mpi_str->toupper(key);
+
+	_u8 key_len = snprintf(hp.pair, (sz_vname < MAX_KEY_LEN -1) ? sz_vname : MAX_KEY_LEN -1, "%s", vname) + 1;
+
+	snprintf(hp.pair + key_len,
+		(sz_vvalue < (sizeof(hp.pair) - key_len - 1)) ? sz_vvalue : (sizeof(hp.pair) - key_len - 1),
+		"%s", vvalue);
+
+	if(mpi_map->set(key, strlen(key), &hp, hp.size()))
+		r = true;
+
+	return r;
 }
 
 bool cHttpClientConnection::req_var(_cstr_t name, _cstr_t value) {
