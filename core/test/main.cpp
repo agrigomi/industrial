@@ -57,10 +57,10 @@ _err_t main(int argc, char *argv[]) {
 
 		iNet *pi_net = (iNet *)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
 		if(pi_net) {
-			iHttpClientConnection *pi_httpc = pi_net->create_http_client("dropbox.com", 80, 8192);
+			iHttpClientConnection *pi_httpc = pi_net->create_http_client("printecgroup.com", 80, 8192);
 			if(pi_httpc) {
 				pi_httpc->req_method(HTTP_METHOD_GET);
-				pi_httpc->req_url("/");
+				pi_httpc->req_url("/cgi-sys/defaultwebpage.cgi");
 				pi_httpc->req_var("Connection", "Keep-Alive");
 				pi_httpc->send(10, [](void *data, _u32 size, void *udata) {
 					fprintf(stdout, "\n------ %u -----\n", size);
@@ -68,6 +68,7 @@ _err_t main(int argc, char *argv[]) {
 					fflush(stdout);
 				}, NULL);
 
+				printf("Response Code: %d %s\n", pi_httpc->res_code(), pi_httpc->res_var("KEY-RES-TEXT"));
 				pi_repo->object_release(pi_httpc);
 			}
 		}
