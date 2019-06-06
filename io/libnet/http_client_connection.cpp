@@ -300,7 +300,10 @@ bool cHttpClientConnection::prepare_req_header(void) {
 						m_buffer_size - m_header_len,
 						"Content-Length: %u\r\n", m_content_len);
 
-		m_header_len += snprintf(mp_bheader + m_header_len, m_buffer_size - m_header_len, "\r\n");
+		_char_t _peer_ip[32]="";
+
+		mpi_sio->peer_ip(_peer_ip, sizeof(_peer_ip));
+		m_header_len += snprintf(mp_bheader + m_header_len, m_buffer_size - m_header_len, "Host: %s\r\n\r\n", _peer_ip);
 		r = true;
 	}
 
