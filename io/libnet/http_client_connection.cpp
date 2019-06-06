@@ -148,7 +148,7 @@ bool cHttpClientConnection::add_var(_cstr_t vname, _u32 sz_vname, _cstr_t vvalue
 
 	memset(&hp, 0, sizeof(_hdr_pair_t));
 	memcpy(hp.pair, vname, (sz_vname < MAX_KEY_LEN-1) ? sz_vname : MAX_KEY_LEN-1);
-	memcpy(hp.pair + sz_vname + 1, vvalue, (sz_vvalue < sizeof(hp.pair)-sz_vname+1) ? sz_vvalue : sizeof(hp.pair)-sz_vname+1);
+	memcpy(hp.pair + sz_vname + 1, vvalue, (sz_vvalue < (sizeof(hp.pair)-(sz_vname+1))) ? sz_vvalue : (sizeof(hp.pair)-(sz_vname+1)));
 
 	if(mpi_map->set(key, strlen(key), &hp, hp.size()))
 		r = true;
