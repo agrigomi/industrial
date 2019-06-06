@@ -272,7 +272,9 @@ private:
 	bool prepare_req_header(void);
 	bool parse_response_header(void);
 	_u32 receive_buffer(void *buffer, time_t now, _u32 timeout_s);
-	bool req_var(_char_t *vname, _u32 sz_vname, _char_t *vvalue, _u32 sz_vvalue);
+	bool add_var(_cstr_t vname, _u32 sz_vname, _cstr_t vvalue, _u32 sz_vvalue);
+	_u32 parse_response_line(void);
+	_u32 parse_variable_line(_cstr_t var, _u32 sz_max);
 public:
 	BASE(cHttpClientConnection, CLASS_NAME_HTTP_CLIENT_CONNECTION, RF_CLONE, 1,0,0);
 	bool _init(iSocketIO *pi_sio, _u32 buffer_size);

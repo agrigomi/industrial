@@ -6,8 +6,12 @@
 #define MAX_VAR_LEN		4096
 #define MAX_KEY_LEN		256
 
-#define KEY_REQ_URL		"KEY-REQ-URL"
-#define KEY_REQ_PROTOCOL	"KEY-REQ-PROTOCOL"
+#define KEY_URL		"KEY-URL"
+#define KEY_PROTOCOL	"KEY-PROTOCOL"
+#define KEY_RES_TEXT	"KEY-RES-TEXT"
+#define KEY_RES_CODE	"KEY-RES-CODE"
+#define KEY_CONTENT_LEN "Content-Length"
+#define KEY_RES_HEADER	"KEY-RES-HEADER"
 
 typedef struct {
 	_char_t pair[MAX_VAR_LEN];
@@ -127,14 +131,14 @@ bool cHttpClientConnection::alive(void) {
 }
 
 void cHttpClientConnection::req_url(_cstr_t url) {
-	req_var(KEY_REQ_URL, url);
+	req_var(KEY_URL, url);
 }
 
 void cHttpClientConnection::req_protocol(_cstr_t protocol) {
-	req_var(KEY_REQ_PROTOCOL, protocol);
+	req_var(KEY_PROTOCOL, protocol);
 }
 
-bool cHttpClientConnection::req_var(_char_t *vname, _u32 sz_vname, _char_t *vvalue, _u32 sz_vvalue) {
+bool cHttpClientConnection::add_var(_cstr_t vname, _u32 sz_vname, _cstr_t vvalue, _u32 sz_vvalue) {
 	bool r = false;
 	_hdr_pair_t hp;
 	_char_t key[MAX_KEY_LEN]="";
@@ -142,11 +146,9 @@ bool cHttpClientConnection::req_var(_char_t *vname, _u32 sz_vname, _char_t *vval
 	strncpy(key, vname, (sz_vname < MAX_KEY_LEN -1) ? sz_vname : MAX_KEY_LEN -1);
 	mpi_str->toupper(key);
 
-	_u8 key_len = snprintf(hp.pair, (sz_vname < MAX_KEY_LEN -1) ? sz_vname : MAX_KEY_LEN -1, "%s", vname) + 1;
-
-	snprintf(hp.pair + key_len,
-		(sz_vvalue < (sizeof(hp.pair) - key_len - 1)) ? sz_vvalue : (sizeof(hp.pair) - key_len - 1),
-		"%s", vvalue);
+	memset(&hp, 0, sizeof(_hdr_pair_t));
+	memcpy(hp.pair, vname, (sz_vname < MAX_KEY_LEN-1) ? sz_vname : MAX_KEY_LEN-1);
+	memcpy(hp.pair + sz_vname + 1, vvalue, (sz_vvalue < sizeof(hp.pair)-sz_vname+1) ? sz_vvalue : sizeof(hp.pair)-sz_vname+1);
 
 	if(mpi_map->set(key, strlen(key), &hp, hp.size()))
 		r = true;
@@ -234,8 +236,8 @@ _u32 cHttpClientConnection::_req_write(_cstr_t fmt, ...) {
 
 bool cHttpClientConnection::prepare_req_header(void) {
 	bool r = false;
-	_cstr_t rurl = res_var(KEY_REQ_URL);
-	_cstr_t rprotocol = res_var(KEY_REQ_PROTOCOL);
+	_cstr_t rurl = res_var(KEY_URL);
+	_cstr_t rprotocol = res_var(KEY_PROTOCOL);
 	static _cstr_t http_1_1 = "HTTP/1.1";
 	typedef struct {
 		_u8 	im;
@@ -270,8 +272,8 @@ bool cHttpClientConnection::prepare_req_header(void) {
 
 	if(str_method && rurl) {
 		m_header_len = snprintf(mp_bheader, m_buffer_size, "%s %s %s\r\n", str_method, rurl, rprotocol);
-		mpi_map->del(KEY_REQ_URL, strlen(KEY_REQ_URL));
-		mpi_map->del(KEY_REQ_PROTOCOL, strlen(KEY_REQ_PROTOCOL));
+		mpi_map->del(KEY_URL, strlen(KEY_URL));
+		mpi_map->del(KEY_PROTOCOL, strlen(KEY_PROTOCOL));
 
 		_map_enum_t me = mpi_map->enum_open();
 
@@ -398,7 +400,8 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 							break;
 						else
 							buffer_idx++;
-					}
+					} else
+						break;
 				} else
 					break;
 			}
@@ -423,10 +426,136 @@ bool cHttpClientConnection::send(_u32 timeout_s, _on_http_response_t *p_cb_resp,
 	return r;
 }
 
+_u32 cHttpClientConnection::parse_response_line(void) {
+	_u32 r = 0;
+	_char_t c = 0;
+	_char_t _c = 0;
+	_char_t *hdr = (_char_t *)mp_bheader;
+	_str_t fld[4] = {hdr, 0, 0, 0};
+	_u32 fld_sz[4] = {0, 0, 0, 0};
+
+	for(_u32 i=0, n=0; r < m_header_len && i < 3; r++) {
+		c = hdr[r];
+
+		switch(c) {
+			case ' ':
+				if(c != _c) {
+					if(i < 2) {
+						fld_sz[i] = n;
+						n = 0;
+					} else
+						n++;
+				}
+				break;
+			case '\r':
+				fld_sz[i] = n;
+				n = 0;
+				break;
+			case '\n':
+				if(_c == '\r')
+					i = 3;
+				break;
+			default:
+				if(_c == ' ') {
+					if(i < 2) {
+						i++;
+						fld[i] =  hdr + r;
+						n = 1;
+					} else
+						n++;
+				} else
+					n++;
+				break;
+		}
+
+		_c = c;
+	}
+
+	if(fld[0] && fld_sz[0] && fld_sz[0] < m_header_len)
+		add_var(KEY_PROTOCOL, strlen(KEY_PROTOCOL), fld[0], fld_sz[0]);
+	if(fld[1] && fld_sz[1] && fld_sz[1] < m_header_len)
+		add_var(KEY_RES_CODE, strlen(KEY_RES_CODE), fld[1], fld_sz[1]);
+	if(fld[2] && fld_sz[2] && fld_sz[2] < m_header_len)
+		add_var(KEY_RES_TEXT, strlen(KEY_RES_TEXT), fld[2], fld_sz[2]);
+
+	return r;
+}
+
+_u32 cHttpClientConnection::parse_variable_line(_cstr_t var, _u32 sz_max) {
+	_u32 r = 0;
+
+	_str_t fld[3] = {(_str_t)var, 0, 0};
+	_u32 fld_sz[3] = {0, 0, 0};
+	_char_t c = 0;
+	_char_t _c = 0;
+	bool val = false;
+
+	for(_u32 i=0, n=0; r < sz_max && i < 2; r++) {
+		c = var[r];
+
+		switch(c) {
+			case ' ':
+				if(_c != ':' && i)
+					n++;
+				break;
+			case ':':
+				if(!i) {
+					fld_sz[i] = n;
+					n = 0;
+					i++;
+				} else
+					n++;
+				break;
+			case '\r':
+				if(i)
+					fld_sz[i] = n;
+				break;
+			case '\n':
+				if(_c == '\r')
+					i = 2;
+				break;
+			default:
+				if(!val && i && _c == ' ') {
+					fld[i] = (_str_t)var + r;
+					val = true;
+					n = 1;
+				} else
+					n++;
+				break;
+		}
+
+		_c = c;
+	}
+
+	if(fld[0] && fld_sz[0] && fld[1] && fld_sz[1] &&
+			fld_sz[0] < sz_max && fld_sz[1] < sz_max)
+		add_var(fld[0], fld_sz[0], fld[1], fld_sz[1]);
+
+	return r;
+}
+
 bool cHttpClientConnection::parse_response_header(void) {
 	bool r = true;
+	_u32 offset = parse_response_line();
+	_cstr_t hdr = (_cstr_t)mp_bheader;
+	_cstr_t res_code = res_var(KEY_RES_CODE);
 
-	//...
+	if(res_code)
+		m_res_code = atoi(res_code);
+
+	while(offset && offset < m_header_len) {
+		_u32 n = parse_variable_line(hdr + offset, m_header_len - offset);
+		offset = (n) ? (offset + n) : 0;
+	}
+
+	if(offset == m_header_len) {
+		_cstr_t content_len = res_var(KEY_CONTENT_LEN);
+
+		if(content_len)
+			m_content_len = atoi(content_len);
+
+		add_var(KEY_RES_HEADER, strlen(KEY_RES_HEADER), hdr, m_header_len);
+	}
 
 	return r;
 }
