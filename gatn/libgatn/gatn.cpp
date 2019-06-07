@@ -12,7 +12,6 @@ private:
 	iNet		*mpi_net;
 	iFS		*mpi_fs;
 	iLog		*mpi_log;
-	iBufferMap	*mpi_bmap;
 	iHeap		*mpi_heap;
 
 	void stop(bool autorestore=false) { // stop servers
@@ -104,23 +103,13 @@ public:
 				if((mpi_map = dynamic_cast<iMap *>(pi_repo->object_by_iname(I_MAP, RF_CLONE))))
 					mpi_map->init(31);
 				mpi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
-				mpi_bmap = dynamic_cast<iBufferMap *>(pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE));
 				mpi_heap = dynamic_cast<iHeap *>(pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL));
 				mpi_net = NULL;
 				mpi_fs = NULL;
 				init_mime_type_resolver();
-				if(mpi_map && mpi_log && mpi_bmap && mpi_heap) {
+				if(mpi_map && mpi_log && mpi_heap) {
 					pi_repo->monitoring_add(NULL, I_NET, NULL, this, SCAN_ORIGINAL);
 					pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
-
-					mpi_bmap->init(GATN_BUFFER_SIZE, [](_u8 op, void *bptr, _u32 sz, void *udata)->_u32 {
-						_u32 r = 0;
-
-						if(op == BIO_INIT)
-							memset(bptr, 0, sz);
-
-						return r;
-					});
 					r = true;
 				}
 			} break;
@@ -130,7 +119,6 @@ public:
 				destroy();
 				pi_repo->object_release(mpi_map);
 				pi_repo->object_release(mpi_log);
-				pi_repo->object_release(mpi_bmap);
 				pi_repo->object_release(mpi_heap);
 				pi_repo->object_release(mpi_fs);
 				pi_repo->object_release(mpi_net);
@@ -204,7 +192,16 @@ public:
 				srv.mpi_log = mpi_log;
 				srv.mpi_heap = mpi_heap;
 				srv.m_autorestore = false;
-				srv.mpi_bmap = mpi_bmap;
+				if((srv.mpi_bmap = dynamic_cast<iBufferMap *>(_gpi_repo_->object_by_iname(I_BUFFER_MAP, RF_CLONE)))) {
+					srv.mpi_bmap->init(buffer_size, [](_u8 op, void *bptr, _u32 sz, void *udata)->_u32 {
+						_u32 r = 0;
+
+						if(op == BIO_INIT)
+							memset(bptr, 0, sz);
+
+						return r;
+					});
+				}
 				srv.m_buffer_size = buffer_size;
 				srv.mpi_fcache = NULL;
 				srv.m_max_workers = max_workers;
@@ -239,6 +236,7 @@ public:
 		if(p) {
 			_gpi_repo_->object_release(p->mpi_server);
 			_gpi_repo_->object_release(p->mpi_map);
+			_gpi_repo_->object_release(p->mpi_bmap);
 			_gpi_repo_->object_release(p->mpi_fcache);
 			mpi_map->del(p->m_name, strlen(p->m_name));
 		}
