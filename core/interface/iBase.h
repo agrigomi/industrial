@@ -53,7 +53,7 @@ public:
 	_class_()
 
 #define INFO(_class_, name, f, a, i, r) \
-	void object_info(_object_info_t *pi) { \
+	virtual void object_info(_object_info_t *pi) { \
 		pi->iname = interface_name(); \
 		pi->cname = name; \
 		pi->flags = f; \
