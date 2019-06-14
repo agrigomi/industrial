@@ -53,7 +53,7 @@ public:
 					r = pcsio;
 				} else {
 					::close(sfd);
-					_gpi_repo_->object_release(pcsio);
+					_gpi_repo_->object_release(pcsio, false);
 				}
 			} else
 				::close(sfd);
@@ -119,7 +119,7 @@ public:
 			if(!r) {
 				::close(sfd);
 				if(pcsio)
-					_gpi_repo_->object_release(pcsio);
+					_gpi_repo_->object_release(pcsio, false);
 			}
 		}
 
@@ -143,7 +143,7 @@ public:
 			if(pctcps->_init(port, ssl_context))
 				r = pctcps;
 			else
-				_gpi_repo_->object_release(pctcps);
+				_gpi_repo_->object_release(pctcps, false);
 		}
 
 		return r;
@@ -194,7 +194,7 @@ public:
 			if(chttps->_init(port, buffer_size, max_workers, max_connections, connection_timeout, ssl_context))
 				r = chttps;
 			else
-				_gpi_repo_->object_release(chttps);
+				_gpi_repo_->object_release(chttps, false);
 		}
 
 		return r;
@@ -214,11 +214,11 @@ public:
 				if(_r->_init(pi_tcpc, buffer_size))
 					r = _r;
 				else {
-					_gpi_repo_->object_release(_r);
-					_gpi_repo_->object_release(pi_tcpc);
+					_gpi_repo_->object_release(_r, false);
+					_gpi_repo_->object_release(pi_tcpc, false);
 				}
 			} else
-				_gpi_repo_->object_release(pi_tcpc);
+				_gpi_repo_->object_release(pi_tcpc, false);
 		}
 
 		return r;

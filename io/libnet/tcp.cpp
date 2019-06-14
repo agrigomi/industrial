@@ -69,7 +69,7 @@ bool cTCPServer::object_ctl(_u32 cmd, void *arg, ...) {
 		case OCTL_UNINIT: {
 			_close();
 			iRepository *pi_repo = (iRepository *)arg;
-			pi_repo->object_release(mpi_heap);
+			pi_repo->object_release(mpi_heap, false);
 			r = true;
 		} break;
 	}

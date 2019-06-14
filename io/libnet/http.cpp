@@ -121,10 +121,10 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			m_num_connections = m_num_workers = m_active_workers = 0;
 			memset(m_event, 0, sizeof(m_event));
 			mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
-			p_tcps = (cTCPServer *)pi_repo->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE);
-			mpi_bmap = (iBufferMap *)pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE);
+			p_tcps = (cTCPServer *)pi_repo->object_by_cname(CLASS_NAME_TCP_SERVER, RF_CLONE|RF_NONOTIFY);
+			mpi_bmap = (iBufferMap *)pi_repo->object_by_iname(I_BUFFER_MAP, RF_CLONE|RF_NONOTIFY);
 			mpi_tmaker = (iTaskMaker *)pi_repo->object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
-			mpi_list = (iLlist *)pi_repo->object_by_iname(I_LLIST, RF_CLONE);
+			mpi_list = (iLlist *)pi_repo->object_by_iname(I_LLIST, RF_CLONE|RF_NONOTIFY);
 			m_hconnection = pi_repo->handle_by_cname(CLASS_NAME_HTTP_SERVER_CONNECTION);
 			if(p_tcps && mpi_bmap && mpi_tmaker && mpi_list && m_hconnection) {
 				mpi_list->init(LL_VECTOR, 2);
@@ -150,11 +150,11 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 
 			remove_all_connections();
 			_close();
-			pi_repo->object_release(p_tcps);
+			pi_repo->object_release(p_tcps, false);
 			pi_repo->object_release(mpi_log);
-			pi_repo->object_release(mpi_bmap);
+			pi_repo->object_release(mpi_bmap, false);
 			pi_repo->object_release(mpi_tmaker);
-			pi_repo->object_release(mpi_list);
+			pi_repo->object_release(mpi_list, false);
 			p_tcps = 0;
 			r = true;
 		} break;
@@ -241,7 +241,7 @@ _http_connection_t *cHttpServer::add_connection(void) {
 		if(!r) {
 			p_tcps->close(p_sio);
 			if(rec.p_httpc)
-				_gpi_repo_->object_release(rec.p_httpc);
+				_gpi_repo_->object_release(rec.p_httpc, false);
 		}
 	}
 

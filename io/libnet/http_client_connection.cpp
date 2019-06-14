@@ -37,8 +37,8 @@ bool cHttpClientConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			}
 			break;
 		case OCTL_UNINIT: {
-			_gpi_repo_->object_release(mpi_sio);
-			_gpi_repo_->object_release(mpi_map);
+			_gpi_repo_->object_release(mpi_sio, false);
+			_gpi_repo_->object_release(mpi_map, false);
 			_gpi_repo_->object_release(mpi_str);
 
 			for(_u32 i = 0; i < m_sz_barray; i++) {
