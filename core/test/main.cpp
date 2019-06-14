@@ -128,7 +128,7 @@ _err_t main(int argc, char *argv[]) {
 					printf(">> render/home\n");
 
 					if(evt == HTTP_ON_REQUEST)
-						res->render("index.html",false);
+						res->render("index.html",true, false);
 				}, p_srv);
 
 				p_srv->on_route(HTTP_METHOD_GET, "/login/", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
