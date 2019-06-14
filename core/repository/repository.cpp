@@ -275,12 +275,12 @@ private:
 			if(info->flags & RF_TASK)
 				flags |= NF_STOP;
 
-			if(notification)
-				notify(flags, pi, hobj);
-
 			if(!(*state & ST_INITIALIZED))
 				// removed
 				return true;
+
+			if(notification)
+				notify(flags, pi, hobj);
 
 			if((flags & NF_REMOVE) && *ref_cnt)
 				// the object still busy, can't be removed
