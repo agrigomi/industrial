@@ -130,7 +130,7 @@ bool server::start(void) {
 
 	if(mpi_map && mpi_net && mpi_fs) {
 		if(!mpi_fcache) { // create file cache
-			if((mpi_fcache = dynamic_cast<iFileCache *>(_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE))))
+			if((mpi_fcache = dynamic_cast<iFileCache *>(_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE|RF_NONOTIFY))))
 				mpi_fcache->init(m_cache_path, m_name);
 		}
 		if(!mpi_server)
@@ -149,11 +149,11 @@ bool server::start(void) {
 
 void server::stop(void) {
 	if(mpi_server) {
-		_gpi_repo_->object_release(mpi_server);
+		_gpi_repo_->object_release(mpi_server, false);
 		mpi_server = NULL;
 	}
 	if(mpi_fcache) {
-		_gpi_repo_->object_release(mpi_fcache);
+		_gpi_repo_->object_release(mpi_fcache, false);
 		mpi_fcache = NULL;
 	}
 }

@@ -100,7 +100,7 @@ public:
 			case OCTL_INIT: {
 				iRepository *pi_repo = (iRepository *)arg;
 
-				if((mpi_map = dynamic_cast<iMap *>(pi_repo->object_by_iname(I_MAP, RF_CLONE))))
+				if((mpi_map = dynamic_cast<iMap *>(pi_repo->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
 					mpi_map->init(31);
 				mpi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
 				mpi_heap = dynamic_cast<iHeap *>(pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL));
@@ -117,7 +117,7 @@ public:
 				iRepository *pi_repo = (iRepository *)arg;
 
 				destroy();
-				pi_repo->object_release(mpi_map);
+				pi_repo->object_release(mpi_map, false);
 				pi_repo->object_release(mpi_log);
 				pi_repo->object_release(mpi_heap);
 				pi_repo->object_release(mpi_fs);
@@ -192,7 +192,7 @@ public:
 				srv.mpi_log = mpi_log;
 				srv.mpi_heap = mpi_heap;
 				srv.m_autorestore = false;
-				if((srv.mpi_bmap = dynamic_cast<iBufferMap *>(_gpi_repo_->object_by_iname(I_BUFFER_MAP, RF_CLONE)))) {
+				if((srv.mpi_bmap = dynamic_cast<iBufferMap *>(_gpi_repo_->object_by_iname(I_BUFFER_MAP, RF_CLONE | RF_NONOTIFY)))) {
 					srv.mpi_bmap->init(buffer_size, [](_u8 op, void *bptr, _u32 sz, void *udata)->_u32 {
 						_u32 r = 0;
 
@@ -208,7 +208,7 @@ public:
 				srv.m_max_connections = max_connections;
 				srv.m_connection_timeout = connection_timeout;
 				srv.m_ssl_context = ssl_context;
-				if((srv.mpi_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE))))
+				if((srv.mpi_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE | RF_NONOTIFY))))
 					if(srv.mpi_map->init(63))
 						r = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(server));
 
@@ -234,9 +234,9 @@ public:
 		server *p = dynamic_cast<server *>(p_srv);
 
 		if(p) {
-			_gpi_repo_->object_release(p->mpi_server);
-			_gpi_repo_->object_release(p->mpi_map);
-			_gpi_repo_->object_release(p->mpi_bmap);
+			_gpi_repo_->object_release(p->mpi_server, false);
+			_gpi_repo_->object_release(p->mpi_map, false);
+			_gpi_repo_->object_release(p->mpi_bmap, false);
 			_gpi_repo_->object_release(p->mpi_fcache);
 			mpi_map->del(p->m_name, strlen(p->m_name));
 		}
