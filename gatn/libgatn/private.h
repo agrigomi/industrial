@@ -49,7 +49,7 @@ struct response: public _response_t {
 	void destroy(void);
 	void process_content(void);
 	void redirect(_cstr_t uri);
-	bool render(_cstr_t fname, bool cache=true);
+	bool render(_cstr_t fname, bool done=true, bool cache=true);
 };
 
 #define MAX_SERVER_NAME		32

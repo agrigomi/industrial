@@ -202,7 +202,7 @@ void response::redirect(_cstr_t uri) {
 	_end(HTTPRC_OK, "<meta http-equiv=\"refresh\" content=\"0; url=%s\"/>", uri);
 }
 
-bool response::render(_cstr_t fname, bool cache) {
+bool response::render(_cstr_t fname, bool done, bool cache) {
 	bool r = false;
 	_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
 	_ulong doc_sz = 0;
@@ -221,7 +221,10 @@ bool response::render(_cstr_t fname, bool cache) {
 			ptr = (_u8 *)mpi_fcache->ptr(fc, &doc_sz);
 
 			if(ptr) { // found in cache
-				end(HTTPRC_OK, ptr, (_u32)doc_sz);
+				if(done)
+					end(HTTPRC_OK, ptr, (_u32)doc_sz);
+				else
+					write(ptr, (_u32)doc_sz);
 				r = true;
 			}
 
@@ -235,7 +238,10 @@ bool response::render(_cstr_t fname, bool cache) {
 			ptr = (_u8 *)fio->map(MPF_READ);
 
 			if(ptr) {
-				end(HTTPRC_OK, ptr, (_u32)doc_sz);
+				if(done)
+					end(HTTPRC_OK, ptr, (_u32)doc_sz);
+				else
+					write(ptr, (_u32)doc_sz);
 				r = true;
 				fio->unmap();
 			}
