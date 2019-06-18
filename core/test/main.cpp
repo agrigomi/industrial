@@ -75,7 +75,18 @@ _err_t main(int argc, char *argv[]) {
 
 		iGatn *pi_gatn = (iGatn *)pi_repo->object_by_iname(I_GATN, RF_ORIGINAL);
 		if(pi_gatn) {
-			_server_t *p_srv = pi_gatn->create_server("gatn-1 (proholic)", 8081, "../test/original", "/tmp");
+			_str_t doc_root = (_str_t)"../test/original";
+
+			iArgs *pi_arg = (iArgs *)pi_repo->object_by_iname(I_ARGS, RF_ORIGINAL);
+			if(pi_arg) {
+				_str_t _doc_root = pi_arg->value("doc-root");
+
+				if(_doc_root)
+					doc_root = _doc_root;
+				pi_repo->object_release(pi_arg);
+			}
+
+			_server_t *p_srv = pi_gatn->create_server("gatn-1 (proholic)", 8081, doc_root, "/tmp");
 			if(p_srv) {
 				while(!p_srv->is_running()) {
 					printf(".");
