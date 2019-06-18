@@ -61,7 +61,7 @@ static _bool remap(_map_context_t *p_mcxt) {
 	_bool r = _false;
 
 	if(p_mcxt->pf_mem_alloc && p_mcxt->pf_mem_free && p_mcxt->capacity) {
-		_u32 new_capacity = p_mcxt->capacity * 2;
+		_u32 new_capacity = (p_mcxt->capacity * 2) + 1;
 		_map_rec_hdr_t **pp_new_map = p_mcxt->pf_mem_alloc(new_capacity * sizeof(_map_rec_hdr_t *), p_mcxt->udata);
 		_u32 collisions = 0;
 
