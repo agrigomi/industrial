@@ -1,6 +1,6 @@
 OUTDIR=bin
 SRCSUFFIX=.cpp
-COMPILER_FLAGS=-c -O2 -Wall -DBUILD_CONFIG="$(CONFIG)"
+COMPILER_FLAGS=-c -O2 -Wall -DNDEBUG -D"BUILD_CONFIG=\"$(CONFIG)\""
 INCLUDES=-Icore/include -Icore/interface -Icmd/interface
 COMPILER_FLAGS+=$(INCLUDES)
 LIBRARY += -lstdc++
