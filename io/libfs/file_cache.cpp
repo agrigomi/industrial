@@ -9,6 +9,7 @@ typedef struct { // file cache entry
 	iFileIO		*pi_fio; // file IO
 	std::mutex 	mutex;	// native mutex
 	_u32		refc; // reference counter
+	_u32		acct; // access counter
 	_char_t		sha_fname[SHA_DIGEST_LENGTH*2+1]; // sha1 of file path
 	void		*ptr; // pointer to file content
 	_ulong		size; // file size
@@ -59,6 +60,7 @@ private:
 		if(_r) {
 			if((pfce->pi_fio = mpi_fs->open(cache_path))) {
 				pfce->refc = 0;
+				pfce->acct = 0;
 				pfce->ptr = NULL;
 				pfce->size = pfce->pi_fio->size();
 				pfce->mtime = mtime;
@@ -230,6 +232,7 @@ public:
 			if(success) {
 				r = pfce;
 				pfce->refc++;
+				pfce->acct++;
 			}
 			pfce->mutex.unlock();
 		}
