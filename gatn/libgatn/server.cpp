@@ -326,7 +326,9 @@ void server::enum_route(void (*enum_cb)(_cstr_t path, _on_route_event_t *pcb, vo
 		_route_data_t *rd = (_route_data_t *)mpi_map->enum_first(me, &sz, hm);
 
 		while(rd) {
+			mpi_map->unlock(hm);
 			enum_cb(rd->path, rd->pcb, udata);
+			hm = mpi_map->lock();
 			rd = (_route_data_t *)mpi_map->enum_next(me, &sz, hm);
 		}
 
