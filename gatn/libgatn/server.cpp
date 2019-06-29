@@ -11,11 +11,20 @@
 typedef struct {
 	_u8	method;
 	_char_t	path[MAX_ROUTE_PATH];
+
+	_u32 size(void) {
+		return sizeof(_u8) + strlen(path);
+	}
 }_route_key_t;
 
 typedef struct {
 	_on_route_event_t	*pcb;
 	void			*udata;
+	_char_t			path[MAX_ROUTE_PATH];
+
+	_u32 size(void) {
+		return (sizeof(_on_route_event_t *) + sizeof(void *) + strlen(path));
+	}
 }_route_data_t;
 
 typedef struct {
@@ -183,7 +192,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 		key.method = p_httpc->req_method();
 		strncpy(key.path, url, sizeof(key.path)-1);
 
-		_route_data_t *prd = (_route_data_t *)mpi_map->get(&key, sizeof(_route_key_t), &sz);
+		_route_data_t *prd = (_route_data_t *)mpi_map->get(&key, key.size(), &sz);
 
 		if(prd) {
 			// route found
@@ -261,11 +270,13 @@ void server::on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *ud
 	_route_key_t key;
 	_route_data_t data = {pcb, udata};
 
+	strncpy(data.path, path, sizeof(data.path)-1);
+
 	memset(&key, 0, sizeof(_route_key_t));
 	key.method = method;
 	strncpy(key.path, path, MAX_ROUTE_PATH-1);
 	if(mpi_map)
-		mpi_map->add(&key, sizeof(_route_key_t), &data, sizeof(_route_data_t));
+		mpi_map->add(&key, key.size(), &data, data.size());
 }
 
 void server::on_event(_u8 evt, _on_http_event_t *pcb, void *udata) {
@@ -306,3 +317,21 @@ _response_t *server::get_response(iHttpServerConnection *pi_httpc) {
 	return r;
 }
 
+void server::enum_route(void (*enum_cb)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata) {
+	_map_enum_t me = mpi_map->enum_open();
+	_u32 sz = 0;
+	HMUTEX hm = mpi_map->lock();
+
+	if(me) {
+		_route_data_t *rd = (_route_data_t *)mpi_map->enum_first(me, &sz, hm);
+
+		while(rd) {
+			enum_cb(rd->path, rd->pcb, udata);
+			rd = (_route_data_t *)mpi_map->enum_next(me, &sz, hm);
+		}
+
+		mpi_map->enum_close(me);
+	}
+
+	mpi_map->unlock(hm);
+}

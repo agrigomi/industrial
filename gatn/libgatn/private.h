@@ -114,4 +114,5 @@ struct server: public _server_t {
 	iFileCache *get_file_cache(void) {
 		return mpi_fcache;
 	}
+	void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=0);
 };
