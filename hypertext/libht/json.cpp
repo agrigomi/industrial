@@ -59,8 +59,8 @@ public:
 	}
 	// Compare strins (according content encoding)
 	_s32 compare(HTCONTEXT htc,
-			_str_t str1, // string 1
-			_str_t str2, // string 2
+			_cstr_t str1, // string 1
+			_cstr_t str2, // string 2
 			_u32 sz// size
 			) {
 		_json_context_t *p_jcxt = (_json_context_t *)htc;

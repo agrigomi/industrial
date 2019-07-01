@@ -22,8 +22,8 @@ public:
 			)=0;
 	// Compare strins (according content encoding)
 	virtual _s32 compare(HTCONTEXT,
-			_str_t, // string 1
-			_str_t, // string 2
+			_cstr_t, // string 1
+			_cstr_t, // string 2
 			_u32 // size
 			)=0;
 };
