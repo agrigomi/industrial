@@ -202,7 +202,10 @@ void response::redirect(_cstr_t uri) {
 	_end(HTTPRC_OK, "<meta http-equiv=\"refresh\" content=\"0; url=%s\"/>", uri);
 }
 
-bool response::render(_cstr_t fname, bool done, bool cache) {
+bool response::render(_cstr_t fname,
+			bool done,
+			bool cache,
+			bool autoresolve_content_type) {
 	bool r = false;
 	_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
 	_ulong doc_sz = 0;
@@ -210,9 +213,11 @@ bool response::render(_cstr_t fname, bool done, bool cache) {
 
 	snprintf(doc, sizeof(doc), "%s/%s", m_doc_root, fname);
 
-	_cstr_t ct = resolve_mime_type(doc);
+	if(autoresolve_content_type) {
+		_cstr_t ct = resolve_mime_type(doc);
 
-	var("Content-Type", (ct) ? ct : "");
+		var("Content-Type", (ct) ? ct : "");
+	}
 
 	if(cache) { // cacheable
 		HFCACHE fc = mpi_fcache->open(doc);
