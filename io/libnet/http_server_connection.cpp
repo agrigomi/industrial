@@ -769,7 +769,7 @@ bool cHttpServerConnection::res_var(_cstr_t name, _cstr_t value) {
 			_u32 sz_data = strlen(name) + strlen(value) + 4;
 			_u32 rem = (sz > m_oheader_offset) ? (sz - m_oheader_offset) : 0;
 
-			if(rem && (rem > sz_data)) {
+			if(rem > sz_data) {
 				m_oheader_offset += snprintf(ptr + m_oheader_offset, rem, "%s: %s\r\n", name, value);
 				r = true;
 			}
