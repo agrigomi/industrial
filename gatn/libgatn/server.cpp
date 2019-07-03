@@ -30,6 +30,15 @@ typedef struct {
 typedef struct {
 	request		req;
 	response	res;
+
+	void clear(void) {
+		res.clear();
+	}
+
+	void destroy(void) {
+		req.destroy();
+		res.destroy();
+	}
 }_connection_t;
 
 bool server::create_connection(iHttpServerConnection *p_httpc) {
@@ -62,8 +71,7 @@ void server::destroy_connection(iHttpServerConnection *p_httpc) {
 
 	if(pc) {
 		// release connection memory
-		pc->req.destroy();
-		pc->res.destroy();
+		pc->destroy();
 		mpi_heap->free(pc, sizeof(_connection_t));
 		p_httpc->set_udata((_ulong)NULL, IDX_CONNECTION);
 	}
@@ -93,7 +101,7 @@ void server::set_handlers(void) {
 
 		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 		if(pc)
-			pc->res.clear();
+			pc->clear();
 		/**********************************/
 
 		p_srv->call_handler(HTTP_ON_REQUEST, p_httpc);
