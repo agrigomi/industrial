@@ -185,9 +185,6 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_cstr_t url = p_httpc->req_url();
 
 	if(url) {
-		// response header
-		p_httpc->res_var("Server", m_name);
-
 		memset(&key, 0, sizeof(_route_key_t));
 		key.method = p_httpc->req_method();
 		strncpy(key.path, url, sizeof(key.path)-1);
@@ -217,6 +214,8 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 						if(ptr) {
 							p_httpc->res_content_len(doc_sz);
 							p_httpc->res_code(HTTPRC_OK);
+							// response header
+							p_httpc->res_var("Server", m_name);
 							p_httpc->res_var("Content-Type", resolve_content_type(doc));
 							p_httpc->res_mtime(mpi_fcache->mtime(fc));
 							p_httpc->res_write(ptr, doc_sz);
