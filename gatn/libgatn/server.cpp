@@ -118,7 +118,6 @@ void server::set_handlers(void) {
 	mpi_server->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
-		p_srv->call_handler(HTTP_ON_RESPONSE_DATA, p_httpc);
 		p_srv->update_response(p_httpc);
 	}, this);
 
