@@ -138,7 +138,7 @@ _err_t main(int argc, char *argv[]) {
 					printf(">> render/home\n");
 
 					if(evt == HTTP_ON_REQUEST)
-						res->render("index.html",true, false);
+						res->render("index.html", RNDR_DONE|RNDR_RESOLVE_MT|RNDR_SET_MTIME);
 				}, p_srv);
 
 				p_srv->on_route(HTTP_METHOD_GET, "/login/", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {

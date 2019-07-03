@@ -4,10 +4,16 @@
 
 struct request: public _request_t{
 	iHttpServerConnection *mpi_httpc;
+	_server_t *mpi_server;
 
 	iHttpServerConnection *connection(void) {
 		return mpi_httpc;
 	}
+
+	_server_t *server(void) {
+		return mpi_server;
+	}
+
 	_u8 method(void);
 	_cstr_t header(void);
 	_cstr_t utl(void);
@@ -20,6 +26,7 @@ struct request: public _request_t{
 
 struct response: public _response_t {
 	iHttpServerConnection *mpi_httpc;
+	_server_t *mpi_server;
 	iHeap *mpi_heap;
 	iBufferMap *mpi_bmap;
 	HBUFFER	*mp_hbarray;
@@ -33,6 +40,11 @@ struct response: public _response_t {
 	iHttpServerConnection *connection(void) {
 		return mpi_httpc;
 	}
+
+	_server_t *server(void) {
+		return mpi_server;
+	}
+
 	bool alloc_buffer(void);
 	void clear(void);
 	_u32 capacity(void);
@@ -50,9 +62,7 @@ struct response: public _response_t {
 	void process_content(void);
 	void redirect(_cstr_t uri);
 	bool render(_cstr_t fname,
-			bool done=true,
-			bool cache=true,
-			bool autoresolve_content_type=true);
+		_u8 flags=RNDR_DONE|RNDR_CACHE|RNDR_RESOLVE_MT|RNDR_SET_MTIME);
 };
 
 #define MAX_SERVER_NAME		32
@@ -109,13 +119,13 @@ struct server: public _server_t {
 	void call_handler(_u8 evt, iHttpServerConnection *p_httpc);
 	void call_route_handler(_u8 evt, iHttpServerConnection *p_httpc);
 	void update_response(iHttpServerConnection *p_httpc);
-	void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata);
-	void on_event(_u8 evt, _on_http_event_t *pcb, void *udata);
+	void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata=NULL);
+	void on_event(_u8 evt, _on_http_event_t *pcb, void *udata=NULL);
 	void remove_route(_u8 method, _cstr_t path);
 	_request_t *get_request(iHttpServerConnection *pi_httpc);
 	_response_t *get_response(iHttpServerConnection *pi_httpc);
 	iFileCache *get_file_cache(void) {
 		return mpi_fcache;
 	}
-	void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=0);
+	void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=NULL);
 };

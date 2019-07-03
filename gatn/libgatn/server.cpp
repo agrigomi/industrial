@@ -40,6 +40,7 @@ bool server::create_connection(iHttpServerConnection *p_httpc) {
 	if(p_cnt) {
 		memcpy((void *)p_cnt, (void *)&tmp, sizeof(_connection_t));
 		p_cnt->req.mpi_httpc = p_cnt->res.mpi_httpc = p_httpc;
+		p_cnt->req.mpi_server = p_cnt->res.mpi_server = this;
 		p_cnt->res.mpi_heap = mpi_heap;
 		p_cnt->res.mpi_bmap = mpi_bmap;
 		p_cnt->res.mp_hbarray = NULL;
@@ -212,12 +213,13 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 
 						_u8 *ptr = (_u8 *)mpi_fcache->ptr(fc, &doc_sz);
 						if(ptr) {
+							// response header
 							p_httpc->res_content_len(doc_sz);
 							p_httpc->res_code(HTTPRC_OK);
-							// response header
 							p_httpc->res_var("Server", m_name);
 							p_httpc->res_var("Content-Type", resolve_content_type(doc));
 							p_httpc->res_mtime(mpi_fcache->mtime(fc));
+							// response content
 							p_httpc->res_write(ptr, doc_sz);
 							p_httpc->set_udata((_ulong)fc, IDX_FCACHE);
 						} else {
@@ -307,7 +309,6 @@ _request_t *server::get_request(iHttpServerConnection *pi_httpc) {
 
 _response_t *server::get_response(iHttpServerConnection *pi_httpc) {
 	_response_t *r = NULL;
-
 	_connection_t *pc = (_connection_t *)pi_httpc->get_udata(IDX_CONNECTION);
 
 	if(pc)

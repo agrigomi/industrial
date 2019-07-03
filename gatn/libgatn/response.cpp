@@ -202,10 +202,7 @@ void response::redirect(_cstr_t uri) {
 	_end(HTTPRC_OK, "<meta http-equiv=\"refresh\" content=\"0; url=%s\"/>", uri);
 }
 
-bool response::render(_cstr_t fname,
-			bool done,
-			bool cache,
-			bool autoresolve_content_type) {
+bool response::render(_cstr_t fname, _u8 flags) {
 	bool r = false;
 	_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
 	_ulong doc_sz = 0;
@@ -213,22 +210,24 @@ bool response::render(_cstr_t fname,
 
 	snprintf(doc, sizeof(doc), "%s/%s", m_doc_root, fname);
 
-	if(autoresolve_content_type) {
+	if((flags & RNDR_RESOLVE_MT) && (flags & RNDR_DONE) ) {
 		_cstr_t ct = resolve_mime_type(doc);
 
 		var("Content-Type", (ct) ? ct : "");
 	}
 
-	if(cache) { // cacheable
+	if(flags & RNDR_CACHE) { // cacheable
 		HFCACHE fc = mpi_fcache->open(doc);
 
 		if(fc) {
 			ptr = (_u8 *)mpi_fcache->ptr(fc, &doc_sz);
 
 			if(ptr) { // found in cache
-				if(done)
+				if(flags & RNDR_DONE) {
+					if(flags & RNDR_SET_MTIME)
+						mpi_httpc->res_mtime(mpi_fcache->mtime(fc));
 					end(HTTPRC_OK, ptr, (_u32)doc_sz);
-				else
+				} else
 					write(ptr, (_u32)doc_sz);
 				r = true;
 			}
@@ -243,9 +242,11 @@ bool response::render(_cstr_t fname,
 			ptr = (_u8 *)fio->map(MPF_READ);
 
 			if(ptr) {
-				if(done)
+				if(flags & RNDR_DONE) {
+					if(flags & RNDR_SET_MTIME)
+						mpi_httpc->res_mtime(mpi_fs->modify_time(doc));
 					end(HTTPRC_OK, ptr, (_u32)doc_sz);
-				else
+				} else
 					write(ptr, (_u32)doc_sz);
 				r = true;
 				fio->unmap();

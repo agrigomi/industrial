@@ -6,8 +6,11 @@
 
 #define I_GATN	"iGatn"
 
+typedef struct gatn_server _server_t;
+
 typedef struct {
 	virtual iHttpServerConnection *connection(void)=0;
+	virtual _server_t *server(void)=0;
 	virtual _u8 method(void)=0;
 	virtual _cstr_t header(void)=0;
 	virtual _cstr_t utl(void)=0;
@@ -20,6 +23,7 @@ typedef struct {
 
 typedef struct {
 	virtual iHttpServerConnection *connection(void)=0;
+	virtual _server_t *server(void)=0;
 	virtual void var(_cstr_t name, _cstr_t value)=0;
 	virtual void _var(_cstr_t name, _cstr_t fmt, ...)=0;
 	virtual _u32 write(void *data, _u32 size)=0;
@@ -29,10 +33,11 @@ typedef struct {
 	virtual _u32 end(_u16 response_code, _cstr_t str)=0;
 	virtual _u32 _end(_u16 response_code, _cstr_t fmt, ...)=0;
 	virtual void redirect(_cstr_t uri)=0;
-	virtual bool render(_cstr_t fname,
-				bool done=true,
-				bool cache=true,
-				bool autoresolve_content_type=true)=0;
+#define RNDR_DONE	(1<<0) // done flag (end of transmission)
+#define RNDR_CACHE	(1<<1) // use file cache
+#define RNDR_RESOLVE_MT	(1<<2) // auto resolve mime (content) type if RNDR_DONE is set
+#define RNDR_SET_MTIME	(1<<3) // auto set modify time if RNDR_DONE is set
+	virtual bool render(_cstr_t fname, _u8 flags=RNDR_DONE|RNDR_CACHE|RNDR_RESOLVE_MT|RNDR_SET_MTIME)=0;
 	//...
 }_response_t;
 
@@ -46,20 +51,20 @@ typedef struct {
 
 typedef void _on_route_event_t(_u8 evt, _request_t *request, _response_t *response, void *udata);
 
-typedef struct {
+struct gatn_server {
 	virtual bool is_running(void)=0;
 	virtual bool start(void)=0;
 	virtual void stop(void)=0;
 	virtual _cstr_t name(void)=0;
 	virtual _u32 port(void)=0;
-	virtual void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata)=0;
-	virtual void on_event(_u8 evt, _on_http_event_t *pcb, void *udata)=0;
+	virtual void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata=NULL)=0;
+	virtual void on_event(_u8 evt, _on_http_event_t *pcb, void *udata=NULL)=0;
 	virtual void remove_route(_u8 method, _cstr_t path)=0;
 	virtual _request_t *get_request(iHttpServerConnection *pi_httpc)=0;
 	virtual _response_t *get_response(iHttpServerConnection *pi_httpc)=0;
 	virtual iFileCache *get_file_cache(void)=0;
-	virtual void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=0)=0;
-}_server_t;
+	virtual void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=NULL)=0;
+};
 
 class iGatn: public iBase {
 public:
