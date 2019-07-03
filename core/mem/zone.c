@@ -11,17 +11,11 @@ static unsigned int _align(unsigned int size) {
 		r += (size % ZONE_PAGE_SIZE) ? 1 : 0;
 		r *= ZONE_PAGE_SIZE;
 	} else if(size && size < ZONE_PAGE_SIZE) {
-		unsigned int m = 0;
-
 		r = ZONE_PAGE_SIZE;
 		while(r && !(r & size))
 			r >>= 1;
 
-		m = r >> 1;
-		while(m && !(m & size))
-			m >>= 1;
-
-		if(m)
+		if(size & ~r)
 			r <<= 1;
 	} else
 		r = size;
