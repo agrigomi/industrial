@@ -115,17 +115,16 @@ _err_t main(int argc, char *argv[]) {
 				}, p_srv);
 
 				p_srv->on_route(HTTP_METHOD_POST, "/file/upload", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
-					printf(">> upload_file\n");
 					_u32 sz = 0;
-
-					if(evt == HTTP_ON_REQUEST)
-						res->redirect("/file/");
-						//res->end(HTTPRC_OK, g_body);
 
 					_str_t data = (_str_t)req->data(&sz);
 					if(data) {
 						fwrite(data, sz, 1, stdout);
+						fflush(stdout);
 					}
+
+					if(evt == HTTP_ON_REQUEST)
+						res->redirect("/file/");
 				}, p_srv);
 
 				p_srv->on_route(HTTP_METHOD_GET, "/about", [](_u8 evt, _request_t *req, _response_t *res, void *udata) {
