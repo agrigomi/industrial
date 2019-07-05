@@ -36,13 +36,19 @@ bool cHttpServer::_init(_u32 port,
 
 	if(p_tcps && !m_is_init) {
 		if((m_is_init = r = p_tcps->_init(port, ssl_context))) {
+			_char_t sname[17]="";
+
 			mpi_bmap->init(buffer_size, buffer_io);
 			m_max_workers = max_workers;
 			m_max_connections = max_connections;
 			m_connection_timeout = connection_timeout;
 			m_port = port;
 			p_tcps->blocking(false);
-			mpi_tmaker->start(_http_server_thread, this);
+
+			HTASK ht = mpi_tmaker->start(_http_server_thread, this);
+
+			snprintf(sname, sizeof(sname) - 1, "http-s:%u", m_port);
+			mpi_tmaker->set_name(ht, sname);
 		}
 	}
 
@@ -59,14 +65,6 @@ void cHttpServer::_close(void) {
 void cHttpServer::http_server_thread(void) {
 	m_is_running = true;
 	m_is_stopped = false;
-
-	HTASK ht = mpi_tmaker->handle(_http_server_thread);
-	if(ht) {
-		_char_t sname[17]="";
-
-		snprintf(sname, sizeof(sname) - 1, "http-s:%u", m_port);
-		mpi_tmaker->set_name(ht, sname);
-	}
 
 	while(m_is_running) {
 		if(m_is_init && m_num_connections < m_max_connections)
