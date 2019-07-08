@@ -2,6 +2,7 @@
 #include "startup.h"
 #include "iGatn.h"
 #include "iLog.h"
+#include "iHT.h"
 #include "private.h"
 
 IMPLEMENT_BASE_ARRAY("libgatn", 10);
@@ -13,6 +14,7 @@ private:
 	iFS		*mpi_fs;
 	iLog		*mpi_log;
 	iHeap		*mpi_heap;
+	iJSON		*mpi_json;
 
 	void stop(bool autorestore=false) { // stop servers
 		_map_enum_t en = mpi_map->enum_open();
@@ -106,10 +108,12 @@ public:
 				mpi_heap = dynamic_cast<iHeap *>(pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL));
 				mpi_net = NULL;
 				mpi_fs = NULL;
+				mpi_json = NULL;
 				init_mime_type_resolver();
 				if(mpi_map && mpi_log && mpi_heap) {
 					pi_repo->monitoring_add(NULL, I_NET, NULL, this, SCAN_ORIGINAL);
 					pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
+					pi_repo->monitoring_add(NULL, I_JSON, NULL, this, SCAN_ORIGINAL);
 					r = true;
 				}
 			} break;
@@ -122,6 +126,7 @@ public:
 				pi_repo->object_release(mpi_heap);
 				pi_repo->object_release(mpi_fs);
 				pi_repo->object_release(mpi_net);
+				pi_repo->object_release(mpi_json);
 				uninit_mime_type_resolver();
 				r = true;
 			} break;
@@ -159,6 +164,14 @@ public:
 				}
 			} break;
 		}
+
+		return r;
+	}
+
+	bool configure(_cstr_t json_fname) {
+		bool r = false;
+
+		//...
 
 		return r;
 	}

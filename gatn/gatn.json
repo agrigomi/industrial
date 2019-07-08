@@ -43,6 +43,6 @@
 			"ssl_flags":	["NO_SSLv2", "NO_SSLv3", "NO_COMPRESSION"],
 			"ssl_cert":	"certificate.crt",
 			"ssl_key":	"keyfile.key"
-		},
+		}
 	]
 }
