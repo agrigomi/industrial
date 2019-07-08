@@ -1,0 +1,29 @@
+{
+	"server":	[
+		{
+			"name":		"server-0",
+			"port":		8080,
+			"buffer":	16384,
+			"root":		"../test/balay",
+			"vhost": 	[
+				{
+					"host":		"alabala.ddns.net",
+					"root":		"../test/NiceAdmin",
+					"nocache":	["fldr1", "fldr2"],
+				},
+				{
+					"host":		"troubles.ddns.net",
+					"root":		"../test/StarAdmin",
+					"nocache":	["fldr1", "fldr2"],
+				}
+			]
+		},
+		{
+			"name":		"server-1",
+			"port":		8081,
+			"buffer":	8192,
+			"root":		"../test/philosophy-colorlib",
+
+		},
+	]
+}
