@@ -177,8 +177,8 @@ void server::stop(void) {
 
 void server::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	if(evt < HTTP_MAX_EVENTS) {
-		if(m_event[evt].pcb)
-			m_event[evt].pcb(p_httpc, m_event[evt].udata);
+		if(host.event[evt].pcb)
+			host.event[evt].pcb(p_httpc, host.event[evt].udata);
 	}
 }
 
@@ -289,8 +289,8 @@ void server::on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *ud
 
 void server::on_event(_u8 evt, _on_http_event_t *pcb, void *udata) {
 	if(evt < HTTP_MAX_EVENTS) {
-		m_event[evt].pcb = pcb;
-		m_event[evt].udata = udata;
+		host.event[evt].pcb = pcb;
+		host.event[evt].udata = udata;
 	}
 }
 

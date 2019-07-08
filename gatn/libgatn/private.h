@@ -88,6 +88,7 @@ typedef struct {
 	iFileCache	*pi_fcache;		// file cache
 	iMap		*pi_nocache_map;	// non cacheable areas in document root
 	iMap		*pi_route_map;
+	_event_data_t	event[HTTP_MAX_EVENTS];
 }_vhost_t;
 
 struct server: public _server_t {
@@ -101,7 +102,6 @@ struct server: public _server_t {
 	iLog		*mpi_log; // system log
 	iHeap		*mpi_heap;
 	bool		m_autorestore;
-	_event_data_t	m_event[HTTP_MAX_EVENTS];
 	iBufferMap	*mpi_bmap;
 	_u32		m_buffer_size;
 	_u32		m_max_workers;

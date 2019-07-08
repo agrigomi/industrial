@@ -180,7 +180,7 @@ public:
 				server srv;
 
 				srv.mpi_server = NULL;
-				memset(srv.m_event, 0, sizeof(srv.m_event));
+				memset(srv.host.event, 0, sizeof(srv.host.event));
 				memset(srv.host.root, 0, sizeof(srv.host.root));
 				memset(srv.host.cache_path, 0, sizeof(srv.host.cache_path));
 				strncpy(srv.m_name, name, MAX_SERVER_NAME-1);
