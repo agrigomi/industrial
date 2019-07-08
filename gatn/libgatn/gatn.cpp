@@ -79,9 +79,9 @@ private:
 					mpi_log->fwrite(LMT_INFO, "Gatn: stop server '%s'", p->m_name);
 					_gpi_repo_->object_release(p->mpi_server);
 					p->mpi_server = NULL;
-					_gpi_repo_->object_release(p->mpi_map);
-					_gpi_repo_->object_release(p->mpi_fcache);
-					p->mpi_fcache = NULL;
+					_gpi_repo_->object_release(p->host.pi_route_map);
+					_gpi_repo_->object_release(p->host.pi_fcache);
+					p->host.pi_fcache = NULL;
 				}
 				p_srv = (_server_t *)mpi_map->enum_next(en, &sz, hm);
 			}
@@ -181,11 +181,11 @@ public:
 
 				srv.mpi_server = NULL;
 				memset(srv.m_event, 0, sizeof(srv.m_event));
-				memset(srv.m_doc_root, 0, sizeof(srv.m_doc_root));
-				memset(srv.m_cache_path, 0, sizeof(srv.m_cache_path));
+				memset(srv.host.root, 0, sizeof(srv.host.root));
+				memset(srv.host.cache_path, 0, sizeof(srv.host.cache_path));
 				strncpy(srv.m_name, name, MAX_SERVER_NAME-1);
-				strncpy(srv.m_doc_root, doc_root, MAX_DOC_ROOT_PATH-1);
-				strncpy(srv.m_cache_path, cache_path, MAX_CACHE_PATH-1);
+				strncpy(srv.host.root, doc_root, MAX_DOC_ROOT_PATH-1);
+				strncpy(srv.host.cache_path, cache_path, MAX_CACHE_PATH-1);
 				srv.m_port = port;
 				srv.mpi_net = mpi_net;
 				srv.mpi_fs = mpi_fs;
@@ -203,20 +203,20 @@ public:
 					});
 				}
 				srv.m_buffer_size = buffer_size;
-				srv.mpi_fcache = NULL;
+				srv.host.pi_fcache = NULL;
 				srv.m_max_workers = max_workers;
 				srv.m_max_connections = max_connections;
 				srv.m_connection_timeout = connection_timeout;
 				srv.m_ssl_context = ssl_context;
-				if((srv.mpi_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE | RF_NONOTIFY))))
-					if(srv.mpi_map->init(63))
+				if((srv.host.pi_route_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE | RF_NONOTIFY))))
+					if(srv.host.pi_route_map->init(63))
 						r = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(server));
 
 				if(r)
 					r->start();
 				else {
-					if(srv.mpi_map)
-						_gpi_repo_->object_release(srv.mpi_map);
+					if(srv.host.pi_route_map)
+						_gpi_repo_->object_release(srv.host.pi_route_map);
 				}
 			}
 		}
@@ -235,9 +235,9 @@ public:
 
 		if(p) {
 			_gpi_repo_->object_release(p->mpi_server, false);
-			_gpi_repo_->object_release(p->mpi_map, false);
+			_gpi_repo_->object_release(p->host.pi_route_map, false);
 			_gpi_repo_->object_release(p->mpi_bmap, false);
-			_gpi_repo_->object_release(p->mpi_fcache);
+			_gpi_repo_->object_release(p->host.pi_fcache);
 			mpi_map->del(p->m_name, strlen(p->m_name));
 		}
 	}

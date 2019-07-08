@@ -70,6 +70,7 @@ struct response: public _response_t {
 #define HTTP_MAX_EVENTS		10
 #define MAX_DOC_ROOT_PATH	512
 #define MAX_CACHE_PATH		512
+#define MAX_HOSTNAME		256
 
 typedef struct {
 	_on_http_event_t	*pcb;
@@ -80,11 +81,21 @@ void init_mime_type_resolver(void);
 void uninit_mime_type_resolver(void);
 _cstr_t resolve_mime_type(_cstr_t fname);
 
+typedef struct {
+	_char_t		host[MAX_HOSTNAME];	// host name
+	_char_t 	root[MAX_DOC_ROOT_PATH];// document root
+	_char_t		cache_path[MAX_CACHE_PATH];
+	iFileCache	*pi_fcache;		// file cache
+	iMap		*pi_nocache_map;	// non cacheable areas in document root
+	iMap		*pi_route_map;
+}_vhost_t;
+
 struct server: public _server_t {
 	_char_t 	m_name[MAX_SERVER_NAME];
 	_u32 		m_port;
 	iHttpServer 	*mpi_server;
-	iMap		*mpi_map; // route map
+	_vhost_t	host;
+	iMap		*mpi_vhost_map; // virtual hosts map
 	iNet		*mpi_net; // networking
 	iFS		*mpi_fs; // FS support
 	iLog		*mpi_log; // system log
@@ -92,9 +103,6 @@ struct server: public _server_t {
 	bool		m_autorestore;
 	_event_data_t	m_event[HTTP_MAX_EVENTS];
 	iBufferMap	*mpi_bmap;
-	iFileCache	*mpi_fcache;
-	_char_t		m_doc_root[MAX_DOC_ROOT_PATH];
-	_char_t		m_cache_path[MAX_CACHE_PATH];
 	_u32		m_buffer_size;
 	_u32		m_max_workers;
 	_u32		m_max_connections;
@@ -125,7 +133,7 @@ struct server: public _server_t {
 	_request_t *get_request(iHttpServerConnection *pi_httpc);
 	_response_t *get_response(iHttpServerConnection *pi_httpc);
 	iFileCache *get_file_cache(void) {
-		return mpi_fcache;
+		return host.pi_fcache;
 	}
 	void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=NULL);
 };

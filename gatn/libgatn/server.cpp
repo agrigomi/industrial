@@ -56,8 +56,8 @@ bool server::create_connection(iHttpServerConnection *p_httpc) {
 		p_cnt->res.m_hbcount = 0;
 		p_cnt->res.m_content_len = 0;
 		p_cnt->res.m_buffers = 0;
-		p_cnt->res.m_doc_root = m_doc_root;
-		p_cnt->res.mpi_fcache = mpi_fcache;
+		p_cnt->res.m_doc_root = host.root;
+		p_cnt->res.mpi_fcache = host.pi_fcache;
 		p_cnt->res.mpi_fs = mpi_fs;
 		p_httpc->set_udata((_ulong)p_cnt, IDX_CONNECTION);
 		r = true;
@@ -95,7 +95,7 @@ void server::set_handlers(void) {
 		*/
 		HFCACHE old_fc = (HFCACHE)p_httpc->get_udata(IDX_FCACHE);
 		if(old_fc) {
-			p_srv->mpi_fcache->close(old_fc);
+			p_srv->host.pi_fcache->close(old_fc);
 			p_httpc->set_udata(0, IDX_FCACHE);
 		}
 
@@ -136,7 +136,7 @@ void server::set_handlers(void) {
 		p_srv->call_route_handler(HTTP_ON_CLOSE, p_httpc);
 
 		if(fc)
-			p_srv->mpi_fcache->close(fc);
+			p_srv->host.pi_fcache->close(fc);
 
 		p_srv->destroy_connection(p_httpc);
 	}, this);
@@ -145,17 +145,17 @@ void server::set_handlers(void) {
 bool server::start(void) {
 	bool r = false;
 
-	if(mpi_map && mpi_net && mpi_fs) {
-		if(!mpi_fcache) { // create file cache
-			if((mpi_fcache = dynamic_cast<iFileCache *>(_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE|RF_NONOTIFY))))
-				mpi_fcache->init(m_cache_path, m_name);
+	if(host.pi_route_map && mpi_net && mpi_fs) {
+		if(!host.pi_fcache) { // create file cache
+			if((host.pi_fcache = dynamic_cast<iFileCache *>(_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE|RF_NONOTIFY))))
+				host.pi_fcache->init(host.cache_path, m_name);
 		}
 		if(!mpi_server)
 			mpi_server = mpi_net->create_http_server(m_port, m_buffer_size, m_max_workers,
 								m_max_connections, m_connection_timeout,
 								m_ssl_context);
 
-		if(mpi_fcache && mpi_server) {
+		if(host.pi_fcache && mpi_server) {
 			set_handlers();
 			r = true;
 		}
@@ -169,9 +169,9 @@ void server::stop(void) {
 		_gpi_repo_->object_release(mpi_server, false);
 		mpi_server = NULL;
 	}
-	if(mpi_fcache) {
-		_gpi_repo_->object_release(mpi_fcache, false);
-		mpi_fcache = NULL;
+	if(host.pi_fcache) {
+		_gpi_repo_->object_release(host.pi_fcache, false);
+		host.pi_fcache = NULL;
 	}
 }
 
@@ -197,7 +197,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 		key.method = p_httpc->req_method();
 		strncpy(key.path, url, sizeof(key.path)-1);
 
-		_route_data_t *prd = (_route_data_t *)mpi_map->get(&key, key.size(), &sz);
+		_route_data_t *prd = (_route_data_t *)host.pi_route_map->get(&key, key.size(), &sz);
 
 		if(prd) {
 			// route found
@@ -209,37 +209,37 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 			// try to resolve file name
 			_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
 
-			if((strlen(url) + strlen(m_doc_root) < sizeof(doc)-1)) {
+			if((strlen(url) + strlen(host.root) < sizeof(doc)-1)) {
 				snprintf(doc, sizeof(doc), "%s%s",
-					m_doc_root,
+					host.root,
 					(strcmp(url, "/") == 0) ? "/index.html" : url);
-				HFCACHE fc = mpi_fcache->open(doc);
+				HFCACHE fc = host.pi_fcache->open(doc);
 				if(fc) {
 					if(key.method == HTTP_METHOD_GET) {
 						_ulong doc_sz = 0;
 
-						_u8 *ptr = (_u8 *)mpi_fcache->ptr(fc, &doc_sz);
+						_u8 *ptr = (_u8 *)host.pi_fcache->ptr(fc, &doc_sz);
 						if(ptr) {
 							// response header
 							p_httpc->res_content_len(doc_sz);
 							p_httpc->res_code(HTTPRC_OK);
 							p_httpc->res_var("Server", m_name);
 							p_httpc->res_var("Content-Type", resolve_content_type(doc));
-							p_httpc->res_mtime(mpi_fcache->mtime(fc));
+							p_httpc->res_mtime(host.pi_fcache->mtime(fc));
 							// response content
 							p_httpc->res_write(ptr, doc_sz);
 							p_httpc->set_udata((_ulong)fc, IDX_FCACHE);
 						} else {
 							p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
-							mpi_fcache->close(fc);
+							host.pi_fcache->close(fc);
 						}
 					} else if(key.method == HTTP_METHOD_HEAD) {
-						p_httpc->res_mtime(mpi_fcache->mtime(fc));
+						p_httpc->res_mtime(host.pi_fcache->mtime(fc));
 						p_httpc->res_code(HTTPRC_OK);
-						mpi_fcache->close(fc);
+						host.pi_fcache->close(fc);
 					} else {
 						p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
-						mpi_fcache->close(fc);
+						host.pi_fcache->close(fc);
 					}
 				} else {
 					p_httpc->res_code(HTTPRC_NOT_FOUND);
@@ -258,7 +258,7 @@ void server::update_response(iHttpServerConnection *p_httpc) {
 	if(fc) {
 		// update content from file cache
 		_ulong sz = 0;
-		_u8 *ptr = (_u8 *)mpi_fcache->ptr(fc, &sz);
+		_u8 *ptr = (_u8 *)host.pi_fcache->ptr(fc, &sz);
 
 		if(ptr) {
 			_u32 res_sent = p_httpc->res_content_sent();
@@ -283,8 +283,8 @@ void server::on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *ud
 	memset(&key, 0, sizeof(_route_key_t));
 	key.method = method;
 	strncpy(key.path, path, MAX_ROUTE_PATH-1);
-	if(mpi_map)
-		mpi_map->add(&key, key.size(), &data, data.size());
+	if(host.pi_route_map)
+		host.pi_route_map->add(&key, key.size(), &data, data.size());
 }
 
 void server::on_event(_u8 evt, _on_http_event_t *pcb, void *udata) {
@@ -300,8 +300,8 @@ void server::remove_route(_u8 method, _cstr_t path) {
 	memset(&key, 0, sizeof(_route_key_t));
 	key.method = method;
 	strncpy(key.path, path, MAX_ROUTE_PATH-1);
-	if(mpi_map)
-		mpi_map->del(&key, sizeof(_route_key_t));
+	if(host.pi_route_map)
+		host.pi_route_map->del(&key, sizeof(_route_key_t));
 }
 
 _request_t *server::get_request(iHttpServerConnection *pi_httpc) {
@@ -325,22 +325,22 @@ _response_t *server::get_response(iHttpServerConnection *pi_httpc) {
 }
 
 void server::enum_route(void (*enum_cb)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata) {
-	_map_enum_t me = mpi_map->enum_open();
+	_map_enum_t me = host.pi_route_map->enum_open();
 	_u32 sz = 0;
-	HMUTEX hm = mpi_map->lock();
+	HMUTEX hm = host.pi_route_map->lock();
 
 	if(me) {
-		_route_data_t *rd = (_route_data_t *)mpi_map->enum_first(me, &sz, hm);
+		_route_data_t *rd = (_route_data_t *)host.pi_route_map->enum_first(me, &sz, hm);
 
 		while(rd) {
-			mpi_map->unlock(hm);
+			host.pi_route_map->unlock(hm);
 			enum_cb(rd->path, rd->pcb, udata);
-			hm = mpi_map->lock();
-			rd = (_route_data_t *)mpi_map->enum_next(me, &sz, hm);
+			hm = host.pi_route_map->lock();
+			rd = (_route_data_t *)host.pi_route_map->enum_next(me, &sz, hm);
 		}
 
-		mpi_map->enum_close(me);
+		host.pi_route_map->enum_close(me);
 	}
 
-	mpi_map->unlock(hm);
+	host.pi_route_map->unlock(hm);
 }
