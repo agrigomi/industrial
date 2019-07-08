@@ -4,17 +4,27 @@
 			"name":		"server-0",
 			"port":		8080,
 			"buffer":	16384,
+			"threads":	32,
+			"connections":	1000,
+			"timeout":	10,
+			"ssl":		false,
+			"cache_path":	"/tmp/",
+			"cache_key":	"server-0",
 			"root":		"../test/balay",
 			"vhost": 	[
 				{
-					"host":		"alabala.ddns.net",
+					"host":		"oland.ddns.net",
 					"root":		"../test/NiceAdmin",
-					"nocache":	["fldr1", "fldr2"],
+					"no_cache":	["fldr1", "fldr2"],
+					"cache_path":	"/tmp/",
+					"cache_key":	"oland"
 				},
 				{
 					"host":		"troubles.ddns.net",
 					"root":		"../test/StarAdmin",
-					"nocache":	["fldr1", "fldr2"],
+					"no_cache":	["fldr1", "fldr2"],
+					"cache_path":	"/tmp/",
+					"cache_key":	"troubles"
 				}
 			]
 		},
@@ -22,8 +32,17 @@
 			"name":		"server-1",
 			"port":		8081,
 			"buffer":	8192,
+			"threads":	32,
+			"connections":	1000,
+			"timeout":	10,
+			"cache_path":	"/tmp/",
+			"cache_key":	"server-1",
 			"root":		"../test/philosophy-colorlib",
-
+			"ssl":		false,
+			"ssl_method":	"SSLv23",
+			"ssl_flags":	["NO_SSLv2", "NO_SSLv3", "NO_COMPRESSION"],
+			"ssl_cert":	"certificate.crt",
+			"ssl_key":	"keyfile.key"
 		},
 	]
 }
