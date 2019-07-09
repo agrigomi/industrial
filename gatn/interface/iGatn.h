@@ -4,7 +4,8 @@
 #include "iNet.h"
 #include "iFS.h"
 
-#define I_GATN	"iGatn"
+#define I_GATN			"iGatn"
+#define I_GATN_EXTENSION	"iGatnExtension"
 
 typedef struct gatn_server _server_t;
 
@@ -64,6 +65,14 @@ struct gatn_server {
 	virtual _response_t *get_response(iHttpServerConnection *pi_httpc)=0;
 	virtual iFileCache *get_file_cache(void)=0;
 	virtual void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=NULL)=0;
+};
+
+class iGatnExtension: public iBase {
+public:
+	INTERFACE(iGatnExtension, I_GATN_EXTENSION);
+	virtual _cstr_t name(void)=0; // returns extension name
+	virtual bool init(_server_t *p_srv, _cstr_t host=NULL)=0;
+	virtual void uninit(_server_t *p_srv, _cstr_t host=NULL)=0;
 };
 
 class iGatn: public iBase {
