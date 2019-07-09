@@ -1,32 +1,43 @@
 {
-	"server":	[
-		{
+	"server": [{
 			"name":		"server-0",
 			"port":		8080,
 			"buffer":	16384,
 			"threads":	32,
 			"connections":	1000,
 			"timeout":	10,
-			"ssl":		false,
-			"cache_path":	"/tmp/",
-			"cache_key":	"server-0",
+			"cache": {
+				"path":		"/tmp/",
+				"key":		"server-0",
+				"exclude":	["folder1", "folder2"]
+			},
 			"root":		"../test/balay",
-			"vhost": 	[
-				{
+			"vhost": [{
 					"host":		"oland.ddns.net",
 					"root":		"../test/NiceAdmin",
-					"no_cache":	["fldr1", "fldr2"],
-					"cache_path":	"/tmp/",
-					"cache_key":	"oland"
+					"cache": {
+						"exclude":	["fldr1", "fldr2"],
+						"path":		"/tmp/",
+						"key":		"oland"
+					}
 				},
 				{
-					"host":		"troubles.ddns.net",
+					"host":		"agrigomi.ddns.net",
 					"root":		"../test/StarAdmin",
-					"no_cache":	["fldr1", "fldr2"],
-					"cache_path":	"/tmp/",
-					"cache_key":	"troubles"
+					"cache": {
+						"exclude":	["fldr1", "fldr2"],
+						"path":		"/tmp/",
+						"key":		"agrigomi"
+					}
 				}
-			]
+			],
+			"ssl": {
+				"enable":	false,
+				"method":	"SSLv23",
+				"flags":	["NO_SSLv2", "NO_SSLv3", "NO_COMPRESSION"],
+				"certificate":	"certificate.crt",
+				"key":		"keyfile.key"
+			}
 		},
 		{
 			"name":		"server-1",
@@ -35,14 +46,18 @@
 			"threads":	32,
 			"connections":	1000,
 			"timeout":	10,
-			"cache_path":	"/tmp/",
-			"cache_key":	"server-1",
+			"cache": {
+				"path":		"/tmp/",
+				"key":		"server-1",
+			},
 			"root":		"../test/philosophy-colorlib",
-			"ssl":		false,
-			"ssl_method":	"SSLv23",
-			"ssl_flags":	["NO_SSLv2", "NO_SSLv3", "NO_COMPRESSION"],
-			"ssl_cert":	"certificate.crt",
-			"ssl_key":	"keyfile.key"
+			"ssl": {
+				"enable":	false,
+				"method":	"SSLv23",
+				"flags":	["NO_SSLv2", "NO_SSLv3", "NO_COMPRESSION"],
+				"certificate":	"certificate.crt",
+				"key":		"keyfile.key"
+			}
 		}
 	]
 }
