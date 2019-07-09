@@ -194,9 +194,7 @@ public:
 				server srv;
 
 				srv.mpi_server = NULL;
-				memset(srv.host.event, 0, sizeof(srv.host.event));
-				memset(srv.host.root, 0, sizeof(srv.host.root));
-				memset(srv.host.cache_path, 0, sizeof(srv.host.cache_path));
+				memset(&srv.host, 0, sizeof(srv.host));
 				strncpy(srv.m_name, name, MAX_SERVER_NAME-1);
 				strncpy(srv.host.root, doc_root, MAX_DOC_ROOT_PATH-1);
 				strncpy(srv.host.cache_path, cache_path, MAX_CACHE_PATH-1);
@@ -251,7 +249,7 @@ public:
 			_gpi_repo_->object_release(p->mpi_server, false);
 			_gpi_repo_->object_release(p->host.pi_route_map, false);
 			_gpi_repo_->object_release(p->mpi_bmap, false);
-			_gpi_repo_->object_release(p->host.pi_fcache);
+			_gpi_repo_->object_release(p->host.pi_fcache, false);
 			mpi_map->del(p->m_name, strlen(p->m_name));
 		}
 	}
