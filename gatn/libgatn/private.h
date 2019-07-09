@@ -70,6 +70,7 @@ struct response: public _response_t {
 #define HTTP_MAX_EVENTS		10
 #define MAX_DOC_ROOT_PATH	512
 #define MAX_CACHE_PATH		512
+#define MAX_CACHE_KEY		32
 #define MAX_HOSTNAME		256
 
 typedef struct {
@@ -84,18 +85,19 @@ _cstr_t resolve_mime_type(_cstr_t fname);
 typedef struct {
 	_char_t		host[MAX_HOSTNAME];	// host name
 	_char_t 	root[MAX_DOC_ROOT_PATH];// document root
-	_char_t		cache_path[MAX_CACHE_PATH];
+	_char_t		cache_path[MAX_CACHE_PATH]; // cache folder (by example: /tmp/)
+	_char_t		cache_key[MAX_CACHE_KEY];// cache folder name
 	iFileCache	*pi_fcache;		// file cache
 	iMap		*pi_nocache_map;	// non cacheable areas in document root
-	iMap		*pi_route_map;
-	_event_data_t	event[HTTP_MAX_EVENTS];
+	iMap		*pi_route_map;		// URL routing map
+	_event_data_t	event[HTTP_MAX_EVENTS]; // HTTP event handlers
 }_vhost_t;
 
 struct server: public _server_t {
 	_char_t 	m_name[MAX_SERVER_NAME];
 	_u32 		m_port;
 	iHttpServer 	*mpi_server;
-	_vhost_t	host;
+	_vhost_t	host; // default host
 	iMap		*mpi_vhost_map; // virtual hosts map
 	iNet		*mpi_net; // networking
 	iFS		*mpi_fs; // FS support
