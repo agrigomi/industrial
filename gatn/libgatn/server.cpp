@@ -5,7 +5,6 @@
 
 #define MAX_ROUTE_PATH	256
 
-#define IDX_FCACHE	6
 #define IDX_CONNECTION	7
 
 typedef struct {
@@ -30,9 +29,14 @@ typedef struct {
 typedef struct {
 	request		req;
 	response	res;
+	_cstr_t		url;
+	_vhost_t	*p_vhost;
+	HFCACHE		hfc;
 
 	void clear(void) {
 		res.clear();
+		hfc = NULL;
+		p_vhost = NULL;
 	}
 
 	void destroy(void) {
@@ -54,10 +58,12 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 	strncpy(host.root, root, sizeof(host.root)-1);
 	strncpy(host.cache_path, cache_path, sizeof(host.cache_path)-1);
 	strncpy(host.cache_key, m_name, sizeof(host.cache_key)-1);
-	attach_fs();
-	attach_network();
 	mpi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL));
 	mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
+	mpi_net = NULL;
+	mpi_fs = NULL;
+	attach_fs();
+	attach_network();
 	m_autorestore = false;
 	if((mpi_bmap = dynamic_cast<iBufferMap *>(_gpi_repo_->object_by_iname(I_BUFFER_MAP, RF_CLONE|RF_NONOTIFY)))) {
 		mpi_bmap->init(buffer_size, [](_u8 op, void *bptr, _u32 sz, void *udata)->_u32 {
@@ -160,6 +166,7 @@ bool server::create_connection(iHttpServerConnection *p_httpc) {
 		p_cnt->res.m_doc_root = host.root;
 		p_cnt->res.mpi_fcache = host.pi_fcache;
 		p_cnt->res.mpi_fs = mpi_fs;
+		p_cnt->clear();
 		p_httpc->set_udata((_ulong)p_cnt, IDX_CONNECTION);
 		r = true;
 	}
@@ -188,22 +195,23 @@ void server::set_handlers(void) {
 
 	mpi_server->on_event(HTTP_ON_REQUEST, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
+		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
 		/************************************
 		 Check for unclosed file cache and connections
 		 because in cases of reuse connection (connection: keep-alive),
 		 HTTP_ON_CLOSE will not happened
 		*/
-		HFCACHE old_fc = (HFCACHE)p_httpc->get_udata(IDX_FCACHE);
-		if(old_fc) {
-			p_srv->host.pi_fcache->close(old_fc);
-			p_httpc->set_udata(0, IDX_FCACHE);
-		}
+		if(pc->hfc) {
+			_vhost_t *p_vhost = pc->p_vhost;
 
-		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
-		if(pc)
-			pc->clear();
+			if(p_vhost && p_vhost->pi_fcache)
+				p_vhost->pi_fcache->close(pc->hfc);
+		}
 		/**********************************/
+		pc->clear();
+		pc->p_vhost = p_srv->get_host(p_httpc->req_var("Host"));
+		pc->url = p_httpc->req_url();
 
 		p_srv->call_handler(HTTP_ON_REQUEST, p_httpc);
 		p_srv->call_route_handler(HTTP_ON_REQUEST, p_httpc);
@@ -231,13 +239,14 @@ void server::set_handlers(void) {
 
 	mpi_server->on_event(HTTP_ON_CLOSE, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
-		HFCACHE fc = (HFCACHE)p_httpc->get_udata(IDX_FCACHE);
+			//HFCACHE fc = (HFCACHE)p_httpc->get_udata(IDX_FCACHE);
+		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
 		p_srv->call_handler(HTTP_ON_CLOSE, p_httpc);
 		p_srv->call_route_handler(HTTP_ON_CLOSE, p_httpc);
 
-		if(fc)
-			p_srv->host.pi_fcache->close(fc);
+		if(pc && pc->hfc && pc->p_vhost && pc->p_vhost->pi_fcache)
+			pc->p_vhost->pi_fcache->close(pc->hfc);
 
 		p_srv->destroy_connection(p_httpc);
 	}, this);
@@ -327,7 +336,9 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_cstr_t url = p_httpc->req_url();
 
 	if(url) {
-		_vhost_t *pvhost = get_host(p_httpc->req_var("Host"));
+		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
+		_vhost_t *pvhost = pc->p_vhost;
+		_cstr_t url = pc->url;
 
 		memset(&key, 0, sizeof(_route_key_t));
 		key.method = p_httpc->req_method();
@@ -337,7 +348,6 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 
 		if(prd) {
 			// route found
-			_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 			if(pc) // call route handler
 				prd->pcb(evt, &pc->req, &pc->res, prd->udata);
 		} else if(evt == HTTP_ON_REQUEST) {
@@ -364,7 +374,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 							p_httpc->res_mtime(host.pi_fcache->mtime(fc));
 							// response content
 							p_httpc->res_write(ptr, doc_sz);
-							p_httpc->set_udata((_ulong)fc, IDX_FCACHE);
+							pc->hfc = fc;
 						} else {
 							p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
 							host.pi_fcache->close(fc);
@@ -389,12 +399,12 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 
 void server::update_response(iHttpServerConnection *p_httpc) {
 	// write response remainder
-	HFCACHE fc = (HFCACHE)p_httpc->get_udata(IDX_FCACHE);
+	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
-	if(fc) {
+	if(pc->hfc) {
 		// update content from file cache
 		_ulong sz = 0;
-		_u8 *ptr = (_u8 *)host.pi_fcache->ptr(fc, &sz);
+		_u8 *ptr = (_u8 *)host.pi_fcache->ptr(pc->hfc, &sz);
 
 		if(ptr) {
 			_u32 res_sent = p_httpc->res_content_sent();
@@ -402,12 +412,9 @@ void server::update_response(iHttpServerConnection *p_httpc) {
 
 			p_httpc->res_write(ptr + res_sent, res_remainder);
 		}
-	} else {
+	} else
 		// update content from response buffer
-		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
-		if(pc)
-			pc->res.process_content();
-	}
+		pc->res.process_content();
 }
 
 void server::on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata) {
