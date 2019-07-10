@@ -48,6 +48,7 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 		_u32 connection_timeout, SSL_CTX *ssl_context) {
 	memset(&host, 0, sizeof(_vhost_t)); // default host
 	mpi_server = NULL; // HTTP server
+	mpi_vhost_map = NULL;
 	strncpy(m_name, name, sizeof(m_name));
 	m_port = port;
 	strncpy(host.root, root, sizeof(host.root));
@@ -58,7 +59,7 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 	mpi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL));
 	mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
 	m_autorestore = false;
-	if((mpi_bmap = dynamic_cast<iBufferMap *>(_gpi_repo_->object_by_iname(I_BUFFER_MAP, RF_ORIGINAL)))) {
+	if((mpi_bmap = dynamic_cast<iBufferMap *>(_gpi_repo_->object_by_iname(I_BUFFER_MAP, RF_CLONE|RF_NONOTIFY)))) {
 		mpi_bmap->init(buffer_size, [](_u8 op, void *bptr, _u32 sz, void *udata)->_u32 {
 			_u32 r = 0;
 
@@ -72,6 +73,7 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 	m_max_workers = max_workers;
 	m_max_connections = max_connections;
 	m_connection_timeout = connection_timeout;
+	m_ssl_context = ssl_context;
 }
 
 void server::attach_network(void) {
@@ -312,11 +314,13 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_cstr_t url = p_httpc->req_url();
 
 	if(url) {
+		_vhost_t *pvhost = get_host(p_httpc->req_var("Host"));
+
 		memset(&key, 0, sizeof(_route_key_t));
 		key.method = p_httpc->req_method();
 		strncpy(key.path, url, sizeof(key.path)-1);
 
-		_route_data_t *prd = (_route_data_t *)host.pi_route_map->get(&key, key.size(), &sz);
+		_route_data_t *prd = (_route_data_t *)pvhost->pi_route_map->get(&key, key.size(), &sz);
 
 		if(prd) {
 			// route found
@@ -402,8 +406,10 @@ void server::on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *ud
 	memset(&key, 0, sizeof(_route_key_t));
 	key.method = method;
 	strncpy(key.path, path, MAX_ROUTE_PATH-1);
-	if(!host.pi_route_map)
-		host.pi_route_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY));
+	if(!host.pi_route_map) {
+		if((host.pi_route_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
+			host.pi_route_map->init(33, mpi_heap);
+	}
 	if(host.pi_route_map)
 		host.pi_route_map->add(&key, key.size(), &data, data.size());
 }
@@ -475,8 +481,11 @@ bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _c
 	strncpy(vhost.cache_path, cache_path, sizeof(vhost.cache_path));
 	strncpy(vhost.cache_key, cache_key, sizeof(vhost.cache_key));
 
-	if(!mpi_vhost_map)
-		mpi_vhost_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY));
+	if(!mpi_vhost_map) {
+		if((mpi_vhost_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
+			mpi_vhost_map->init(15, mpi_heap);
+	}
+
 	if(mpi_vhost_map) {
 		if(mpi_vhost_map->add(host, strlen(host), &vhost, sizeof(_vhost_t)))
 			r = true;
@@ -487,23 +496,30 @@ bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _c
 
 _vhost_t *server::get_virtual_host(_cstr_t host) {
 	_u32 sz = 0;
+	_vhost_t *r = NULL;
 
-	return (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz);
+	if(mpi_vhost_map)
+		r = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz);
+
+	return r;
 }
 
 bool server::remove_virtual_host(_cstr_t host) {
 	bool r = false;
 	_u32 sz = 0;
-	HMUTEX hm = mpi_vhost_map->lock();
-	_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz, hm);
 
-	if(pvhost) {
-		destroy(pvhost);
-		mpi_vhost_map->del(host, strlen(host), hm);
-		r = true;
+	if(mpi_vhost_map) {
+		HMUTEX hm = mpi_vhost_map->lock();
+		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz, hm);
+
+		if(pvhost) {
+			destroy(pvhost);
+			mpi_vhost_map->del(host, strlen(host), hm);
+			r = true;
+		}
+
+		mpi_vhost_map->unlock(hm);
 	}
-
-	mpi_vhost_map->unlock(hm);
 
 	return r;
 }
@@ -511,15 +527,18 @@ bool server::remove_virtual_host(_cstr_t host) {
 bool server::start_virtual_host(_cstr_t host) {
 	bool r = false;
 	_u32 sz = 0;
-	HMUTEX hm = mpi_vhost_map->lock();
-	_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz, hm);
 
-	if(pvhost) {
-		start(pvhost);
-		r = true;
+	if(mpi_vhost_map) {
+		HMUTEX hm = mpi_vhost_map->lock();
+		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz, hm);
+
+		if(pvhost) {
+			start(pvhost);
+			r = true;
+		}
+
+		mpi_vhost_map->unlock(hm);
 	}
-
-	mpi_vhost_map->unlock(hm);
 
 	return r;
 }
@@ -527,15 +546,18 @@ bool server::start_virtual_host(_cstr_t host) {
 bool server::stop_virtual_host(_cstr_t host) {
 	bool r = false;
 	_u32 sz = 0;
-	HMUTEX hm = mpi_vhost_map->lock();
-	_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz, hm);
 
-	if(pvhost) {
-		stop(pvhost);
-		r = true;
+	if(mpi_vhost_map) {
+		HMUTEX hm = mpi_vhost_map->lock();
+		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz, hm);
+
+		if(pvhost) {
+			stop(pvhost);
+			r = true;
+		}
+
+		mpi_vhost_map->unlock(hm);
 	}
-
-	mpi_vhost_map->unlock(hm);
 
 	return r;
 }

@@ -10,10 +10,7 @@ IMPLEMENT_BASE_ARRAY("libgatn", 10);
 class cGatn: public iGatn {
 private:
 	iMap		*mpi_map;// server map
-	iNet		*mpi_net;
-	iFS		*mpi_fs;
 	iLog		*mpi_log;
-	iHeap		*mpi_heap;
 	iJSON		*mpi_json;
 
 	void stop(bool autorestore=false) { // stop servers
@@ -28,9 +25,8 @@ private:
 				server *p = dynamic_cast<server *>(p_srv);
 
 				if(p) {
-					p->stop();
-					p->mpi_net = NULL;
-					p->mpi_fs = NULL;
+					p->release_network();
+					p->release_fs();
 					p->m_autorestore = autorestore;
 					p_srv = (_server_t *)mpi_map->enum_next(en, &sz, hm);
 				}
@@ -53,10 +49,12 @@ private:
 				server *p = dynamic_cast<server *>(p_srv);
 
 				if(p) {
-					p->mpi_net = mpi_net;
-					p->mpi_fs = mpi_fs;
-					if(p->m_autorestore)
-						p->start();
+					p->attach_fs();
+					p->attach_network();
+					if(p->m_autorestore) {
+						if(!p->start())
+							mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to restore server '%s'", p->name());
+					}
 					p_srv = (_server_t *)mpi_map->enum_next(en, &sz, hm);
 				}
 			}
@@ -79,11 +77,7 @@ private:
 
 				if(p) {
 					mpi_log->fwrite(LMT_INFO, "Gatn: stop server '%s'", p->m_name);
-					_gpi_repo_->object_release(p->mpi_server);
-					p->mpi_server = NULL;
-					_gpi_repo_->object_release(p->host.pi_route_map);
-					_gpi_repo_->object_release(p->host.pi_fcache);
-					p->host.pi_fcache = NULL;
+					p->destroy();
 				}
 				p_srv = (_server_t *)mpi_map->enum_next(en, &sz, hm);
 			}
@@ -105,12 +99,9 @@ public:
 				if((mpi_map = dynamic_cast<iMap *>(pi_repo->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
 					mpi_map->init(31);
 				mpi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
-				mpi_heap = dynamic_cast<iHeap *>(pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL));
-				mpi_net = NULL;
-				mpi_fs = NULL;
 				mpi_json = NULL;
 				init_mime_type_resolver();
-				if(mpi_map && mpi_log && mpi_heap) {
+				if(mpi_map && mpi_log) {
 					pi_repo->monitoring_add(NULL, I_NET, NULL, this, SCAN_ORIGINAL);
 					pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
 					pi_repo->monitoring_add(NULL, I_JSON, NULL, this, SCAN_ORIGINAL);
@@ -123,9 +114,6 @@ public:
 				destroy();
 				pi_repo->object_release(mpi_map, false);
 				pi_repo->object_release(mpi_log);
-				pi_repo->object_release(mpi_heap);
-				pi_repo->object_release(mpi_fs);
-				pi_repo->object_release(mpi_net);
 				pi_repo->object_release(mpi_json);
 				uninit_mime_type_resolver();
 				r = true;
@@ -140,25 +128,19 @@ public:
 
 					if(pn->flags & NF_INIT) { // catch
 						if(strcmp(oi.iname, I_NET) == 0) {
-							mpi_log->write(LMT_INFO, "Gatn: catch networking");
-							mpi_net = (iNet *)_gpi_repo_->object_by_handle(pn->hobj, RF_ORIGINAL|RF_NONOTIFY);
+							mpi_log->write(LMT_INFO, "Gatn: attach networking");
 							restore();
 						} else if(strcmp(oi.iname, I_FS) == 0) {
-							mpi_log->write(LMT_INFO, "Gatn: catch FS support");
-							mpi_fs = (iFS *)_gpi_repo_->object_by_handle(pn->hobj, RF_ORIGINAL|RF_NONOTIFY);
+							mpi_log->write(LMT_INFO, "Gatn: attach FS");
 							restore();
 						}
 					} else if(pn->flags & (NF_UNINIT | NF_REMOVE)) { // release
 						if(strcmp(oi.iname, I_NET) == 0) {
-							mpi_log->write(LMT_INFO, "Gatn: release networking");
+							mpi_log->write(LMT_INFO, "Gatn: detach networking");
 							stop(true);
-							_gpi_repo_->object_release(mpi_net);
-							mpi_net = NULL;
 						} else if(strcmp(oi.iname, I_FS) == 0) {
-							mpi_log->write(LMT_INFO, "Gatn: release FS support");
+							mpi_log->write(LMT_INFO, "Gatn: detach FS");
 							stop(true);
-							_gpi_repo_->object_release(mpi_fs);
-							mpi_fs = NULL;
 						}
 					}
 				}
@@ -189,8 +171,8 @@ public:
 		_server_t *r = NULL;
 		_u32 sz = 0;
 
-		if(!(r = (_server_t *)mpi_map->get(name, strlen(name), &sz))) {
-			if(mpi_map && mpi_net && mpi_fs) {
+		if(mpi_map) {
+			if(!(r = (_server_t *)mpi_map->get(name, strlen(name), &sz))) {
 				server srv(name, port, doc_root, cache_path, no_cache,
 					buffer_size, max_workers, max_connections,
 					connection_timeout, ssl_context);
