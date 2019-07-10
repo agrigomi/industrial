@@ -54,8 +54,8 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 	strncpy(host.root, root, sizeof(host.root));
 	strncpy(host.cache_path, cache_path, sizeof(host.cache_path));
 	strncpy(host.cache_key, m_name, sizeof(host.cache_key));
-	mpi_net = dynamic_cast<iNet *>(_gpi_repo_->object_by_iname(I_NET, RF_ORIGINAL));
-	mpi_fs = dynamic_cast<iFS *>(_gpi_repo_->object_by_iname(I_FS, RF_ORIGINAL));
+	attach_fs();
+	attach_network();
 	mpi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL));
 	mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
 	m_autorestore = false;
@@ -77,17 +77,26 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 }
 
 void server::attach_network(void) {
-	if(!mpi_net)
-		mpi_net = dynamic_cast<iNet *>(_gpi_repo_->object_by_iname(I_NET, RF_ORIGINAL));
+	if(!mpi_net) {
+		if((mpi_net = dynamic_cast<iNet *>(_gpi_repo_->object_by_iname(I_NET, RF_ORIGINAL))))
+			mpi_log->fwrite(LMT_INFO, "'%s' attach networking", m_name);
+		else
+			mpi_log->fwrite(LMT_ERROR, "'%s' unable to attach networking", m_name);
+	}
 }
 void server::attach_fs(void) {
-	if(!mpi_fs)
-		mpi_fs = dynamic_cast<iFS *>(_gpi_repo_->object_by_iname(I_FS, RF_ORIGINAL));
+	if(!mpi_fs) {
+		if((mpi_fs = dynamic_cast<iFS *>(_gpi_repo_->object_by_iname(I_FS, RF_ORIGINAL))))
+			mpi_log->fwrite(LMT_INFO, "'%s' attach FS", m_name);
+		else
+			mpi_log->fwrite(LMT_ERROR, "'%s' unable to attach FS", m_name);
+	}
 }
 
 void server::release_network(void) {
 	stop();
 	if(mpi_net) {
+		mpi_log->fwrite(LMT_INFO, "'%s' detach networking", m_name);
 		_gpi_repo_->object_release(mpi_net);
 		mpi_net = NULL;
 	}
@@ -96,6 +105,7 @@ void server::release_network(void) {
 void server::release_fs(void) {
 	stop();
 	if(mpi_fs) {
+		mpi_log->fwrite(LMT_INFO, "'%s' detach FS", m_name);
 		_gpi_repo_->object_release(mpi_fs);
 		mpi_fs = NULL;
 	}
@@ -235,6 +245,9 @@ void server::set_handlers(void) {
 
 bool server::start(void) {
 	bool r = false;
+
+	attach_fs();
+	attach_network();
 
 	if(mpi_net && mpi_fs) {
 		enum_virtual_hosts([](_vhost_t *pvhost, void *udata) {
@@ -476,10 +489,10 @@ bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _c
 	bool r = false;
 	_vhost_t vhost;
 
-	strncpy(vhost.host, host, sizeof(vhost.host));
-	strncpy(vhost.root, root, sizeof(vhost.root));
-	strncpy(vhost.cache_path, cache_path, sizeof(vhost.cache_path));
-	strncpy(vhost.cache_key, cache_key, sizeof(vhost.cache_key));
+	strncpy(vhost.host, host, sizeof(vhost.host)-1);
+	strncpy(vhost.root, root, sizeof(vhost.root)-1);
+	strncpy(vhost.cache_path, cache_path, sizeof(vhost.cache_path)-1);
+	strncpy(vhost.cache_key, cache_key, sizeof(vhost.cache_key)-1);
 
 	if(!mpi_vhost_map) {
 		if((mpi_vhost_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))

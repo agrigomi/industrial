@@ -195,10 +195,7 @@ public:
 		server *p = dynamic_cast<server *>(p_srv);
 
 		if(p) {
-			_gpi_repo_->object_release(p->mpi_server, false);
-			_gpi_repo_->object_release(p->host.pi_route_map, false);
-			_gpi_repo_->object_release(p->mpi_bmap, false);
-			_gpi_repo_->object_release(p->host.pi_fcache, false);
+			p->destroy();
 			mpi_map->del(p->m_name, strlen(p->m_name));
 		}
 	}
