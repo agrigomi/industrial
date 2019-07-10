@@ -35,6 +35,7 @@ typedef struct {
 
 	void clear(void) {
 		res.clear();
+		url = NULL;
 		hfc = NULL;
 		p_vhost = NULL;
 	}
@@ -42,6 +43,9 @@ typedef struct {
 	void destroy(void) {
 		req.destroy();
 		res.destroy();
+		url = NULL;
+		hfc = NULL;
+		p_vhost = NULL;
 	}
 }_connection_t;
 
@@ -178,10 +182,18 @@ void server::destroy_connection(iHttpServerConnection *p_httpc) {
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
 	if(pc) {
-		// release connection memory
-		pc->destroy();
-		mpi_heap->free(pc, sizeof(_connection_t));
+		if(pc->hfc && pc->p_vhost && pc->p_vhost->pi_fcache)
+			// close cache handle
+			pc->p_vhost->pi_fcache->close(pc->hfc);
+
+		// detach connection record
 		p_httpc->set_udata((_ulong)NULL, IDX_CONNECTION);
+
+		// destroy connection record
+		pc->destroy();
+
+		// release connection memory
+		mpi_heap->free(pc, sizeof(_connection_t));
 	}
 }
 
@@ -198,7 +210,7 @@ void server::set_handlers(void) {
 		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
 		/************************************
-		 Check for unclosed file cache and connections
+		 Check for unclosed handle from file cache,
 		 because in cases of reuse connection (connection: keep-alive),
 		 HTTP_ON_CLOSE will not happened
 		*/
@@ -239,15 +251,8 @@ void server::set_handlers(void) {
 
 	mpi_server->on_event(HTTP_ON_CLOSE, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
-			//HFCACHE fc = (HFCACHE)p_httpc->get_udata(IDX_FCACHE);
-		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
 		p_srv->call_handler(HTTP_ON_CLOSE, p_httpc);
-		p_srv->call_route_handler(HTTP_ON_CLOSE, p_httpc);
-
-		if(pc && pc->hfc && pc->p_vhost && pc->p_vhost->pi_fcache)
-			pc->p_vhost->pi_fcache->close(pc->hfc);
-
 		p_srv->destroy_connection(p_httpc);
 	}, this);
 }
@@ -333,13 +338,11 @@ _cstr_t server::resolve_content_type(_cstr_t doc_name) {
 void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_route_key_t key;
 	_u32 sz=0;
-	_cstr_t url = p_httpc->req_url();
+	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
+	_vhost_t *pvhost = pc->p_vhost;
+	_cstr_t url = pc->url;
 
 	if(url) {
-		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
-		_vhost_t *pvhost = pc->p_vhost;
-		_cstr_t url = pc->url;
-
 		memset(&key, 0, sizeof(_route_key_t));
 		key.method = p_httpc->req_method();
 		strncpy(key.path, url, sizeof(key.path)-1);
@@ -348,44 +351,43 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 
 		if(prd) {
 			// route found
-			if(pc) // call route handler
-				prd->pcb(evt, &pc->req, &pc->res, prd->udata);
+			prd->pcb(evt, &pc->req, &pc->res, prd->udata);
 		} else if(evt == HTTP_ON_REQUEST) {
 			// route not found
 			// try to resolve file name
 			_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
 
-			if((strlen(url) + strlen(host.root) < sizeof(doc)-1)) {
+			if((strlen(url) + strlen(pvhost->root) < sizeof(doc)-1)) {
 				snprintf(doc, sizeof(doc), "%s%s",
-					host.root,
+					pvhost->root,
 					(strcmp(url, "/") == 0) ? "/index.html" : url);
-				HFCACHE fc = host.pi_fcache->open(doc);
+				HFCACHE fc = pvhost->pi_fcache->open(doc);
 				if(fc) {
 					if(key.method == HTTP_METHOD_GET) {
 						_ulong doc_sz = 0;
 
-						_u8 *ptr = (_u8 *)host.pi_fcache->ptr(fc, &doc_sz);
+						_u8 *ptr = (_u8 *)pvhost->pi_fcache->ptr(fc, &doc_sz);
 						if(ptr) {
 							// response header
 							p_httpc->res_content_len(doc_sz);
 							p_httpc->res_code(HTTPRC_OK);
 							p_httpc->res_var("Server", m_name);
 							p_httpc->res_var("Content-Type", resolve_content_type(doc));
-							p_httpc->res_mtime(host.pi_fcache->mtime(fc));
+							p_httpc->res_mtime(pvhost->pi_fcache->mtime(fc));
 							// response content
 							p_httpc->res_write(ptr, doc_sz);
 							pc->hfc = fc;
 						} else {
 							p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
-							host.pi_fcache->close(fc);
+							pvhost->pi_fcache->close(fc);
 						}
 					} else if(key.method == HTTP_METHOD_HEAD) {
-						p_httpc->res_mtime(host.pi_fcache->mtime(fc));
+						p_httpc->res_mtime(pvhost->pi_fcache->mtime(fc));
 						p_httpc->res_code(HTTPRC_OK);
-						host.pi_fcache->close(fc);
+						pvhost->pi_fcache->close(fc);
 					} else {
 						p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
-						host.pi_fcache->close(fc);
+						pvhost->pi_fcache->close(fc);
 					}
 				} else {
 					p_httpc->res_code(HTTPRC_NOT_FOUND);
@@ -404,13 +406,17 @@ void server::update_response(iHttpServerConnection *p_httpc) {
 	if(pc->hfc) {
 		// update content from file cache
 		_ulong sz = 0;
-		_u8 *ptr = (_u8 *)host.pi_fcache->ptr(pc->hfc, &sz);
+		_vhost_t *pvhost = pc->p_vhost;
 
-		if(ptr) {
-			_u32 res_sent = p_httpc->res_content_sent();
-			_u32 res_remainder = p_httpc->res_remainder();
+		if(pvhost) {
+			_u8 *ptr = (_u8 *)pvhost->pi_fcache->ptr(pc->hfc, &sz);
 
-			p_httpc->res_write(ptr + res_sent, res_remainder);
+			if(ptr) {
+				_u32 res_sent = p_httpc->res_content_sent();
+				_u32 res_remainder = p_httpc->res_remainder();
+
+				p_httpc->res_write(ptr + res_sent, res_remainder);
+			}
 		}
 	} else
 		// update content from response buffer
