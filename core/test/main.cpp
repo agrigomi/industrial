@@ -54,7 +54,7 @@ _err_t main(int argc, char *argv[]) {
 		pi_repo->extension_load("extfs.so");
 		pi_repo->extension_load("extnet.so");
 		pi_repo->extension_load("extgatn.so");
-
+/*
 		iNet *pi_net = (iNet *)pi_repo->object_by_iname(I_NET, RF_ORIGINAL);
 		if(pi_net) {
 			iHttpClientConnection *pi_httpc = pi_net->create_http_client("printecgroup.com", 80, 8192);
@@ -72,7 +72,7 @@ _err_t main(int argc, char *argv[]) {
 				pi_repo->object_release(pi_httpc);
 			}
 		}
-
+*/
 		iGatn *pi_gatn = (iGatn *)pi_repo->object_by_iname(I_GATN, RF_ORIGINAL);
 		if(pi_gatn) {
 			_str_t doc_root = (_str_t)"../test/original";
