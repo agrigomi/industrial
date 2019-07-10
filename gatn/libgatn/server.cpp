@@ -49,11 +49,11 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 	memset(&host, 0, sizeof(_vhost_t)); // default host
 	mpi_server = NULL; // HTTP server
 	mpi_vhost_map = NULL;
-	strncpy(m_name, name, sizeof(m_name));
+	strncpy(m_name, name, sizeof(m_name)-1);
 	m_port = port;
-	strncpy(host.root, root, sizeof(host.root));
-	strncpy(host.cache_path, cache_path, sizeof(host.cache_path));
-	strncpy(host.cache_key, m_name, sizeof(host.cache_key));
+	strncpy(host.root, root, sizeof(host.root)-1);
+	strncpy(host.cache_path, cache_path, sizeof(host.cache_path)-1);
+	strncpy(host.cache_key, m_name, sizeof(host.cache_key)-1);
 	attach_fs();
 	attach_network();
 	mpi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL));
