@@ -343,6 +343,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 	_vhost_t *pvhost = pc->p_vhost;
 	_cstr_t url = pc->url;
+	iFileCache *pi_fcache = pvhost->pi_fcache;
 
 	if(pvhost && url) {
 		memset(&key, 0, sizeof(_route_key_t));
@@ -363,33 +364,33 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 				snprintf(doc, sizeof(doc), "%s%s",
 					pvhost->root,
 					(strcmp(url, "/") == 0) ? "/index.html" : url);
-				HFCACHE fc = pvhost->pi_fcache->open(doc);
+				HFCACHE fc = (pi_fcache) ? pi_fcache->open(doc) : NULL;
 				if(fc) {
 					if(key.method == HTTP_METHOD_GET) {
 						_ulong doc_sz = 0;
 
-						_u8 *ptr = (_u8 *)pvhost->pi_fcache->ptr(fc, &doc_sz);
+						_u8 *ptr = (_u8 *)pi_fcache->ptr(fc, &doc_sz);
 						if(ptr) {
 							// response header
 							p_httpc->res_content_len(doc_sz);
 							p_httpc->res_code(HTTPRC_OK);
 							p_httpc->res_var("Server", m_name);
 							p_httpc->res_var("Content-Type", resolve_content_type(doc));
-							p_httpc->res_mtime(pvhost->pi_fcache->mtime(fc));
+							p_httpc->res_mtime(pi_fcache->mtime(fc));
 							// response content
 							p_httpc->res_write(ptr, doc_sz);
 							pc->hfc = fc;
 						} else {
 							p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
-							pvhost->pi_fcache->close(fc);
+							pi_fcache->close(fc);
 						}
 					} else if(key.method == HTTP_METHOD_HEAD) {
-						p_httpc->res_mtime(pvhost->pi_fcache->mtime(fc));
+						p_httpc->res_mtime(pi_fcache->mtime(fc));
 						p_httpc->res_code(HTTPRC_OK);
-						pvhost->pi_fcache->close(fc);
+						pi_fcache->close(fc);
 					} else {
 						p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
-						pvhost->pi_fcache->close(fc);
+						pi_fcache->close(fc);
 					}
 				} else {
 					p_httpc->res_code(HTTPRC_NOT_FOUND);
