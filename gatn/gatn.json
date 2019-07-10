@@ -48,7 +48,7 @@
 			"timeout":	10,
 			"cache": {
 				"path":		"/tmp/",
-				"key":		"server-1",
+				"key":		"server-1"
 			},
 			"root":		"../test/philosophy-colorlib",
 			"ssl": {

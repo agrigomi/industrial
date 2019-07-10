@@ -65,6 +65,10 @@ struct gatn_server {
 	virtual _response_t *get_response(iHttpServerConnection *pi_httpc)=0;
 	virtual iFileCache *get_file_cache(void)=0;
 	virtual void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=NULL)=0;
+	virtual bool add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key, _cstr_t cache_exclude=NULL)=0;
+	virtual bool remove_virtual_host(_cstr_t host)=0;
+	virtual bool start_virtual_host(_cstr_t host)=0;
+	virtual bool stop_virtual_host(_cstr_t host)=0;
 };
 
 class iGatnExtension: public iBase {

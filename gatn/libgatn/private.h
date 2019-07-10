@@ -138,4 +138,8 @@ struct server: public _server_t {
 		return host.pi_fcache;
 	}
 	void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=NULL);
+	bool add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key, _cstr_t cache_exclude=NULL);
+	bool remove_virtual_host(_cstr_t host);
+	bool start_virtual_host(_cstr_t host);
+	bool stop_virtual_host(_cstr_t host);
 };

@@ -344,3 +344,38 @@ void server::enum_route(void (*enum_cb)(_cstr_t path, _on_route_event_t *pcb, vo
 
 	host.pi_route_map->unlock(hm);
 }
+
+bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key, _cstr_t cache_exclude) {
+	bool r = false;
+	_vhost_t vhost;
+
+	//
+
+
+	return r;
+}
+
+bool server::remove_virtual_host(_cstr_t host) {
+	bool r = false;
+
+	//...
+
+	return r;
+}
+
+bool server::start_virtual_host(_cstr_t host) {
+	bool r = false;
+
+	//...
+
+	return r;
+}
+
+bool server::stop_virtual_host(_cstr_t host) {
+	bool r = false;
+
+	//...
+
+	return r;
+}
+
