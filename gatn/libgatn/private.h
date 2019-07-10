@@ -124,6 +124,7 @@ struct server: public _server_t {
 	}
 	bool start(void);
 	void stop(void);
+	_vhost_t *get_host(_cstr_t host);
 	void stop(_vhost_t *pvhost);
 	bool start(_vhost_t *pvhost);
 	_cstr_t name(void) {
@@ -153,6 +154,7 @@ struct server: public _server_t {
 	}
 	void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=NULL);
 	bool add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key, _cstr_t cache_exclude=NULL);
+	_vhost_t *get_virtual_host(_cstr_t host);
 	bool remove_virtual_host(_cstr_t host);
 	bool start_virtual_host(_cstr_t host);
 	bool stop_virtual_host(_cstr_t host);
