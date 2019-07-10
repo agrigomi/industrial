@@ -264,14 +264,16 @@ bool server::start(void) {
 	attach_network();
 
 	if(mpi_net && mpi_fs) {
+		// start virtual hosts
 		enum_virtual_hosts([](_vhost_t *pvhost, void *udata) {
 			server *p = (server *)udata;
 			p->start(pvhost);
 		}, this);
 
+		// start default host
 		start(&host);
 
-		if(!mpi_server)
+		if(!mpi_server) // create HTTP engine
 			mpi_server = mpi_net->create_http_server(m_port, m_buffer_size, m_max_workers,
 								m_max_connections, m_connection_timeout,
 								m_ssl_context);
@@ -342,7 +344,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_vhost_t *pvhost = pc->p_vhost;
 	_cstr_t url = pc->url;
 
-	if(url) {
+	if(pvhost && url) {
 		memset(&key, 0, sizeof(_route_key_t));
 		key.method = p_httpc->req_method();
 		strncpy(key.path, url, sizeof(key.path)-1);
