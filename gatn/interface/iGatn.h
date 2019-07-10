@@ -87,7 +87,7 @@ public:
 	virtual _server_t *create_server(_cstr_t name, _u32 port,
 					_cstr_t doc_root, // path to documents root
 					_cstr_t cache_path, // path to cache folder (by example: /tmp/)
-					_cstr_t no_cache="", // non cacheable area inside documents root (by example: folder1:folder2:...)
+					_cstr_t no_cache="", // non cacheable area inside documents root (by example: /folder1:/folder2:...)
 					_u32 buffer_size=HTTP_BUFFER_SIZE,
 					_u32 max_workers=HTTP_MAX_WORKERS,
 					_u32 max_connections=HTTP_MAX_CONNECTIONS,

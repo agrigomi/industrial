@@ -41,6 +41,90 @@ typedef struct {
 	}
 }_connection_t;
 
+server::server(_cstr_t name, _u32 port, _cstr_t root,
+		_cstr_t cache_path, _cstr_t cache_exclude,
+		_u32 buffer_size,
+		_u32 max_workers, _u32 max_connections,
+		_u32 connection_timeout, SSL_CTX *ssl_context) {
+	memset(&host, 0, sizeof(_vhost_t)); // default host
+	mpi_server = NULL; // HTTP server
+	strncpy(m_name, name, sizeof(m_name));
+	m_port = port;
+	strncpy(host.root, root, sizeof(host.root));
+	strncpy(host.cache_path, cache_path, sizeof(host.cache_path));
+	strncpy(host.cache_key, m_name, sizeof(host.cache_key));
+	mpi_net = dynamic_cast<iNet *>(_gpi_repo_->object_by_iname(I_NET, RF_ORIGINAL));
+	mpi_fs = dynamic_cast<iFS *>(_gpi_repo_->object_by_iname(I_FS, RF_ORIGINAL));
+	mpi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL));
+	mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
+	m_autorestore = false;
+	if((mpi_bmap = dynamic_cast<iBufferMap *>(_gpi_repo_->object_by_iname(I_BUFFER_MAP, RF_ORIGINAL)))) {
+		mpi_bmap->init(buffer_size, [](_u8 op, void *bptr, _u32 sz, void *udata)->_u32 {
+			_u32 r = 0;
+
+			if(op == BIO_INIT)
+				memset(bptr, 0, sz);
+
+			return r;
+		});
+	}
+	m_buffer_size = buffer_size;
+	m_max_workers = max_workers;
+	m_max_connections = max_connections;
+	m_connection_timeout = connection_timeout;
+}
+
+void server::attach_network(void) {
+	if(!mpi_net)
+		mpi_net = dynamic_cast<iNet *>(_gpi_repo_->object_by_iname(I_NET, RF_ORIGINAL));
+}
+void server::attach_fs(void) {
+	if(!mpi_fs)
+		mpi_fs = dynamic_cast<iFS *>(_gpi_repo_->object_by_iname(I_FS, RF_ORIGINAL));
+}
+
+void server::release_network(void) {
+	stop();
+	if(mpi_net) {
+		_gpi_repo_->object_release(mpi_net);
+		mpi_net = NULL;
+	}
+}
+
+void server::release_fs(void) {
+	stop();
+	if(mpi_fs) {
+		_gpi_repo_->object_release(mpi_fs);
+		mpi_fs = NULL;
+	}
+}
+
+void server::destroy(void) {
+	release_network();
+	release_fs();
+
+	// destroy virtual hosts
+	enum_virtual_hosts([](_vhost_t *pvhost, void *udata) {
+		server *p = (server *)udata;
+		p->destroy(pvhost);
+	}, this);
+
+	destroy(&host);
+}
+
+void server::destroy(_vhost_t *pvhost) {
+	stop(pvhost);
+
+	if(pvhost->pi_route_map) {
+		_gpi_repo_->object_release(pvhost->pi_route_map);
+		pvhost->pi_route_map = NULL;
+	}
+	if(pvhost->pi_nocache_map) {
+		_gpi_repo_->object_release(pvhost->pi_nocache_map);
+		pvhost->pi_nocache_map = NULL;
+	}
+}
+
 bool server::create_connection(iHttpServerConnection *p_httpc) {
 	bool r = false;
 	_connection_t tmp;
@@ -145,7 +229,7 @@ void server::set_handlers(void) {
 bool server::start(void) {
 	bool r = false;
 
-	if(host.pi_route_map && mpi_net && mpi_fs) {
+	if(mpi_net && mpi_fs) {
 		if(!host.pi_fcache) { // create file cache
 			if((host.pi_fcache = dynamic_cast<iFileCache *>(_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE|RF_NONOTIFY))))
 				host.pi_fcache->init(host.cache_path, m_name);
@@ -164,15 +248,37 @@ bool server::start(void) {
 	return r;
 }
 
+void server::stop(_vhost_t *pvhost) {
+	// release file cache
+	if(pvhost->pi_fcache) {
+		_gpi_repo_->object_release(pvhost->pi_fcache);
+		pvhost->pi_fcache = NULL;
+	}
+}
+
+bool server::start(_vhost_t *pvhost) {
+	bool r = false;
+
+	if(!pvhost->pi_fcache) {
+		if((pvhost->pi_fcache = dynamic_cast<iFileCache *>(_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE|RF_NONOTIFY))))
+			r = pvhost->pi_fcache->init(pvhost->cache_path, pvhost->cache_key);
+	}
+
+	return r;
+}
+
 void server::stop(void) {
 	if(mpi_server) {
 		_gpi_repo_->object_release(mpi_server, false);
 		mpi_server = NULL;
 	}
-	if(host.pi_fcache) {
-		_gpi_repo_->object_release(host.pi_fcache, false);
-		host.pi_fcache = NULL;
-	}
+
+	enum_virtual_hosts([](_vhost_t *pvhost, void *udata) {
+		server *p = (server *)udata;
+		p->stop(pvhost);
+	}, this);
+
+	stop(&host);
 }
 
 void server::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
@@ -283,6 +389,8 @@ void server::on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *ud
 	memset(&key, 0, sizeof(_route_key_t));
 	key.method = method;
 	strncpy(key.path, path, MAX_ROUTE_PATH-1);
+	if(!host.pi_route_map)
+		host.pi_route_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY));
 	if(host.pi_route_map)
 		host.pi_route_map->add(&key, key.size(), &data, data.size());
 }
@@ -379,3 +487,19 @@ bool server::stop_virtual_host(_cstr_t host) {
 	return r;
 }
 
+void server::enum_virtual_hosts(void (*enum_cb)(_vhost_t *, void *udata), void *udata) {
+	if(mpi_vhost_map) {
+		_map_enum_t vhe = mpi_vhost_map->enum_open();
+		HMUTEX hm = mpi_vhost_map->lock();
+		_u32 sz = 0;
+		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->enum_first(vhe, &sz, hm);
+
+		while(pvhost) {
+			enum_cb(pvhost, udata);
+			pvhost = (_vhost_t *)mpi_vhost_map->enum_next(vhe, &sz, hm);
+		}
+
+		mpi_vhost_map->unlock(hm);
+		mpi_vhost_map->enum_close(vhe);
+	}
+}

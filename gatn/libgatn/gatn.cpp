@@ -191,45 +191,12 @@ public:
 
 		if(!(r = (_server_t *)mpi_map->get(name, strlen(name), &sz))) {
 			if(mpi_map && mpi_net && mpi_fs) {
-				server srv;
+				server srv(name, port, doc_root, cache_path, no_cache,
+					buffer_size, max_workers, max_connections,
+					connection_timeout, ssl_context);
 
-				srv.mpi_server = NULL;
-				memset(&srv.host, 0, sizeof(srv.host));
-				strncpy(srv.m_name, name, MAX_SERVER_NAME-1);
-				strncpy(srv.host.root, doc_root, MAX_DOC_ROOT_PATH-1);
-				strncpy(srv.host.cache_path, cache_path, MAX_CACHE_PATH-1);
-				srv.m_port = port;
-				srv.mpi_net = mpi_net;
-				srv.mpi_fs = mpi_fs;
-				srv.mpi_log = mpi_log;
-				srv.mpi_heap = mpi_heap;
-				srv.m_autorestore = false;
-				if((srv.mpi_bmap = dynamic_cast<iBufferMap *>(_gpi_repo_->object_by_iname(I_BUFFER_MAP, RF_CLONE | RF_NONOTIFY)))) {
-					srv.mpi_bmap->init(buffer_size, [](_u8 op, void *bptr, _u32 sz, void *udata)->_u32 {
-						_u32 r = 0;
-
-						if(op == BIO_INIT)
-							memset(bptr, 0, sz);
-
-						return r;
-					});
-				}
-				srv.m_buffer_size = buffer_size;
-				srv.host.pi_fcache = NULL;
-				srv.m_max_workers = max_workers;
-				srv.m_max_connections = max_connections;
-				srv.m_connection_timeout = connection_timeout;
-				srv.m_ssl_context = ssl_context;
-				if((srv.host.pi_route_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE | RF_NONOTIFY))))
-					if(srv.host.pi_route_map->init(63))
-						r = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(server));
-
-				if(r)
+				if((r = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(server))))
 					r->start();
-				else {
-					if(srv.host.pi_route_map)
-						_gpi_repo_->object_release(srv.host.pi_route_map);
-				}
 			}
 		}
 

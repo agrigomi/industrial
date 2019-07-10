@@ -111,17 +111,31 @@ struct server: public _server_t {
 	_u32		m_connection_timeout;
 	SSL_CTX		*m_ssl_context;
 
+	server(_cstr_t name, _u32 port, _cstr_t root,
+		_cstr_t cache_path, _cstr_t cache_exclude,
+		_u32 buffer_size,
+		_u32 max_workers, _u32 max_connections,
+		_u32 connection_timeout, SSL_CTX *ssl_context);
+
+	void destroy(void);
+	void destroy(_vhost_t *pvhost);
 	bool is_running(void) {
 		return (mpi_server) ? true : false;
 	}
 	bool start(void);
 	void stop(void);
+	void stop(_vhost_t *pvhost);
+	bool start(_vhost_t *pvhost);
 	_cstr_t name(void) {
 		return m_name;
 	}
 	_u32 port(void) {
 		return m_port;
 	}
+	void attach_network(void);
+	void attach_fs(void);
+	void release_network(void);
+	void release_fs(void);
 	bool create_connection(iHttpServerConnection *p_httpc);
 	void destroy_connection(iHttpServerConnection *p_httpc);
 	_cstr_t resolve_content_type(_cstr_t doc_name);
@@ -142,4 +156,5 @@ struct server: public _server_t {
 	bool remove_virtual_host(_cstr_t host);
 	bool start_virtual_host(_cstr_t host);
 	bool stop_virtual_host(_cstr_t host);
+	void enum_virtual_hosts(void (*)(_vhost_t *, void *udata), void *udata=NULL);
 };
