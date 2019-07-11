@@ -13,6 +13,7 @@ bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 	mpi_fcache = dynamic_cast<iFileCache *>(_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE | RF_NONOTIFY));
 	mpi_nocache_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE | RF_NONOTIFY));
 	mpi_handle_list = dynamic_cast<iLlist *>(_gpi_repo_->object_by_iname(I_LLIST, RF_CLONE | RF_NONOTIFY));
+	mpi_str = dynamic_cast<iStr *>(_gpi_repo_->object_by_iname(I_STR, RF_ORIGINAL));
 
 	if(mpi_fcache && mpi_nocache_map && mpi_handle_list) {
 		r = mpi_fcache->init(cache_path, cache_key);
@@ -43,7 +44,21 @@ void root::destroy(void) {
 		mpi_handle_list = NULL;
 	}
 
+	_gpi_repo_->object_release(mpi_str);
+
 	m_enable = false;
+}
+
+void root::parse_nocache_list(_cstr_t cache_exclude) {
+	//...
+}
+
+bool root::cache_exclude(_cstr_t path) {
+	bool r = false;
+
+	//...
+
+	return r;
 }
 
 HDOCUMENT root::open(_cstr_t url) {

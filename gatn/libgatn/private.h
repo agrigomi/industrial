@@ -1,6 +1,7 @@
 #include "iMemory.h"
 #include "iGatn.h"
 #include "iLog.h"
+#include "iStr.h"
 
 struct request: public _request_t{
 	iHttpServerConnection *mpi_httpc;
@@ -81,11 +82,14 @@ struct root { // document root
 	iFileCache	*mpi_fcache;
 	iMap		*mpi_nocache_map;
 	iLlist		*mpi_handle_list;
+	iStr		*mpi_str;
 	bool		m_enable;
 
 	bool init(_cstr_t doc_root, _cstr_t cache_path,
 		_cstr_t cache_key, _cstr_t cache_exclude,
 		iHeap *pi_heap=NULL);
+	void parse_nocache_list(_cstr_t nocache);
+	bool cache_exclude(_cstr_t path);
 	void destroy(void);
 	HDOCUMENT open(_cstr_t url);
 	void close(HDOCUMENT);
