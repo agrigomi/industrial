@@ -73,22 +73,39 @@ struct response: public _response_t {
 #define MAX_CACHE_KEY		32
 #define MAX_HOSTNAME		256
 
-typedef struct {
-	_on_http_event_t	*pcb;
-	void			*udata;
-}_event_data_t;
+typedef void* HDOCUMENT;
+typedef struct root _root_t;
+
+struct root { // document root
+	_char_t		m_root_path[MAX_DOC_ROOT_PATH];
+	_char_t		m_cache_path[MAX_CACHE_PATH]; // cache folder (by example: /tmp/)
+	_char_t		m_cache_key[MAX_CACHE_KEY];// cache folder name
+	iFileCache	*mpi_fcache;
+	iMap		*mpi_nocache_map;
+	iLlist		*mpi_handle_list;
+	bool		m_enable;
+
+	bool init(_cstr_t doc_root, _cstr_t cache_path,
+		_cstr_t cache_key, _cstr_t cache_exclude);
+	void destroy(void);
+	HDOCUMENT open(_cstr_t url);
+	void close(HDOCUMENT);
+	void stop(void);
+	void start(void);
+};
 
 void init_mime_type_resolver(void);
 void uninit_mime_type_resolver(void);
 _cstr_t resolve_mime_type(_cstr_t fname);
 
 typedef struct {
+	_on_http_event_t	*pcb;
+	void			*udata;
+}_event_data_t;
+
+typedef struct {
 	_char_t		host[MAX_HOSTNAME];	// host name
-	_char_t 	root[MAX_DOC_ROOT_PATH];// document root
-	_char_t		cache_path[MAX_CACHE_PATH]; // cache folder (by example: /tmp/)
-	_char_t		cache_key[MAX_CACHE_KEY];// cache folder name
-	iFileCache	*pi_fcache;		// file cache
-	iMap		*pi_nocache_map;	// non cacheable areas in document root
+	_root_t		root;			// document root
 	iMap		*pi_route_map;		// URL routing map
 	_event_data_t	event[HTTP_MAX_EVENTS]; // HTTP event handlers
 }_vhost_t;
@@ -149,9 +166,6 @@ struct server: public _server_t {
 	void remove_route(_u8 method, _cstr_t path);
 	_request_t *get_request(iHttpServerConnection *pi_httpc);
 	_response_t *get_response(iHttpServerConnection *pi_httpc);
-	iFileCache *get_file_cache(void) {
-		return host.pi_fcache;
-	}
 	void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=NULL);
 	bool add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key, _cstr_t cache_exclude=NULL);
 	_vhost_t *get_virtual_host(_cstr_t host);
