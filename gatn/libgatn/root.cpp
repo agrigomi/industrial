@@ -21,6 +21,7 @@ bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 		if(r)
 			mpi_handle_list->init(LL_VECTOR, 2, pi_heap);
 
+		parse_nocache_list(cache_exclude);
 		m_enable = r;
 	} else
 		destroy();
@@ -49,14 +50,30 @@ void root::destroy(void) {
 	m_enable = false;
 }
 
-void root::parse_nocache_list(_cstr_t cache_exclude) {
-	//...
+void root::parse_nocache_list(_cstr_t nocache) {
+	_char_t lb[MAX_DOC_ROOT_PATH]="";
+	_char_t fldr[MAX_DOC_ROOT_PATH]="";
+
+	if(mpi_str) {
+		strncpy(lb, nocache, sizeof(lb)-1);
+
+		while(mpi_str->div_str(lb, fldr, sizeof(fldr), lb, sizeof(lb), ":"))
+			cache_exclude(fldr);
+
+		if(strlen(fldr))
+			cache_exclude(fldr);
+	}
 }
 
 bool root::cache_exclude(_cstr_t path) {
 	bool r = false;
+	_u32 l = strlen(path);
 
-	//...
+	if(path[l] == '/')
+		l--;
+
+	if(mpi_nocache_map->add(path, l, path, l))
+		r = true;
 
 	return r;
 }
