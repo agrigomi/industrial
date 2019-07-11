@@ -124,28 +124,30 @@ private:
 	}
 
 	void close_cache(void) {
-		HMUTEX hm = mpi_map->lock();
-		_map_enum_t me = mpi_map->enum_open();
+		if(mpi_map) {
+			HMUTEX hm = mpi_map->lock();
+			_map_enum_t me = mpi_map->enum_open();
 
-		if(me) {
-			_u32 sz = 0;
-			_fce_t *pfce = (_fce_t *)mpi_map->enum_first(me, &sz, hm);
+			if(me) {
+				_u32 sz = 0;
+				_fce_t *pfce = (_fce_t *)mpi_map->enum_first(me, &sz, hm);
 
-			while(pfce) {
-				if(pfce->pi_fio) {
-					mpi_fs->close(pfce->pi_fio);
-					pfce->pi_fio = NULL;
+				while(pfce) {
+					if(pfce->pi_fio) {
+						mpi_fs->close(pfce->pi_fio);
+						pfce->pi_fio = NULL;
+					}
+					pfce->ptr = NULL;
+					pfce->size = 0;
+					remove_cache_file(pfce);
+					pfce = (_fce_t *)mpi_map->enum_next(me, &sz, hm);
 				}
-				pfce->ptr = NULL;
-				pfce->size = 0;
-				remove_cache_file(pfce);
-				pfce = (_fce_t *)mpi_map->enum_next(me, &sz, hm);
+
+				mpi_map->enum_close(me);
 			}
 
-			mpi_map->enum_close(me);
+			mpi_map->unlock(hm);
 		}
-
-		mpi_map->unlock(hm);
 	}
 
 public:
@@ -158,6 +160,7 @@ public:
 			case OCTL_INIT: {
 				iRepository *pi_repo = (iRepository *)arg;
 
+				mpi_map = NULL;
 				if((mpi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL)))
 					r = true;
 			} break;
