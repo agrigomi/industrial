@@ -158,11 +158,8 @@ public:
 			case OCTL_INIT: {
 				iRepository *pi_repo = (iRepository *)arg;
 
-				mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
-				mpi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
-
-				if(mpi_map)
-					r = mpi_map->init(127);
+				if((mpi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL)))
+					r = true;
 			} break;
 			case OCTL_UNINIT: {
 				iRepository *pi_repo = (iRepository *)arg;
@@ -190,8 +187,14 @@ public:
 		return r;
 	}
 
-	bool init(_cstr_t path, _cstr_t key=NULL) {
-		bool r = make_cache_dir(path, I_FILE_CACHE);
+	bool init(_cstr_t path, _cstr_t key=NULL, iHeap *pi_heap=NULL) {
+		bool r = false;
+
+		if((mpi_map = (iMap *)_gpi_repo_->object_by_iname(I_MAP, RF_CLONE)))
+			r = mpi_map->init(127, pi_heap);
+
+		if(r)
+			r = make_cache_dir(path, I_FILE_CACHE);
 
 		if(r) {
 			_char_t sbase[MAX_FCACHE_PATH]="";
