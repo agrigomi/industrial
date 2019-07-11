@@ -78,15 +78,14 @@ typedef struct root _root_t;
 
 struct root { // document root
 	_char_t		m_root_path[MAX_DOC_ROOT_PATH];
-	_char_t		m_cache_path[MAX_CACHE_PATH]; // cache folder (by example: /tmp/)
-	_char_t		m_cache_key[MAX_CACHE_KEY];// cache folder name
 	iFileCache	*mpi_fcache;
 	iMap		*mpi_nocache_map;
 	iLlist		*mpi_handle_list;
 	bool		m_enable;
 
 	bool init(_cstr_t doc_root, _cstr_t cache_path,
-		_cstr_t cache_key, _cstr_t cache_exclude);
+		_cstr_t cache_key, _cstr_t cache_exclude,
+		iHeap *pi_heap=NULL);
 	void destroy(void);
 	HDOCUMENT open(_cstr_t url);
 	void close(HDOCUMENT);
