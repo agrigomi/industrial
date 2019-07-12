@@ -90,6 +90,8 @@ private:
 	void parse_nocache_list(_cstr_t nocache);
 	void _cache_exclude(_cstr_t path);
 	_handle_t *get_busy_handle(HDOCUMENT, HMUTEX);
+	_handle_t *get_free_handle(HMUTEX);
+
 public:
 	_char_t		m_root_path[MAX_DOC_ROOT_PATH];
 	iFS		*mpi_fs;

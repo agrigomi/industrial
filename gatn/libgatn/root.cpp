@@ -95,6 +95,19 @@ _handle_t *root::get_busy_handle(HDOCUMENT hdoc, HMUTEX hlock) {
 	return r;
 }
 
+_handle_t *root::get_free_handle(HMUTEX hlock) {
+	_handle_t *r = NULL;
+	_u32 sz = 0;
+	HMUTEX hm = mpi_handle_list->lock(hlock);
+
+	mpi_handle_list->col(HCOL_FREE, hm);
+	r = (_handle_t *)mpi_handle_list->first(&sz, hm);
+
+	mpi_handle_list->unlock(hm);
+
+	return r;
+}
+
 void *root::ptr(HDOCUMENT hdoc, _ulong *size) {
 	void *r = NULL;
 
