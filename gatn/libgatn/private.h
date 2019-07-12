@@ -77,6 +77,11 @@ struct response: public _response_t {
 typedef void* HDOCUMENT;
 typedef struct root _root_t;
 
+typedef struct {
+	HFCACHE	hfc; // handle from file cache
+	iFileIO	*pi_fio;
+}_handle_t;
+
 struct root { // document root
 private:
 	bool		m_enable;
@@ -84,6 +89,7 @@ private:
 	void object_release(iBase **ppi);
 	void parse_nocache_list(_cstr_t nocache);
 	void _cache_exclude(_cstr_t path);
+	_handle_t *get_busy_handle(HDOCUMENT, HMUTEX);
 public:
 	_char_t		m_root_path[MAX_DOC_ROOT_PATH];
 	iFS		*mpi_fs;
@@ -99,6 +105,7 @@ public:
 	void cache_exclude(_cstr_t path);
 	void destroy(void);
 	HDOCUMENT open(_cstr_t url);
+	void *ptr(HDOCUMENT, _ulong*);
 	void close(HDOCUMENT);
 	void stop(void);
 	void start(void);
