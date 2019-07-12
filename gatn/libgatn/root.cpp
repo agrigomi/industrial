@@ -111,20 +111,29 @@ HDOCUMENT root::open(_cstr_t url) {
 	HDOCUMENT r = NULL;
 
 	if(m_enable && mpi_fs && mpi_fcache && mpi_handle_list) {
-		_u32 path_len = get_url_path(url);
-		bool use_cache = cacheable(url, path_len);
-		_handle_t *ph = alloc_handle(0);
+		_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
 
-		if(ph) {
-			if(use_cache) {
-				if((ph->hfc = mpi_fcache->open(url)))
+		if((strlen(url) + strlen(m_root_path) < sizeof(doc)-1)) {
+			_handle_t *ph = alloc_handle(0);
+
+			if(ph) {
+				_u32 path_len = get_url_path(url);
+				bool use_cache = cacheable(url, path_len);
+
+				snprintf(doc, sizeof(doc), "%s%s",
+					m_root_path,
+					(strcmp(url, "/") == 0) ? "/index.html" : url);
+
+				if(use_cache) {
+					if((ph->hfc = mpi_fcache->open(doc)))
+						r = ph;
+				} else if((ph->pi_fio = mpi_fs->open(doc, O_RDONLY)))
 					r = ph;
-			} else if((ph->pi_fio = mpi_fs->open(url, O_RDONLY)))
-				r = ph;
 
-			if(!r)
-				// move to free column
-				mpi_handle_list->mov(ph, HCOL_FREE);
+				if(!r)
+					// move to free column
+					mpi_handle_list->mov(ph, HCOL_FREE);
+			}
 		}
 	}
 
