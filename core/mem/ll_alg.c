@@ -40,6 +40,12 @@ _u8 ll_init(_ll_context_t *p_cxt, _u8 mode, _u8 ncol, _ulong addr_limit) {
 void ll_uninit(_ll_context_t *p_cxt) {
 	if(p_cxt->state) {
 		_u64 lock = ll_lock(p_cxt, 0);
+		_u32 i = 0;
+
+		for(; i < p_cxt->ncol; i++) {
+			ll_col(p_cxt, i, lock);
+			ll_clr(p_cxt, lock);
+		}
 		p_cxt->p_free(p_cxt->state, p_cxt->ncol * sizeof(_ll_state_t), p_cxt->p_udata);
 		p_cxt->state = 0;
 		p_cxt->ncol = 0;
