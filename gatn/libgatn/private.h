@@ -81,6 +81,9 @@ struct root { // document root
 private:
 	bool		m_enable;
 
+	void object_release(iBase **ppi);
+	void parse_nocache_list(_cstr_t nocache);
+	void _cache_exclude(_cstr_t path);
 public:
 	_char_t		m_root_path[MAX_DOC_ROOT_PATH];
 	iFS		*mpi_fs;
@@ -90,10 +93,10 @@ public:
 	iStr		*mpi_str;
 
 	bool init(_cstr_t doc_root, _cstr_t cache_path,
-		_cstr_t cache_key, _cstr_t cache_exclude,
+		_cstr_t cache_key,
+		_cstr_t cache_exclude_path, // example: /folder1:/foldef2:...
 		iHeap *pi_heap=NULL);
-	void parse_nocache_list(_cstr_t nocache);
-	bool cache_exclude(_cstr_t path);
+	void cache_exclude(_cstr_t path);
 	void destroy(void);
 	HDOCUMENT open(_cstr_t url);
 	void close(HDOCUMENT);
