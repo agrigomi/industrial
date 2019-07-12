@@ -74,13 +74,13 @@ struct response: public _response_t {
 #define MAX_CACHE_KEY		32
 #define MAX_HOSTNAME		256
 
-typedef void* HDOCUMENT;
-typedef struct root _root_t;
-
 typedef struct {
 	HFCACHE	hfc; // handle from file cache
 	iFileIO	*pi_fio;
 }_handle_t;
+
+typedef _handle_t* HDOCUMENT;
+typedef struct root _root_t;
 
 struct root { // document root
 private:
