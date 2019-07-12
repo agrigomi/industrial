@@ -100,7 +100,7 @@ bool root::cacheable(_cstr_t path, _u32 len) {
 		_cstr_t str = (_cstr_t)mpi_nocache_map->enum_first(m_map_enum, &sz, hm);
 
 		while(str) {
-			if(memcmp(path, str, (sz < len) ? sz : len) == 0) {
+			if(sz <= len && memcmp(path, str, sz) == 0) {
 				r = false;
 				break;
 			}
