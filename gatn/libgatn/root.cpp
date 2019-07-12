@@ -65,13 +65,15 @@ void root::cache_exclude(_cstr_t path) {
 void root::_cache_exclude(_str_t path, _u32 sz) {
 	_u32 l = strlen(path);
 
-	if(l && path[l-1] != '/') {
-		// the path must be always terminated with '/'
-		strncat(path, "/", 1);
-		l++;
-	}
+	if(l) {
+		if(path[l-1] != '/') {
+			// the path must be always terminated with '/'
+			strncat(path, "/", 1);
+			l++;
+		}
 
-	mpi_nocache_map->add(path, l, path, l);
+		mpi_nocache_map->add(path, l, path, l);
+	}
 }
 
 _u32 root::get_url_path(_cstr_t url) {
