@@ -48,7 +48,7 @@ void root::destroy(void) {
 }
 
 void root::cache_exclude(_cstr_t path) {
-	_char_t lb[MAX_DOC_ROOT_PATH]="";
+	_char_t lb[MAX_DOC_ROOT_PATH * 2]="";
 	_char_t fldr[MAX_DOC_ROOT_PATH]="";
 
 	if(mpi_str) {
