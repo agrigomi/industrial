@@ -85,21 +85,23 @@ typedef struct root _root_t;
 struct root { // document root
 private:
 	bool		m_enable;
-
-	void object_release(iBase **ppi);
-	void parse_nocache_list(_cstr_t nocache);
-	void _cache_exclude(_cstr_t path);
-	_handle_t *get_busy_handle(HDOCUMENT, HMUTEX);
-	_handle_t *get_free_handle(HMUTEX);
-
-public:
 	_char_t		m_root_path[MAX_DOC_ROOT_PATH];
 	iFS		*mpi_fs;
 	iFileCache	*mpi_fcache;
 	iMap		*mpi_nocache_map;
 	iLlist		*mpi_handle_list;
 	iStr		*mpi_str;
+	_map_enum_t	m_map_enum;
 
+	void object_release(iBase **ppi);
+	void parse_nocache_list(_cstr_t nocache);
+	void _cache_exclude(_str_t path, _u32 size);
+	_handle_t *get_busy_handle(HDOCUMENT, HMUTEX);
+	_handle_t *alloc_handle(HMUTEX);
+	_u32 get_url_path(_cstr_t url);
+	bool cacheable(_cstr_t path, _u32 len);
+
+public:
 	bool init(_cstr_t doc_root, _cstr_t cache_path,
 		_cstr_t cache_key,
 		_cstr_t cache_exclude_path, // example: /folder1:/foldef2:...

@@ -17,13 +17,17 @@ bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 	mpi_handle_list = dynamic_cast<iLlist *>(_gpi_repo_->object_by_iname(I_LLIST, RF_CLONE | RF_NONOTIFY));
 	mpi_str = dynamic_cast<iStr *>(_gpi_repo_->object_by_iname(I_STR, RF_ORIGINAL));
 
+	m_map_enum = NULL;
+
 	if(mpi_fs && mpi_fcache && mpi_nocache_map && mpi_handle_list) {
 		r = mpi_fcache->init(cache_path, cache_key, pi_heap);
 		r &= mpi_nocache_map->init(15, pi_heap);
 		r &= mpi_handle_list->init(LL_VECTOR, 2, pi_heap);
 
-		if((m_enable = r))
+		if((m_enable = r)) {
 			cache_exclude(cache_exclude_path);
+			m_map_enum = mpi_nocache_map->enum_open();
+		}
 	} else
 		destroy();
 
@@ -40,6 +44,9 @@ void root::object_release(iBase **ppi) {
 void root::destroy(void) {
 	stop();
 
+	if(m_map_enum && mpi_nocache_map)
+		mpi_nocache_map->enum_close(m_map_enum);
+
 	object_release((iBase **)&mpi_fs);
 	object_release((iBase **)&mpi_fcache);
 	object_release((iBase **)&mpi_nocache_map);
@@ -55,27 +62,73 @@ void root::cache_exclude(_cstr_t path) {
 		strncpy(lb, path, sizeof(lb)-1);
 
 		while(mpi_str->div_str(lb, fldr, sizeof(fldr), lb, sizeof(lb), ":"))
-			_cache_exclude(fldr);
+			_cache_exclude(fldr, sizeof(fldr));
 
 		if(strlen(fldr))
-			_cache_exclude(fldr);
+			_cache_exclude(fldr, sizeof(fldr));
 	}
 }
 
-void root::_cache_exclude(_cstr_t path) {
+void root::_cache_exclude(_str_t path, _u32 sz) {
 	_u32 l = strlen(path);
 
-	if(path[l] == '/')
-		l--;
+	if(l && path[l-1] != '/') {
+		// the path must be always terminated with '/'
+		strncat(path, "/", 1);
+		l++;
+	}
 
 	mpi_nocache_map->add(path, l, path, l);
+}
+
+_u32 root::get_url_path(_cstr_t url) {
+	_u32 r = strlen(url);
+
+	while(r && url[r-1] != '/')
+		r--;
+
+	return r;
+}
+
+bool root::cacheable(_cstr_t path, _u32 len) {
+	bool r = true;
+
+	if(mpi_nocache_map) {
+		_u32 sz=0;
+
+		_cstr_t str = (_cstr_t)mpi_nocache_map->enum_first(m_map_enum, &sz);
+
+		while(str) {
+			if(memcmp(path, str, (sz < len) ? sz : len) == 0) {
+				r = false;
+				break;
+			}
+			str = (_cstr_t)mpi_nocache_map->enum_next(m_map_enum, &sz);
+		}
+	}
+
+	return r;
 }
 
 HDOCUMENT root::open(_cstr_t url) {
 	HDOCUMENT r = NULL;
 
-	if(m_enable) {
-		//...
+	if(m_enable && mpi_fs && mpi_fcache && mpi_handle_list) {
+		_u32 path_len = get_url_path(url);
+		bool use_cache = cacheable(url, path_len);
+		_handle_t *ph = alloc_handle(0);
+
+		if(ph) {
+			if(use_cache) {
+				if((ph->hfc = mpi_fcache->open(url)))
+					r = ph;
+			} else if((ph->pi_fio = mpi_fs->open(url, O_RDONLY)))
+				r = ph;
+
+			if(!r)
+				// move to free column
+				mpi_handle_list->mov(ph, HCOL_FREE);
+		}
 	}
 
 	return r;
@@ -95,13 +148,22 @@ _handle_t *root::get_busy_handle(HDOCUMENT hdoc, HMUTEX hlock) {
 	return r;
 }
 
-_handle_t *root::get_free_handle(HMUTEX hlock) {
+_handle_t *root::alloc_handle(HMUTEX hlock) {
 	_handle_t *r = NULL;
 	_u32 sz = 0;
 	HMUTEX hm = mpi_handle_list->lock(hlock);
 
 	mpi_handle_list->col(HCOL_FREE, hm);
-	r = (_handle_t *)mpi_handle_list->first(&sz, hm);
+	if(!(r = (_handle_t *)mpi_handle_list->first(&sz, hm))) {
+		_handle_t handle;
+
+		handle.hfc = NULL;
+		handle.pi_fio = NULL;
+
+		mpi_handle_list->col(HCOL_BUSY, hm);
+		r = (_handle_t *)mpi_handle_list->add(&handle, sizeof(_handle_t), hm);
+	} else
+		mpi_handle_list->mov(r, HCOL_BUSY, hm);
 
 	mpi_handle_list->unlock(hm);
 
@@ -129,8 +191,7 @@ void *root::ptr(HDOCUMENT hdoc, _ulong *size) {
 
 void root::close(HDOCUMENT hdoc) {
 	if(mpi_handle_list) {
-		HMUTEX hm = mpi_handle_list->lock();
-		_handle_t *ph = get_busy_handle(hdoc, hm);
+		_handle_t *ph = get_busy_handle(hdoc, 0);
 
 		if(ph) {
 			if(ph->hfc) {
@@ -142,10 +203,8 @@ void root::close(HDOCUMENT hdoc) {
 			}
 
 			// release handle
-			mpi_handle_list->mov(ph, HCOL_FREE, hm);
+			mpi_handle_list->mov(ph, HCOL_FREE);
 		}
-
-		mpi_handle_list->unlock(hm);
 	}
 }
 
