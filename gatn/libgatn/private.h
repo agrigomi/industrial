@@ -86,7 +86,10 @@ struct root { // document root
 private:
 	bool		m_enable;
 	_char_t		m_root_path[MAX_DOC_ROOT_PATH];
+	_char_t		m_cache_path[MAX_CACHE_PATH];
+	_char_t		m_cache_key[MAX_CACHE_KEY];
 	iFS		*mpi_fs;
+	iHeap		*mpi_heap;
 	iFileCache	*mpi_fcache;
 	iMap		*mpi_nocache_map;
 	iLlist		*mpi_handle_list;

@@ -11,19 +11,19 @@ bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 	bool r = false;
 
 	strncpy(m_root_path, doc_root, sizeof(m_root_path)-1);
-	mpi_fs = dynamic_cast<iFS *>(_gpi_repo_->object_by_iname(I_FS, RF_ORIGINAL));
-	mpi_fcache = dynamic_cast<iFileCache *>(_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE | RF_NONOTIFY));
+	strncpy(m_cache_path, cache_path, sizeof(m_cache_path)-1);
+	strncpy(m_cache_key, cache_key, sizeof(m_cache_key)-1);
+	mpi_fs = NULL;
+	mpi_fcache = NULL;
+	m_enable = false;
+	mpi_heap = pi_heap;
 	mpi_nocache_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE | RF_NONOTIFY));
 	mpi_handle_list = dynamic_cast<iLlist *>(_gpi_repo_->object_by_iname(I_LLIST, RF_CLONE | RF_NONOTIFY));
 	mpi_str = dynamic_cast<iStr *>(_gpi_repo_->object_by_iname(I_STR, RF_ORIGINAL));
 
-	if(mpi_fs && mpi_fcache && mpi_nocache_map && mpi_handle_list) {
-		r = mpi_fcache->init(cache_path, cache_key, pi_heap);
+	if(mpi_nocache_map && mpi_handle_list) {
 		r &= mpi_nocache_map->init(15, pi_heap);
 		r &= mpi_handle_list->init(LL_VECTOR, 2, pi_heap);
-
-		if((m_enable = r))
-			cache_exclude(cache_exclude_path);
 	} else
 		destroy();
 
@@ -68,7 +68,7 @@ void root::_cache_exclude(_str_t path, _u32 sz) {
 	if(l) {
 		if(path[l-1] != '/') {
 			// the path must be always terminated with '/'
-			strncat(path, "/", 1);
+			strncat(path, "/", sz - l);
 			l++;
 		}
 
@@ -232,12 +232,18 @@ void root::stop(void) {
 			else
 				usleep(10000);
 		}
+
+		object_release((iBase **)&mpi_fcache);
+		object_release((iBase **)&mpi_fs);
 	}
 }
 
 void root::start(void) {
 	if(!m_enable) {
-		//...
-		m_enable = true;
+		mpi_fs = dynamic_cast<iFS *>(_gpi_repo_->object_by_iname(I_FS, RF_ORIGINAL));
+		mpi_fcache = dynamic_cast<iFileCache *>(_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE | RF_NONOTIFY));
+
+		if(mpi_fs && mpi_fcache)
+			m_enable = mpi_fcache->init(m_cache_path, m_cache_key, mpi_heap);
 	}
 }
