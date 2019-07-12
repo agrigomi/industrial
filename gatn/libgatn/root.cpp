@@ -83,31 +83,31 @@ HDOCUMENT root::open(_cstr_t url) {
 
 _handle_t *root::get_busy_handle(HDOCUMENT hdoc, HMUTEX hlock) {
 	_handle_t *r = NULL;
+	_u32 sz = 0;
+	HMUTEX hm = mpi_handle_list->lock(hlock);
 
-	if(mpi_handle_list) {
-		_u32 sz = 0;
-		HMUTEX hm = mpi_handle_list->lock(hlock);
+	mpi_handle_list->col(HCOL_BUSY, hm);
+	if(mpi_handle_list->sel(hdoc, hm))
+		r = (_handle_t *)mpi_handle_list->current(&sz, hm);
 
-		mpi_handle_list->col(HCOL_BUSY, hm);
-		if(mpi_handle_list->sel(hdoc, hm))
-			r = (_handle_t *)mpi_handle_list->current(&sz, hm);
-
-		mpi_handle_list->unlock(hm);
-	}
+	mpi_handle_list->unlock(hm);
 
 	return r;
 }
 
 void *root::ptr(HDOCUMENT hdoc, _ulong *size) {
 	void *r = NULL;
-	_handle_t *ph = get_busy_handle(hdoc, 0);
 
-	if(ph) {
-		if(ph->hfc) // pointer from file cache
-			r = mpi_fcache->ptr(ph->hfc, size);
-		else if(ph->pi_fio) {
-			r = ph->pi_fio->map(MPF_READ);
-			*size = ph->pi_fio->size();
+	if(mpi_handle_list) {
+		_handle_t *ph = get_busy_handle(hdoc, 0);
+
+		if(ph) {
+			if(ph->hfc) // pointer from file cache
+				r = mpi_fcache->ptr(ph->hfc, size);
+			else if(ph->pi_fio) {
+				r = ph->pi_fio->map(MPF_READ);
+				*size = ph->pi_fio->size();
+			}
 		}
 	}
 
