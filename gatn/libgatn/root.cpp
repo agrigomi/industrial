@@ -95,16 +95,19 @@ bool root::cacheable(_cstr_t path, _u32 len) {
 
 	if(mpi_nocache_map) {
 		_u32 sz=0;
+		HMUTEX hm = mpi_nocache_map->lock();
 
-		_cstr_t str = (_cstr_t)mpi_nocache_map->enum_first(m_map_enum, &sz);
+		_cstr_t str = (_cstr_t)mpi_nocache_map->enum_first(m_map_enum, &sz, hm);
 
 		while(str) {
 			if(memcmp(path, str, (sz < len) ? sz : len) == 0) {
 				r = false;
 				break;
 			}
-			str = (_cstr_t)mpi_nocache_map->enum_next(m_map_enum, &sz);
+			str = (_cstr_t)mpi_nocache_map->enum_next(m_map_enum, &sz, hm);
 		}
+
+		mpi_nocache_map->unlock(hm);
 	}
 
 	return r;
