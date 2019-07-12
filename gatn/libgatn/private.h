@@ -91,7 +91,6 @@ private:
 	iMap		*mpi_nocache_map;
 	iLlist		*mpi_handle_list;
 	iStr		*mpi_str;
-	_map_enum_t	m_map_enum;
 
 	void object_release(iBase **ppi);
 	void parse_nocache_list(_cstr_t nocache);

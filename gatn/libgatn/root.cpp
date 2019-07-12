@@ -17,17 +17,13 @@ bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 	mpi_handle_list = dynamic_cast<iLlist *>(_gpi_repo_->object_by_iname(I_LLIST, RF_CLONE | RF_NONOTIFY));
 	mpi_str = dynamic_cast<iStr *>(_gpi_repo_->object_by_iname(I_STR, RF_ORIGINAL));
 
-	m_map_enum = NULL;
-
 	if(mpi_fs && mpi_fcache && mpi_nocache_map && mpi_handle_list) {
 		r = mpi_fcache->init(cache_path, cache_key, pi_heap);
 		r &= mpi_nocache_map->init(15, pi_heap);
 		r &= mpi_handle_list->init(LL_VECTOR, 2, pi_heap);
 
-		if((m_enable = r)) {
+		if((m_enable = r))
 			cache_exclude(cache_exclude_path);
-			m_map_enum = mpi_nocache_map->enum_open();
-		}
 	} else
 		destroy();
 
@@ -43,9 +39,6 @@ void root::object_release(iBase **ppi) {
 
 void root::destroy(void) {
 	stop();
-
-	if(m_map_enum && mpi_nocache_map)
-		mpi_nocache_map->enum_close(m_map_enum);
 
 	object_release((iBase **)&mpi_fs);
 	object_release((iBase **)&mpi_fcache);
@@ -95,19 +88,18 @@ bool root::cacheable(_cstr_t path, _u32 len) {
 
 	if(mpi_nocache_map) {
 		_u32 sz=0;
-		HMUTEX hm = mpi_nocache_map->lock();
-
-		_cstr_t str = (_cstr_t)mpi_nocache_map->enum_first(m_map_enum, &sz, hm);
+		_map_enum_t map_enum = mpi_nocache_map->enum_open();
+		_cstr_t str = (_cstr_t)mpi_nocache_map->enum_first(map_enum, &sz);
 
 		while(str) {
 			if(sz <= len && memcmp(path, str, sz) == 0) {
 				r = false;
 				break;
 			}
-			str = (_cstr_t)mpi_nocache_map->enum_next(m_map_enum, &sz, hm);
+			str = (_cstr_t)mpi_nocache_map->enum_next(map_enum, &sz);
 		}
 
-		mpi_nocache_map->unlock(hm);
+		mpi_nocache_map->enum_close(map_enum);
 	}
 
 	return r;
