@@ -15,7 +15,9 @@ static void _set(_u8 *ptr, _u8 x, _u32 sz) {
 		*(ptr + i) = x;
 }
 
-void ll_init(_ll_context_t *p_cxt, _u8 mode, _u8 ncol, _ulong addr_limit) {
+_u8 ll_init(_ll_context_t *p_cxt, _u8 mode, _u8 ncol, _ulong addr_limit) {
+	_u8 r = 0;
+
 	if(!p_cxt->state) {
 		_u64 lock = ll_lock(p_cxt, 0);
 		_u32 ssz = ncol * sizeof(_ll_state_t);
@@ -24,11 +26,15 @@ void ll_init(_ll_context_t *p_cxt, _u8 mode, _u8 ncol, _ulong addr_limit) {
 		p_cxt->ncol = ncol;
 		p_cxt->addr_limit = addr_limit;
 		p_cxt->ccol = 0;
-		if((p_cxt->state = (_ll_state_t *)p_cxt->p_alloc(ssz, addr_limit, p_cxt->p_udata)))
+		if((p_cxt->state = (_ll_state_t *)p_cxt->p_alloc(ssz, addr_limit, p_cxt->p_udata))) {
 			_set((_u8 *)p_cxt->state, 0, ssz);
+			r = 1;
+		}
 
 		ll_unlock(p_cxt, lock);
 	}
+
+	return r;
 }
 
 void ll_uninit(_ll_context_t *p_cxt) {

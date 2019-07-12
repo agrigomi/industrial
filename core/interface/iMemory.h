@@ -78,7 +78,7 @@ public:
 class iLlist:public iBase {
 public:
 	INTERFACE(iLlist, I_LLIST);
-	virtual void init(_u8 mode, _u8 ncol, iHeap *pi_heap=0)=0;
+	virtual bool init(_u8 mode, _u8 ncol, iHeap *pi_heap=0)=0;
 	virtual void uninit(void)=0;
 
 	virtual HMUTEX lock(HMUTEX hlock=0)=0;

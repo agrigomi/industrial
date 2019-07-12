@@ -52,7 +52,7 @@ public:
 		return r;
 	}
 
-	void init(_u8 mode, _u8 ncol, iHeap *pi_heap=0) {
+	bool init(_u8 mode, _u8 ncol, iHeap *pi_heap=0) {
 		if(!(mpi_heap = pi_heap))
 			mpi_heap = (iHeap *)_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL);
 
@@ -68,7 +68,7 @@ public:
 		m_cxt.addr_limit = 0xffffffffffffffffLLU;
 		m_cxt.p_udata = this;
 
-		ll_init(&m_cxt, mode, ncol, m_cxt.addr_limit);
+		return (ll_init(&m_cxt, mode, ncol, m_cxt.addr_limit)) ? true : false;
 	}
 
 	void uninit(void) {

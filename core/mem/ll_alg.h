@@ -44,7 +44,8 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif
-void ll_init(_ll_context_t *p_cxt, _u8 mode, _u8 ncol, _ulong addr_limit);
+// returns 1 for success
+_u8 ll_init(_ll_context_t *p_cxt, _u8 mode, _u8 ncol, _ulong addr_limit);
 void ll_uninit(_ll_context_t *p_cxt);
 
 /* get record by index */
