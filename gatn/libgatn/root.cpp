@@ -91,7 +91,7 @@ void root::stop(void) {
 
 		m_enable = false;
 
-		while(1) {
+		while(mpi_handle_list) {
 			HMUTEX hm = mpi_handle_list->lock();
 
 			mpi_handle_list->col(HCOL_BUSY, hm);
