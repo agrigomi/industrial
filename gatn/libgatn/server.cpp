@@ -55,6 +55,7 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 		_u32 max_workers, _u32 max_connections,
 		_u32 connection_timeout, SSL_CTX *ssl_context) {
 	memset(&host, 0, sizeof(_vhost_t)); // default host
+	strncpy(host.host, "defulthost", sizeof(host.host));
 	mpi_server = NULL; // HTTP server
 	mpi_vhost_map = NULL;
 	strncpy(m_name, name, sizeof(m_name)-1);
@@ -280,7 +281,10 @@ bool server::start(void) {
 
 void server::stop(_vhost_t *pvhost) {
 	// release file cache
-	pvhost->root.stop();
+	if(pvhost->root.is_enabled()) {
+		mpi_log->fwrite(LMT_INFO, "Gatn: Stop host '%s'", pvhost->host);
+		pvhost->root.stop();
+	}
 }
 
 _vhost_t *server::get_host(_cstr_t _host) {
