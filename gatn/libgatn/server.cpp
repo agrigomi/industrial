@@ -31,12 +31,12 @@ typedef struct {
 	response	res;
 	_cstr_t		url;
 	_vhost_t	*p_vhost;
-	HFCACHE		hfc;
+	HDOCUMENT	hdoc;
 
 	void clear(void) {
 		res.clear();
 		url = NULL;
-		hfc = NULL;
+		hdoc = NULL;
 		p_vhost = NULL;
 	}
 
@@ -44,7 +44,7 @@ typedef struct {
 		req.destroy();
 		res.destroy();
 		url = NULL;
-		hfc = NULL;
+		hdoc = NULL;
 		p_vhost = NULL;
 	}
 }_connection_t;
@@ -59,9 +59,6 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 	mpi_vhost_map = NULL;
 	strncpy(m_name, name, sizeof(m_name)-1);
 	m_port = port;
-	strncpy(host.root, root, sizeof(host.root)-1);
-	strncpy(host.cache_path, cache_path, sizeof(host.cache_path)-1);
-	strncpy(host.cache_key, m_name, sizeof(host.cache_key)-1);
 	mpi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL));
 	mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
 	mpi_net = NULL;
@@ -84,6 +81,8 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 	m_max_connections = max_connections;
 	m_connection_timeout = connection_timeout;
 	m_ssl_context = ssl_context;
+
+	host.root.init(root, cache_path, name, cache_exclude, mpi_heap);
 }
 
 void server::attach_network(void) {
@@ -146,10 +145,8 @@ void server::destroy(_vhost_t *pvhost) {
 		_gpi_repo_->object_release(pvhost->pi_route_map);
 		pvhost->pi_route_map = NULL;
 	}
-	if(pvhost->pi_nocache_map) {
-		_gpi_repo_->object_release(pvhost->pi_nocache_map);
-		pvhost->pi_nocache_map = NULL;
-	}
+
+	pvhost->root.destroy();
 }
 
 bool server::create_connection(iHttpServerConnection *p_httpc) {
@@ -167,9 +164,10 @@ bool server::create_connection(iHttpServerConnection *p_httpc) {
 		p_cnt->res.m_hbcount = 0;
 		p_cnt->res.m_content_len = 0;
 		p_cnt->res.m_buffers = 0;
-		p_cnt->res.m_doc_root = host.root;
-		p_cnt->res.mpi_fcache = host.pi_fcache;
+		p_cnt->res.m_doc_root = host.root.get_doc_root();
+		p_cnt->res.mpi_fcache = host.root.get_file_cache();
 		p_cnt->res.mpi_fs = mpi_fs;
+		p_cnt->p_vhost = NULL;
 		p_cnt->clear();
 		p_httpc->set_udata((_ulong)p_cnt, IDX_CONNECTION);
 		r = true;
@@ -182,10 +180,6 @@ void server::destroy_connection(iHttpServerConnection *p_httpc) {
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
 	if(pc) {
-		if(pc->hfc && pc->p_vhost && pc->p_vhost->pi_fcache)
-			// close cache handle
-			pc->p_vhost->pi_fcache->close(pc->hfc);
-
 		// detach connection record
 		p_httpc->set_udata((_ulong)NULL, IDX_CONNECTION);
 
@@ -209,18 +203,11 @@ void server::set_handlers(void) {
 		server *p_srv = (server *)udata;
 		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
-		/************************************
-		 Check for unclosed handle from file cache,
-		 because in cases of reuse connection (connection: keep-alive),
-		 HTTP_ON_CLOSE will not happened
+		/* check for unclosed document
 		*/
-		if(pc->hfc) {
-			_vhost_t *p_vhost = pc->p_vhost;
+		if(pc->hdoc && pc->p_vhost)
+			pc->p_vhost->root.close(pc->hdoc);
 
-			if(p_vhost && p_vhost->pi_fcache)
-				p_vhost->pi_fcache->close(pc->hfc);
-		}
-		/**********************************/
 		pc->clear();
 		pc->p_vhost = p_srv->get_host(p_httpc->req_var("Host"));
 		pc->url = p_httpc->req_url();
@@ -278,7 +265,7 @@ bool server::start(void) {
 								m_max_connections, m_connection_timeout,
 								m_ssl_context);
 
-		if(host.pi_fcache && mpi_server) {
+		if(host.root.is_enabled() && mpi_server) {
 			set_handlers();
 			r = true;
 		}
@@ -289,10 +276,7 @@ bool server::start(void) {
 
 void server::stop(_vhost_t *pvhost) {
 	// release file cache
-	if(pvhost->pi_fcache) {
-		_gpi_repo_->object_release(pvhost->pi_fcache);
-		pvhost->pi_fcache = NULL;
-	}
+	pvhost->root.stop();
 }
 
 _vhost_t *server::get_host(_cstr_t _host) {
@@ -303,10 +287,8 @@ _vhost_t *server::get_host(_cstr_t _host) {
 bool server::start(_vhost_t *pvhost) {
 	bool r = false;
 
-	if(!pvhost->pi_fcache) {
-		if((pvhost->pi_fcache = dynamic_cast<iFileCache *>(_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE|RF_NONOTIFY))))
-			r = pvhost->pi_fcache->init(pvhost->cache_path, pvhost->cache_key);
-	}
+	if(!(r = pvhost->root.is_enabled()))
+		pvhost->root.start();
 
 	return r;
 }
@@ -343,9 +325,10 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 	_vhost_t *pvhost = pc->p_vhost;
 	_cstr_t url = pc->url;
-	iFileCache *pi_fcache = pvhost->pi_fcache;
 
 	if(pvhost && url) {
+		_root_t *root = &pvhost->root;
+
 		memset(&key, 0, sizeof(_route_key_t));
 		key.method = p_httpc->req_method();
 		strncpy(key.path, url, sizeof(key.path)-1);
@@ -355,49 +338,41 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 		if(prd) {
 			// route found
 			prd->pcb(evt, &pc->req, &pc->res, prd->udata);
-		} else if(evt == HTTP_ON_REQUEST) {
+		} else if(root->is_enabled() && evt == HTTP_ON_REQUEST) {
 			// route not found
 			// try to resolve file name
-			_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
+			HDOCUMENT hdoc = root->open(url);
+			if(hdoc) {
+				if(key.method == HTTP_METHOD_GET) {
+					_ulong doc_sz = 0;
 
-			if((strlen(url) + strlen(pvhost->root) < sizeof(doc)-1)) {
-				snprintf(doc, sizeof(doc), "%s%s",
-					pvhost->root,
-					(strcmp(url, "/") == 0) ? "/index.html" : url);
-				HFCACHE fc = (pi_fcache) ? pi_fcache->open(doc) : NULL;
-				if(fc) {
-					if(key.method == HTTP_METHOD_GET) {
-						_ulong doc_sz = 0;
-
-						_u8 *ptr = (_u8 *)pi_fcache->ptr(fc, &doc_sz);
-						if(ptr) {
-							// response header
-							p_httpc->res_content_len(doc_sz);
-							p_httpc->res_code(HTTPRC_OK);
-							p_httpc->res_var("Server", m_name);
-							p_httpc->res_var("Content-Type", resolve_content_type(doc));
-							p_httpc->res_mtime(pi_fcache->mtime(fc));
-							// response content
-							p_httpc->res_write(ptr, doc_sz);
-							pc->hfc = fc;
-						} else {
-							p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
-							pi_fcache->close(fc);
-						}
-					} else if(key.method == HTTP_METHOD_HEAD) {
-						p_httpc->res_mtime(pi_fcache->mtime(fc));
+					_u8 *ptr = (_u8 *)root->ptr(hdoc, &doc_sz);
+					if(ptr) {
+						// response header
+						p_httpc->res_content_len(doc_sz);
 						p_httpc->res_code(HTTPRC_OK);
-						pi_fcache->close(fc);
+						p_httpc->res_var("Server", m_name);
+						p_httpc->res_var("Content-Type", resolve_content_type(url));
+						p_httpc->res_mtime(root->mtime(hdoc));
+						// response content
+						p_httpc->res_write(ptr, doc_sz);
+						pc->hdoc = hdoc;
 					} else {
-						p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
-						pi_fcache->close(fc);
+						p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
+						root->close(hdoc);
 					}
+				} else if(key.method == HTTP_METHOD_HEAD) {
+					p_httpc->res_mtime(root->mtime(hdoc));
+					p_httpc->res_code(HTTPRC_OK);
+					root->close(hdoc);
 				} else {
-					p_httpc->res_code(HTTPRC_NOT_FOUND);
-					call_handler(ON_NOT_FOUND, p_httpc);
+					p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
+					root->close(hdoc);
 				}
-			} else
-				p_httpc->res_code(HTTPRC_REQ_URI_TOO_LARGE);
+			} else {
+				p_httpc->res_code(HTTPRC_NOT_FOUND);
+				call_handler(ON_NOT_FOUND, p_httpc);
+			}
 		}
 	}
 }
@@ -406,13 +381,13 @@ void server::update_response(iHttpServerConnection *p_httpc) {
 	// write response remainder
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
-	if(pc->hfc) {
+	if(pc->hdoc) {
 		// update content from file cache
 		_ulong sz = 0;
 		_vhost_t *pvhost = pc->p_vhost;
 
 		if(pvhost) {
-			_u8 *ptr = (_u8 *)pvhost->pi_fcache->ptr(pc->hfc, &sz);
+			_u8 *ptr = (_u8 *)pvhost->root.ptr(pc->hdoc, &sz);
 
 			if(ptr) {
 				_u32 res_sent = p_httpc->res_content_sent();
@@ -506,10 +481,7 @@ bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _c
 	_vhost_t vhost;
 
 	strncpy(vhost.host, host, sizeof(vhost.host)-1);
-	strncpy(vhost.root, root, sizeof(vhost.root)-1);
-	strncpy(vhost.cache_path, cache_path, sizeof(vhost.cache_path)-1);
-	strncpy(vhost.cache_key, cache_key, sizeof(vhost.cache_key)-1);
-
+	vhost.root.init(root, cache_path, cache_key, cache_exclude, mpi_heap);
 	if(!mpi_vhost_map) {
 		if((mpi_vhost_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
 			mpi_vhost_map->init(15, mpi_heap);

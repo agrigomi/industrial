@@ -113,8 +113,18 @@ public:
 	HDOCUMENT open(_cstr_t url);
 	void *ptr(HDOCUMENT, _ulong*);
 	void close(HDOCUMENT);
+	time_t mtime(HDOCUMENT);
 	void stop(void);
 	void start(void);
+	bool is_enabled(void) {
+		return m_enable;
+	}
+	_cstr_t get_doc_root(void) {
+		return m_root_path;
+	}
+	iFileCache *get_file_cache(void) {
+		return mpi_fcache;
+	}
 };
 
 void init_mime_type_resolver(void);

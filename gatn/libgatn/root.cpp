@@ -214,13 +214,31 @@ void root::close(HDOCUMENT hdoc) {
 	}
 }
 
+time_t root::mtime(HDOCUMENT hdoc) {
+	time_t r = 0;
+
+	if(mpi_handle_list) {
+		_handle_t *ph = get_busy_handle(hdoc, 0);
+
+		if(ph) {
+			if(ph->hfc && mpi_fcache)
+				r = mpi_fcache->mtime(ph->hfc);
+			else if(ph->pi_fio)
+				r = ph->pi_fio->modify_time();
+		}
+	}
+
+	return r;
+}
+
 void root::stop(void) {
 	if(m_enable) {
 		_u32 sz = 0;
+		_u32 t = 100;
 
 		m_enable = false;
 
-		while(mpi_handle_list) {
+		while(mpi_handle_list && t--) {
 			HMUTEX hm = mpi_handle_list->lock();
 
 			mpi_handle_list->col(HCOL_BUSY, hm);
@@ -231,6 +249,22 @@ void root::stop(void) {
 				break;
 			else
 				usleep(10000);
+		}
+
+		if(!t && mpi_handle_list) {
+			_handle_t *ph = NULL;
+
+			do {
+				HMUTEX hm = mpi_handle_list->lock();
+
+				mpi_handle_list->col(HCOL_BUSY, hm);
+				ph = (_handle_t *)mpi_handle_list->first(&sz, hm);
+
+				mpi_handle_list->unlock(hm);
+
+				if(ph)
+					close(ph);
+			} while(ph);
 		}
 
 		object_release((iBase **)&mpi_fcache);
