@@ -207,10 +207,13 @@ void server::set_handlers(void) {
 		server *p_srv = (server *)udata;
 		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
-		/* check for unclosed document
+		/* check for unclosed document,
+		   because in case of reusing connection,
+		   HTTP_ON_CLOSE not hapened
 		*/
 		if(pc->hdoc && pc->p_vhost)
 			pc->p_vhost->root.close(pc->hdoc);
+		/*****************************************/
 
 		pc->clear();
 		pc->p_vhost = p_srv->get_host(p_httpc->req_var("Host"));
@@ -296,8 +299,10 @@ _vhost_t *server::get_host(_cstr_t _host) {
 bool server::start(_vhost_t *pvhost) {
 	bool r = false;
 
-	if(!(r = pvhost->root.is_enabled()))
+	if(!(r = pvhost->root.is_enabled())) {
+		mpi_log->fwrite(LMT_INFO, "Gatn: Start host '%s'", pvhost->host);
 		pvhost->root.start();
+	}
 
 	return r;
 }
@@ -329,13 +334,13 @@ _cstr_t server::resolve_content_type(_cstr_t doc_name) {
 }
 
 void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
-	_route_key_t key;
 	_u32 sz=0;
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 	_vhost_t *pvhost = pc->p_vhost;
 	_cstr_t url = pc->url;
 
 	if(pvhost && url) {
+		_route_key_t key;
 		_root_t *root = &pvhost->root;
 
 		memset(&key, 0, sizeof(_route_key_t));
