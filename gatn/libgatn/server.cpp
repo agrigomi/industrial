@@ -163,10 +163,12 @@ bool server::create_connection(iHttpServerConnection *p_httpc) {
 		p_cnt->res.mpi_bmap = mpi_bmap;
 		p_cnt->res.mp_hbarray = NULL;
 		p_cnt->res.m_hbcount = 0;
-		p_cnt->res.m_content_len = 0;
 		p_cnt->res.m_buffers = 0;
+		p_cnt->res.m_content_len = 0;
 		p_cnt->res.mpi_fs = mpi_fs;
-		p_cnt->clear();
+		p_cnt->url = NULL;
+		p_cnt->hdoc = NULL;
+		p_cnt->p_vhost = NULL;
 		p_httpc->set_udata((_ulong)p_cnt, IDX_CONNECTION);
 		r = true;
 	}
