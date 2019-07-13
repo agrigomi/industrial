@@ -165,10 +165,7 @@ bool server::create_connection(iHttpServerConnection *p_httpc) {
 		p_cnt->res.m_hbcount = 0;
 		p_cnt->res.m_content_len = 0;
 		p_cnt->res.m_buffers = 0;
-		p_cnt->res.m_doc_root = host.root.get_doc_root();
-		p_cnt->res.mpi_fcache = host.root.get_file_cache();
 		p_cnt->res.mpi_fs = mpi_fs;
-		p_cnt->p_vhost = NULL;
 		p_cnt->clear();
 		p_httpc->set_udata((_ulong)p_cnt, IDX_CONNECTION);
 		r = true;
@@ -216,6 +213,8 @@ void server::set_handlers(void) {
 		pc->clear();
 		pc->p_vhost = p_srv->get_host(p_httpc->req_var("Host"));
 		pc->url = p_httpc->req_url();
+		pc->res.m_doc_root = pc->p_vhost->root.get_doc_root();
+		pc->res.mpi_fcache = pc->p_vhost->root.get_file_cache();
 
 		p_srv->call_handler(HTTP_ON_REQUEST, p_httpc);
 		p_srv->call_route_handler(HTTP_ON_REQUEST, p_httpc);
