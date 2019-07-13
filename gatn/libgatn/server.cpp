@@ -541,10 +541,8 @@ bool server::start_virtual_host(_cstr_t host) {
 		HMUTEX hm = mpi_vhost_map->lock();
 		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz, hm);
 
-		if(pvhost) {
-			start(pvhost);
-			r = true;
-		}
+		if(pvhost)
+			r = start(pvhost);
 
 		mpi_vhost_map->unlock(hm);
 	}

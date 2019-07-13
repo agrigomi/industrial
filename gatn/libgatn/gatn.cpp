@@ -11,7 +11,6 @@ class cGatn: public iGatn {
 private:
 	iMap		*mpi_map;// server map
 	iLog		*mpi_log;
-	iJSON		*mpi_json;
 
 	void stop(bool autorestore=false) { // stop servers
 		_map_enum_t en = mpi_map->enum_open();
@@ -99,12 +98,10 @@ public:
 				if((mpi_map = dynamic_cast<iMap *>(pi_repo->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
 					mpi_map->init(31);
 				mpi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
-				mpi_json = NULL;
 				init_mime_type_resolver();
 				if(mpi_map && mpi_log) {
 					pi_repo->monitoring_add(NULL, I_NET, NULL, this, SCAN_ORIGINAL);
 					pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
-					pi_repo->monitoring_add(NULL, I_JSON, NULL, this, SCAN_ORIGINAL);
 					r = true;
 				}
 			} break;
@@ -114,7 +111,6 @@ public:
 				destroy();
 				pi_repo->object_release(mpi_map, false);
 				pi_repo->object_release(mpi_log);
-				pi_repo->object_release(mpi_json);
 				uninit_mime_type_resolver();
 				r = true;
 			} break;
