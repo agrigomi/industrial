@@ -9,6 +9,7 @@
 #define I_RING_BUFFER 	"iRingBuffer"
 #define I_MAP		"iMap"
 #define I_BUFFER_MAP	"iBufferMap"
+#define I_POOL		"iPool"
 
 typedef struct {
 	_u32 robj; // number of reserved objects
@@ -72,6 +73,15 @@ public:
 	virtual void status(_map_status_t *)=0;
 };
 
+class iPool: public iBase {
+public:
+	INTERFACE(iPool, I_POOL);
+	virtual bool init(_u32 data_size, iHeap *pi_heap=0)=0;
+	virtual void *alloc(void)=0;
+	virtual void free(void *)=0;
+	virtual void clear(void)=0;
+};
+
 #define LL_VECTOR	1
 #define LL_RING		2
 
@@ -83,6 +93,9 @@ public:
 
 	virtual HMUTEX lock(HMUTEX hlock=0)=0;
 	virtual void unlock(HMUTEX hlock)=0;
+
+	// create new empty record
+	virtual void *add(_u32 size, HMUTEX hlock=0)=0;
 
 	// get record by index
 	virtual void *get(_u32 index, _u32 *p_size, HMUTEX hlock=0)=0;

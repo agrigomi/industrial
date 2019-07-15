@@ -91,6 +91,10 @@ public:
 		return ll_get(&m_cxt, index, p_size, hlock);
 	}
 
+	void *add(_u32 size, HMUTEX hlock=0) {
+		return ll_new(&m_cxt, size, hlock);
+	}
+
 	// add record at end of list
 	void *add(void *rec, _u32 size, HMUTEX hlock=0) {
 		return ll_add(&m_cxt, rec, size, hlock);

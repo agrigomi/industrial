@@ -122,6 +122,54 @@ void *ll_get(_ll_context_t *p_cxt, _u32 index, _u32 *p_size, _u64 hlock) {
 	return r;
 }
 
+// alloc new empty record
+void *ll_new(_ll_context_t *p_cxt, _u32 size, _u64 hlock) {
+	void *r = 0;
+	_u32 sz = size + sizeof(_ll_item_hdr_t);
+ 	_ll_item_hdr_t *p = 0; /* prev */
+
+	if(p_cxt->p_alloc)
+		p = (_ll_item_hdr_t *)p_cxt->p_alloc(sz, p_cxt->addr_limit, p_cxt->p_udata);
+
+	if(p) {
+		/* clear record */
+		_set((_u8 *)p, 0, sz);
+
+		p->cxt = p_cxt;
+		p->size= size;
+		p->col = p_cxt->ccol;
+
+		_u64 hm = ll_lock(p_cxt, hlock);
+
+		if(p_cxt->state[p_cxt->ccol].p_last)
+			p_cxt->state[p_cxt->ccol].p_last->next = p;
+
+		p->prev = p_cxt->state[p_cxt->ccol].p_last;
+		if(p_cxt->mode == LL_MODE_RING)
+			p->next = p_cxt->state[p_cxt->ccol].p_first;
+		else
+			p->next = 0;
+
+		p_cxt->state[p_cxt->ccol].p_last = p_cxt->state[p_cxt->ccol].p_current = p;
+
+		if(!p_cxt->state[p_cxt->ccol].p_first)
+			p_cxt->state[p_cxt->ccol].p_first = p;
+
+		/* make the new item as current */
+		p_cxt->state[p_cxt->ccol].current = p_cxt->state[p_cxt->ccol].count;
+		/* increase items counter */
+		p_cxt->state[p_cxt->ccol].count++;
+
+		ll_unlock(p_cxt, hm);
+
+		/* move the pointer to user data area
+			(skip the item header) */
+		r = (p + 1);
+	}
+
+	return r;
+}
+
 void *ll_add(_ll_context_t *p_cxt, void *p_data, _u32 size, _u64 hlock) {
 	void *r = 0;
  	_ll_item_hdr_t *_p = 0; /* prev */
@@ -132,7 +180,7 @@ void *ll_add(_ll_context_t *p_cxt, void *p_data, _u32 size, _u64 hlock) {
 		_p = (_ll_item_hdr_t *)p_cxt->p_alloc(sz, p_cxt->addr_limit, p_cxt->p_udata);
 
 	if(_p) {
-		// clear memory region
+		/* clear memory region */
 		_u8 *ptr = (_u8 *)_p;
 		_u32 i = 0;
 
@@ -169,9 +217,11 @@ void *ll_add(_ll_context_t *p_cxt, void *p_data, _u32 size, _u64 hlock) {
 		p_cxt->state[p_cxt->ccol].current = p_cxt->state[p_cxt->ccol].count;
 		/* increase items counter */
 		p_cxt->state[p_cxt->ccol].count++;
+
+		ll_unlock(p_cxt, hm);
+
 		/* move the pointer to user data area
 			(skip the item header) */
-		ll_unlock(p_cxt, hm);
 		r = (_p + 1);
 	}
 
@@ -190,7 +240,7 @@ void *ll_ins(_ll_context_t *p_cxt, _u32 index, void *p_data, _u32 size, _u64 hlo
 			p_new = (_ll_item_hdr_t *)p_cxt->p_alloc(sz, p_cxt->addr_limit, p_cxt->p_udata);
 
 		if(p_new) {
-			// clear memory region
+			/* clear memory region */
 			_u8 *ptr = (_u8 *)p_new;
 			_u32 i = 0;
 

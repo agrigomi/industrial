@@ -50,6 +50,8 @@ void ll_uninit(_ll_context_t *p_cxt);
 
 /* get record by index */
 void *ll_get(_ll_context_t *p_cxt, _u32 index, _u32 *p_size, _u64 hlock);
+// alloc new empty record
+void *ll_new(_ll_context_t *p_cxt, _u32 size, _u64 hlock);
 /* add new record at end of list */
 void *ll_add(_ll_context_t *p_cxt, void *p_data, _u32 size, _u64 hlock);
 /* insert record */
