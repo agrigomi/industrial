@@ -43,16 +43,40 @@ public:
 
 	void *alloc(void) {
 		void *r = NULL;
+		_u32 sz = 0;
+		HMUTEX hm = mpi_list->lock();
 
-		//...
+		mpi_list->col(COL_FREE, hm);
+		if((r = mpi_list->first(&sz, hm)))
+			mpi_list->mov(r, COL_BUSY, hm);
+		else {
+			mpi_list->col(COL_BUSY, hm);
+			r = mpi_list->add(m_data_size, hm);
+		}
+
+		mpi_list->unlock(hm);
 
 		return r;
 	}
 
 	void free(void *rec) {
+		HMUTEX hm = mpi_list->lock();
+
+		mpi_list->col(COL_BUSY, hm);
+		if(mpi_list->sel(rec, hm))
+			mpi_list->mov(COL_FREE, hm);
+
+		mpi_list->unlock(hm);
 	}
 
 	void clear(void) {
+		HMUTEX hm = mpi_list->lock();
+
+		mpi_list->col(COL_BUSY, hm);
+		mpi_list->clr(hm);
+		mpi_list->col(COL_FREE, hm);
+		mpi_list->clr(hm);
+		mpi_list->unlock(hm);
 	}
 };
 
