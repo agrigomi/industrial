@@ -11,6 +11,7 @@ class cGatn: public iGatn {
 private:
 	iMap		*mpi_map;// server map
 	iLog		*mpi_log;
+	_char_t		m_config_fname[256];
 
 	void stop(bool autorestore=false) { // stop servers
 		_map_enum_t en = mpi_map->enum_open();
@@ -147,6 +148,14 @@ public:
 	}
 
 	bool configure(_cstr_t json_fname) {
+		bool r = false;
+
+		//...
+
+		return r;
+	}
+
+	bool reload(_cstr_t server_name=NULL) {
 		bool r = false;
 
 		//...
