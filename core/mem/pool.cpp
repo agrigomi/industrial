@@ -64,7 +64,7 @@ public:
 
 		mpi_list->col(COL_BUSY, hm);
 		if(mpi_list->sel(rec, hm))
-			mpi_list->mov(COL_FREE, hm);
+			mpi_list->mov(rec, COL_FREE, hm);
 
 		mpi_list->unlock(hm);
 	}
