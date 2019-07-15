@@ -153,6 +153,7 @@ struct server: public _server_t {
 	iFS		*mpi_fs; // FS support
 	iLog		*mpi_log; // system log
 	iHeap		*mpi_heap;
+	iPool		*mpi_pool;
 	bool		m_autorestore;
 	iBufferMap	*mpi_bmap;
 	_u32		m_buffer_size;

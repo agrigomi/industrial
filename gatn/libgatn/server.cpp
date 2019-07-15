@@ -62,6 +62,8 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 	m_port = port;
 	mpi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL));
 	mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
+	if((mpi_pool = dynamic_cast<iPool *>(_gpi_repo_->object_by_iname(I_POOL, RF_CLONE|RF_NONOTIFY))))
+		mpi_pool->init(sizeof(_connection_t), mpi_heap);
 	mpi_net = NULL;
 	mpi_fs = NULL;
 	attach_fs();
@@ -136,7 +138,8 @@ void server::destroy(void) {
 	_gpi_repo_->object_release(mpi_vhost_map);
 	_gpi_repo_->object_release(mpi_heap);
 	_gpi_repo_->object_release(mpi_log);
-	_gpi_repo_->object_release(mpi_bmap);
+	_gpi_repo_->object_release(mpi_bmap, false);
+	_gpi_repo_->object_release(mpi_pool, false);
 }
 
 void server::destroy(_vhost_t *pvhost) {
@@ -153,22 +156,24 @@ void server::destroy(_vhost_t *pvhost) {
 bool server::create_connection(iHttpServerConnection *p_httpc) {
 	bool r = false;
 	_connection_t tmp;
-	_connection_t *p_cnt = (_connection_t *)mpi_heap->alloc(sizeof(_connection_t));
+
+	tmp.req.mpi_httpc = tmp.res.mpi_httpc = p_httpc;
+	tmp.req.mpi_server = tmp.res.mpi_server = this;
+	tmp.res.mpi_heap = mpi_heap;
+	tmp.res.mpi_bmap = mpi_bmap;
+	tmp.res.mp_hbarray = NULL;
+	tmp.res.m_hbcount = 0;
+	tmp.res.m_buffers = 0;
+	tmp.res.m_content_len = 0;
+	tmp.res.mpi_fs = mpi_fs;
+	tmp.url = NULL;
+	tmp.hdoc = NULL;
+	tmp.p_vhost = NULL;
+
+	_connection_t *p_cnt = (_connection_t *)mpi_pool->alloc();
 
 	if(p_cnt) {
 		memcpy((void *)p_cnt, (void *)&tmp, sizeof(_connection_t));
-		p_cnt->req.mpi_httpc = p_cnt->res.mpi_httpc = p_httpc;
-		p_cnt->req.mpi_server = p_cnt->res.mpi_server = this;
-		p_cnt->res.mpi_heap = mpi_heap;
-		p_cnt->res.mpi_bmap = mpi_bmap;
-		p_cnt->res.mp_hbarray = NULL;
-		p_cnt->res.m_hbcount = 0;
-		p_cnt->res.m_buffers = 0;
-		p_cnt->res.m_content_len = 0;
-		p_cnt->res.mpi_fs = mpi_fs;
-		p_cnt->url = NULL;
-		p_cnt->hdoc = NULL;
-		p_cnt->p_vhost = NULL;
 		p_httpc->set_udata((_ulong)p_cnt, IDX_CONNECTION);
 		r = true;
 	}
@@ -191,7 +196,7 @@ void server::destroy_connection(iHttpServerConnection *p_httpc) {
 		pc->destroy();
 
 		// release connection memory
-		mpi_heap->free(pc, sizeof(_connection_t));
+		mpi_pool->free(pc);
 	}
 }
 
