@@ -96,6 +96,7 @@ public:
 	virtual void remove_server(_server_t *p_srv)=0;
 	virtual bool stop_server(_server_t *p_srv)=0;
 	virtual bool start_server(_server_t *p_srv)=0;
+	virtual void enum_server(void (*)(_server_t *, void *), void *udata=NULL)=0;
 };
 
 #endif

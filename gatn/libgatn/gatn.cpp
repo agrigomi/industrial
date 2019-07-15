@@ -217,6 +217,22 @@ public:
 
 		return r;
 	}
+
+	void enum_server(void (*cb_enum)(_server_t *, void *), void *udata=NULL) {
+		_u32 sz = 0;
+		_map_enum_t se = mpi_map->enum_open();
+
+		if(se) {
+			_server_t *p_srv = reinterpret_cast<_server_t *>(mpi_map->enum_first(se, &sz));
+
+			while(p_srv) {
+				cb_enum(p_srv, udata);
+				p_srv = reinterpret_cast<_server_t *>(mpi_map->enum_next(se, &sz));
+			}
+
+			mpi_map->enum_close(se);
+		}
+	}
 };
 
 static cGatn _g_gatn_;

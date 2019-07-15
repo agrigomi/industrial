@@ -472,22 +472,17 @@ _response_t *server::get_response(iHttpServerConnection *pi_httpc) {
 void server::enum_route(void (*enum_cb)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata) {
 	_map_enum_t me = host.pi_route_map->enum_open();
 	_u32 sz = 0;
-	HMUTEX hm = host.pi_route_map->lock();
 
 	if(me) {
-		_route_data_t *rd = (_route_data_t *)host.pi_route_map->enum_first(me, &sz, hm);
+		_route_data_t *rd = (_route_data_t *)host.pi_route_map->enum_first(me, &sz);
 
 		while(rd) {
-			host.pi_route_map->unlock(hm);
 			enum_cb(rd->path, rd->pcb, udata);
-			hm = host.pi_route_map->lock();
-			rd = (_route_data_t *)host.pi_route_map->enum_next(me, &sz, hm);
+			rd = (_route_data_t *)host.pi_route_map->enum_next(me, &sz);
 		}
 
 		host.pi_route_map->enum_close(me);
 	}
-
-	host.pi_route_map->unlock(hm);
 }
 
 bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key, _cstr_t cache_exclude) {
@@ -578,16 +573,14 @@ bool server::stop_virtual_host(_cstr_t host) {
 void server::enum_virtual_hosts(void (*enum_cb)(_vhost_t *, void *udata), void *udata) {
 	if(mpi_vhost_map) {
 		_map_enum_t vhe = mpi_vhost_map->enum_open();
-		HMUTEX hm = mpi_vhost_map->lock();
 		_u32 sz = 0;
-		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->enum_first(vhe, &sz, hm);
+		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->enum_first(vhe, &sz);
 
 		while(pvhost) {
 			enum_cb(pvhost, udata);
-			pvhost = (_vhost_t *)mpi_vhost_map->enum_next(vhe, &sz, hm);
+			pvhost = (_vhost_t *)mpi_vhost_map->enum_next(vhe, &sz);
 		}
 
-		mpi_vhost_map->unlock(hm);
 		mpi_vhost_map->enum_close(vhe);
 	}
 }
