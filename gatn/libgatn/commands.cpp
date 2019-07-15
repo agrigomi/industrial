@@ -66,8 +66,9 @@ static _cmd_t _g_cmd_[] = {
 		ACT_START  "\t:Start server or host (gatn start <server|host> name)\n"
 		ACT_STOP   "\t:Stop server or host (gatn start <server|host> name)\n"
 		ACT_LIST   "\t:List servers\n"
-		ACT_LOAD   "\t:Configure Gatn by JSON file (gatn configure <JSON file name>)\n"
-		ACT_RELOAD "\t:Reload configuration for server or host (gatn reload [<server|host>])\n"
+		ACT_LOAD   "\t:Configure Gatn by JSON file (gatn load <JSON file name>)\n"
+		ACT_RELOAD "\t:Reload configuration for server or host (gatn reload [<server|host>])\n",
+		"gatn <command> [options] [arguments]"
 	},
 	{ 0,	0,	0,	0,	0,	0} // terminate command list
 };
