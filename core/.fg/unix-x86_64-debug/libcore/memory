@@ -3,4 +3,5 @@ core/mem/llist.cpp
 core/mem/rbuffer.cpp
 core/mem/map.cpp
 core/mem/bmap.cpp
+core/mem/pool.cpp
 
