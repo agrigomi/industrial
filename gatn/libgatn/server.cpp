@@ -499,6 +499,7 @@ bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _c
 	bool r = false;
 	_vhost_t vhost;
 
+	memset(&vhost, 0, sizeof(_vhost_t));
 	strncpy(vhost.host, host, sizeof(vhost.host)-1);
 	vhost.root.init(root, cache_path, cache_key, cache_exclude, mpi_heap);
 	if(!mpi_vhost_map) {
