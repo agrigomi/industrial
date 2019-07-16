@@ -26,6 +26,11 @@
 
 static iGatn *gpi_gatn = NULL;
 
+typedef struct {
+	_cstr_t	a_name;
+	_cmd_handler_t	*p_handler;
+}_cmd_action_t;
+
 static iGatn *get_gatn(void) {
 	if(!gpi_gatn)
 		gpi_gatn = (iGatn *)_gpi_repo_->object_by_iname(I_GATN, RF_ORIGINAL);
@@ -36,7 +41,7 @@ static iGatn *get_gatn(void) {
 static void fout(iIO *pi_io, _cstr_t fmt, ...) {
 	if(pi_io) {
 		va_list va;
-		_char_t lb[1024]="";
+		_char_t lb[2048]="";
 		_u32 sz=0;
 
 		va_start(va, fmt);
@@ -46,6 +51,87 @@ static void fout(iIO *pi_io, _cstr_t fmt, ...) {
 	}
 }
 
+static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
+			iCmdHost *pi_cmd_host, // interface to command host
+			iIO *pi_io, // interface to I/O object
+			_cmd_opt_t *p_opt, // options array
+			_u32 argc, // number of arguments
+			_cstr_t argv[] // arguments
+			) {
+	//...
+}
+
+static void gatn_remove_handler(iCmd *pi_cmd, // interface to command object
+			iCmdHost *pi_cmd_host, // interface to command host
+			iIO *pi_io, // interface to I/O object
+			_cmd_opt_t *p_opt, // options array
+			_u32 argc, // number of arguments
+			_cstr_t argv[] // arguments
+			) {
+	//...
+}
+
+static void gatn_start_handler(iCmd *pi_cmd, // interface to command object
+			iCmdHost *pi_cmd_host, // interface to command host
+			iIO *pi_io, // interface to I/O object
+			_cmd_opt_t *p_opt, // options array
+			_u32 argc, // number of arguments
+			_cstr_t argv[] // arguments
+			) {
+	//...
+}
+
+static void gatn_stop_handler(iCmd *pi_cmd, // interface to command object
+			iCmdHost *pi_cmd_host, // interface to command host
+			iIO *pi_io, // interface to I/O object
+			_cmd_opt_t *p_opt, // options array
+			_u32 argc, // number of arguments
+			_cstr_t argv[] // arguments
+			) {
+	//...
+}
+
+static void gatn_list_handler(iCmd *pi_cmd, // interface to command object
+			iCmdHost *pi_cmd_host, // interface to command host
+			iIO *pi_io, // interface to I/O object
+			_cmd_opt_t *p_opt, // options array
+			_u32 argc, // number of arguments
+			_cstr_t argv[] // arguments
+			) {
+	//...
+}
+
+static void gatn_load_handler(iCmd *pi_cmd, // interface to command object
+			iCmdHost *pi_cmd_host, // interface to command host
+			iIO *pi_io, // interface to I/O object
+			_cmd_opt_t *p_opt, // options array
+			_u32 argc, // number of arguments
+			_cstr_t argv[] // arguments
+			) {
+	//...
+}
+
+static void gatn_reload_handler(iCmd *pi_cmd, // interface to command object
+			iCmdHost *pi_cmd_host, // interface to command host
+			iIO *pi_io, // interface to I/O object
+			_cmd_opt_t *p_opt, // options array
+			_u32 argc, // number of arguments
+			_cstr_t argv[] // arguments
+			) {
+	//...
+}
+
+static _cmd_action_t _g_gatn_actions_[] = {
+	{ ACT_CREATE,	gatn_create_handler},
+	{ ACT_REMOVE,	gatn_remove_handler},
+	{ ACT_START,	gatn_start_handler},
+	{ ACT_STOP,	gatn_stop_handler},
+	{ ACT_LIST,	gatn_list_handler},
+	{ ACT_LOAD,	gatn_load_handler},
+	{ ACT_RELOAD,	gatn_reload_handler},
+	{ 0,		0}
+};
+
 static void gatn_handler(iCmd *pi_cmd, // interface to command object
 			iCmdHost *pi_cmd_host, // interface to command host
 			iIO *pi_io, // interface to I/O object
@@ -53,6 +139,25 @@ static void gatn_handler(iCmd *pi_cmd, // interface to command object
 			_u32 argc, // number of arguments
 			_cstr_t argv[] // arguments
 			) {
+	_cstr_t arg = pi_cmd_host->argument(argc, argv, p_opt, 1);
+
+	if(arg) {
+		_u32 n = 0;
+
+		while(_g_gatn_actions_[n].a_name) {
+			if(strcmp(arg, _g_gatn_actions_[n].a_name) == 0) {
+				// call action handler
+				_g_gatn_actions_[n].p_handler(pi_cmd, pi_cmd_host, pi_io,
+								p_opt, argc, argv);
+				break;
+			}
+
+			n++;
+		}
+
+		if(_g_gatn_actions_[n].a_name == 0)
+			fout(pi_io, "Unknown gatn command '%s'\n", arg);
+	}
 }
 
 static _cmd_opt_t _g_opt_[] = {
