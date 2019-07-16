@@ -1,6 +1,7 @@
 #include "iCmd.h"
 #include "iGatn.h"
 #include "iRepository.h"
+#include "private.h"
 
 // gatn actions
 #define ACT_CREATE 	"create"
@@ -58,7 +59,62 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 			_u32 argc, // number of arguments
 			_cstr_t argv[] // arguments
 			) {
-	//...
+	iGatn *pi_gatn = get_gatn();
+
+	if(pi_gatn) {
+		_cstr_t server = pi_cmd_host->option_value(OPT_SERVER, p_opt);
+		_cstr_t name = pi_cmd_host->option_value(OPT_NAME, p_opt);
+		_cstr_t port = pi_cmd_host->option_value(OPT_PORT, p_opt);
+		_cstr_t root = pi_cmd_host->option_value(OPT_ROOT, p_opt);
+		_cstr_t cache_path = pi_cmd_host->option_value(OPT_CACHE_PATH, p_opt);
+		_cstr_t cache_key = pi_cmd_host->option_value(OPT_CACHE_KEY, p_opt);
+		_cstr_t no_cache = pi_cmd_host->option_value(OPT_NOCACHE, p_opt);
+		_cstr_t threads = pi_cmd_host->option_value(OPT_THREADS, p_opt);
+		_cstr_t connections = pi_cmd_host->option_value(OPT_CONNECTIONS, p_opt);
+		_cstr_t timeout = pi_cmd_host->option_value(OPT_TIMEOUT, p_opt);
+		_cstr_t arg2 = pi_cmd_host->argument(argc, argv, p_opt, 2);
+		_cstr_t arg3 = pi_cmd_host->argument(argc, argv, p_opt, 3);
+
+		if(!arg2 )
+			fout(pi_io, "Usage: gatn create <server | host>\n");
+		else {
+			if(strcmp(arg2, ACT_SERVER) == 0) {
+				// create server
+				_cstr_t server_name = (name) ? name : arg3;
+
+				if(server_name) {
+					if(port && root) {
+						pi_gatn->create_server(server_name, atoi(port), root, cache_path,
+									(no_cache) ? no_cache : "",
+									SERVER_BUFFER_SIZE,
+									(threads) ? atoi(threads) : HTTP_MAX_WORKERS,
+									(connections) ? atoi(connections) : HTTP_MAX_CONNECTIONS,
+									(timeout) ? atoi(timeout) : HTTP_CONNECTION_TIMEOUT);
+					} else {
+						fout(pi_io, "Mandatory parameter is missing\n");
+						fout(pi_io, "Usage: gatn create server --name=... --port=... --root=...\
+ [--cache_path=... --cache-key=... --threads=... --connections=... --timeout=... --cache-exclude=...]\n");
+					}
+				} else
+					fout(pi_io, "Server name is missing\n");
+			} else if(strcmp(arg2, ACT_HOST) == 0) {
+				// create host
+				_cstr_t host_name = (name) ? name : arg3;
+
+				if(host_name) {
+					if(root) {
+						//...
+					} else {
+						fout(pi_io, "Mandatory parameter is missing\n");
+						fout(pi_io, "Usage: gatn create host --name=... --root=...\
+ [--cache_path=... --cache-key=... --cache-exclude=...]\n");
+					}
+				} else
+					fout(pi_io, "Host name is missing\n");
+			} else
+				fout(pi_io, "'%s' is unknown\n", arg2);
+		}
+	}
 }
 
 static void gatn_remove_handler(iCmd *pi_cmd, // interface to command object
@@ -161,16 +217,16 @@ static void gatn_handler(iCmd *pi_cmd, // interface to command object
 }
 
 static _cmd_opt_t _g_opt_[] = {
-	{ OPT_SERVER,		OF_LONG,			0,		"Server name (--server=<name>)"},
-	{ OPT_NAME,		OF_LONG,			0,		"Server or host name (--name=<name>)"},
-	{ OPT_PORT,		OF_LONG,			0,		"Listen port number (--port=<number>)"},
-	{ OPT_ROOT,		OF_LONG,			0,		"Path to documents root (--root=<path>)"},
-	{ OPT_THREADS,		OF_LONG,			0,		"Max. number of HTTP worker threads (--threads=<num>)"},
-	{ OPT_CONNECTIONS,	OF_LONG,			0,		"Max number of HTTP connections (--connections=<num>)"},
-	{ OPT_TIMEOUT,		OF_LONG,			0,		"Connection timeout in seconds (--timeout=<sec>)"},
+	{ OPT_SERVER,		OF_LONG|OF_VALUE,		0,		"Server name (--server=<name>)"},
+	{ OPT_NAME,		OF_LONG|OF_VALUE,		0,		"Server or host name (--name=<name>)"},
+	{ OPT_PORT,		OF_LONG|OF_VALUE,		0,		"Listen port number (--port=<number>)"},
+	{ OPT_ROOT,		OF_LONG|OF_VALUE,		0,		"Path to documents root (--root=<path>)"},
+	{ OPT_THREADS,		OF_LONG|OF_VALUE,		0,		"Max. number of HTTP worker threads (--threads=<num>)"},
+	{ OPT_CONNECTIONS,	OF_LONG|OF_VALUE,		0,		"Max number of HTTP connections (--connections=<num>)"},
+	{ OPT_TIMEOUT,		OF_LONG|OF_VALUE,		0,		"Connection timeout in seconds (--timeout=<sec>)"},
 	{ OPT_CACHE_PATH,	OF_LONG|OF_VALUE|OF_PRESENT,	(_str_t)"/tmp",	"Path to cache foldef (/tmp by default)"},
-	{ OPT_CACHE_KEY,	OF_LONG,			0,		"Cache key (folder name)"},
-	{ OPT_NOCACHE,		OF_LONG,			0,		"Disable caching for spec. folders (--cache-exclude=/fldr1:/fldr2)"},
+	{ OPT_CACHE_KEY,	OF_LONG|OF_VALUE,		0,		"Cache key (folder name)"},
+	{ OPT_NOCACHE,		OF_LONG|OF_VALUE,		0,		"Disable caching for spec. folders (--cache-exclude=/fldr1:/fldr2)"},
 	{ 0,			0,				0,		0 } // terminate options list
 };
 
@@ -201,8 +257,10 @@ public:
 				r = true;
 				break;
 			case OCTL_UNINIT:
-				if(gpi_gatn)
+				if(gpi_gatn) {
 					_gpi_repo_->object_release(gpi_gatn);
+					gpi_gatn = NULL;
+				}
 				r = true;
 		}
 		return r;
