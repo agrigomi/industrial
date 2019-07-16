@@ -61,7 +61,11 @@ public:
 	}
 
 	void free(void *ptr, _u32 size) {
-		assert(!zone_free(&m_zone, ptr, size));
+#ifndef NDEBUG
+		assert(zone_free(&m_zone, ptr, size));
+#else
+		zone_free(&m_zone, ptr, size);
+#endif
 	}
 
 	bool verify(void *ptr, _u32 size) {
