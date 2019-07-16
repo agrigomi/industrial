@@ -92,8 +92,8 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 									(timeout) ? atoi(timeout) : HTTP_CONNECTION_TIMEOUT);
 					} else {
 						fout(pi_io, "Mandatory parameter is missing\n");
-						fout(pi_io, "Usage: gatn create server --name=... --port=... --root=...\
- [--cache_path=... --cache-key=... --threads=... --connections=... --timeout=... --cache-exclude=...]\n");
+						fout(pi_io, "Usage: gatn create server <name> | <--name=...> --port=... --root=...\
+ [--cache_path=... --threads=... --connections=... --timeout=... --cache-exclude=...]\n");
 					}
 				} else
 					fout(pi_io, "Server name is missing\n");
@@ -102,11 +102,22 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 				_cstr_t host_name = (name) ? name : arg3;
 
 				if(host_name) {
-					if(root) {
-						//...
+					if(root && server) {
+						_server_t *p_srv = pi_gatn->server_by_name(server);
+
+						if(p_srv) {
+							if(p_srv->add_virtual_host(host_name, root,
+									(cache_path) ? cache_path : "/tmp",
+									(cache_key) ? cache_key : "DAC",
+									no_cache))
+								p_srv->start_virtual_host(host_name);
+							else
+								fout(pi_io, "Unable to create virtual host '%s'\n", host_name);
+						} else
+							fout(pi_io, "Wrong server name '%s'\n", server);
 					} else {
 						fout(pi_io, "Mandatory parameter is missing\n");
-						fout(pi_io, "Usage: gatn create host --name=... --root=...\
+						fout(pi_io, "Usage: gatn create host <name> | <--name=...> --root=... --server=... \
  [--cache_path=... --cache-key=... --cache-exclude=...]\n");
 					}
 				} else
