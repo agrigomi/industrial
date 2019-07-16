@@ -345,24 +345,29 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_cstr_t url = pc->url;
 
 	if(pvhost && url) {
-		_route_key_t key;
 		_root_t *root = &pvhost->root;
+		_route_data_t *prd = NULL;
+		_u8 method = p_httpc->req_method();
 
-		memset(&key, 0, sizeof(_route_key_t));
-		key.method = p_httpc->req_method();
-		strncpy(key.path, url, sizeof(key.path)-1);
+		if(pvhost->pi_route_map) {
+			_route_key_t key;
 
-		_route_data_t *prd = (_route_data_t *)pvhost->pi_route_map->get(&key, key.size(), &sz);
+			memset(&key, 0, sizeof(_route_key_t));
+			key.method = method;
+			strncpy(key.path, url, sizeof(key.path)-1);
 
-		if(prd) {
+			prd = (_route_data_t *)pvhost->pi_route_map->get(&key, key.size(), &sz);
+		}
+
+		if(prd)
 			// route found
 			prd->pcb(evt, &pc->req, &pc->res, prd->udata);
-		} else if(root->is_enabled() && evt == HTTP_ON_REQUEST) {
+		else if(root->is_enabled() && evt == HTTP_ON_REQUEST) {
 			// route not found
 			// try to resolve file name
 			HDOCUMENT hdoc = root->open(url);
 			if(hdoc) {
-				if(key.method == HTTP_METHOD_GET) {
+				if(method == HTTP_METHOD_GET) {
 					_ulong doc_sz = 0;
 
 					_u8 *ptr = (_u8 *)root->ptr(hdoc, &doc_sz);
@@ -380,7 +385,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 						p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
 						root->close(hdoc);
 					}
-				} else if(key.method == HTTP_METHOD_HEAD) {
+				} else if(method == HTTP_METHOD_HEAD) {
 					p_httpc->res_mtime(root->mtime(hdoc));
 					p_httpc->res_code(HTTPRC_OK);
 					root->close(hdoc);

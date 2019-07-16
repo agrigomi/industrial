@@ -23,7 +23,8 @@ bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 	mpi_str = dynamic_cast<iStr *>(_gpi_repo_->object_by_iname(I_STR, RF_ORIGINAL));
 
 	if(mpi_nocache_map && mpi_handle_list) {
-		r &= mpi_nocache_map->init(15, pi_heap);
+		if((r &= mpi_nocache_map->init(15, pi_heap)))
+			cache_exclude(cache_exclude_path);
 		r &= mpi_handle_list->init(LL_VECTOR, 2, pi_heap);
 	} else
 		destroy();
