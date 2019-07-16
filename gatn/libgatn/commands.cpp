@@ -13,6 +13,7 @@
 #define ACT_LOAD	"load"
 #define ACT_RELOAD	"reload"
 
+#define OPT_SERVER	"server"
 #define OPT_NAME	"name"
 #define OPT_PORT	"port"
 #define OPT_ROOT	"root"
@@ -55,7 +56,17 @@ static void gatn_handler(iCmd *pi_cmd, // interface to command object
 }
 
 static _cmd_opt_t _g_opt_[] = {
-	{ 0,				0,				0,	0 } // terminate options list
+	{ OPT_SERVER,		OF_LONG,			0,		"Server name (--server=<name>)"},
+	{ OPT_NAME,		OF_LONG,			0,		"Server or host name (--name=<name>)"},
+	{ OPT_PORT,		OF_LONG,			0,		"Listen port number (--port=<number>)"},
+	{ OPT_ROOT,		OF_LONG,			0,		"Path to documents root (--root=<path>)"},
+	{ OPT_THREADS,		OF_LONG,			0,		"Max. number of HTTP worker threads (--threads=<num>)"},
+	{ OPT_CONNECTIONS,	OF_LONG,			0,		"Max number of HTTP connections (--connections=<num>)"},
+	{ OPT_TIMEOUT,		OF_LONG,			0,		"Connection timeout in seconds (--timeout=<sec>)"},
+	{ OPT_CACHE_PATH,	OF_LONG|OF_VALUE|OF_PRESENT,	(_str_t)"/tmp",	"Path to cache foldef (/tmp by default)"},
+	{ OPT_CACHE_KEY,	OF_LONG,			0,		"Cache key (folder name)"},
+	{ OPT_NOCACHE,		OF_LONG,			0,		"Disable caching for spec. folders (--cache-exclude=/fldr1:/fldr2)"},
+	{ 0,			0,				0,		0 } // terminate options list
 };
 
 static _cmd_t _g_cmd_[] = {
