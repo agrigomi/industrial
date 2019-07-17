@@ -1,3 +1,4 @@
+#include <string.h>
 #include "iMemory.h"
 #include "iRepository.h"
 
@@ -51,7 +52,8 @@ public:
 			mpi_list->mov(r, COL_BUSY, hm);
 		else {
 			mpi_list->col(COL_BUSY, hm);
-			r = mpi_list->add(m_data_size, hm);
+			if((r = mpi_list->add(m_data_size, hm)))
+				memset(r, 0, m_data_size);
 		}
 
 		mpi_list->unlock(hm);
