@@ -511,6 +511,7 @@ _u32 cHttpServerConnection::send_header(void) {
 	_char_t rs[128]="";
 
 	if(m_response_code) {
+		mp_sio->blocking(true);
 		if(!m_oheader_sent) {
 			// send first line
 			_u32 n = snprintf(rs, sizeof(rs), "%s %u %s\r\n",
@@ -518,9 +519,7 @@ _u32 cHttpServerConnection::send_header(void) {
 					m_response_code,
 					get_rc_text(m_response_code));
 
-			mp_sio->blocking(true);
 			mp_sio->write(rs, n);
-			mp_sio->blocking(false);
 		}
 
 		if(m_oheader_offset) {
@@ -528,11 +527,9 @@ _u32 cHttpServerConnection::send_header(void) {
 			_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_oheader);
 
 			if(ptr) {
-				mp_sio->blocking(true);
 				r = mp_sio->write(ptr + m_oheader_sent,
 						m_oheader_offset - m_oheader_sent);
 				m_oheader_sent += r;
-				mp_sio->blocking(false);
 			}
 		}
 
@@ -541,6 +538,7 @@ _u32 cHttpServerConnection::send_header(void) {
 			mp_sio->write("\r\n", 2);
 			m_oheader_sent = r;
 		}
+		mp_sio->blocking(false);
 	}
 
 	return r;
