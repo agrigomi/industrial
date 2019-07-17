@@ -44,6 +44,8 @@ bool cSocketIO::_init(struct sockaddr_in *p_saddr, // server addr
 	setsockopt(m_socket, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
 	setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	setsockopt(m_socket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
+	setsockopt(m_socket, IPPROTO_TCP, TCP_NODELAY, (char *)&opt, sizeof(opt));
+
 	opt = 10;
 	setsockopt(m_socket, SOL_TCP, TCP_KEEPIDLE, &opt, sizeof(opt));
 	opt = 3;
