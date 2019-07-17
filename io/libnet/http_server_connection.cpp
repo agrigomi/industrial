@@ -526,11 +526,9 @@ _u32 cHttpServerConnection::send_header(void) {
 			_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_oheader);
 
 			if(ptr) {
-				mp_sio->blocking(true);
 				r = mp_sio->write(ptr + m_oheader_sent,
 						m_oheader_offset - m_oheader_sent);
 				m_oheader_sent += r;
-				mp_sio->blocking(false);
 			}
 		}
 
@@ -558,11 +556,9 @@ _u32 cHttpServerConnection::send_content(void) {
 	if(m_res_content_len && m_content_sent < m_res_content_len) {
 		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_obuffer);
 		if(ptr && m_obuffer_offset) {
-			mp_sio->blocking(true);
 			r = mp_sio->write(ptr + m_obuffer_sent, m_obuffer_offset - m_obuffer_sent);
 			m_obuffer_sent += r;
 			m_content_sent += r;
-			mp_sio->blocking(false);
 		}
 	}
 
