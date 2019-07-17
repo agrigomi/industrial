@@ -154,10 +154,8 @@ public:
 			r = start_task(t);
 		} else {
 			_task_t *task = (_task_t *)r;
-			if(!(task->state & TS_RUNNING)) {
-				pthread_create(&task->thread, 0, (_task_proc_t *)starter, task);
-				usleep(1);
-			}
+			if(!(task->state & TS_RUNNING))
+				start_task(task);
 		}
 
 		return r;
