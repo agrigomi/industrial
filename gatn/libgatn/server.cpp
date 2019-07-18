@@ -380,6 +380,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 						p_httpc->res_code(HTTPRC_OK);
 						p_httpc->res_var("Server", m_name);
 						p_httpc->res_var("Content-Type", resolve_content_type(url));
+						p_httpc->res_protocol("HTTP/2.0");
 						p_httpc->res_mtime(root->mtime(hdoc));
 						// response content
 						p_httpc->res_write(ptr, doc_sz);
