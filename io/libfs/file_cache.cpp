@@ -3,6 +3,7 @@
 #include <openssl/sha.h>
 #include <mutex>
 #include "iFS.h"
+#include "iStr.h"
 #include "iRepository.h"
 
 typedef struct { // file cache entry
@@ -23,6 +24,8 @@ class cFileCache: public iFileCache {
 private:
 	iMap	*mpi_map;
 	iFS	*mpi_fs;
+	iStr	*mpi_str;
+
 	_char_t	m_cache_path[MAX_FCACHE_PATH];
 
 	void hash(_cstr_t path, _char_t sha_out[SHA_DIGEST_LENGTH*2+1]) {
@@ -161,7 +164,10 @@ public:
 				iRepository *pi_repo = (iRepository *)arg;
 
 				mpi_map = NULL;
-				if((mpi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL)))
+				mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
+				mpi_fs = (iFS *)pi_repo->object_by_iname(I_FS, RF_ORIGINAL);
+
+				if(mpi_str && mpi_fs)
 					r = true;
 			} break;
 			case OCTL_UNINIT: {
@@ -171,6 +177,7 @@ public:
 				mpi_fs->rm_dir(m_cache_path);
 				pi_repo->object_release(mpi_map);
 				pi_repo->object_release(mpi_fs);
+				pi_repo->object_release(mpi_str);
 				r = true;
 			} break;
 		}
@@ -193,30 +200,32 @@ public:
 	bool init(_cstr_t path, _cstr_t key=NULL, iHeap *pi_heap=NULL) {
 		bool r = false;
 
-		if((mpi_map = (iMap *)_gpi_repo_->object_by_iname(I_MAP, RF_CLONE)))
-			r = mpi_map->init(127, pi_heap);
+		if(!mpi_map) {
+			if((mpi_map = (iMap *)_gpi_repo_->object_by_iname(I_MAP, RF_CLONE)))
+				r = mpi_map->init(127, pi_heap);
 
-		if(r)
-			r = make_cache_dir(path, I_FILE_CACHE);
+			if(r)
+				r = make_cache_dir(path, I_FILE_CACHE);
 
-		if(r) {
-			_char_t sbase[MAX_FCACHE_PATH]="";
-			bool auto_key = false;
+			if(r) {
+				_char_t sbase[MAX_FCACHE_PATH]="";
+				bool auto_key = false;
 
-			snprintf(sbase, sizeof(sbase), "%s", m_cache_path);
+				snprintf(sbase, sizeof(sbase), "%s", m_cache_path);
 
-			if(!key)
-				auto_key = true;
-			else if(strlen(key) == 0)
-				auto_key = true;
+				if(!key)
+					auto_key = true;
+				else if(strlen(key) == 0)
+					auto_key = true;
 
-			if(auto_key) {
-				_char_t saddr[32]="";
+				if(auto_key) {
+					_char_t saddr[32]="";
 
-				snprintf(saddr, sizeof(saddr), "%lu", (_ulong)this);
-				r = make_cache_dir(sbase, saddr);
-			} else
-				r = make_cache_dir(sbase, key);
+					snprintf(saddr, sizeof(saddr), "%lu", (_ulong)this);
+					r = make_cache_dir(sbase, saddr);
+				} else
+					r = make_cache_dir(sbase, key);
+			}
 		}
 
 		return r;
@@ -241,6 +250,28 @@ public:
 				pfce->acct++;
 			}
 			pfce->mutex.unlock();
+		}
+
+		return r;
+	}
+
+	_ulong read(HFCACHE hfc, void *buffer, _ulong offset, _ulong size) {
+		ulong r = 0;
+		_fce_t *pfce = (_fce_t *)hfc;
+
+		if(pfce->pi_fio) {
+			if(pfce->ptr) {
+				// use mapping
+				_u8 *ptr = (_u8 *)pfce->ptr;
+				_ulong sz = (ptr + pfce->size >= ptr + offset + size) ?
+						size : pfce->size - (ptr + offset - ptr);
+
+				mpi_str->mem_cpy(buffer, ptr + offset, sz);
+				r = sz;
+			} else {
+				pfce->pi_fio->seek(offset);
+				r = pfce->pi_fio->read(buffer, size);
+			}
 		}
 
 		return r;

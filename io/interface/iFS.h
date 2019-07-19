@@ -58,6 +58,8 @@ public:
 	virtual bool init(_cstr_t path, _cstr_t key=NULL, iHeap *pi_heap=NULL)=0;
 	// open file in cache
 	virtual HFCACHE open(_cstr_t path)=0;
+	// read file
+	virtual _ulong read(HFCACHE hfc, void *buffer, _ulong offset, _ulong size)=0;
 	// return pointer to file content
 	virtual void *ptr(HFCACHE hfc, _ulong *size)=0;
 	// close file in cache
