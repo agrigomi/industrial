@@ -227,7 +227,7 @@ public:
 		return r;
 	}
 
-	void enum_server(void (*cb_enum)(_server_t *, void *), void *udata=NULL) {
+	void enum_servers(void (*cb_enum)(_server_t *, void *), void *udata=NULL) {
 		_u32 sz = 0;
 		_map_enum_t se = mpi_map->enum_open();
 

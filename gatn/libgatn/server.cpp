@@ -291,7 +291,7 @@ bool server::start(void) {
 void server::stop(_vhost_t *pvhost) {
 	// release file cache
 	if(pvhost->root.is_enabled()) {
-		mpi_log->fwrite(LMT_INFO, "Gatn: Stop host '%s'", pvhost->host);
+		mpi_log->fwrite(LMT_INFO, "Gatn: Stop host '%s' on server '%s'", pvhost->host, m_name);
 		pvhost->root.stop();
 	}
 }
@@ -305,8 +305,9 @@ bool server::start(_vhost_t *pvhost) {
 	bool r = false;
 
 	if(!(r = pvhost->root.is_enabled())) {
-		mpi_log->fwrite(LMT_INFO, "Gatn: Start host '%s'", pvhost->host);
+		mpi_log->fwrite(LMT_INFO, "Gatn: Start host '%s' on server '%s'", pvhost->host, m_name);
 		pvhost->root.start();
+		r = true;
 	}
 
 	return r;

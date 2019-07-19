@@ -89,7 +89,7 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 					if(port && root) {
 						pi_gatn->create_server(server_name, atoi(port), root, cache_path,
 									(no_cache) ? no_cache : "",
-									(buffer) ? atoi(buffer) * 1024 : SERVER_BUFFER_SIZE,
+									(buffer && atoi(buffer) > 0) ? atoi(buffer) * 1024 : SERVER_BUFFER_SIZE,
 									(threads) ? atoi(threads) : HTTP_MAX_WORKERS,
 									(connections) ? atoi(connections) : HTTP_MAX_CONNECTIONS,
 									(timeout) ? atoi(timeout) : HTTP_CONNECTION_TIMEOUT);
@@ -99,7 +99,7 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
  [--cache_path=... --threads=... --connections=... --timeout=... --cache-exclude=...]\n");
 					}
 				} else
-					fout(pi_io, "Server name is missing\n");
+					fout(pi_io, "Server name missing\n");
 			} else if(strcmp(arg2, ACT_HOST) == 0) {
 				// create host
 				_cstr_t host_name = (name) ? name : arg3;
@@ -119,12 +119,12 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 						} else
 							fout(pi_io, "Wrong server name '%s'\n", server);
 					} else {
-						fout(pi_io, "Mandatory parameter is missing\n");
+						fout(pi_io, "Mandatory parameter missing\n");
 						fout(pi_io, "Usage: gatn create host <name> | <--name=...> --root=... --server=... \
  [--cache_path=... --cache-key=... --cache-exclude=...]\n");
 					}
 				} else
-					fout(pi_io, "Host name is missing\n");
+					fout(pi_io, "Host name missing\n");
 			} else
 				fout(pi_io, "'%s' is unknown\n", arg2);
 		}
@@ -138,7 +138,46 @@ static void gatn_remove_handler(iCmd *pi_cmd, // interface to command object
 			_u32 argc, // number of arguments
 			_cstr_t argv[] // arguments
 			) {
-	//...
+	iGatn *pi_gatn = get_gatn();
+
+	if(pi_gatn) {
+		_cstr_t server = pi_cmd_host->option_value(OPT_SERVER, p_opt);
+		_cstr_t name = pi_cmd_host->option_value(OPT_NAME, p_opt);
+		_cstr_t arg2 = pi_cmd_host->argument(argc, argv, p_opt, 2); // server or host
+		_cstr_t arg3 = pi_cmd_host->argument(argc, argv, p_opt, 3); // server name or host name
+
+		if(!arg2 )
+			fout(pi_io, "Usage: gatn remove <server | host>\n");
+		else {
+			if(strcmp(arg2, ACT_SERVER) == 0) {
+				_cstr_t server_name = (name) ? name : arg3;
+
+				if(server_name) {
+					_server_t *p_srv = pi_gatn->server_by_name(server_name);
+
+					if(p_srv)
+						pi_gatn->remove_server(p_srv);
+					else
+						fout(pi_io, "Unamble to find server '%s'\n", server_name);
+				} else
+					fout(pi_io, "Usage: gatn remove server <name> | <--name=...>\n");
+			} else if(strcmp(arg2, ACT_HOST) == 0) {
+				_cstr_t host_name = (name) ? name : arg3;
+
+				if(host_name && server) {
+					_server_t *p_srv = pi_gatn->server_by_name(server);
+
+					if(p_srv) {
+						if(!p_srv->remove_virtual_host(host_name))
+							fout(pi_io, "Unable to remove virtual host '%s'\n", host_name);
+					} else
+						fout(pi_io, "Unable to find server '%s'\n", server);
+				} else
+					fout(pi_io, "Usage: gatn remove host <name> | <--name=...> <--server=...>\n");
+			} else
+				fout(pi_io, "'%s' is unknown\n", arg2);
+		}
+	}
 }
 
 static void gatn_start_handler(iCmd *pi_cmd, // interface to command object
@@ -148,7 +187,46 @@ static void gatn_start_handler(iCmd *pi_cmd, // interface to command object
 			_u32 argc, // number of arguments
 			_cstr_t argv[] // arguments
 			) {
-	//...
+	iGatn *pi_gatn = get_gatn();
+
+	if(pi_gatn) {
+		_cstr_t server = pi_cmd_host->option_value(OPT_SERVER, p_opt);
+		_cstr_t name = pi_cmd_host->option_value(OPT_NAME, p_opt);
+		_cstr_t arg2 = pi_cmd_host->argument(argc, argv, p_opt, 2); // server or host
+		_cstr_t arg3 = pi_cmd_host->argument(argc, argv, p_opt, 3); // server name or host name
+
+		if(!arg2 )
+			fout(pi_io, "Usage: gatn start <server | host>\n");
+		else {
+			if(strcmp(arg2, ACT_SERVER) == 0) {
+				_cstr_t server_name = (name) ? name : arg3;
+
+				if(server_name) {
+					_server_t *p_srv = pi_gatn->server_by_name(server_name);
+
+					if(p_srv)
+						pi_gatn->start_server(p_srv);
+					else
+						fout(pi_io, "Unamble to find server '%s'\n", server_name);
+				} else
+					fout(pi_io, "Usage: gatn start server <name> | <--name=...>\n");
+			} else if(strcmp(arg2, ACT_HOST) == 0) {
+				_cstr_t host_name = (name) ? name : arg3;
+
+				if(host_name && server) {
+					_server_t *p_srv = pi_gatn->server_by_name(server);
+
+					if(p_srv) {
+						if(!p_srv->start_virtual_host(host_name))
+							fout(pi_io, "Unable to start virtual host '%s'\n", host_name);
+					} else
+						fout(pi_io, "Unable to find server '%s'\n", server);
+				} else
+					fout(pi_io, "Usage: gatn start host <name> | <--name=...> <--server=...>\n");
+			} else
+				fout(pi_io, "'%s' is unknown\n", arg2);
+		}
+	}
 }
 
 static void gatn_stop_handler(iCmd *pi_cmd, // interface to command object
@@ -158,7 +236,46 @@ static void gatn_stop_handler(iCmd *pi_cmd, // interface to command object
 			_u32 argc, // number of arguments
 			_cstr_t argv[] // arguments
 			) {
-	//...
+	iGatn *pi_gatn = get_gatn();
+
+	if(pi_gatn) {
+		_cstr_t server = pi_cmd_host->option_value(OPT_SERVER, p_opt);
+		_cstr_t name = pi_cmd_host->option_value(OPT_NAME, p_opt);
+		_cstr_t arg2 = pi_cmd_host->argument(argc, argv, p_opt, 2); // server or host
+		_cstr_t arg3 = pi_cmd_host->argument(argc, argv, p_opt, 3); // server name or host name
+
+		if(!arg2 )
+			fout(pi_io, "Usage: gatn stop <server | host>\n");
+		else {
+			if(strcmp(arg2, ACT_SERVER) == 0) {
+				_cstr_t server_name = (name) ? name : arg3;
+
+				if(server_name) {
+					_server_t *p_srv = pi_gatn->server_by_name(server_name);
+
+					if(p_srv)
+						pi_gatn->stop_server(p_srv);
+					else
+						fout(pi_io, "Unamble to find server '%s'\n", server_name);
+				} else
+					fout(pi_io, "Usage: gatn stop server <name> | <--name=...>\n");
+			} else if(strcmp(arg2, ACT_HOST) == 0) {
+				_cstr_t host_name = (name) ? name : arg3;
+
+				if(host_name && server) {
+					_server_t *p_srv = pi_gatn->server_by_name(server);
+
+					if(p_srv) {
+						if(!p_srv->stop_virtual_host(host_name))
+							fout(pi_io, "Unable to stop virtual host '%s'\n", host_name);
+					} else
+						fout(pi_io, "Unable to find server '%s'\n", server);
+				} else
+					fout(pi_io, "Usage: gatn stop host <name> | <--name=...> <--server=...>\n");
+			} else
+				fout(pi_io, "'%s' is unknown\n", arg2);
+		}
+	}
 }
 
 static void gatn_list_handler(iCmd *pi_cmd, // interface to command object
@@ -168,7 +285,27 @@ static void gatn_list_handler(iCmd *pi_cmd, // interface to command object
 			_u32 argc, // number of arguments
 			_cstr_t argv[] // arguments
 			) {
-	//...
+	iGatn *pi_gatn = get_gatn();
+
+	if(pi_gatn) {
+		pi_gatn->enum_servers([](_server_t *srv, void *udata) {
+			iIO *pi_io = (iIO *)udata;
+			server *psrv = dynamic_cast<server *>(srv);
+
+			if(psrv) {
+				fout(pi_io, "[%c] %d %s %s\n", (psrv->is_running()) ? 'R' : 'S',
+					psrv->port(), psrv->name(), psrv->host.root.get_doc_root());
+
+				psrv->enum_virtual_hosts([](_vhost_t *pvhost, void *udata) {
+					iIO *pi_io = (iIO *)udata;
+
+					fout(pi_io, "\t[%c] %s %s\n", (pvhost->root.is_enabled()) ? 'R' : 'S',
+						pvhost->host,
+						pvhost->root.get_doc_root());
+				}, pi_io);
+			}
+		}, pi_io);
+	}
 }
 
 static void gatn_load_handler(iCmd *pi_cmd, // interface to command object
