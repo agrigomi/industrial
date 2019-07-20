@@ -146,16 +146,28 @@ public:
 
 	bool init(_cstr_t args, _u32 sz_args=0) {
 		bool r = false;
+		_u32 sz = (sz_args) ? sz_args : strlen(args);
 
-		//...
+		if(m_arg_line && m_sz_arg_line)
+			mpi_heap->free(m_arg_line, m_sz_arg_line);
+
+		if((m_arg_line = (_str_t)mpi_heap->alloc(sz))) {
+			mpi_str->mem_cpy(m_arg_line, (void *)args, sz);
+			m_sz_arg_line = sz;
+			m_argc = parse_argv(m_arg_line, sz);
+			m_argv = m_arg_array;
+			r = true;
+		}
 
 		return r;
 	}
 
 	_cstr_t path(void) {
 		_cstr_t r = 0;
+
 		if(m_argc && m_argv)
 			r = m_argv[0];
+
 		return r;
 	}
 
@@ -202,6 +214,7 @@ public:
 		sopt[0] = opt;
 		if(m_argc > 1 && m_argv) {
 			_u32 idx = 0;
+
 			for(_u32 i = 1; i < m_argc; i++) {
 				if(check(sopt, m_argv[i], OPT_VALUE, &idx)) {
 					if(idx+1 < (_u32)strlen(m_argv[i])) {
@@ -222,6 +235,7 @@ public:
 
 		if(m_argc > 1 && m_argv) {
 			_u32 idx = 0;
+
 			for(_u32 i = 1; i < m_argc; i++) {
 				if(check(opt, m_argv[i], OPT_VALUE|OPT_LONG, &idx)) {
 					if(m_argv[i][idx] == '=') {
