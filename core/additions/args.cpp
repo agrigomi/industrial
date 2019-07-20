@@ -144,7 +144,7 @@ public:
 		m_argv = argv;
 	}
 
-	bool init(_cstr_t args) {
+	bool init(_cstr_t args, _u32 sz_args=0) {
 		bool r = false;
 
 		//...
