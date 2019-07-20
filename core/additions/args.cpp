@@ -55,7 +55,7 @@ private:
 	}
 
 public:
-	BASE(cArgs, "cArgs", RF_ORIGINAL, 1,0,0);
+	BASE(cArgs, "cArgs", RF_ORIGINAL | RF_CLONE, 1,0,0);
 
 	bool object_ctl(_u32 cmd, void *arg, ...) {
 		bool r = false;
@@ -75,6 +75,14 @@ public:
 	void init(_u32 argc, _str_t argv[]) {
 		m_argc = argc;
 		m_argv = argv;
+	}
+
+	bool init(_cstr_t args) {
+		bool r = false;
+
+		//...
+
+		return r;
 	}
 
 	_cstr_t path(void) {
