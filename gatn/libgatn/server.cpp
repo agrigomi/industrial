@@ -430,27 +430,30 @@ void server::update_response(iHttpServerConnection *p_httpc) {
 		pc->res.process_content();
 }
 
-void server::on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata) {
+void server::on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata, _cstr_t _host) {
 	_route_key_t key;
 	_route_data_t data = {pcb, udata};
+	_vhost_t *pvhost = get_host(_host);
 
 	strncpy(data.path, path, sizeof(data.path)-1);
 
 	memset(&key, 0, sizeof(_route_key_t));
 	key.method = method;
 	strncpy(key.path, path, MAX_ROUTE_PATH-1);
-	if(!host.pi_route_map) {
-		if((host.pi_route_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
-			host.pi_route_map->init(33, mpi_heap);
+	if(!pvhost->pi_route_map) {
+		if((pvhost->pi_route_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
+			pvhost->pi_route_map->init(33, mpi_heap);
 	}
-	if(host.pi_route_map)
-		host.pi_route_map->add(&key, key.size(), &data, data.size());
+	if(pvhost->pi_route_map)
+		pvhost->pi_route_map->add(&key, key.size(), &data, data.size());
 }
 
-void server::on_event(_u8 evt, _on_http_event_t *pcb, void *udata) {
+void server::on_event(_u8 evt, _on_http_event_t *pcb, void *udata, _cstr_t _host) {
+	_vhost_t *pvhost = get_host(_host);
+
 	if(evt < HTTP_MAX_EVENTS) {
-		host.event[evt].pcb = pcb;
-		host.event[evt].udata = udata;
+		pvhost->event[evt].pcb = pcb;
+		pvhost->event[evt].udata = udata;
 	}
 }
 
