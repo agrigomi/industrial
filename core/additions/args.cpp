@@ -2,15 +2,23 @@
 #include "iArgs.h"
 #include "iSync.h"
 #include "iRepository.h"
+#include "iMemory.h"
+#include "iStr.h"
 
 #define OPT_VALUE	(1<<0)
 #define OPT_LONG	(1<<1)
 
+#define MAX_ARGV 128
 
 class cArgs: public iArgs {
 private:
 	_u32 m_argc;
 	_str_t *m_argv;
+	iStr	*mpi_str;
+	iHeap	*mpi_heap;
+	_str_t	m_arg_line;
+	_u32 	m_sz_arg_line;
+	_str_t	m_arg_array[MAX_ARGV];
 
 	bool check(_cstr_t opt, _str_t arg, _u32 flags, _u32 *idx) {
 		bool r = false;
@@ -54,6 +62,55 @@ private:
 		return r;
 	}
 
+#define INV_POS  0xffffffff
+
+	// converts a command line string to list of arguments
+	_u32 parse_argv(_str_t cmd_line, _u32 cmd_len) {
+		_u32 r = 0;
+		bool strophe = false;
+		bool quotes = false;
+		_u32 arg_pos = INV_POS;
+		_u32 i = 0;
+
+		while(i < cmd_len + 1 && r < MAX_ARGV) {
+			switch(cmd_line[i]) {
+				case '\'':
+					mpi_str->mem_cpy(cmd_line+i, cmd_line+i+1, cmd_len - i);
+					strophe = !strophe;
+					continue;
+				case '"':
+					mpi_str->mem_cpy(cmd_line+i, cmd_line+i+1, cmd_len - i);
+					quotes = !quotes;
+					continue;
+				case '\\':
+					mpi_str->mem_cpy(cmd_line+i, cmd_line+i+1, cmd_len - i);
+					break;
+				case 0:
+				case ' ':
+				case '\n':
+				case '\r':
+				case '\t':
+					if(arg_pos != INV_POS) {
+						if(!quotes && !strophe) {
+							m_arg_array[r] = cmd_line + arg_pos;
+							arg_pos = INV_POS;
+							cmd_line[i] = 0;
+							r++;
+						}
+					}
+					break;
+				default:
+					if(arg_pos == INV_POS)
+						arg_pos = i;
+					break;
+			}
+
+			i++;
+		}
+
+		return r;
+	}
+
 public:
 	BASE(cArgs, "cArgs", RF_ORIGINAL | RF_CLONE, 1,0,0);
 
@@ -63,9 +120,19 @@ public:
 			case OCTL_INIT:
 				m_argc = 0;
 				m_argv = 0;
-				r = true;
+				m_arg_line = NULL;
+				m_sz_arg_line = 0;
+				mpi_str = dynamic_cast<iStr *>(_gpi_repo_->object_by_iname(I_STR, RF_ORIGINAL));
+				mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
+
+				if(mpi_str && mpi_heap)
+					r = true;
 				break;
 			case OCTL_UNINIT:
+				if(m_arg_line && m_sz_arg_line)
+					mpi_heap->free(m_arg_line, m_sz_arg_line);
+				_gpi_repo_->object_release(mpi_str);
+				_gpi_repo_->object_release(mpi_heap);
 				r = true;
 				break;
 		}
