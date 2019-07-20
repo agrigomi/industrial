@@ -73,8 +73,9 @@ struct gatn_server {
 class iGatnExtension: public iBase {
 public:
 	INTERFACE(iGatnExtension, I_GATN_EXTENSION);
-	virtual bool init(_server_t *p_srv, _cstr_t host=NULL)=0;
-	virtual void uninit(_server_t *p_srv, _cstr_t host=NULL)=0;
+	virtual bool options(_cstr_t opt, _u32 sz_opt=0)=0;
+	virtual bool attach(_server_t *p_srv, _cstr_t host=NULL)=0;
+	virtual void detach(_server_t *p_srv, _cstr_t host=NULL)=0;
 };
 
 class iGatn: public iBase {
