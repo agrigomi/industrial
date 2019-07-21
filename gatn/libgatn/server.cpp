@@ -145,8 +145,32 @@ void server::destroy(void) {
 void server::destroy(_vhost_t *pvhost) {
 	stop(pvhost);
 
+	if(pvhost->pi_class_map) {
+		// detach extensions
+		_map_enum_t me = pvhost->pi_class_map->enum_open();
+
+		if(me) {
+			_u32 sz = 0;
+			iBase **ppi_base = (iBase **)pvhost->pi_class_map->enum_first(me, &sz);
+
+			while(ppi_base) {
+				_object_info_t oi;
+
+				(*ppi_base)->object_info(&oi);
+				detach_class(oi.cname, pvhost->host);
+				ppi_base = (iBase **)pvhost->pi_class_map->enum_next(me, &sz);
+			}
+
+			pvhost->pi_class_map->enum_close(me);
+		}
+
+		_gpi_repo_->object_release(pvhost->pi_class_map, false);
+		pvhost->pi_class_map = NULL;
+	}
+
 	if(pvhost->pi_route_map) {
-		_gpi_repo_->object_release(pvhost->pi_route_map);
+		// destroy routing
+		_gpi_repo_->object_release(pvhost->pi_route_map, false);
 		pvhost->pi_route_map = NULL;
 	}
 
@@ -602,4 +626,62 @@ void server::enum_virtual_hosts(void (*enum_cb)(_vhost_t *, void *udata), void *
 
 		mpi_vhost_map->enum_close(vhe);
 	}
+}
+
+bool server::attach_class(_cstr_t cname, _cstr_t options, _u32 sz_options, _cstr_t _host) {
+	bool r = false;
+	_u32 sz = 0;
+	_vhost_t *pvhost = get_host(_host);
+
+	if(pvhost->pi_class_map == NULL) {
+		if((pvhost->pi_class_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
+			pvhost->pi_class_map->init(15, mpi_heap);
+	}
+
+	if(pvhost->pi_class_map) {
+		iGatnExtension **ppi_ext = (iGatnExtension **)pvhost->pi_class_map->get(cname, strlen(cname), &sz);
+
+		if(!ppi_ext) {
+			iGatnExtension *pi_ext = dynamic_cast<iGatnExtension *>(_gpi_repo_->object_by_cname(cname, RF_CLONE|RF_NONOTIFY));
+
+			if(pi_ext) {
+				if(pvhost->pi_class_map->add(cname, strlen(cname), &pi_ext, sizeof(pi_ext))) {
+					mpi_log->fwrite(LMT_INFO, "Gatn: Attach class '%s' to '%s/%s'",
+							cname, m_name, pvhost->host);
+					if(options && sz_options)
+						pi_ext->options(options, sz_options);
+					r = pi_ext->attach(this, _host);
+				} else
+					_gpi_repo_->object_release(pi_ext, false);
+			} else
+				mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to clone class '%s'", cname);
+		} else
+			mpi_log->fwrite(LMT_ERROR, "Gatn: class '%s' already attached to '%s/%s'",
+					cname, m_name, pvhost->host);
+	}
+
+	return r;
+}
+
+bool server::detach_class(_cstr_t cname, _cstr_t _host) {
+	bool r = false;
+	_u32 sz = 0;
+	_vhost_t *pvhost = get_host(_host);
+
+	if(pvhost->pi_class_map) {
+		iGatnExtension **ppi_ext = (iGatnExtension **)pvhost->pi_class_map->get(cname, strlen(cname), &sz);
+
+		if(ppi_ext) {
+			_object_info_t oi;
+
+			(*ppi_ext)->object_info(&oi);
+			mpi_log->fwrite(LMT_INFO, "Gatn: Detach class '%s' from '%s/%s'",
+					cname, m_name, pvhost->host);
+			(*ppi_ext)->detach(this, _host);
+			_gpi_repo_->object_release(*ppi_ext, false);
+			r = true;
+		}
+	}
+
+	return r;
 }
