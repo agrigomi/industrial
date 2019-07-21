@@ -628,7 +628,7 @@ void server::enum_virtual_hosts(void (*enum_cb)(_vhost_t *, void *udata), void *
 	}
 }
 
-bool server::attach_class(_cstr_t cname, _cstr_t options, _u32 sz_options, _cstr_t _host) {
+bool server::attach_class(_cstr_t cname, _cstr_t options, _cstr_t _host) {
 	bool r = false;
 	_u32 sz = 0;
 	_vhost_t *pvhost = get_host(_host);
@@ -648,8 +648,8 @@ bool server::attach_class(_cstr_t cname, _cstr_t options, _u32 sz_options, _cstr
 				if(pvhost->pi_class_map->add(cname, strlen(cname), &pi_ext, sizeof(pi_ext))) {
 					mpi_log->fwrite(LMT_INFO, "Gatn: Attach class '%s' to '%s/%s'",
 							cname, m_name, pvhost->host);
-					if(options && sz_options)
-						pi_ext->options(options, sz_options);
+					if(options)
+						pi_ext->options(options);
 					r = pi_ext->attach(this, _host);
 				} else
 					_gpi_repo_->object_release(pi_ext, false);

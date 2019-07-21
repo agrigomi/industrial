@@ -68,14 +68,14 @@ struct gatn_server {
 	virtual bool remove_virtual_host(_cstr_t host)=0;
 	virtual bool start_virtual_host(_cstr_t host)=0;
 	virtual bool stop_virtual_host(_cstr_t host)=0;
-	virtual bool attach_class(_cstr_t cname, _cstr_t options=NULL, _u32 sz_options=0, _cstr_t host=NULL)=0;
+	virtual bool attach_class(_cstr_t cname, _cstr_t options=NULL, _cstr_t host=NULL)=0;
 	virtual bool detach_class(_cstr_t cname, _cstr_t host=NULL)=0;
 };
 
 class iGatnExtension: public iBase {
 public:
 	INTERFACE(iGatnExtension, I_GATN_EXTENSION);
-	virtual bool options(_cstr_t opt, _u32 sz_opt=0)=0;
+	virtual bool options(_cstr_t opt)=0;
 	virtual bool attach(_server_t *p_srv, _cstr_t host=NULL)=0;
 	virtual void detach(_server_t *p_srv, _cstr_t host=NULL)=0;
 };
