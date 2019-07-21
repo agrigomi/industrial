@@ -60,6 +60,7 @@ public:
 	virtual iBase *object_by_handle(HOBJECT, _rf_t)=0;
 	virtual HOBJECT handle_by_iname(_cstr_t iname)=0;
 	virtual HOBJECT handle_by_cname(_cstr_t cname)=0;
+	virtual bool object_info(HOBJECT h, _object_info_t *poi)=0;
 
 	virtual void init_array(_base_entry_t *array, _u32 count)=0;
 

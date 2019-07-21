@@ -631,6 +631,20 @@ public:
 		return r;
 	}
 
+	bool object_info(HOBJECT h, _object_info_t *poi) {
+		bool r = false;
+		_base_entry_t *bentry = h;
+
+		if(bentry) {
+			if(bentry->pi_base) {
+				bentry->pi_base->object_info(poi);
+				r = true;
+			}
+		}
+
+		return r;
+	}
+
 	// extensions
 	void extension_dir(_cstr_t dir) {
 		m_ext_dir = dir;
