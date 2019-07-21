@@ -679,6 +679,7 @@ bool server::detach_class(_cstr_t cname, _cstr_t _host) {
 					cname, m_name, pvhost->host);
 			(*ppi_ext)->detach(this, _host);
 			_gpi_repo_->object_release(*ppi_ext, false);
+			pvhost->pi_class_map->del(cname, strlen(cname));
 			r = true;
 		}
 	}
