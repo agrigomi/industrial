@@ -186,7 +186,7 @@ public:
 
 		sopt[0] = opt;
 		if(m_argc > 1 && m_argv) {
-			for(_u32 i = 1; i < m_argc; i++) {
+			for(_u32 i = 0; i < m_argc; i++) {
 				if((r = check(sopt, m_argv[i], 0, &idx)))
 					break;
 			}
@@ -199,7 +199,7 @@ public:
 		_u32 idx = 0;
 
 		if(m_argc > 1 && m_argv) {
-			for(_u32 i = 1; i < m_argc; i++) {
+			for(_u32 i = 0; i < m_argc; i++) {
 				if((r = check(opt, m_argv[i], OPT_LONG, &idx)))
 					break;
 			}
@@ -215,7 +215,7 @@ public:
 		if(m_argc > 1 && m_argv) {
 			_u32 idx = 0;
 
-			for(_u32 i = 1; i < m_argc; i++) {
+			for(_u32 i = 0; i < m_argc; i++) {
 				if(check(sopt, m_argv[i], OPT_VALUE, &idx)) {
 					if(idx+1 < (_u32)strlen(m_argv[i])) {
 						r = m_argv[i] + idx+1;
@@ -236,7 +236,7 @@ public:
 		if(m_argc > 1 && m_argv) {
 			_u32 idx = 0;
 
-			for(_u32 i = 1; i < m_argc; i++) {
+			for(_u32 i = 0; i < m_argc; i++) {
 				if(check(opt, m_argv[i], OPT_VALUE|OPT_LONG, &idx)) {
 					if(m_argv[i][idx] == '=') {
 						r = m_argv[i] + idx+1;
