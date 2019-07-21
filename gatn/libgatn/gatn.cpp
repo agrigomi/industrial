@@ -103,6 +103,7 @@ public:
 				if(mpi_map && mpi_log) {
 					pi_repo->monitoring_add(NULL, I_NET, NULL, this, SCAN_ORIGINAL);
 					pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
+					pi_repo->monitoring_add(NULL, I_GATN_EXTENSION, NULL, this);
 					r = true;
 				}
 			} break;
@@ -123,6 +124,13 @@ public:
 				if(pn->object) {
 					pn->object->object_info(&oi);
 
+					if(pn->flags & NF_LOAD) {
+						if(strcmp(oi.iname, I_GATN_EXTENSION) == 0) {
+							// register extension
+							mpi_log->fwrite(LMT_INFO, "Gatn: register class '%s'", oi.cname);
+							//...
+						}
+					}
 					if(pn->flags & NF_INIT) { // catch
 						if(strcmp(oi.iname, I_NET) == 0) {
 							mpi_log->write(LMT_INFO, "Gatn: attach networking");
@@ -138,6 +146,13 @@ public:
 						} else if(strcmp(oi.iname, I_FS) == 0) {
 							mpi_log->write(LMT_INFO, "Gatn: detach FS");
 							stop(true);
+						}
+					}
+					if(pn->flags & NF_UNLOAD) {
+						if(strcmp(oi.iname, I_GATN_EXTENSION) == 0) {
+							// unregister extension
+							mpi_log->fwrite(LMT_INFO, "Gatn: unregister class '%s'", oi.cname);
+							//...
 						}
 					}
 				}

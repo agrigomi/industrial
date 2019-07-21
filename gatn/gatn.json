@@ -19,7 +19,11 @@
 						"exclude":	["fldr1", "fldr2"],
 						"path":		"/tmp/",
 						"key":		"oland"
-					}
+					},
+					"attach": [
+						"cname":	"cGatnExtClass",
+						"options":	"-o --lopt=something"
+					]
 				},
 				{
 					"host":		"agrigomi.ddns.net",
@@ -37,7 +41,13 @@
 				"flags":	["NO_SSLv2", "NO_SSLv3", "NO_COMPRESSION"],
 				"certificate":	"certificate.crt",
 				"key":		"keyfile.key"
-			}
+			},
+			"attach":	[
+				{
+					"cname":	"cGatnExtClass",
+					"options":	"--opt1 --opt2=value"
+				}
+			]
 		},
 		{
 			"name":		"server-1",
@@ -59,5 +69,8 @@
 				"key":		"keyfile.key"
 			}
 		}
+	],
+	"extensions": [
+		{ "module":	"extsample.so", 	"alias":	"example" }
 	]
 }
