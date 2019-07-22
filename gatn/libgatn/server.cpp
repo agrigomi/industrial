@@ -638,17 +638,29 @@ bool server::attach_class(_cstr_t cname, _cstr_t options, _cstr_t _host) {
 		iGatnExtension **ppi_ext = (iGatnExtension **)pvhost->pi_class_map->get(cname, strlen(cname), &sz);
 
 		if(!ppi_ext) {
-			iGatnExtension *pi_ext = dynamic_cast<iGatnExtension *>(_gpi_repo_->object_by_cname(cname, RF_CLONE|RF_NONOTIFY));
+			_object_info_t oi;
+			iBase *pi_base = _gpi_repo_->object_by_cname(cname, RF_CLONE|RF_NONOTIFY);
 
-			if(pi_ext) {
-				if(pvhost->pi_class_map->add(cname, strlen(cname), &pi_ext, sizeof(pi_ext))) {
-					mpi_log->fwrite(LMT_INFO, "Gatn: Attach class '%s' to '%s/%s'",
-							cname, m_name, pvhost->host);
-					if(options)
-						pi_ext->options(options);
-					r = pi_ext->attach(this, _host);
-				} else
-					_gpi_repo_->object_release(pi_ext, false);
+			if(pi_base) {
+				pi_base->object_info(&oi);
+
+				if(strcmp(I_GATN_EXTENSION, oi.iname) == 0) {
+					iGatnExtension *pi_ext = dynamic_cast<iGatnExtension *>(pi_base);
+
+					if(pi_ext) {
+						if(pvhost->pi_class_map->add(cname, strlen(cname), &pi_ext, sizeof(pi_ext))) {
+							mpi_log->fwrite(LMT_INFO, "Gatn: Attach class '%s' to '%s/%s'",
+									cname, m_name, pvhost->host);
+							if(options)
+								pi_ext->options(options);
+							r = pi_ext->attach(this, _host);
+						} else
+							_gpi_repo_->object_release(pi_ext, false);
+					}
+				} else {
+					mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to attach class '%s'", cname);
+					_gpi_repo_->object_release(pi_base, false);
+				}
 			} else
 				mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to clone class '%s'", cname);
 		} else
