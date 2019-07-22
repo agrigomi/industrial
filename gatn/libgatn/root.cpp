@@ -17,15 +17,19 @@ bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 	mpi_fs = NULL;
 	mpi_fcache = NULL;
 	m_enable = false;
-	mpi_heap = pi_heap;
-	mpi_nocache_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE | RF_NONOTIFY));
+	if(pi_heap)
+		mpi_heap = pi_heap;
+	else
+		mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
+	m_nocache = NULL;
+	m_sz_nocache = 0;
 	mpi_handle_list = dynamic_cast<iLlist *>(_gpi_repo_->object_by_iname(I_LLIST, RF_CLONE | RF_NONOTIFY));
 	mpi_str = dynamic_cast<iStr *>(_gpi_repo_->object_by_iname(I_STR, RF_ORIGINAL));
+	mpi_mutex = dynamic_cast<iMutex *>(_gpi_repo_->object_by_iname(I_MUTEX, RF_CLONE|RF_NONOTIFY));
 
-	if(mpi_nocache_map && mpi_handle_list) {
-		if((r &= mpi_nocache_map->init(15, pi_heap)))
-			cache_exclude(cache_exclude_path);
-		r &= mpi_handle_list->init(LL_VECTOR, 2, pi_heap);
+	if(mpi_handle_list && mpi_str && mpi_heap && mpi_mutex) {
+		cache_exclude(cache_exclude_path);
+		r = mpi_handle_list->init(LL_VECTOR, 2, pi_heap);
 	} else
 		destroy();
 
@@ -44,37 +48,49 @@ void root::destroy(void) {
 
 	object_release((iBase **)&mpi_fs);
 	object_release((iBase **)&mpi_fcache);
-	object_release((iBase **)&mpi_nocache_map);
 	object_release((iBase **)&mpi_handle_list);
 	object_release((iBase **)&mpi_str);
+	object_release((iBase **)&mpi_mutex);
+}
+
+_str_t root::realloc_nocache(_u32 sz) {
+	_str_t r = NULL;
+	_str_t old = m_nocache;
+	_u32 sz_new = m_sz_nocache + sz;
+
+	if((r = (_str_t)mpi_heap->alloc(sz_new))) {
+		memset(r, 0, sz_new);
+		if(old) {
+			memcpy(r, old, m_sz_nocache);
+			mpi_heap->free(old, m_sz_nocache);
+		}
+
+		m_sz_nocache = sz_new;
+		m_nocache = r;
+	}
+
+	return r;
 }
 
 void root::cache_exclude(_cstr_t path) {
-	_char_t lb[MAX_DOC_ROOT_PATH * 2]="";
-	_char_t fldr[MAX_DOC_ROOT_PATH]="";
+	if(path) {
+		_u32 sz = strlen(path);
+		_u32 sz_old = strlen(m_nocache);
+		_cstr_t fmt;
 
-	if(mpi_str) {
-		strncpy(lb, path, sizeof(lb)-1);
+		if(path[0] != '/' && path[sz-1] != '/')
+			fmt = (m_nocache) ? ":/%s/" : "/%s/";
+		else if(path[0] == '/' && path[sz-1] != '/')
+			fmt = (m_nocache) ? ":%s/" : "%s/";
+		else if(path[0] != '/' && path[sz-1] == '/')
+			fmt = (m_nocache) ? ":/%s" : "/%s";
+		else
+			fmt = (m_nocache) ? ":%s" : "%s";
 
-		while(mpi_str->div_str(lb, fldr, sizeof(fldr), lb, sizeof(lb), ":"))
-			_cache_exclude(fldr, sizeof(fldr));
-
-		if(strlen(fldr))
-			_cache_exclude(fldr, sizeof(fldr));
-	}
-}
-
-void root::_cache_exclude(_str_t path, _u32 sz) {
-	_u32 l = strlen(path);
-
-	if(l) {
-		if(path[l-1] != '/') {
-			// the path must be always terminated with '/'
-			strncat(path, "/", sz - l);
-			l++;
-		}
-
-		mpi_nocache_map->add(path, l, path, l);
+		HMUTEX hm = mpi_mutex->lock();
+		realloc_nocache(sz + 4);
+		snprintf(m_nocache + sz_old, sz + 3, fmt, path);
+		mpi_mutex->unlock(hm);
 	}
 }
 
@@ -90,20 +106,25 @@ _u32 root::get_url_path(_cstr_t url) {
 bool root::cacheable(_cstr_t path, _u32 len) {
 	bool r = true;
 
-	if(mpi_nocache_map) {
-		_u32 sz=0;
-		_map_enum_t map_enum = mpi_nocache_map->enum_open();
-		_cstr_t str = (_cstr_t)mpi_nocache_map->enum_first(map_enum, &sz);
+	if(m_nocache && m_sz_nocache) {
+		m_hlock = mpi_mutex->lock(m_hlock);
 
-		while(str) {
-			if(sz <= len && memcmp(path, str, sz) == 0) {
-				r = false;
-				break;
+		for(_u32 i = 0, j = 0; i < m_sz_nocache; i++) {
+			if(m_nocache[i] == ':') {
+				_u32 sz = i - j;
+
+				if(sz && sz <= len) {
+					if(memcmp(m_nocache + j, path, sz) == 0) {
+						r = false;
+						break;
+					}
+				}
+
+				j = i + 1;
 			}
-			str = (_cstr_t)mpi_nocache_map->enum_next(map_enum, &sz);
 		}
 
-		mpi_nocache_map->enum_close(map_enum);
+		mpi_mutex->unlock(m_hlock);
 	}
 
 	return r;

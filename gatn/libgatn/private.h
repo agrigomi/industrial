@@ -2,6 +2,7 @@
 #include "iGatn.h"
 #include "iLog.h"
 #include "iStr.h"
+#include "iSync.h"
 
 struct request: public _request_t{
 	iHttpServerConnection *mpi_httpc;
@@ -91,17 +92,20 @@ private:
 	iFS		*mpi_fs;
 	iHeap		*mpi_heap;
 	iFileCache	*mpi_fcache;
-	iMap		*mpi_nocache_map;
+	_str_t		m_nocache;
+	_u32		m_sz_nocache;
+	iMutex		*mpi_mutex;
 	iLlist		*mpi_handle_list;
 	iStr		*mpi_str;
+	HMUTEX		m_hlock;
 
 	void object_release(iBase **ppi);
 	void parse_nocache_list(_cstr_t nocache);
-	void _cache_exclude(_str_t path, _u32 size);
 	_handle_t *get_busy_handle(HDOCUMENT, HMUTEX);
 	_handle_t *alloc_handle(HMUTEX);
 	_u32 get_url_path(_cstr_t url);
 	bool cacheable(_cstr_t path, _u32 len);
+	_str_t realloc_nocache(_u32 sz);
 
 public:
 	bool init(_cstr_t doc_root, _cstr_t cache_path,
