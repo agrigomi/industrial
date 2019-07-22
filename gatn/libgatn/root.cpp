@@ -88,8 +88,8 @@ void root::cache_exclude(_cstr_t path) {
 			fmt = (m_nocache) ? ":%s" : "%s";
 
 		HMUTEX hm = mpi_mutex->lock();
-		realloc_nocache(sz + 4);
-		snprintf(m_nocache + sz_old, sz + 3, fmt, path);
+		if(realloc_nocache(sz + 4))
+			snprintf(m_nocache + sz_old, sz + 3, fmt, path);
 		mpi_mutex->unlock(hm);
 	}
 }
