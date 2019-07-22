@@ -21,8 +21,10 @@
 						"key":		"oland"
 					},
 					"attach": [
-						"cname":	"cGatnExtClass",
-						"options":	"-o --lopt=something"
+						{
+							"cname":	"cGatnExtClass",
+							"options":	"-o --lopt=something"
+						}
 					]
 				},
 				{
