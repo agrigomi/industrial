@@ -89,7 +89,7 @@ void root::cache_exclude(_cstr_t path) {
 
 		HMUTEX hm = mpi_mutex->lock();
 		if(realloc_nocache(sz + 4))
-			snprintf(m_nocache + sz_old, sz + 3, fmt, path);
+			snprintf(m_nocache + sz_old, m_sz_nocache - sz_old, fmt, path);
 		mpi_mutex->unlock(hm);
 	}
 }
