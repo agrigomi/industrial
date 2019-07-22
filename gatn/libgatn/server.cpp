@@ -34,6 +34,8 @@ typedef struct {
 	HDOCUMENT	hdoc;
 
 	void clear(void) {
+		if(hdoc && p_vhost) // close handle
+			p_vhost->root.close(hdoc);
 		res.clear();
 		url = NULL;
 		hdoc = NULL;
@@ -41,6 +43,8 @@ typedef struct {
 	}
 
 	void destroy(void) {
+		if(hdoc && p_vhost) // close handle
+			p_vhost->root.close(hdoc);
 		req.destroy();
 		res.destroy();
 		url = NULL;
@@ -235,14 +239,6 @@ void server::set_handlers(void) {
 	mpi_server->on_event(HTTP_ON_REQUEST, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 		_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
-
-		/* check for unclosed document,
-		   because in case of reusing connection,
-		   HTTP_ON_CLOSE not hapened
-		*/
-		if(pc->hdoc && pc->p_vhost)
-			pc->p_vhost->root.close(pc->hdoc);
-		/*****************************************/
 
 		pc->clear();
 		pc->p_vhost = p_srv->get_host(p_httpc->req_var("Host"));
