@@ -110,7 +110,7 @@ bool root::cacheable(_cstr_t path, _u32 len) {
 		m_hlock = mpi_mutex->lock(m_hlock);
 
 		for(_u32 i = 0, j = 0; i < m_sz_nocache; i++) {
-			if(m_nocache[i] == ':') {
+			if(m_nocache[i] == ':' || m_nocache[i] == 0) {
 				_u32 sz = i - j;
 
 				if(sz && sz <= len) {
