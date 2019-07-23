@@ -9,6 +9,10 @@ class cPool: public iPool {
 private:
 	iLlist	*mpi_list;
 	_u32 	m_data_size;
+	void (*mp_cb_new)(void *data, void *udata);
+	void (*mp_cb_delete)(void *data, void *udata);
+	void *mp_udata;
+
 public:
 	BASE(cPool, "cPool", RF_CLONE, 1,0,0);
 
@@ -31,15 +35,26 @@ public:
 		return r;
 	}
 
-	bool init(_u32 data_size, iHeap *pi_heap=0) {
+	bool init(_u32 data_size,
+			void (*cb_new)(void *data, void *udata),
+			void (*cb_delete)(void *data, void *udata),
+			void *udata,
+			iHeap *pi_heap) {
 		bool r = false;
 
 		if(mpi_list) {
 			m_data_size = data_size;
+			mp_cb_new = cb_new;
+			mp_cb_delete = cb_delete;
+			mp_udata = udata;
 			r = mpi_list->init(LL_VECTOR, 2, pi_heap);
 		}
 
 		return r;
+	}
+
+	_u32 size(void) {
+		return m_data_size;
 	}
 
 	void *alloc(void) {
@@ -52,8 +67,11 @@ public:
 			mpi_list->mov(r, COL_BUSY, hm);
 		else {
 			mpi_list->col(COL_BUSY, hm);
-			if((r = mpi_list->add(m_data_size, hm)))
+			if((r = mpi_list->add(m_data_size, hm))) {
 				memset(r, 0, m_data_size);
+				if(mp_cb_new)
+					mp_cb_new(r, mp_udata);
+			}
 		}
 
 		mpi_list->unlock(hm);
