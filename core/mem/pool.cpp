@@ -9,35 +9,34 @@ class cPool: public iPool {
 private:
 	iLlist	*mpi_list;
 	_u32 	m_data_size;
-	void (*mp_cb_new)(void *data, void *udata);
-	void (*mp_cb_delete)(void *data, void *udata);
+	void (*mp_cb)(_u8 op, void *data, void *udata);
 	void *mp_udata;
 
 	void destroy(void) {
-		if(mp_cb_delete) {
-			HMUTEX hm = mpi_list->lock();
-			_u32 sz = 0;
+		HMUTEX hm = mpi_list->lock();
+		_u32 sz = 0;
 
-			for(_u8 col = 0; col < 2; col++) {
-				mpi_list->col(col, hm);
-				void *rec = mpi_list->first(&sz, hm);
+		_free_all(hm);
 
-				while(rec) {
-					mpi_list->unlock(hm);
-					mp_cb_delete(rec, mp_udata);
-					hm = mpi_list->lock();
-					mpi_list->col(col, hm);
-					if(mpi_list->sel(rec, hm))
-						rec = mpi_list->next(&sz, hm);
-					else
-						rec = mpi_list->first(&sz, hm);
-				}
+		if(mp_cb) {
+			mpi_list->col(COL_BUSY, hm);
+			void *rec = mpi_list->first(&sz, hm);
+
+			while(rec) {
+				mp_cb(POOL_OP_DELETE, rec, mp_udata);
+				rec = mpi_list->next(&sz, hm);
 			}
-
-			mpi_list->unlock(hm);
 		}
 
+		mpi_list->unlock(hm);
+
 		_gpi_repo_->object_release(mpi_list, false);
+	}
+
+	void _clear(HMUTEX hlock=0) {
+	}
+
+	void _free_all(HMUTEX hlock=0) {
 	}
 public:
 	BASE(cPool, "cPool", RF_CLONE, 1,0,0);
@@ -62,16 +61,14 @@ public:
 	}
 
 	bool init(_u32 data_size,
-			void (*cb_new)(void *data, void *udata),
-			void (*cb_delete)(void *data, void *udata),
+			void (*cb)(_u8 op, void *data, void *udata),
 			void *udata,
 			iHeap *pi_heap) {
 		bool r = false;
 
 		if(mpi_list) {
 			m_data_size = data_size;
-			mp_cb_new = cb_new;
-			mp_cb_delete = cb_delete;
+			mp_cb = cb;
 			mp_udata = udata;
 			r = mpi_list->init(LL_VECTOR, 2, pi_heap);
 		}
@@ -86,24 +83,23 @@ public:
 	void *alloc(void) {
 		void *r = NULL;
 		_u32 sz = 0;
-		bool _new = false;
 		HMUTEX hm = mpi_list->lock();
 
 		mpi_list->col(COL_FREE, hm);
-		if((r = mpi_list->first(&sz, hm)))
+		if((r = mpi_list->first(&sz, hm))) {
+			if(mp_cb)
+				mp_cb(POOL_OP_INIT, r, mp_udata);
 			mpi_list->mov(r, COL_BUSY, hm);
-		else {
+		} else {
 			mpi_list->col(COL_BUSY, hm);
 			if((r = mpi_list->add(m_data_size, hm))) {
 				memset(r, 0, m_data_size);
-				_new = true;
+				if(mp_cb)
+					mp_cb(POOL_OP_NEW, r, mp_udata);
 			}
 		}
 
 		mpi_list->unlock(hm);
-
-		if(_new && mp_cb_new)
-			mp_cb_new(r, mp_udata);
 
 		return r;
 	}
@@ -112,19 +108,24 @@ public:
 		HMUTEX hm = mpi_list->lock();
 
 		mpi_list->col(COL_BUSY, hm);
-		if(mpi_list->sel(rec, hm))
+		if(mpi_list->sel(rec, hm)) {
+			if(mp_cb)
+				mp_cb(POOL_OP_UNINIT, rec, mp_udata);
 			mpi_list->mov(rec, COL_FREE, hm);
+		}
 
 		mpi_list->unlock(hm);
+	}
+
+	void free_all(void) {
 	}
 
 	void clear(void) {
 		HMUTEX hm = mpi_list->lock();
 
-		mpi_list->col(COL_BUSY, hm);
-		mpi_list->clr(hm);
-		mpi_list->col(COL_FREE, hm);
-		mpi_list->clr(hm);
+		_free_all(hm);
+		_clear(hm);
+
 		mpi_list->unlock(hm);
 	}
 };

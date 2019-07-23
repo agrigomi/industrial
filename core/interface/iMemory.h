@@ -73,16 +73,21 @@ public:
 	virtual void status(_map_status_t *)=0;
 };
 
+#define POOL_OP_NEW	1
+#define POOL_OP_INIT	2
+#define POOL_OP_UNINIT	3
+#define POOL_OP_DELETE	4
+
 class iPool: public iBase {
 public:
 	INTERFACE(iPool, I_POOL);
 	virtual bool init(_u32 data_size,
-			void (*cb_new)(void *data, void *udata)=0,
-			void (*cb_delete)(void *data, void *udata)=0,
+			void (*)(_u8 op, void *data, void *udata)=0,
 			void *udata=NULL,
 			iHeap *pi_heap=0)=0;
 	virtual void *alloc(void)=0;
 	virtual void free(void *)=0;
+	virtual void free_all(void)=0;
 	virtual _u32 size(void)=0;
 	virtual void clear(void)=0;
 };
