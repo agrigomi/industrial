@@ -143,7 +143,7 @@ void server::destroy(void) {
 
 	destroy(&host); // destroy default host
 
-	_gpi_repo_->object_release(mpi_vhost_map);
+	_gpi_repo_->object_release(mpi_vhost_map, false);
 	_gpi_repo_->object_release(mpi_heap);
 	_gpi_repo_->object_release(mpi_log);
 	_gpi_repo_->object_release(mpi_bmap, false);
