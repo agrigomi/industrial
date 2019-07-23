@@ -14,7 +14,29 @@ private:
 	void *mp_udata;
 
 	void destroy(void) {
-		//...
+		if(mp_cb_delete) {
+			HMUTEX hm = mpi_list->lock();
+			_u32 sz = 0;
+
+			for(_u8 col = 0; col < 2; col++) {
+				mpi_list->col(col, hm);
+				void *rec = mpi_list->first(&sz, hm);
+
+				while(rec) {
+					mpi_list->unlock(hm);
+					mp_cb_delete(rec, mp_udata);
+					hm = mpi_list->lock();
+					mpi_list->col(col, hm);
+					if(mpi_list->sel(rec, hm))
+						rec = mpi_list->next(&sz, hm);
+					else
+						rec = mpi_list->first(&sz, hm);
+				}
+			}
+
+			mpi_list->unlock(hm);
+		}
+
 		_gpi_repo_->object_release(mpi_list, false);
 	}
 public:
