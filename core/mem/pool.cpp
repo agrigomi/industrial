@@ -19,7 +19,7 @@ private:
 		_free_all(hm);
 
 		if(mp_cb) {
-			mpi_list->col(COL_BUSY, hm);
+			mpi_list->col(COL_FREE, hm);
 			void *rec = mpi_list->first(&sz, hm);
 
 			while(rec) {
@@ -34,9 +34,37 @@ private:
 	}
 
 	void _clear(HMUTEX hlock=0) {
+		HMUTEX hm = mpi_list->lock(hlock);
+		_u32 sz = 0;
+		void *rec = 0;
+
+		_free_all(hm);
+
+		mpi_list->col(COL_FREE, hm);
+
+		while((rec = mpi_list->first(&sz, hm))) {
+			if(mp_cb)
+				mp_cb(POOL_OP_DELETE, rec, mp_udata);
+			mpi_list->del(hm);
+		}
+
+		mpi_list->unlock(hm);
 	}
 
 	void _free_all(HMUTEX hlock=0) {
+		HMUTEX hm = mpi_list->lock(hlock);
+		_u32 sz = 0;
+		void *rec = NULL;
+
+		mpi_list->col(COL_BUSY, hm);
+
+		while((rec = mpi_list->first(&sz, hm))) {
+			if(mp_cb)
+				mp_cb(POOL_OP_FREE, rec, mp_udata);
+			mpi_list->mov(rec, COL_FREE, hm);
+		}
+
+		mpi_list->unlock(hm);
 	}
 public:
 	BASE(cPool, "cPool", RF_CLONE, 1,0,0);
@@ -88,7 +116,7 @@ public:
 		mpi_list->col(COL_FREE, hm);
 		if((r = mpi_list->first(&sz, hm))) {
 			if(mp_cb)
-				mp_cb(POOL_OP_INIT, r, mp_udata);
+				mp_cb(POOL_OP_BUSY, r, mp_udata);
 			mpi_list->mov(r, COL_BUSY, hm);
 		} else {
 			mpi_list->col(COL_BUSY, hm);
@@ -110,7 +138,7 @@ public:
 		mpi_list->col(COL_BUSY, hm);
 		if(mpi_list->sel(rec, hm)) {
 			if(mp_cb)
-				mp_cb(POOL_OP_UNINIT, rec, mp_udata);
+				mp_cb(POOL_OP_FREE, rec, mp_udata);
 			mpi_list->mov(rec, COL_FREE, hm);
 		}
 
@@ -118,15 +146,35 @@ public:
 	}
 
 	void free_all(void) {
+		_free_all(0);
 	}
 
 	void clear(void) {
+		_clear(0);
+	}
+
+	_u32 num_busy(void) {
+		_u32 r = 0;
 		HMUTEX hm = mpi_list->lock();
 
-		_free_all(hm);
-		_clear(hm);
+		mpi_list->col(COL_BUSY, hm);
+		r = mpi_list->cnt(hm);
 
 		mpi_list->unlock(hm);
+
+		return r;
+	}
+
+	_u32 num_free(void) {
+		_u32 r = 0;
+		HMUTEX hm = mpi_list->lock();
+
+		mpi_list->col(COL_FREE, hm);
+		r = mpi_list->cnt(hm);
+
+		mpi_list->unlock(hm);
+
+		return r;
 	}
 };
 

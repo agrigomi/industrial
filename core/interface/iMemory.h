@@ -74,8 +74,8 @@ public:
 };
 
 #define POOL_OP_NEW	1
-#define POOL_OP_INIT	2
-#define POOL_OP_UNINIT	3
+#define POOL_OP_BUSY	2
+#define POOL_OP_FREE	3
 #define POOL_OP_DELETE	4
 
 class iPool: public iBase {
@@ -90,6 +90,8 @@ public:
 	virtual void free_all(void)=0;
 	virtual _u32 size(void)=0;
 	virtual void clear(void)=0;
+	virtual _u32 num_busy(void)=0;
+	virtual _u32 num_free(void)=0;
 };
 
 #define LL_VECTOR	1
