@@ -67,7 +67,7 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 	mpi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL));
 	mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
 	if((mpi_pool = dynamic_cast<iPool *>(_gpi_repo_->object_by_iname(I_POOL, RF_CLONE|RF_NONOTIFY))))
-		mpi_pool->init(sizeof(_connection_t), mpi_heap);
+		mpi_pool->init(sizeof(_connection_t), NULL, NULL, NULL, mpi_heap);
 	mpi_net = NULL;
 	mpi_fs = NULL;
 	attach_fs();
