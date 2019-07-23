@@ -13,6 +13,10 @@ private:
 	void (*mp_cb_delete)(void *data, void *udata);
 	void *mp_udata;
 
+	void destroy(void) {
+		//...
+		_gpi_repo_->object_release(mpi_list, false);
+	}
 public:
 	BASE(cPool, "cPool", RF_CLONE, 1,0,0);
 
@@ -27,7 +31,7 @@ public:
 				break;
 
 			case OCTL_UNINIT:
-				_gpi_repo_->object_release(mpi_list, false);
+				destroy();
 				r = true;
 				break;
 		}
@@ -60,6 +64,7 @@ public:
 	void *alloc(void) {
 		void *r = NULL;
 		_u32 sz = 0;
+		bool _new = false;
 		HMUTEX hm = mpi_list->lock();
 
 		mpi_list->col(COL_FREE, hm);
@@ -69,12 +74,14 @@ public:
 			mpi_list->col(COL_BUSY, hm);
 			if((r = mpi_list->add(m_data_size, hm))) {
 				memset(r, 0, m_data_size);
-				if(mp_cb_new)
-					mp_cb_new(r, mp_udata);
+				_new = true;
 			}
 		}
 
 		mpi_list->unlock(hm);
+
+		if(_new && mp_cb_new)
+			mp_cb_new(r, mp_udata);
 
 		return r;
 	}
