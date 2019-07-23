@@ -78,6 +78,7 @@ struct response: public _response_t {
 typedef struct {
 	HFCACHE	hfc; // handle from file cache
 	iFileIO	*pi_fio;
+	_cstr_t mime;
 }_handle_t;
 
 typedef _handle_t* HDOCUMENT;
@@ -118,6 +119,7 @@ public:
 	void *ptr(HDOCUMENT, _ulong*);
 	void close(HDOCUMENT);
 	time_t mtime(HDOCUMENT);
+	_cstr_t mime(HDOCUMENT);
 	void stop(void);
 	void start(void);
 	bool is_enabled(void) {
@@ -195,7 +197,6 @@ struct server: public _server_t {
 	void release_fs(void);
 	bool create_connection(iHttpServerConnection *p_httpc);
 	void destroy_connection(iHttpServerConnection *p_httpc);
-	_cstr_t resolve_content_type(_cstr_t doc_name);
 	void set_handlers(void);
 	void call_handler(_u8 evt, iHttpServerConnection *p_httpc);
 	void call_route_handler(_u8 evt, iHttpServerConnection *p_httpc);

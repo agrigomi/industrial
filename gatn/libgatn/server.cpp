@@ -361,11 +361,6 @@ void server::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	}
 }
 
-_cstr_t server::resolve_content_type(_cstr_t doc_name) {
-	_cstr_t r = resolve_mime_type(doc_name);
-	return (r) ? r : "";
-}
-
 void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_u32 sz=0;
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
@@ -404,7 +399,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 						p_httpc->res_content_len(doc_sz);
 						p_httpc->res_code(HTTPRC_OK);
 						p_httpc->res_var("Server", m_name);
-						p_httpc->res_var("Content-Type", resolve_content_type(url));
+						p_httpc->res_var("Content-Type", root->mime(hdoc));
 						p_httpc->res_protocol("HTTP/2.0");
 						p_httpc->res_mtime(root->mtime(hdoc));
 						// response content

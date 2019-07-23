@@ -147,6 +147,8 @@ HDOCUMENT root::open(_cstr_t url) {
 					m_root_path,
 					(strcmp(url, "/") == 0) ? "/index.html" : url);
 
+				ph->mime = resolve_mime_type(doc);
+
 				if(use_cache) {
 					if((ph->hfc = mpi_fcache->open(doc)))
 						r = ph;
@@ -249,6 +251,19 @@ time_t root::mtime(HDOCUMENT hdoc) {
 			else if(ph->pi_fio)
 				r = ph->pi_fio->modify_time();
 		}
+	}
+
+	return r;
+}
+
+_cstr_t root::mime(HDOCUMENT hdoc) {
+	_cstr_t r = NULL;
+
+	if(mpi_handle_list) {
+		_handle_t *ph = get_busy_handle(hdoc, 0);
+
+		if(ph)
+			r = (ph->mime) ? ph->mime : "";
 	}
 
 	return r;
