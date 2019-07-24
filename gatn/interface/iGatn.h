@@ -64,7 +64,8 @@ struct gatn_server {
 	virtual _request_t *get_request(iHttpServerConnection *pi_httpc)=0;
 	virtual _response_t *get_response(iHttpServerConnection *pi_httpc)=0;
 	virtual void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=NULL)=0;
-	virtual bool add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key, _cstr_t cache_exclude=NULL)=0;
+	virtual bool add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key,
+				_cstr_t cache_exclude=NULL, _cstr_t path_disable=NULL)=0;
 	virtual bool remove_virtual_host(_cstr_t host)=0;
 	virtual bool start_virtual_host(_cstr_t host)=0;
 	virtual bool stop_virtual_host(_cstr_t host)=0;
@@ -89,7 +90,8 @@ public:
 	virtual _server_t *create_server(_cstr_t name, _u32 port,
 					_cstr_t doc_root, // path to documents root
 					_cstr_t cache_path, // path to cache folder (by example: /tmp/)
-					_cstr_t no_cache="", // non cacheable area inside documents root (by example: /folder1:/folder2:...)
+					_cstr_t no_cache="", // non cacheable area inside documents root (by example: /folder1/:/folder2:...)
+					_cstr_t path_disable="", // disabled area inside documents root (by example: /folder1/:/folder2/:...)
 					_u32 buffer_size=HTTP_BUFFER_SIZE,
 					_u32 max_workers=HTTP_MAX_WORKERS,
 					_u32 max_connections=HTTP_MAX_CONNECTIONS,

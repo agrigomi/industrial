@@ -180,6 +180,7 @@ public:
 				_cstr_t doc_root,
 				_cstr_t cache_path,
 				_cstr_t no_cache="", // non cacheable area inside documents root (by example: folder1:folder2:...)
+				_cstr_t path_disable="", // disabled area inside documents root (by example: /folder1/:/folder2/:...)
 				_u32 buffer_size=SERVER_BUFFER_SIZE,
 				_u32 max_workers=HTTP_MAX_WORKERS,
 				_u32 max_connections=HTTP_MAX_CONNECTIONS,
@@ -196,7 +197,7 @@ public:
 
 				if(psrv) {
 					if(psrv->init(name, port, doc_root, cache_path, no_cache,
-							buffer_size, max_workers, max_connections,
+							path_disable, buffer_size, max_workers, max_connections,
 							connection_timeout, ssl_context)) {
 						psrv->start();
 						r = psrv;

@@ -55,7 +55,7 @@ typedef struct {
 
 bool server::init(_cstr_t name, _u32 port, _cstr_t root,
 		_cstr_t cache_path, _cstr_t cache_exclude,
-		_u32 buffer_size,
+		_cstr_t path_disable, _u32 buffer_size,
 		_u32 max_workers, _u32 max_connections,
 		_u32 connection_timeout, SSL_CTX *ssl_context) {
 	bool r = false;
@@ -120,7 +120,7 @@ bool server::init(_cstr_t name, _u32 port, _cstr_t root,
 	m_connection_timeout = connection_timeout;
 	m_ssl_context = ssl_context;
 
-	r = host.root.init(root, cache_path, name, cache_exclude, mpi_heap);
+	r = host.root.init(root, cache_path, name, cache_exclude, path_disable, mpi_heap);
 
 	return r;
 }
@@ -539,7 +539,8 @@ void server::enum_route(void (*enum_cb)(_cstr_t path, _on_route_event_t *pcb, vo
 	}
 }
 
-bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key, _cstr_t cache_exclude) {
+bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key,
+				_cstr_t cache_exclude, _cstr_t path_disable) {
 	bool r = false;
 	_vhost_t vhost;
 
@@ -555,7 +556,8 @@ bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _c
 		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->add(host, strlen(host), &vhost, sizeof(_vhost_t));
 
 		if(pvhost)
-			r = pvhost->root.init(root, cache_path, cache_key, cache_exclude, mpi_heap);
+			r = pvhost->root.init(root, cache_path, cache_key,
+						cache_exclude, path_disable, mpi_heap);
 	}
 
 	return r;

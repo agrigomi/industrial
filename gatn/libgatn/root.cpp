@@ -8,7 +8,7 @@
 
 bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 		_cstr_t cache_key, _cstr_t cache_exclude_path,
-		iHeap *pi_heap) {
+		_cstr_t path_disable, iHeap *pi_heap) {
 	bool r = false;
 
 	strncpy(m_root_path, doc_root, sizeof(m_root_path)-1);
@@ -22,13 +22,17 @@ bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 	else
 		mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
 	m_nocache = NULL;
+	m_disabled = NULL;
 	m_sz_nocache = 0;
+	m_sz_disabled = 0;
 	mpi_handle_pool = dynamic_cast<iPool *>(_gpi_repo_->object_by_iname(I_POOL, RF_CLONE | RF_NONOTIFY));
 	mpi_str = dynamic_cast<iStr *>(_gpi_repo_->object_by_iname(I_STR, RF_ORIGINAL));
 	mpi_mutex = dynamic_cast<iMutex *>(_gpi_repo_->object_by_iname(I_MUTEX, RF_CLONE|RF_NONOTIFY));
 
 	if(mpi_handle_pool && mpi_str && mpi_heap && mpi_mutex) {
 		cache_exclude(cache_exclude_path);
+		disable_path(path_disable);
+
 		r = mpi_handle_pool->init(sizeof(_handle_t), [](_u8 op, void *data, void *udata) {
 			_handle_t *ph = (_handle_t *)data;
 			root *p_root = (root *)udata;
@@ -91,6 +95,25 @@ _str_t root::realloc_nocache(_u32 sz) {
 	return r;
 }
 
+_str_t root::realloc_path_disable(_u32 sz) {
+	_str_t r = NULL;
+	_str_t old = m_disabled;
+	_u32 sz_new = m_sz_disabled + sz;
+
+	if((r = (_str_t)mpi_heap->alloc(sz_new))) {
+		memset(r, 0, sz_new);
+		if(old) {
+			memcpy(r, old, m_sz_disabled);
+			mpi_heap->free(old, m_sz_disabled);
+		}
+
+		m_sz_disabled = sz_new;
+		m_disabled = r;
+	}
+
+	return r;
+}
+
 void root::cache_exclude(_cstr_t path) {
 	if(path) {
 		_u32 sz = strlen(path);
@@ -111,6 +134,31 @@ void root::cache_exclude(_cstr_t path) {
 			HMUTEX hm = mpi_mutex->lock();
 			if(realloc_nocache(sz + 4))
 				snprintf(m_nocache + sz_old, m_sz_nocache - sz_old, fmt, path);
+			mpi_mutex->unlock(hm);
+		}
+	}
+}
+
+void root::disable_path(_cstr_t path) {
+	if(path) {
+		_u32 sz = strlen(path);
+
+		if(sz) {
+			_u32 sz_old = (m_disabled) ? strlen(m_disabled) : 0;
+			_cstr_t fmt;
+
+			if(path[0] != '/' && path[sz-1] != '/')
+				fmt = (m_disabled) ? ":/%s/" : "/%s/";
+			else if(path[0] == '/' && path[sz-1] != '/')
+				fmt = (m_disabled) ? ":%s/" : "%s/";
+			else if(path[0] != '/' && path[sz-1] == '/')
+				fmt = (m_disabled) ? ":/%s" : "/%s";
+			else
+				fmt = (m_disabled) ? ":%s" : "%s";
+
+			HMUTEX hm = mpi_mutex->lock();
+			if(realloc_path_disable(sz + 4))
+				snprintf(m_disabled + sz_old, m_sz_disabled - sz_old, fmt, path);
 			mpi_mutex->unlock(hm);
 		}
 	}
@@ -152,6 +200,33 @@ bool root::cacheable(_cstr_t path, _u32 len) {
 	return r;
 }
 
+bool root::disabled(_cstr_t path, _u32 len) {
+	bool r = false;
+
+	if(m_disabled && m_sz_disabled) {
+		m_hlock = mpi_mutex->lock(m_hlock);
+
+		for(_u32 i = 0, j = 0; i < m_sz_disabled; i++) {
+			if(m_disabled[i] == ':' || m_disabled[i] == 0) {
+				_u32 sz = i - j;
+
+				if(sz && sz <= len) {
+					if(memcmp(m_disabled + j, path, sz) == 0) {
+						r = true;
+						break;
+					}
+				}
+
+				j = i + 1;
+			}
+		}
+
+		mpi_mutex->unlock(m_hlock);
+	}
+
+	return r;
+}
+
 HDOCUMENT root::open(_cstr_t url) {
 	HDOCUMENT r = NULL;
 
@@ -159,23 +234,26 @@ HDOCUMENT root::open(_cstr_t url) {
 		_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
 
 		if((strlen(url) + strlen(m_root_path) < sizeof(doc)-1)) {
-			_handle_t *ph = (_handle_t *)mpi_handle_pool->alloc();
+			_u32 path_len = get_url_path(url);
 
-			if(ph) {
-				_u32 path_len = get_url_path(url);
-				bool use_cache = cacheable(url, path_len);
+			if(!disabled(url, path_len)) {
+				_handle_t *ph = (_handle_t *)mpi_handle_pool->alloc();
 
-				snprintf(doc, sizeof(doc), "%s%s",
-					m_root_path,
-					(strcmp(url, "/") == 0) ? "/index.html" : url);
+				if(ph) {
+					bool use_cache = cacheable(url, path_len);
 
-				ph->mime = resolve_mime_type(doc);
+					snprintf(doc, sizeof(doc), "%s%s",
+						m_root_path,
+						(strcmp(url, "/") == 0) ? "/index.html" : url);
 
-				if(use_cache) {
-					if((ph->hfc = mpi_fcache->open(doc)))
+					ph->mime = resolve_mime_type(doc);
+
+					if(use_cache) {
+						if((ph->hfc = mpi_fcache->open(doc)))
+							r = ph;
+					} else if((ph->pi_fio = mpi_fs->open(doc, O_RDONLY)))
 						r = ph;
-				} else if((ph->pi_fio = mpi_fs->open(doc, O_RDONLY)))
-					r = ph;
+				}
 			}
 		}
 	}

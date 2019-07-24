@@ -26,6 +26,7 @@
 #define OPT_CACHE_PATH	"cache-path"
 #define OPT_CACHE_KEY	"cache-key"
 #define OPT_NOCACHE	"cache-exclude"
+#define OPT_DISABLE	"path-disable"
 
 static iGatn *gpi_gatn = NULL;
 
@@ -72,6 +73,7 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 		_cstr_t cache_path = pi_cmd_host->option_value(OPT_CACHE_PATH, p_opt);
 		_cstr_t cache_key = pi_cmd_host->option_value(OPT_CACHE_KEY, p_opt);
 		_cstr_t no_cache = pi_cmd_host->option_value(OPT_NOCACHE, p_opt);
+		_cstr_t disable = pi_cmd_host->option_value(OPT_DISABLE, p_opt);
 		_cstr_t threads = pi_cmd_host->option_value(OPT_THREADS, p_opt);
 		_cstr_t connections = pi_cmd_host->option_value(OPT_CONNECTIONS, p_opt);
 		_cstr_t timeout = pi_cmd_host->option_value(OPT_TIMEOUT, p_opt);
@@ -89,6 +91,7 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 					if(port && root) {
 						pi_gatn->create_server(server_name, atoi(port), root, cache_path,
 									(no_cache) ? no_cache : "",
+									(disable) ? disable : "",
 									(buffer && atoi(buffer) > 0) ? atoi(buffer) * 1024 : SERVER_BUFFER_SIZE,
 									(threads) ? atoi(threads) : HTTP_MAX_WORKERS,
 									(connections) ? atoi(connections) : HTTP_MAX_CONNECTIONS,
@@ -112,7 +115,7 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 							if(p_srv->add_virtual_host(host_name, root,
 									(cache_path) ? cache_path : "/tmp",
 									(cache_key) ? cache_key : "DAC",
-									no_cache))
+									no_cache, disable))
 								p_srv->start_virtual_host(host_name);
 							else
 								fout(pi_io, "Unable to create virtual host '%s'\n", host_name);
@@ -378,7 +381,8 @@ static _cmd_opt_t _g_opt_[] = {
 	{ OPT_TIMEOUT,		OF_LONG|OF_VALUE,		0,		"Connection timeout in seconds (--timeout=<sec>)"},
 	{ OPT_CACHE_PATH,	OF_LONG|OF_VALUE|OF_PRESENT,	(_str_t)"/tmp",	"Path to cache foldef (/tmp by default)"},
 	{ OPT_CACHE_KEY,	OF_LONG|OF_VALUE,		0,		"Cache key (folder name)"},
-	{ OPT_NOCACHE,		OF_LONG|OF_VALUE,		0,		"Disable caching for spec. folders (--cache-exclude=/fldr1:/fldr2)"},
+	{ OPT_NOCACHE,		OF_LONG|OF_VALUE,		0,		"Disable caching for spec. folders (--cache-exclude=/fldr1/:/fldr2/)"},
+	{ OPT_DISABLE,		OF_LONG|OF_VALUE,		0,		"Disable folders inside documents root (--path-disable=/folder1/:/folder2/)"},
 	{ 0,			0,				0,		0 } // terminate options list
 };
 

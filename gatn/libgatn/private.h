@@ -95,6 +95,8 @@ private:
 	iFileCache	*mpi_fcache;
 	_str_t		m_nocache;
 	_u32		m_sz_nocache;
+	_str_t		m_disabled;
+	_u32		m_sz_disabled;
 	iMutex		*mpi_mutex;
 	iPool		*mpi_handle_pool;
 	iStr		*mpi_str;
@@ -104,14 +106,16 @@ private:
 	void parse_nocache_list(_cstr_t nocache);
 	_u32 get_url_path(_cstr_t url);
 	bool cacheable(_cstr_t path, _u32 len);
+	bool disabled(_cstr_t path, _u32 len);
 	_str_t realloc_nocache(_u32 sz);
-
+	_str_t realloc_path_disable(_u32 sz);
 public:
 	bool init(_cstr_t doc_root, _cstr_t cache_path,
 		_cstr_t cache_key,
 		_cstr_t cache_exclude_path, // example: /folder1:/foldef2:...
-		iHeap *pi_heap=NULL);
+		_cstr_t path_disable, iHeap *pi_heap=NULL);
 	void cache_exclude(_cstr_t path);
+	void disable_path(_cstr_t path);
 	void destroy(void);
 	HDOCUMENT open(_cstr_t url);
 	void *ptr(HDOCUMENT, _ulong*);
@@ -169,7 +173,7 @@ struct server: public _server_t {
 
 	bool init(_cstr_t name, _u32 port, _cstr_t root,
 		_cstr_t cache_path, _cstr_t cache_exclude,
-		_u32 buffer_size,
+		_cstr_t path_disable, _u32 buffer_size,
 		_u32 max_workers, _u32 max_connections,
 		_u32 connection_timeout, SSL_CTX *ssl_context);
 
@@ -205,7 +209,8 @@ struct server: public _server_t {
 	_request_t *get_request(iHttpServerConnection *pi_httpc);
 	_response_t *get_response(iHttpServerConnection *pi_httpc);
 	void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=NULL);
-	bool add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key, _cstr_t cache_exclude=NULL);
+	bool add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key,
+				_cstr_t cache_exclude=NULL, _cstr_t path_disable=NULL);
 	_vhost_t *get_virtual_host(_cstr_t host);
 	bool remove_virtual_host(_cstr_t host);
 	bool start_virtual_host(_cstr_t host);
