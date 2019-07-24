@@ -26,7 +26,7 @@
 #define OPT_CACHE_PATH	"cache-path"
 #define OPT_CACHE_KEY	"cache-key"
 #define OPT_NOCACHE	"cache-exclude"
-#define OPT_DISABLE	"path-disable"
+#define OPT_DISABLE	"root-exclude"
 
 static iGatn *gpi_gatn = NULL;
 
@@ -382,7 +382,7 @@ static _cmd_opt_t _g_opt_[] = {
 	{ OPT_CACHE_PATH,	OF_LONG|OF_VALUE|OF_PRESENT,	(_str_t)"/tmp",	"Path to cache foldef (/tmp by default)"},
 	{ OPT_CACHE_KEY,	OF_LONG|OF_VALUE,		0,		"Cache key (folder name)"},
 	{ OPT_NOCACHE,		OF_LONG|OF_VALUE,		0,		"Disable caching for spec. folders (--cache-exclude=/fldr1/:/fldr2/)"},
-	{ OPT_DISABLE,		OF_LONG|OF_VALUE,		0,		"Disable folders inside documents root (--path-disable=/folder1/:/folder2/)"},
+	{ OPT_DISABLE,		OF_LONG|OF_VALUE,		0,		"Disable folders inside documents root (--root-exclude=/folder1/:/folder2/)"},
 	{ 0,			0,				0,		0 } // terminate options list
 };
 
