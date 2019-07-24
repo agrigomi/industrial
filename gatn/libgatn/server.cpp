@@ -543,15 +543,17 @@ bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _c
 
 	memset(&vhost, 0, sizeof(_vhost_t));
 	strncpy(vhost.host, host, sizeof(vhost.host)-1);
-	vhost.root.init(root, cache_path, cache_key, cache_exclude, mpi_heap);
+
 	if(!mpi_vhost_map) {
 		if((mpi_vhost_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
 			mpi_vhost_map->init(15, mpi_heap);
 	}
 
 	if(mpi_vhost_map) {
-		if(mpi_vhost_map->add(host, strlen(host), &vhost, sizeof(_vhost_t)))
-			r = true;
+		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->add(host, strlen(host), &vhost, sizeof(_vhost_t));
+
+		if(pvhost)
+			r = pvhost->root.init(root, cache_path, cache_key, cache_exclude, mpi_heap);
 	}
 
 	return r;
