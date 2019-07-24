@@ -15,6 +15,7 @@
 			"vhost": [{
 					"host":		"oland.ddns.net",
 					"root":		"../test/NiceAdmin",
+					"exclude":	"/folder1/:/folder2/",
 					"cache": {
 						"exclude":	["fldr1", "fldr2"],
 						"path":		"/tmp/",
@@ -30,6 +31,7 @@
 				{
 					"host":		"agrigomi.ddns.net",
 					"root":		"../test/StarAdmin",
+					"exclude":	["/folder1/", "/folder2/"],
 					"cache": {
 						"exclude":	["fldr1", "fldr2"],
 						"path":		"/tmp/",
