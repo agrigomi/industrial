@@ -94,22 +94,25 @@ _str_t root::realloc_nocache(_u32 sz) {
 void root::cache_exclude(_cstr_t path) {
 	if(path) {
 		_u32 sz = strlen(path);
-		_u32 sz_old = strlen(m_nocache);
-		_cstr_t fmt;
 
-		if(path[0] != '/' && path[sz-1] != '/')
-			fmt = (m_nocache) ? ":/%s/" : "/%s/";
-		else if(path[0] == '/' && path[sz-1] != '/')
-			fmt = (m_nocache) ? ":%s/" : "%s/";
-		else if(path[0] != '/' && path[sz-1] == '/')
-			fmt = (m_nocache) ? ":/%s" : "/%s";
-		else
-			fmt = (m_nocache) ? ":%s" : "%s";
+		if(sz) {
+			_u32 sz_old = (m_nocache) ? strlen(m_nocache) : 0;
+			_cstr_t fmt;
 
-		HMUTEX hm = mpi_mutex->lock();
-		if(realloc_nocache(sz + 4))
-			snprintf(m_nocache + sz_old, m_sz_nocache - sz_old, fmt, path);
-		mpi_mutex->unlock(hm);
+			if(path[0] != '/' && path[sz-1] != '/')
+				fmt = (m_nocache) ? ":/%s/" : "/%s/";
+			else if(path[0] == '/' && path[sz-1] != '/')
+				fmt = (m_nocache) ? ":%s/" : "%s/";
+			else if(path[0] != '/' && path[sz-1] == '/')
+				fmt = (m_nocache) ? ":/%s" : "/%s";
+			else
+				fmt = (m_nocache) ? ":%s" : "%s";
+
+			HMUTEX hm = mpi_mutex->lock();
+			if(realloc_nocache(sz + 4))
+				snprintf(m_nocache + sz_old, m_sz_nocache - sz_old, fmt, path);
+			mpi_mutex->unlock(hm);
+		}
 	}
 }
 
