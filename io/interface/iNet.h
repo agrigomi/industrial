@@ -20,6 +20,7 @@ public:
 	virtual bool alive(void)=0;
 	virtual _u32 peer_ip(void)=0;
 	virtual bool peer_ip(_str_t strip, _u32 len)=0;
+	virtual _s32 socket(void)=0;
 };
 
 class iTCPServer: public iBase {

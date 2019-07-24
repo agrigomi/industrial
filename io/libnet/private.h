@@ -49,6 +49,9 @@ public:
 	bool alive(void);
 	_u32 peer_ip(void);
 	bool peer_ip(_str_t strip, _u32 len);
+	_s32 socket(void) {
+		return m_socket;
+	}
 };
 
 class cTCPServer: public iTCPServer {
