@@ -86,7 +86,7 @@ _err_t main(int argc, char *argv[]) {
 				pi_repo->object_release(pi_arg);
 			}
 
-			_server_t *p_srv = pi_gatn->create_server("gatn-1 (proholic)", 8081, doc_root, "/tmp", NULL, 32768, 8, 100, 5);
+			_server_t *p_srv = pi_gatn->create_server("gatn-1 (proholic)", 8081, doc_root, "/tmp", NULL, NULL, 32768, 8, 100, 5);
 			if(p_srv) {
 				while(!p_srv->is_running()) {
 					printf(".");
