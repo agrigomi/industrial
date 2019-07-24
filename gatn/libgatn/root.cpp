@@ -23,13 +23,32 @@ bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 		mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
 	m_nocache = NULL;
 	m_sz_nocache = 0;
-	mpi_handle_list = dynamic_cast<iLlist *>(_gpi_repo_->object_by_iname(I_LLIST, RF_CLONE | RF_NONOTIFY));
+	mpi_handle_pool = dynamic_cast<iPool *>(_gpi_repo_->object_by_iname(I_POOL, RF_CLONE | RF_NONOTIFY));
 	mpi_str = dynamic_cast<iStr *>(_gpi_repo_->object_by_iname(I_STR, RF_ORIGINAL));
 	mpi_mutex = dynamic_cast<iMutex *>(_gpi_repo_->object_by_iname(I_MUTEX, RF_CLONE|RF_NONOTIFY));
 
-	if(mpi_handle_list && mpi_str && mpi_heap && mpi_mutex) {
+	if(mpi_handle_pool && mpi_str && mpi_heap && mpi_mutex) {
 		cache_exclude(cache_exclude_path);
-		r = mpi_handle_list->init(LL_VECTOR, 2, pi_heap);
+		r = mpi_handle_pool->init(sizeof(_handle_t), [](_u8 op, void *data, void *udata) {
+			_handle_t *ph = (_handle_t *)data;
+			root *p_root = (root *)udata;
+
+			switch(op) {
+				case POOL_OP_NEW:
+				case POOL_OP_BUSY:
+					break;
+				case POOL_OP_FREE:
+				case POOL_OP_DELETE:
+					if(ph->hfc) {
+						p_root->mpi_fcache->close(ph->hfc);
+						ph->hfc = NULL;
+					} else if(ph->pi_fio) {
+						p_root->mpi_fs->close(ph->pi_fio);
+						ph->pi_fio = NULL;
+					}
+					break;
+			};
+		}, this, pi_heap);
 	} else
 		destroy();
 
@@ -48,7 +67,7 @@ void root::destroy(void) {
 
 	object_release((iBase **)&mpi_fs);
 	object_release((iBase **)&mpi_fcache);
-	object_release((iBase **)&mpi_handle_list);
+	object_release((iBase **)&mpi_handle_pool);
 	object_release((iBase **)&mpi_str);
 	object_release((iBase **)&mpi_mutex);
 }
@@ -133,11 +152,11 @@ bool root::cacheable(_cstr_t path, _u32 len) {
 HDOCUMENT root::open(_cstr_t url) {
 	HDOCUMENT r = NULL;
 
-	if(m_enable && mpi_fs && mpi_fcache && mpi_handle_list) {
+	if(m_enable && mpi_fs && mpi_fcache && mpi_handle_pool) {
 		_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
 
 		if((strlen(url) + strlen(m_root_path) < sizeof(doc)-1)) {
-			_handle_t *ph = alloc_handle(0);
+			_handle_t *ph = (_handle_t *)mpi_handle_pool->alloc();
 
 			if(ph) {
 				_u32 path_len = get_url_path(url);
@@ -154,49 +173,9 @@ HDOCUMENT root::open(_cstr_t url) {
 						r = ph;
 				} else if((ph->pi_fio = mpi_fs->open(doc, O_RDONLY)))
 					r = ph;
-
-				if(!r)
-					// move to free column
-					mpi_handle_list->mov(ph, HCOL_FREE);
 			}
 		}
 	}
-
-	return r;
-}
-
-_handle_t *root::get_busy_handle(HDOCUMENT hdoc, HMUTEX hlock) {
-	_handle_t *r = NULL;
-	_u32 sz = 0;
-	HMUTEX hm = mpi_handle_list->lock(hlock);
-
-	mpi_handle_list->col(HCOL_BUSY, hm);
-	if(mpi_handle_list->sel(hdoc, hm))
-		r = (_handle_t *)mpi_handle_list->current(&sz, hm);
-
-	mpi_handle_list->unlock(hm);
-
-	return r;
-}
-
-_handle_t *root::alloc_handle(HMUTEX hlock) {
-	_handle_t *r = NULL;
-	_u32 sz = 0;
-	HMUTEX hm = mpi_handle_list->lock(hlock);
-
-	mpi_handle_list->col(HCOL_FREE, hm);
-	if(!(r = (_handle_t *)mpi_handle_list->first(&sz, hm))) {
-		_handle_t handle;
-
-		handle.hfc = NULL;
-		handle.pi_fio = NULL;
-
-		mpi_handle_list->col(HCOL_BUSY, hm);
-		r = (_handle_t *)mpi_handle_list->add(&handle, sizeof(_handle_t), hm);
-	} else
-		mpi_handle_list->mov(r, HCOL_BUSY, hm);
-
-	mpi_handle_list->unlock(hm);
 
 	return r;
 }
@@ -204,16 +183,14 @@ _handle_t *root::alloc_handle(HMUTEX hlock) {
 void *root::ptr(HDOCUMENT hdoc, _ulong *size) {
 	void *r = NULL;
 
-	if(mpi_handle_list) {
-		_handle_t *ph = get_busy_handle(hdoc, 0);
+	if(mpi_handle_pool) {
+		_handle_t *ph = (_handle_t *)hdoc;
 
-		if(ph) {
-			if(ph->hfc) // pointer from file cache
-				r = mpi_fcache->ptr(ph->hfc, size);
-			else if(ph->pi_fio) {
-				r = ph->pi_fio->map(MPF_READ);
-				*size = ph->pi_fio->size();
-			}
+		if(ph->hfc) // pointer from file cache
+			r = mpi_fcache->ptr(ph->hfc, size);
+		else if(ph->pi_fio) {
+			r = ph->pi_fio->map(MPF_READ);
+			*size = ph->pi_fio->size();
 		}
 	}
 
@@ -221,36 +198,23 @@ void *root::ptr(HDOCUMENT hdoc, _ulong *size) {
 }
 
 void root::close(HDOCUMENT hdoc) {
-	if(mpi_handle_list) {
-		_handle_t *ph = get_busy_handle(hdoc, 0);
+	if(mpi_handle_pool) {
+		_handle_t *ph = (_handle_t *)hdoc;
 
-		if(ph) {
-			if(ph->hfc) {
-				mpi_fcache->close(ph->hfc);
-				ph->hfc = NULL;
-			} else if(ph->pi_fio) {
-				mpi_fs->close(ph->pi_fio);
-				ph->pi_fio = NULL;
-			}
-
-			// release handle
-			mpi_handle_list->mov(ph, HCOL_FREE);
-		}
+		mpi_handle_pool->free(ph);
 	}
 }
 
 time_t root::mtime(HDOCUMENT hdoc) {
 	time_t r = 0;
 
-	if(mpi_handle_list) {
-		_handle_t *ph = get_busy_handle(hdoc, 0);
+	if(mpi_handle_pool) {
+		_handle_t *ph = (_handle_t *)hdoc;
 
-		if(ph) {
-			if(ph->hfc && mpi_fcache)
-				r = mpi_fcache->mtime(ph->hfc);
-			else if(ph->pi_fio)
-				r = ph->pi_fio->modify_time();
-		}
+		if(ph->hfc && mpi_fcache)
+			r = mpi_fcache->mtime(ph->hfc);
+		else if(ph->pi_fio)
+			r = ph->pi_fio->modify_time();
 	}
 
 	return r;
@@ -259,11 +223,10 @@ time_t root::mtime(HDOCUMENT hdoc) {
 _cstr_t root::mime(HDOCUMENT hdoc) {
 	_cstr_t r = NULL;
 
-	if(mpi_handle_list) {
-		_handle_t *ph = get_busy_handle(hdoc, 0);
+	if(mpi_handle_pool) {
+		_handle_t *ph = (_handle_t *)hdoc;
 
-		if(ph)
-			r = (ph->mime) ? ph->mime : "";
+		r = (ph->mime) ? ph->mime : "";
 	}
 
 	return r;
@@ -271,39 +234,19 @@ _cstr_t root::mime(HDOCUMENT hdoc) {
 
 void root::stop(void) {
 	if(m_enable) {
-		_u32 sz = 0;
 		_u32 t = 100;
 
 		m_enable = false;
 
-		while(mpi_handle_list && t--) {
-			HMUTEX hm = mpi_handle_list->lock();
-
-			mpi_handle_list->col(HCOL_BUSY, hm);
-			void *rec = mpi_handle_list->first(&sz, hm);
-
-			mpi_handle_list->unlock(hm);
-			if(!rec)
+		while(mpi_handle_pool && t--) {
+			if(mpi_handle_pool->num_busy() == 0)
 				break;
 			else
 				usleep(10000);
 		}
 
-		if(!t && mpi_handle_list) {
-			_handle_t *ph = NULL;
-
-			do {
-				HMUTEX hm = mpi_handle_list->lock();
-
-				mpi_handle_list->col(HCOL_BUSY, hm);
-				ph = (_handle_t *)mpi_handle_list->first(&sz, hm);
-
-				mpi_handle_list->unlock(hm);
-
-				if(ph)
-					close(ph);
-			} while(ph);
-		}
+		if(!t && mpi_handle_pool)
+			mpi_handle_pool->free_all();
 
 		object_release((iBase **)&mpi_fcache);
 		object_release((iBase **)&mpi_fs);

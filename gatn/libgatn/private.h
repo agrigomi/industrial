@@ -96,14 +96,12 @@ private:
 	_str_t		m_nocache;
 	_u32		m_sz_nocache;
 	iMutex		*mpi_mutex;
-	iLlist		*mpi_handle_list;
+	iPool		*mpi_handle_pool;
 	iStr		*mpi_str;
 	HMUTEX		m_hlock;
 
 	void object_release(iBase **ppi);
 	void parse_nocache_list(_cstr_t nocache);
-	_handle_t *get_busy_handle(HDOCUMENT, HMUTEX);
-	_handle_t *alloc_handle(HMUTEX);
 	_u32 get_url_path(_cstr_t url);
 	bool cacheable(_cstr_t path, _u32 len);
 	_str_t realloc_nocache(_u32 sz);
@@ -169,7 +167,7 @@ struct server: public _server_t {
 	_u32		m_connection_timeout;
 	SSL_CTX		*m_ssl_context;
 
-	server(_cstr_t name, _u32 port, _cstr_t root,
+	bool init(_cstr_t name, _u32 port, _cstr_t root,
 		_cstr_t cache_path, _cstr_t cache_exclude,
 		_u32 buffer_size,
 		_u32 max_workers, _u32 max_connections,

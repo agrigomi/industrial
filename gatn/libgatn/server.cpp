@@ -53,11 +53,13 @@ typedef struct {
 	}
 }_connection_t;
 
-server::server(_cstr_t name, _u32 port, _cstr_t root,
+bool server::init(_cstr_t name, _u32 port, _cstr_t root,
 		_cstr_t cache_path, _cstr_t cache_exclude,
 		_u32 buffer_size,
 		_u32 max_workers, _u32 max_connections,
 		_u32 connection_timeout, SSL_CTX *ssl_context) {
+	bool r = false;
+
 	memset(&host, 0, sizeof(_vhost_t)); // default host
 	strncpy(host.host, "defulthost", sizeof(host.host));
 	mpi_server = NULL; // HTTP server
@@ -67,10 +69,35 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 	mpi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL));
 	mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
 	if((mpi_pool = dynamic_cast<iPool *>(_gpi_repo_->object_by_iname(I_POOL, RF_CLONE|RF_NONOTIFY)))) {
-		mpi_pool->init(sizeof(_connection_t), NULL, [](void *data, void *udata) {
+		mpi_pool->init(sizeof(_connection_t), [](_u8 op, void *data, void *udata) {
 			_connection_t *pcnt = (_connection_t *)data;
-			pcnt->destroy();
-		}, NULL, mpi_heap);
+			server *p_srv = (server *)udata;
+
+			switch(op) {
+				case POOL_OP_NEW:
+				case POOL_OP_BUSY: {
+						_connection_t tmp;
+
+						tmp.req.mpi_server = tmp.res.mpi_server = p_srv;
+						tmp.res.mpi_heap = p_srv->mpi_heap;
+						tmp.res.mpi_bmap = p_srv->mpi_bmap;
+						tmp.res.mp_hbarray = NULL;
+						tmp.res.m_hbcount = 0;
+						tmp.res.m_buffers = 0;
+						tmp.res.m_content_len = 0;
+						tmp.res.mpi_fs = p_srv->mpi_fs;
+						tmp.url = NULL;
+						tmp.hdoc = NULL;
+						tmp.p_vhost = NULL;
+						memcpy((void *)pcnt, (void *)&tmp, sizeof(_connection_t));
+					} break;
+				case POOL_OP_FREE:
+					break;
+				case POOL_OP_DELETE:
+					pcnt->destroy();
+					break;
+			};
+		}, this, mpi_heap);
 	}
 	mpi_net = NULL;
 	mpi_fs = NULL;
@@ -78,7 +105,7 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 	attach_network();
 	m_autorestore = false;
 	if((mpi_bmap = dynamic_cast<iBufferMap *>(_gpi_repo_->object_by_iname(I_BUFFER_MAP, RF_CLONE|RF_NONOTIFY)))) {
-		mpi_bmap->init(buffer_size, [](_u8 op, void *bptr, _u32 sz, void *udata)->_u32 {
+		mpi_bmap->init(m_buffer_size, [](_u8 op, void *bptr, _u32 sz, void *udata)->_u32 {
 			_u32 r = 0;
 
 			if(op == BIO_INIT)
@@ -93,7 +120,9 @@ server::server(_cstr_t name, _u32 port, _cstr_t root,
 	m_connection_timeout = connection_timeout;
 	m_ssl_context = ssl_context;
 
-	host.root.init(root, cache_path, name, cache_exclude, mpi_heap);
+	r = host.root.init(root, cache_path, name, cache_exclude, mpi_heap);
+
+	return r;
 }
 
 void server::attach_network(void) {
@@ -187,25 +216,11 @@ void server::destroy(_vhost_t *pvhost) {
 
 bool server::create_connection(iHttpServerConnection *p_httpc) {
 	bool r = false;
-	_connection_t tmp;
-
-	tmp.req.mpi_httpc = tmp.res.mpi_httpc = p_httpc;
-	tmp.req.mpi_server = tmp.res.mpi_server = this;
-	tmp.res.mpi_heap = mpi_heap;
-	tmp.res.mpi_bmap = mpi_bmap;
-	tmp.res.mp_hbarray = NULL;
-	tmp.res.m_hbcount = 0;
-	tmp.res.m_buffers = 0;
-	tmp.res.m_content_len = 0;
-	tmp.res.mpi_fs = mpi_fs;
-	tmp.url = NULL;
-	tmp.hdoc = NULL;
-	tmp.p_vhost = NULL;
 
 	_connection_t *p_cnt = (_connection_t *)mpi_pool->alloc();
 
 	if(p_cnt) {
-		memcpy((void *)p_cnt, (void *)&tmp, sizeof(_connection_t));
+		p_cnt->req.mpi_httpc = p_cnt->res.mpi_httpc = p_httpc;
 		p_httpc->set_udata((_ulong)p_cnt, IDX_CONNECTION);
 		r = true;
 	}

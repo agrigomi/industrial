@@ -193,12 +193,17 @@ public:
 
 		if(mpi_map) {
 			if(!(r = (_server_t *)mpi_map->get(name, strlen(name), &sz))) {
-				server srv(name, port, doc_root, cache_path, no_cache,
-					buffer_size, max_workers, max_connections,
-					connection_timeout, ssl_context);
+				server srv;
+				server *psrv = (server *)mpi_map->add(name, strlen(name), &srv, sizeof(server));
 
-				if((r = (_server_t *)mpi_map->add(name, strlen(name), &srv, sizeof(server))))
-					r->start();
+				if(psrv) {
+					if(psrv->init(name, port, doc_root, cache_path, no_cache,
+							buffer_size, max_workers, max_connections,
+							connection_timeout, ssl_context)) {
+						psrv->start();
+						r = psrv;
+					}
+				}
 			}
 		}
 
