@@ -9,8 +9,8 @@ class cPool: public iPool {
 private:
 	iLlist	*mpi_list;
 	_u32 	m_data_size;
-	void (*mp_cb)(_u8 op, void *data, void *udata);
 	void *mp_udata;
+	void (*mp_cb)(_u8, void *, void *);
 
 	void destroy(void) {
 		HMUTEX hm = mpi_list->lock();
@@ -75,8 +75,8 @@ public:
 		switch(cmd) {
 			case OCTL_INIT:
 				m_data_size = 0;
-				if((mpi_list = dynamic_cast<iLlist *>(_gpi_repo_->object_by_iname(I_LLIST, RF_CLONE|RF_NONOTIFY))))
-					r = true;
+				mpi_list = NULL;
+				r = true;
 				break;
 
 			case OCTL_UNINIT:
@@ -89,12 +89,12 @@ public:
 	}
 
 	bool init(_u32 data_size,
-			void (*cb)(_u8 op, void *data, void *udata),
+			void (*cb)(_u8, void *, void *),
 			void *udata,
 			iHeap *pi_heap) {
 		bool r = false;
 
-		if(mpi_list) {
+		if((mpi_list = dynamic_cast<iLlist *>(_gpi_repo_->object_by_iname(I_LLIST, RF_CLONE|RF_NONOTIFY)))) {
 			m_data_size = data_size;
 			mp_cb = cb;
 			mp_udata = udata;

@@ -82,9 +82,9 @@ class iPool: public iBase {
 public:
 	INTERFACE(iPool, I_POOL);
 	virtual bool init(_u32 data_size,
-			void (*)(_u8 op, void *data, void *udata)=0,
+			void (*cb)(_u8, void *, void *)=0,
 			void *udata=NULL,
-			iHeap *pi_heap=0)=0;
+			iHeap *p=0)=0;
 	virtual void *alloc(void)=0;
 	virtual void free(void *)=0;
 	virtual void free_all(void)=0;
