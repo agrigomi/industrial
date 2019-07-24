@@ -75,10 +75,8 @@ private:
 			while(p_srv) {
 				server *p = dynamic_cast<server *>(p_srv);
 
-				if(p) {
-					mpi_log->fwrite(LMT_INFO, "Gatn: stop server '%s'", p->m_name);
+				if(p)
 					p->destroy();
-				}
 				p_srv = (_server_t *)mpi_map->enum_next(en, &sz, hm);
 			}
 

@@ -319,6 +319,7 @@ bool server::start(void) {
 								m_ssl_context);
 
 		if(host.root.is_enabled() && mpi_server) {
+			mpi_log->fwrite(LMT_INFO, "Gatn: Start server '%s'", m_name);
 			set_handlers();
 			r = true;
 		}
@@ -354,6 +355,7 @@ bool server::start(_vhost_t *pvhost) {
 
 void server::stop(void) {
 	if(mpi_server) {
+		mpi_log->fwrite(LMT_INFO, "Gatn: Stop server '%s'", m_name);
 		_gpi_repo_->object_release(mpi_server, false);
 		mpi_server = NULL;
 	}
