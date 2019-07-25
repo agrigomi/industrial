@@ -2,12 +2,13 @@
 #define __ARRAY_H__
 
 #include <string.h>
+#include "startup.h"
 #include "iMemory.h"
 #include "iRepository.h"
 
 
 template <class T>
-class tArray {
+class _LOCAL_ tArray {
 private:
 	T 	*mp_array;
 	_u32 	m_capacity;
@@ -86,6 +87,14 @@ public:
 
 	_u32 size(void) {
 		return m_size;
+	}
+
+	void clean(void) {
+		if(mp_array && m_capacity && mpi_heap) {
+			mpi_heap->free((void *)mp_array, m_capacity * sizeof(T));
+			mp_array = NULL;
+			m_capacity = m_size = 0;
+		}
 	}
 
 	void destroy(void) {
