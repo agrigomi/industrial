@@ -14,6 +14,7 @@ private:
 	_u32	m_initial;
 	_u32 	m_size;
 	iHeap 	*mpi_heap;
+	bool	my_heap;
 
 	bool realloc(void) {
 		bool r = false;
@@ -41,14 +42,17 @@ private:
 	}
 
 public:
-	tArray(int capacity, iHeap *pi_heap) {
+	tArray(int capacity, iHeap *pi_heap=NULL) {
 		m_capacity = 0;
 		mp_array = NULL;
 		m_size = 0;
 		m_initial = capacity;
+		my_heap = false;
 
-		if(!(mpi_heap = pi_heap))
+		if(!(mpi_heap = pi_heap)) {
 			mpi_heap = (iHeap *)_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL);
+			my_heap = true;
+		}
 	}
 
 	~tArray() {
@@ -89,7 +93,8 @@ public:
 			mpi_heap->free((void *)mp_array, m_capacity * sizeof(T));
 			mp_array = NULL;
 			m_capacity = m_size = m_initial = 0;
-			_gpi_repo_->object_release(mpi_heap);
+			if(my_heap)
+				_gpi_repo_->object_release(mpi_heap);
 		}
 	}
 };
