@@ -6,7 +6,6 @@
 #include "iMemory.h"
 #include "iRepository.h"
 
-
 template <class T>
 class _LOCAL_ tArray {
 private:
@@ -60,13 +59,17 @@ public:
 		destroy();
 	}
 
-	T& operator [](_u32 i) {
+	T& get(_u32 i) {
 		T *r = NULL;
 
 		if(i < m_size)
 			r = &mp_array[i];
 
 		return *r;
+	}
+
+	T& operator [](_u32 i) {
+		return get(i);
 	}
 
 	void add(const T &item) {
