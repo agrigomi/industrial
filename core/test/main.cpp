@@ -13,7 +13,7 @@
 #include "iMemory.h"
 #include "iHT.h"
 #include "iGatn.h"
-#include "array.h"
+#include "tVector.h"
 
 IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
