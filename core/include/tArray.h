@@ -7,8 +7,6 @@
 #include "iMemory.h"
 #include "iRepository.h"
 
-#define INITIAL_ARRAY_SIZE 16
-
 template <class T>
 class _LOCAL_ tArray {
 private:
@@ -66,7 +64,7 @@ public:
 
 	tArray() {
 		m_capacity = m_size = 0;
-		m_initial = INITIAL_ARRAY_SIZE;
+		m_initial = 0;
 		mpi_heap = NULL;
 		mp_array = NULL;
 		my_heap = m_is_init = false;
@@ -94,10 +92,12 @@ public:
 	T& get(_u32 i) {
 		T *r = NULL;
 
-		m_mutex.lock();
-		if(i < m_size)
-			r = &mp_array[i];
-		m_mutex.unlock();
+		if(m_is_init) {
+			m_mutex.lock();
+			if(i < m_size)
+				r = &mp_array[i];
+			m_mutex.unlock();
+		}
 
 		return *r;
 	}
@@ -107,17 +107,19 @@ public:
 	}
 
 	void add(const T &item) {
-		bool a = true;
+		if(m_is_init) {
+			bool a = true;
 
-		m_mutex.lock();
-		if(m_size == m_capacity)
-			a = realloc();
+			m_mutex.lock();
+			if(m_size == m_capacity)
+				a = realloc();
 
-		if(a) {
-			mp_array[m_size] = item;
-			m_size++;
+			if(a) {
+				mp_array[m_size] = item;
+				m_size++;
+			}
+			m_mutex.unlock();
 		}
-		m_mutex.unlock();
 	}
 
 	void operator +=(const T &item) {
@@ -135,7 +137,7 @@ public:
 
 	void clean(void) {
 		m_mutex.lock();
-		if(mp_array && m_capacity) {
+		if(m_is_init && m_capacity) {
 			iHeap *pi_heap = get_heap();
 
 			if(pi_heap)
@@ -149,7 +151,7 @@ public:
 
 	void destroy(void) {
 		m_mutex.lock();
-		if(mp_array && m_capacity) {
+		if(m_is_init && m_capacity) {
 			iHeap *pi_heap = get_heap();
 
 			if(pi_heap)
@@ -157,7 +159,7 @@ public:
 
 			mp_array = NULL;
 			m_capacity = m_size = 0;
-			m_initial = INITIAL_ARRAY_SIZE;
+			m_initial = 0;
 			if(my_heap)
 				_gpi_repo_->object_release(mpi_heap);
 			mpi_heap = NULL;

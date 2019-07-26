@@ -54,7 +54,7 @@ public:
 
 	tVector() {
 		m_capacity = m_size = 0;
-		m_initial = INITIAL_ARRAY_SIZE;
+		m_initial = 0;
 		mpi_heap = NULL;
 		my_heap = m_is_init = false;
 	}
@@ -81,16 +81,18 @@ public:
 	_T& get(_u32 i) {
 		_T *r = NULL;
 
-		m_mutex.lock();
-		if(i < m_size) {
-			_u32 chunk = i / m_initial;
-			_u32 idx = i % m_initial;
-			_T *p = m_array[chunk];
+		if(m_is_init) {
+			m_mutex.lock();
+			if(i < m_size) {
+				_u32 chunk = i / m_initial;
+				_u32 idx = i % m_initial;
+				_T *p = m_array[chunk];
 
-			if(p)
-				r = &p[idx];
+				if(p)
+					r = &p[idx];
+			}
+			m_mutex.unlock();
 		}
-		m_mutex.unlock();
 
 		return *r;
 	}
@@ -100,21 +102,23 @@ public:
 	}
 
 	void add(const _T &item) {
-		bool a = true;
+		if(m_is_init) {
+			bool a = true;
 
-		m_mutex.lock();
-		if(m_size == m_capacity)
-			a = alloc_chunk();
+			m_mutex.lock();
+			if(m_size == m_capacity)
+				a = alloc_chunk();
 
-		if(a) {
-			_u32 chunk = m_size / m_initial;
-			_u32 idx = m_size % m_initial;
-			_T *p = m_array[chunk];
+			if(a) {
+				_u32 chunk = m_size / m_initial;
+				_u32 idx = m_size % m_initial;
+				_T *p = m_array[chunk];
 
-			p[idx] = item;
-			m_size++;
+				p[idx] = item;
+				m_size++;
+			}
+			m_mutex.unlock();
 		}
-		m_mutex.unlock();
 	}
 
 	void operator +=(const _T &item) {
@@ -132,7 +136,7 @@ public:
 
 	void clean(void) {
 		m_mutex.lock();
-		if(m_is_init) {
+		if(m_is_init && m_capacity) {
 			iHeap *pi_heap = get_heap();
 			_u32 sz = m_array.size();
 
@@ -153,7 +157,7 @@ public:
 
 	void destroy(void) {
 		m_mutex.lock();
-		if(m_is_init) {
+		if(m_is_init && m_capacity) {
 			_u32 sz = m_array.size();
 			iHeap *pi_heap = get_heap();
 
@@ -168,7 +172,7 @@ public:
 
 			m_array.destroy();
 			m_capacity = m_size = 0;
-			m_initial = INITIAL_ARRAY_SIZE;
+			m_initial = 0;
 
 			if(my_heap)
 				_gpi_repo_->object_release(mpi_heap);
