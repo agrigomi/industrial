@@ -125,12 +125,10 @@ public:
 			mpi_heap->free((void *)mp_array, m_capacity * sizeof(T));
 			mp_array = NULL;
 			m_capacity = m_size = m_initial = 0;
-			if(my_heap) {
+			if(my_heap)
 				_gpi_repo_->object_release(mpi_heap);
-				mpi_heap = NULL;
-			}
-
-			m_is_init = false;
+			mpi_heap = NULL;
+			m_is_init = my_heap = false;
 		}
 	}
 };
@@ -182,6 +180,24 @@ public:
 	}
 
 	void destroy(void) {
+		if(mpi_heap  && m_is_init) {
+			_u32 sz = m_array.size();
+
+			for(_u32 i = 0; i  < sz; i++) {
+				_T *ptr = m_array[i];
+				if(ptr)
+					mpi_heap->free(ptr, m_initial * sizeof(_T));
+			}
+
+			m_array.destroy();
+			m_capacity = m_size = m_initial = 0;
+
+			if(my_heap)
+				_gpi_repo_->object_release(mpi_heap);
+
+			mpi_heap = NULL;
+			m_is_init = my_heap = false;
+		}
 	}
 };
 
