@@ -74,7 +74,7 @@ public:
 		destroy();
 	}
 
-	void init(_u32 capacity, iHeap *pi_heap) {
+	void init(_u32 capacity, iHeap *pi_heap=NULL) {
 		if(!m_is_init) {
 			m_capacity = 0;
 			mp_array = NULL;
