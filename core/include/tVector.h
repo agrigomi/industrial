@@ -1,11 +1,6 @@
 #ifndef __TVECTOR_H__
 #define __TVECTOR_H__
 
-
-#include <string.h>
-#include "startup.h"
-#include "iMemory.h"
-#include "iRepository.h"
 #include "tArray.h"
 
 #define INITIAL_CH_ARRAY	4
