@@ -80,7 +80,7 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 		_cstr_t arg2 = pi_cmd_host->argument(argc, argv, p_opt, 2);
 		_cstr_t arg3 = pi_cmd_host->argument(argc, argv, p_opt, 3);
 
-		if(!arg2 )
+		if(!arg2)
 			fout(pi_io, "Usage: gatn create <server | host>\n");
 		else {
 			if(strcmp(arg2, ACT_SERVER) == 0) {
@@ -114,7 +114,7 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 						if(p_srv) {
 							if(p_srv->add_virtual_host(host_name, root,
 									(cache_path) ? cache_path : "/tmp",
-									(cache_key) ? cache_key : "DAC",
+									(cache_key) ? cache_key : host_name,
 									no_cache, disable))
 								p_srv->start_virtual_host(host_name);
 							else
@@ -198,7 +198,7 @@ static void gatn_start_handler(iCmd *pi_cmd, // interface to command object
 		_cstr_t arg2 = pi_cmd_host->argument(argc, argv, p_opt, 2); // server or host
 		_cstr_t arg3 = pi_cmd_host->argument(argc, argv, p_opt, 3); // server name or host name
 
-		if(!arg2 )
+		if(!arg2)
 			fout(pi_io, "Usage: gatn start <server | host>\n");
 		else {
 			if(strcmp(arg2, ACT_SERVER) == 0) {
@@ -247,7 +247,7 @@ static void gatn_stop_handler(iCmd *pi_cmd, // interface to command object
 		_cstr_t arg2 = pi_cmd_host->argument(argc, argv, p_opt, 2); // server or host
 		_cstr_t arg3 = pi_cmd_host->argument(argc, argv, p_opt, 3); // server name or host name
 
-		if(!arg2 )
+		if(!arg2)
 			fout(pi_io, "Usage: gatn stop <server | host>\n");
 		else {
 			if(strcmp(arg2, ACT_SERVER) == 0) {
@@ -377,7 +377,7 @@ static _cmd_opt_t _g_opt_[] = {
 	{ OPT_ROOT,		OF_LONG|OF_VALUE,		0,		"Path to documents root (--root=<path>)"},
 	{ OPT_BUFFER,		OF_LONG|OF_VALUE,		0,		"Buffer size in Kb"},
 	{ OPT_THREADS,		OF_LONG|OF_VALUE,		0,		"Max. number of HTTP worker threads (--threads=<num>)"},
-	{ OPT_CONNECTIONS,	OF_LONG|OF_VALUE,		0,		"Max number of HTTP connections (--connections=<num>)"},
+	{ OPT_CONNECTIONS,	OF_LONG|OF_VALUE,		0,		"Max. number of HTTP connections (--connections=<num>)"},
 	{ OPT_TIMEOUT,		OF_LONG|OF_VALUE,		0,		"Connection timeout in seconds (--timeout=<sec>)"},
 	{ OPT_CACHE_PATH,	OF_LONG|OF_VALUE|OF_PRESENT,	(_str_t)"/tmp",	"Path to cache foldef (/tmp by default)"},
 	{ OPT_CACHE_KEY,	OF_LONG|OF_VALUE,		0,		"Cache key (folder name)"},
