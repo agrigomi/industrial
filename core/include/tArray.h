@@ -92,13 +92,14 @@ public:
 	T& get(_u32 i) {
 		T *r = NULL;
 
+		m_mutex.lock();
+
 		if(m_is_init) {
-			m_mutex.lock();
 			if(i < m_size)
 				r = &mp_array[i];
-			m_mutex.unlock();
 		}
 
+		m_mutex.unlock();
 		return *r;
 	}
 
@@ -107,10 +108,11 @@ public:
 	}
 
 	void add(const T &item) {
+		m_mutex.lock();
+
 		if(m_is_init) {
 			bool a = true;
 
-			m_mutex.lock();
 			if(m_size == m_capacity)
 				a = realloc();
 
@@ -118,8 +120,9 @@ public:
 				mp_array[m_size] = item;
 				m_size++;
 			}
-			m_mutex.unlock();
 		}
+
+		m_mutex.unlock();
 	}
 
 	void operator +=(const T &item) {

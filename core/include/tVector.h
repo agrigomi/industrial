@@ -81,8 +81,9 @@ public:
 	_T& get(_u32 i) {
 		_T *r = NULL;
 
+		m_mutex.lock();
+
 		if(m_is_init) {
-			m_mutex.lock();
 			if(i < m_size) {
 				_u32 chunk = i / m_initial;
 				_u32 idx = i % m_initial;
@@ -91,9 +92,9 @@ public:
 				if(p)
 					r = &p[idx];
 			}
-			m_mutex.unlock();
 		}
 
+		m_mutex.unlock();
 		return *r;
 	}
 
@@ -102,10 +103,11 @@ public:
 	}
 
 	void add(const _T &item) {
+		m_mutex.lock();
+
 		if(m_is_init) {
 			bool a = true;
 
-			m_mutex.lock();
 			if(m_size == m_capacity)
 				a = alloc_chunk();
 
@@ -114,11 +116,13 @@ public:
 				_u32 idx = m_size % m_initial;
 				_T *p = m_array[chunk];
 
-				p[idx] = item;
-				m_size++;
+				if(p) {
+					p[idx] = item;
+					m_size++;
+				}
 			}
-			m_mutex.unlock();
 		}
+		m_mutex.unlock();
 	}
 
 	void operator +=(const _T &item) {
