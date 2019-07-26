@@ -6,7 +6,7 @@
 #define INITIAL_CH_ARRAY	4
 
 template <class _T>
-class tVector { //Chunked array
+class _LOCAL_ tVector { // Chunked array
 private:
 	tArray<_T*> 	m_array;
 	_u32 		m_capacity;
