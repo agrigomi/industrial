@@ -65,11 +65,19 @@ void cHttpServer::_close(void) {
 void cHttpServer::http_server_thread(void) {
 	m_is_running = true;
 	m_is_stopped = false;
+	_u32 to_idle = 100;
 
 	while(m_is_running) {
-		if(m_is_init && m_num_connections < m_max_connections)
+		if(m_is_init && m_num_connections < m_max_connections) {
 			add_connection();
-		usleep(10000);
+			to_idle = 100;
+		}
+
+		if(to_idle) {
+			usleep(10000);
+			to_idle--;
+		} else
+			usleep(100000);
 	}
 
 	m_is_stopped = true;
