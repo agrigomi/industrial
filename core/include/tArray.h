@@ -107,7 +107,9 @@ public:
 		return get(i);
 	}
 
-	void add(const T &item) {
+	_u32 add(const T &item) {
+		_u32 r = -1;
+
 		m_mutex.lock();
 
 		if(m_is_init) {
@@ -117,16 +119,19 @@ public:
 				a = realloc();
 
 			if(a) {
+				r = m_size;
 				mp_array[m_size] = item;
 				m_size++;
 			}
 		}
 
 		m_mutex.unlock();
+
+		return r;
 	}
 
-	void operator +=(const T &item) {
-		add(item);
+	_u32 operator +=(const T &item) {
+		return add(item);
 	}
 
 	_u32 size(void) {

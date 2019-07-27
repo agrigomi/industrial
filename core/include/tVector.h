@@ -102,7 +102,9 @@ public:
 		return get(i);
 	}
 
-	void add(const _T &item) {
+	_u32 add(const _T &item) {
+		_u32 r = -1;
+
 		m_mutex.lock();
 
 		if(m_is_init) {
@@ -117,16 +119,19 @@ public:
 				_T *p = m_array[chunk];
 
 				if(p) {
+					r = m_size;
 					p[idx] = item;
 					m_size++;
 				}
 			}
 		}
 		m_mutex.unlock();
+
+		return r;
 	}
 
-	void operator +=(const _T &item) {
-		add(item);
+	_u32 operator +=(const _T &item) {
+		return add(item);
 	}
 
 	_u32 size(void) {
