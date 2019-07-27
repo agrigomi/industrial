@@ -79,6 +79,7 @@ void *_http_worker_thread(void *udata) {
 	void *r = 0;
 	cHttpServer *p_https = static_cast<cHttpServer *>(udata);
 	volatile _u32 num = p_https->m_active_workers++;
+	_u32 to_idle = 100;
 
 	p_https->m_num_workers++;
 
@@ -86,6 +87,7 @@ void *_http_worker_thread(void *udata) {
 		_http_connection_t *rec = p_https->get_connection();
 
 		if(rec) {
+			to_idle = 100;
 			if(rec->p_httpc) {
 				if(rec->p_httpc->alive()) {
 					_u8 evt = rec->p_httpc->process();
@@ -98,8 +100,13 @@ void *_http_worker_thread(void *udata) {
 				}
 			} else
 				p_https->remove_connection(rec);
-		} else
-			usleep(10000);
+		} else {
+			if(to_idle) {
+				usleep(10000);
+				to_idle--;
+			} else
+				usleep(100000);
+		}
 	}
 
 	p_https->m_num_workers--;
