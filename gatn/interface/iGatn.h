@@ -60,6 +60,7 @@ struct gatn_server {
 	virtual _u32 port(void)=0;
 	virtual void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata=NULL, _cstr_t host=NULL)=0;
 	virtual void on_event(_u8 evt, _on_http_event_t *pcb, void *udata=NULL, _cstr_t host=NULL)=0;
+	virtual _on_http_event_t *get_event_handler(_u8 evt, void **pp_udata, _cstr_t host=NULL)=0;
 	virtual void remove_route(_u8 method, _cstr_t path)=0;
 	virtual _request_t *get_request(iHttpServerConnection *pi_httpc)=0;
 	virtual _response_t *get_response(iHttpServerConnection *pi_httpc)=0;

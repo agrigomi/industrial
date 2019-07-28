@@ -493,6 +493,18 @@ void server::on_event(_u8 evt, _on_http_event_t *pcb, void *udata, _cstr_t _host
 	}
 }
 
+_on_http_event_t *server::get_event_handler(_u8 evt, void **pp_udata, _cstr_t host) {
+	_on_http_event_t *r = NULL;
+	_vhost_t *pvhost = get_host(host);
+
+	if(evt < HTTP_MAX_EVENTS) {
+		r = pvhost->event[evt].pcb;
+		*pp_udata = pvhost->event[evt].udata;
+	}
+
+	return r;
+}
+
 void server::remove_route(_u8 method, _cstr_t path) {
 	_route_key_t key;
 
