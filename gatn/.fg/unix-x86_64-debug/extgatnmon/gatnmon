@@ -1,2 +1,3 @@
 gatn/libgatnmon/main.cpp
+gatn/libgatnmon/http_log.cpp
 
