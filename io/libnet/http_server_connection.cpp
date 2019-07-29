@@ -80,13 +80,6 @@ static _http_method_map _g_method_map[] = {
 	{0,			NULL}
 };
 
-#define VAR_REQ_METHOD		"req-Method"
-#define VAR_REQ_HEADER		"req-Header"
-#define VAR_REQ_URI		"req-URI"
-#define VAR_REQ_URL		"req-URL"
-#define VAR_REQ_URN		"req-URN"
-#define VAR_REQ_PROTOCOL	"req-Protocol"
-
 #define USE_CONNECTION_TIMEOUT
 
 static iStr *gpi_str = 0;

@@ -82,6 +82,13 @@ public:
 #define HTTP_METHOD_OPTIONS	7
 #define HTTP_METHOD_TRACE	8
 
+#define VAR_REQ_METHOD		"req-Method"
+#define VAR_REQ_HEADER		"req-Header"
+#define VAR_REQ_URI		"req-URI"
+#define VAR_REQ_URL		"req-URL"
+#define VAR_REQ_URN		"req-URN"
+#define VAR_REQ_PROTOCOL	"req-Protocol"
+
 class iHttpServerConnection: public iBase {
 public:
 	INTERFACE(iHttpServerConnection, I_HTTP_SERVER_CONNECTION);
