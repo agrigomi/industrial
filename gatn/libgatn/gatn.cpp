@@ -211,7 +211,11 @@ public:
 
 	_server_t *server_by_name(_cstr_t name) {
 		_u32 sz = 0;
-		_server_t *r = (_server_t *)mpi_map->get(name, strlen(name), &sz);
+		_server_t *r = NULL;
+
+		if(name)
+			r = (_server_t *)mpi_map->get(name, strlen(name), &sz);
+
 		return r;
 	}
 
