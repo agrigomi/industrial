@@ -14,8 +14,11 @@
 #define ACT_LIST	"list"
 #define ACT_LOAD	"load"
 #define ACT_RELOAD	"reload"
+#define ACT_ATTACH	"attach"
+#define ACT_DETACH	"detach"
 
 #define OPT_SERVER	"server"
+#define OPT_HOST	"host"
 #define OPT_NAME	"name"
 #define OPT_PORT	"port"
 #define OPT_ROOT	"root"
@@ -27,6 +30,7 @@
 #define OPT_CACHE_KEY	"cache-key"
 #define OPT_NOCACHE	"cache-exclude"
 #define OPT_DISABLE	"root-exclude"
+#define OPT_OPTIONS	"options"
 
 static iGatn *gpi_gatn = NULL;
 
@@ -331,6 +335,26 @@ static void gatn_reload_handler(iCmd *pi_cmd, // interface to command object
 	//...
 }
 
+static void gatn_attach_handler(iCmd *pi_cmd, // interface to command object
+			iCmdHost *pi_cmd_host, // interface to command host
+			iIO *pi_io, // interface to I/O object
+			_cmd_opt_t *p_opt, // options array
+			_u32 argc, // number of arguments
+			_cstr_t argv[] // arguments
+			) {
+	//...
+}
+
+static void gatn_detach_handler(iCmd *pi_cmd, // interface to command object
+			iCmdHost *pi_cmd_host, // interface to command host
+			iIO *pi_io, // interface to I/O object
+			_cmd_opt_t *p_opt, // options array
+			_u32 argc, // number of arguments
+			_cstr_t argv[] // arguments
+			) {
+	//...
+}
+
 static _cmd_action_t _g_gatn_actions_[] = {
 	{ ACT_CREATE,	gatn_create_handler},
 	{ ACT_REMOVE,	gatn_remove_handler},
@@ -339,6 +363,8 @@ static _cmd_action_t _g_gatn_actions_[] = {
 	{ ACT_LIST,	gatn_list_handler},
 	{ ACT_LOAD,	gatn_load_handler},
 	{ ACT_RELOAD,	gatn_reload_handler},
+	{ ACT_ATTACH,	gatn_attach_handler},
+	{ ACT_DETACH,	gatn_detach_handler},
 	{ 0,		0}
 };
 
@@ -372,6 +398,7 @@ static void gatn_handler(iCmd *pi_cmd, // interface to command object
 
 static _cmd_opt_t _g_opt_[] = {
 	{ OPT_SERVER,		OF_LONG|OF_VALUE,		0,		"Server name (--server=<name>)"},
+	{ OPT_HOST,		OF_LONG|OF_VALUE,		0,		"Host name (--host=<name>)"},
 	{ OPT_NAME,		OF_LONG|OF_VALUE,		0,		"Server or host name (--name=<name>)"},
 	{ OPT_PORT,		OF_LONG|OF_VALUE,		0,		"Listen port number (--port=<number>)"},
 	{ OPT_ROOT,		OF_LONG|OF_VALUE,		0,		"Path to documents root (--root=<path>)"},
@@ -383,6 +410,7 @@ static _cmd_opt_t _g_opt_[] = {
 	{ OPT_CACHE_KEY,	OF_LONG|OF_VALUE,		0,		"Cache key (folder name)"},
 	{ OPT_NOCACHE,		OF_LONG|OF_VALUE,		0,		"Disable caching for spec. folders (--cache-exclude=/fldr1/:/fldr2/)"},
 	{ OPT_DISABLE,		OF_LONG|OF_VALUE,		0,		"Disable folders inside documents root (--root-exclude=/folder1/:/folder2/)"},
+	{ OPT_OPTIONS,		OF_LONG|OF_VALUE,		0,		"Class arguments (--options='...')"},
 	{ 0,			0,				0,		0 } // terminate options list
 };
 
@@ -395,8 +423,10 @@ static _cmd_t _g_cmd_[] = {
 		ACT_STOP   "\t:Stop server or host (gatn start <server|host> name)\n"
 		ACT_LIST   "\t:List servers\n"
 		ACT_LOAD   "\t:Configure Gatn by JSON file (gatn load <JSON file name>)\n"
-		ACT_RELOAD "\t:Reload configuration for server or host (gatn reload [<server|host>])\n",
-		"gatn <command> [options] [arguments]"
+		ACT_RELOAD "\t:Reload configuration for server or host (gatn reload [<server|host>])\n"
+		ACT_ATTACH "\t:Attach class (gatn attach <class name> | <--name=...> --server=... [--host=... --options='...'])\n"
+		ACT_DETACH "\t:Detach class (gatn detach <class name> | <--name=...> --server=... [--host=...])\n\n"
+		"Usage: gatn <command> [options] [arguments]\n"
 	},
 	{ 0,	0,	0,	0,	0,	0} // terminate command list
 };
