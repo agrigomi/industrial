@@ -726,3 +726,19 @@ bool server::detach_class(_cstr_t cname, _cstr_t _host) {
 
 	return r;
 }
+void server::release_class(_cstr_t cname) {
+	struct _xhost {
+		_cstr_t _cname;
+		server	*psrv;
+	};
+
+	_xhost tmp { cname, this};
+
+	enum_virtual_hosts([](_vhost_t *pvhost, void *udata) {
+		_xhost *p = (_xhost *)udata;
+
+		p->psrv->detach_class(p->_cname, pvhost->host);
+	}, &tmp);
+
+	detach_class(cname);
+}

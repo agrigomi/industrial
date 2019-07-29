@@ -150,7 +150,13 @@ public:
 						if(strcmp(oi.iname, I_GATN_EXTENSION) == 0) {
 							// unregister extension
 							mpi_log->fwrite(LMT_INFO, "Gatn: unregister class '%s'", oi.cname);
-							//...
+							enum_servers([](_server_t *psrv, void *udata) {
+								_object_info_t *poi = (_object_info_t *)udata;
+								server *ps = (server *)psrv;
+
+								ps->release_class(poi->cname);
+							}, &oi);
+
 						}
 					}
 				}

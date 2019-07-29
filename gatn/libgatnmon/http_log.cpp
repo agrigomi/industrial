@@ -1,3 +1,4 @@
+#include <string.h>
 #include "iGatn.h"
 #include "iArgs.h"
 #include "iLog.h"
@@ -100,7 +101,7 @@ public:
 
 		switch(cmd) {
 			case OCTL_INIT:
-				memset(&m_original_evt, 0, sizeof(_http_evt_t));
+				memset(m_original_evt, 0, sizeof(m_original_evt));
 				memset(m_host_name, 0, sizeof(m_host_name));
 
 				mpi_args = dynamic_cast<iArgs *>(_gpi_repo_->object_by_iname(I_ARGS, RF_CLONE|RF_NONOTIFY));
