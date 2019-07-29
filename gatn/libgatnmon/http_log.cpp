@@ -15,6 +15,8 @@ private:
 	iArgs		*mpi_args;
 	iLog		*mpi_log;
 	_http_evt_t	m_original_evt[MAX_EVENTS]; // backup events
+	_server_t	*mpi_gatn_server;
+	_char_t		m_host_name[256];
 
 	void backup_handlers(_server_t *psrv, _cstr_t host) {
 		m_original_evt[ON_REQUEST].p_cb = psrv->get_event_handler(ON_REQUEST, &(m_original_evt[ON_REQUEST].udata), host);
@@ -29,16 +31,31 @@ private:
 			_cstr_t method = pscnt->req_var(VAR_REQ_METHOD);
 			_cstr_t uri = pscnt->req_var(VAR_REQ_URI);
 			_cstr_t protocol = pscnt->req_var(VAR_REQ_PROTOCOL);
+			_char_t ip[32];
 
-			//...
+			pscnt->peer_ip(ip, sizeof(ip));
+
+			pi_log->fwrite(LMT_INFO, "%s/%s: (%s) %s %s %s",
+						pobj->mpi_gatn_server->name(),
+						(strlen(pobj->m_host_name)) ? pobj->m_host_name: "defaulthost",
+						ip,
+						method, protocol, uri);
+
 			pobj->call_original_handler(ON_REQUEST, pscnt);
 		}, this, host);
 
 		psrv->on_event(ON_ERROR, [](iHttpServerConnection *pscnt, void *udata) {
 			cHttpLog *pobj = (cHttpLog *)udata;
 			iLog *pi_log = pobj->mpi_log;
+			_char_t ip[32];
 
-			//...
+			pscnt->peer_ip(ip, sizeof(ip));
+
+			pi_log->fwrite(LMT_ERROR, "%s/%s: (%s) ERROR(%d)",
+						pobj->mpi_gatn_server->name(),
+						(strlen(pobj->m_host_name)) ? pobj->m_host_name: "defaulthost",
+						ip,
+						pscnt->error_code());
 			pobj->call_original_handler(ON_ERROR, pscnt);
 		}, this, host);
 
@@ -46,7 +63,19 @@ private:
 			cHttpLog *pobj = (cHttpLog *)udata;
 			iLog *pi_log = pobj->mpi_log;
 
-			//...
+			_cstr_t method = pscnt->req_var(VAR_REQ_METHOD);
+			_cstr_t uri = pscnt->req_var(VAR_REQ_URI);
+			_cstr_t protocol = pscnt->req_var(VAR_REQ_PROTOCOL);
+			_char_t ip[32];
+
+			pscnt->peer_ip(ip, sizeof(ip));
+
+			pi_log->fwrite(LMT_ERROR, "%s/%s: (%s) NOT FOUND(404): %s %s %s",
+						pobj->mpi_gatn_server->name(),
+						(strlen(pobj->m_host_name)) ? pobj->m_host_name: "defaulthost",
+						ip,
+						method, protocol, uri);
+
 			pobj->call_original_handler(ON_NOT_FOUND, pscnt);
 		}, this, host);
 	}
@@ -72,6 +101,7 @@ public:
 		switch(cmd) {
 			case OCTL_INIT:
 				memset(&m_original_evt, 0, sizeof(_http_evt_t));
+				memset(m_host_name, 0, sizeof(m_host_name));
 
 				mpi_args = dynamic_cast<iArgs *>(_gpi_repo_->object_by_iname(I_ARGS, RF_CLONE|RF_NONOTIFY));
 				mpi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL));
@@ -101,6 +131,9 @@ public:
 	bool attach(_server_t *p_srv, _cstr_t host=NULL) {
 		bool r = false;
 
+		mpi_gatn_server = p_srv;
+		if(host)
+			strncpy(m_host_name, host, sizeof(m_host_name)-1);
 		backup_handlers(p_srv, host);
 		set_handlers(p_srv, host);
 
