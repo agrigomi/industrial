@@ -126,6 +126,8 @@ public:
 	virtual _u16 error_code(void)=0;
 	// set response code
 	virtual void res_code(_u16 httprc)=0;
+	// get response text
+	virtual _cstr_t res_text(_u16 rc)=0;
 	// set response protocol as string like 'HTTP/1.1'
 	virtual void res_protocol(_cstr_t protocol)=0;
 	// set Content-Length variable

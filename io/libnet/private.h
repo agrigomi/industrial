@@ -163,6 +163,10 @@ public:
 	_u16 error_code(void) {
 		return m_error_code;
 	}
+	// get response text
+	_cstr_t res_text(_u16 rc) {
+		return get_rc_text(rc);
+	}
 	// set response protocol as string like 'HTTP/1.1'
 	 void res_protocol(_cstr_t protocol);
 	// set response code
