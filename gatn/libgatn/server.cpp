@@ -403,11 +403,18 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 			// route found
 			prd->pcb(evt, &pc->req, &pc->res, prd->udata);
 		else if(root->is_enabled() && evt == HTTP_ON_REQUEST) {
+			p_httpc->res_var("Server", m_name);
+			p_httpc->res_protocol("HTTP/2.0");
+
 			if(method == HTTP_METHOD_GET || method == HTTP_METHOD_HEAD) {
 				// route not found
 				// try to resolve file name
+
 				HDOCUMENT hdoc = root->open(url);
 				if(hdoc) {
+					p_httpc->res_var("Content-Type", root->mime(hdoc));
+					p_httpc->res_mtime(root->mtime(hdoc));
+
 					if(method == HTTP_METHOD_GET) {
 						_ulong doc_sz = 0;
 
@@ -416,10 +423,6 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 							// response header
 							p_httpc->res_content_len(doc_sz);
 							p_httpc->res_code(HTTPRC_OK);
-							p_httpc->res_var("Server", m_name);
-							p_httpc->res_var("Content-Type", root->mime(hdoc));
-							p_httpc->res_protocol("HTTP/2.0");
-							p_httpc->res_mtime(root->mtime(hdoc));
 							// response content
 							p_httpc->res_write(ptr, doc_sz);
 							pc->hdoc = hdoc;
@@ -429,7 +432,6 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 							root->close(hdoc);
 						}
 					} else if(method == HTTP_METHOD_HEAD) {
-						p_httpc->res_mtime(root->mtime(hdoc));
 						p_httpc->res_code(HTTPRC_OK);
 						root->close(hdoc);
 					}
