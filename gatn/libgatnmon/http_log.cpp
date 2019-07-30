@@ -49,14 +49,16 @@ private:
 			cHttpLog *pobj = (cHttpLog *)udata;
 			iLog *pi_log = pobj->mpi_log;
 			_char_t ip[32];
+			_u16 rc = pscnt->error_code();
+			_cstr_t rc_text = pscnt->res_text(rc);
 
 			pscnt->peer_ip(ip, sizeof(ip));
 
-			pi_log->fwrite(LMT_ERROR, "%s/%s: (%s) ERROR(%d)",
+			pi_log->fwrite(LMT_ERROR, "%s/%s: (%s) ERROR(%d) %s",
 						pobj->mpi_gatn_server->name(),
 						(strlen(pobj->m_host_name)) ? pobj->m_host_name: "defaulthost",
-						ip,
-						pscnt->error_code());
+						ip, rc, rc_text);
+
 			pobj->call_original_handler(ON_ERROR, pscnt);
 		}, this, host);
 
