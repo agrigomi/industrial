@@ -424,6 +424,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 						pc->hdoc = hdoc;
 					} else {
 						p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
+						call_handler(ON_ERROR, p_httpc);
 						root->close(hdoc);
 					}
 				} else if(method == HTTP_METHOD_HEAD) {
@@ -432,6 +433,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 					root->close(hdoc);
 				} else {
 					p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
+					call_handler(ON_ERROR, p_httpc);
 					root->close(hdoc);
 				}
 			} else {
