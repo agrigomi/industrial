@@ -167,7 +167,7 @@ public:
 	 void res_protocol(_cstr_t protocol);
 	// set response code
 	void res_code(_u16 httprc) {
-		m_response_code = httprc;
+		m_error_code = m_response_code = httprc;
 	}
 	// set Content-Length variable
 	bool res_content_len(_u32 content_len);
