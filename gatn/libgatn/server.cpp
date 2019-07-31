@@ -737,7 +737,7 @@ void server::release_class(_cstr_t cname) {
 		server	*psrv;
 	};
 
-	_xhost tmp { cname, this};
+	_xhost tmp = { cname, this};
 
 	enum_virtual_hosts([](_vhost_t *pvhost, void *udata) {
 		_xhost *p = (_xhost *)udata;
