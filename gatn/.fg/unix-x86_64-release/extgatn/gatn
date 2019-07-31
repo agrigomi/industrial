@@ -1,8 +1,8 @@
+gatn/libgatn/commands.cpp
 gatn/libgatn/gatn.cpp
 gatn/libgatn/request.cpp
 gatn/libgatn/response.cpp
 gatn/libgatn/server.cpp
 gatn/libgatn/root.cpp
 gatn/libgatn/mime_resolver.cpp
-gatn/libgatn/commands.cpp
 
