@@ -65,5 +65,6 @@ void *request::data(_u32 *size) {
 }
 
 void request::destroy(void) {
-	//...
+	mpi_httpc = NULL;
+	mpi_server = NULL;
 }
