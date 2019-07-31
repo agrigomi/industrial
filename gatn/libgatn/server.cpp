@@ -92,7 +92,6 @@ bool server::init(_cstr_t name, _u32 port, _cstr_t root,
 						memcpy((void *)pcnt, (void *)&tmp, sizeof(_connection_t));
 					} break;
 				case POOL_OP_FREE:
-					break;
 				case POOL_OP_DELETE:
 					pcnt->destroy();
 					break;
@@ -235,14 +234,7 @@ void server::destroy_connection(iHttpServerConnection *p_httpc) {
 		// detach connection record
 		p_httpc->set_udata((_ulong)NULL, IDX_CONNECTION);
 
-		if(pc->p_vhost && pc->hdoc)
-			// close document handle
-			pc->p_vhost->root.close(pc->hdoc);
-
-		// destroy connection record
-		pc->destroy();
-
-		// release connection memory
+		// release connection
 		mpi_pool->free(pc);
 	}
 }
