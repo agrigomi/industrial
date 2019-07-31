@@ -349,19 +349,22 @@ static void gatn_attach_handler(iCmd *pi_cmd, // interface to command object
 		_cstr_t host = pi_cmd_host->option_value(OPT_HOST, p_opt);
 		_cstr_t name = pi_cmd_host->option_value(OPT_NAME, p_opt);
 		_cstr_t options = pi_cmd_host->option_value(OPT_OPTIONS, p_opt);
-		_cstr_t arg2 = pi_cmd_host->argument(argc, argv, p_opt, 2); // class name
-
-		_cstr_t class_name = (name) ? name : arg2;
+		_u32 narg = (name) ? 1 : 2;
+		_cstr_t class_name = (name) ? name : pi_cmd_host->argument(argc, argv, p_opt, narg);
 
 		if(class_name) {
 			_server_t *psrv = pi_gatn->server_by_name(server);
 
-			if(psrv)
-				psrv->attach_class(class_name, options, host);
-			else
+			if(psrv) {
+				while(class_name) {
+					psrv->attach_class(class_name, options, host);
+					narg++;
+					class_name = pi_cmd_host->argument(argc, argv, p_opt, narg);
+				}
+			} else
 				fout(pi_io, "Unable to find server '%s'\n", server);
 		} else
-			fout(pi_io, "Usage: gatn attach <class name> | --name=<class name> --server=<server name> [--host=<host name> --options='...']\n");
+			fout(pi_io, "Usage: gatn attach <class name ...> | --name=<class name> --server=<server name> [--host=<host name> --options='...']\n");
 	}
 }
 
@@ -378,19 +381,22 @@ static void gatn_detach_handler(iCmd *pi_cmd, // interface to command object
 		_cstr_t server = pi_cmd_host->option_value(OPT_SERVER, p_opt);
 		_cstr_t host = pi_cmd_host->option_value(OPT_HOST, p_opt);
 		_cstr_t name = pi_cmd_host->option_value(OPT_NAME, p_opt);
-		_cstr_t arg2 = pi_cmd_host->argument(argc, argv, p_opt, 2); // class name
-
-		_cstr_t class_name = (name) ? name : arg2;
+		_u32 narg = (name) ? 1 : 2;
+		_cstr_t class_name = (name) ? name : pi_cmd_host->argument(argc, argv, p_opt, narg);
 
 		if(class_name) {
 			_server_t *psrv = pi_gatn->server_by_name(server);
 
-			if(psrv)
-				psrv->detach_class(class_name, host);
-			else
+			if(psrv) {
+				while(class_name) {
+					psrv->detach_class(class_name, host);
+					narg++;
+					class_name = pi_cmd_host->argument(argc, argv, p_opt, narg);
+				}
+			} else
 				fout(pi_io, "Unable to find server '%s'\n", server);
 		} else
-			fout(pi_io, "Usage: gatn detach <class name> | --name=<class name> --server=<server name> [--host=<host name>]\n");
+			fout(pi_io, "Usage: gatn detach <class name ...> | --name=<class name> --server=<server name> [--host=<host name>]\n");
 	}
 }
 
@@ -463,8 +469,8 @@ static _cmd_t _g_cmd_[] = {
 		ACT_LIST   "\t:List servers\n"
 		ACT_LOAD   "\t:Configure Gatn by JSON file (gatn load <JSON file name>)\n"
 		ACT_RELOAD "\t:Reload configuration for server or host (gatn reload [<server|host>])\n"
-		ACT_ATTACH "\t:Attach class (gatn attach <class name> | --name=<class name> --server=... [--host=... --options='...'])\n"
-		ACT_DETACH "\t:Detach class (gatn detach <class name> | --name=<class name> --server=... [--host=...])\n\n"
+		ACT_ATTACH "\t:Attach class (gatn attach <class name ...> | --name=<class name> --server=... [--host=... --options='...'])\n"
+		ACT_DETACH "\t:Detach class (gatn detach <class name ...> | --name=<class name> --server=... [--host=...])\n\n"
 		"Usage: gatn <command> [options] [arguments]\n"
 	},
 	{ 0,	0,	0,	0,	0,	0} // terminate command list
