@@ -17,12 +17,12 @@ typedef struct {
 }_route_key_t;
 
 typedef struct {
-	_on_route_event_t	*pcb;
+	_gatn_route_event_t	*pcb;
 	void			*udata;
 	_char_t			path[MAX_ROUTE_PATH];
 
 	_u32 size(void) {
-		return (sizeof(_on_route_event_t *) + sizeof(void *) + strlen(path));
+		return (sizeof(_gatn_route_event_t *) + sizeof(void *) + strlen(path));
 	}
 }_route_data_t;
 
@@ -374,7 +374,7 @@ void server::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 
 	if(evt < HTTP_MAX_EVENTS) {
 		if(pvhost->event[evt].pcb)
-			pvhost->event[evt].pcb(p_httpc, pvhost->event[evt].udata);
+			pvhost->event[evt].pcb(&(pc->req), &(pc->res), pvhost->event[evt].udata);
 	}
 }
 
@@ -401,7 +401,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 
 		if(prd)
 			// route found
-			prd->pcb(evt, &pc->req, &pc->res, prd->udata);
+			prd->pcb(evt, &(pc->req), &(pc->res), prd->udata);
 		else if(root->is_enabled() && evt == HTTP_ON_REQUEST) {
 			p_httpc->res_var("Server", m_name);
 			p_httpc->res_protocol("HTTP/2.0");
@@ -437,7 +437,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 					}
 				} else {
 					p_httpc->res_code(HTTPRC_NOT_FOUND);
-					call_handler(ON_NOT_FOUND, p_httpc);
+					call_handler(ON_ERROR, p_httpc);
 				}
 			} else {
 				p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
@@ -471,7 +471,7 @@ void server::update_response(iHttpServerConnection *p_httpc) {
 		pc->res.process_content();
 }
 
-void server::on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata, _cstr_t _host) {
+void server::on_route(_u8 method, _cstr_t path, _gatn_route_event_t *pcb, void *udata, _cstr_t _host) {
 	_route_key_t key;
 	_route_data_t data = {pcb, udata};
 	_vhost_t *pvhost = get_host(_host);
@@ -489,7 +489,7 @@ void server::on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *ud
 		pvhost->pi_route_map->add(&key, key.size(), &data, data.size());
 }
 
-void server::on_event(_u8 evt, _on_http_event_t *pcb, void *udata, _cstr_t _host) {
+void server::on_event(_u8 evt, _gatn_http_event_t *pcb, void *udata, _cstr_t _host) {
 	_vhost_t *pvhost = get_host(_host);
 
 	if(evt < HTTP_MAX_EVENTS) {
@@ -498,8 +498,8 @@ void server::on_event(_u8 evt, _on_http_event_t *pcb, void *udata, _cstr_t _host
 	}
 }
 
-_on_http_event_t *server::get_event_handler(_u8 evt, void **pp_udata, _cstr_t host) {
-	_on_http_event_t *r = NULL;
+_gatn_http_event_t *server::get_event_handler(_u8 evt, void **pp_udata, _cstr_t host) {
+	_gatn_http_event_t *r = NULL;
 	_vhost_t *pvhost = get_host(host);
 
 	if(evt < HTTP_MAX_EVENTS) {
@@ -540,7 +540,7 @@ _response_t *server::get_response(iHttpServerConnection *pi_httpc) {
 	return r;
 }
 
-void server::enum_route(void (*enum_cb)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata) {
+void server::enum_route(void (*enum_cb)(_cstr_t path, _gatn_route_event_t *pcb, void *udata), void *udata) {
 	_map_enum_t me = host.pi_route_map->enum_open();
 	_u32 sz = 0;
 

@@ -7,7 +7,7 @@
 #define MAX_EVENTS	16
 
 typedef struct {
-	_on_http_event_t	*p_cb;
+	_gatn_http_event_t	*p_cb;
 	void			*udata;
 }_http_evt_t;
 
@@ -22,19 +22,18 @@ private:
 	void backup_handlers(_server_t *psrv, _cstr_t host) {
 		m_original_evt[ON_REQUEST].p_cb = psrv->get_event_handler(ON_REQUEST, &(m_original_evt[ON_REQUEST].udata), host);
 		m_original_evt[ON_ERROR].p_cb = psrv->get_event_handler(ON_ERROR, &(m_original_evt[ON_ERROR].udata), host);
-		m_original_evt[ON_NOT_FOUND].p_cb = psrv->get_event_handler(ON_NOT_FOUND, &(m_original_evt[ON_NOT_FOUND].udata), host);
 	}
 
 	void set_handlers(_server_t *psrv, _cstr_t host) {
-		psrv->on_event(ON_REQUEST, [](iHttpServerConnection *pscnt, void *udata) {
+		psrv->on_event(ON_REQUEST, [](_request_t *req, _response_t *res, void *udata) {
 			cHttpLog *pobj = (cHttpLog *)udata;
 			iLog *pi_log = pobj->mpi_log;
-			_cstr_t method = pscnt->req_var(VAR_REQ_METHOD);
-			_cstr_t uri = pscnt->req_var(VAR_REQ_URI);
-			_cstr_t protocol = pscnt->req_var(VAR_REQ_PROTOCOL);
+			_cstr_t method = req->var(VAR_REQ_METHOD);
+			_cstr_t uri = req->var(VAR_REQ_URI);
+			_cstr_t protocol = req->var(VAR_REQ_PROTOCOL);
 			_char_t ip[32];
 
-			pscnt->peer_ip(ip, sizeof(ip));
+			req->connection()->peer_ip(ip, sizeof(ip));
 
 			pi_log->fwrite(LMT_INFO, "%s/%s: (%s) %s %s %s",
 						pobj->mpi_gatn_server->name(),
@@ -42,57 +41,38 @@ private:
 						ip,
 						method, protocol, uri);
 
-			pobj->call_original_handler(ON_REQUEST, pscnt);
+			pobj->call_original_handler(ON_REQUEST, req, res);
 		}, this, host);
 
-		psrv->on_event(ON_ERROR, [](iHttpServerConnection *pscnt, void *udata) {
+		psrv->on_event(ON_ERROR, [](_request_t *req, _response_t *res, void *udata) {
 			cHttpLog *pobj = (cHttpLog *)udata;
 			iLog *pi_log = pobj->mpi_log;
+			_cstr_t uri = req->var(VAR_REQ_URI);
 			_char_t ip[32];
-			_u16 rc = pscnt->error_code();
-			_cstr_t rc_text = pscnt->res_text(rc);
+			_u16 rc = res->error();
+			_cstr_t rc_text = res->text(rc);
 
-			pscnt->peer_ip(ip, sizeof(ip));
+			req->connection()->peer_ip(ip, sizeof(ip));
 
-			pi_log->fwrite(LMT_ERROR, "%s/%s: (%s) ERROR(%d) %s",
+			pi_log->fwrite(LMT_ERROR, "%s/%s: (%s) ERROR(%d) %s %s",
 						pobj->mpi_gatn_server->name(),
 						(strlen(pobj->m_host_name)) ? pobj->m_host_name: "defaulthost",
-						ip, rc, rc_text);
+						ip, rc, rc_text,
+						 (uri) ? uri : "");
 
-			pobj->call_original_handler(ON_ERROR, pscnt);
-		}, this, host);
-
-		psrv->on_event(ON_NOT_FOUND, [](iHttpServerConnection *pscnt, void *udata) {
-			cHttpLog *pobj = (cHttpLog *)udata;
-			iLog *pi_log = pobj->mpi_log;
-
-			_cstr_t method = pscnt->req_var(VAR_REQ_METHOD);
-			_cstr_t uri = pscnt->req_var(VAR_REQ_URI);
-			_cstr_t protocol = pscnt->req_var(VAR_REQ_PROTOCOL);
-			_char_t ip[32];
-
-			pscnt->peer_ip(ip, sizeof(ip));
-
-			pi_log->fwrite(LMT_ERROR, "%s/%s: (%s) NOT FOUND(404): %s %s %s",
-						pobj->mpi_gatn_server->name(),
-						(strlen(pobj->m_host_name)) ? pobj->m_host_name: "defaulthost",
-						ip,
-						method, protocol, uri);
-
-			pobj->call_original_handler(ON_NOT_FOUND, pscnt);
+			pobj->call_original_handler(ON_ERROR, req, res);
 		}, this, host);
 	}
 
 	void restore_handlers(_server_t *psrv, _cstr_t host) {
 		psrv->on_event(ON_REQUEST, m_original_evt[ON_REQUEST].p_cb, m_original_evt[ON_REQUEST].udata, host);
 		psrv->on_event(ON_ERROR, m_original_evt[ON_ERROR].p_cb, m_original_evt[ON_ERROR].udata, host);
-		psrv->on_event(ON_NOT_FOUND, m_original_evt[ON_NOT_FOUND].p_cb, m_original_evt[ON_NOT_FOUND].udata, host);
 	}
 
-	void call_original_handler(_u8 evt, iHttpServerConnection *pscnt) {
+	void call_original_handler(_u8 evt, _request_t *req, _response_t *res) {
 		if(evt < MAX_EVENTS) {
 			if(m_original_evt[evt].p_cb)
-				m_original_evt[evt].p_cb(pscnt, m_original_evt[evt].udata);
+				m_original_evt[evt].p_cb(req, res, m_original_evt[evt].udata);
 		}
 	}
 public:

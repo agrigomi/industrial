@@ -63,6 +63,8 @@ struct response: public _response_t {
 	void destroy(void);
 	void process_content(void);
 	void redirect(_cstr_t uri);
+	_cstr_t text(_u16 rc);
+	_u16 error(void);
 	bool render(_cstr_t fname,
 		_u8 flags=RNDR_DONE|RNDR_CACHE|RNDR_RESOLVE_MT|RNDR_SET_MTIME);
 };
@@ -140,7 +142,7 @@ void uninit_mime_type_resolver(void);
 _cstr_t resolve_mime_type(_cstr_t fname);
 
 typedef struct {
-	_on_http_event_t	*pcb;
+	_gatn_http_event_t	*pcb;
 	void			*udata;
 }_event_data_t;
 
@@ -203,13 +205,13 @@ struct server: public _server_t {
 	void call_handler(_u8 evt, iHttpServerConnection *p_httpc);
 	void call_route_handler(_u8 evt, iHttpServerConnection *p_httpc);
 	void update_response(iHttpServerConnection *p_httpc);
-	void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata=NULL, _cstr_t host=NULL);
-	void on_event(_u8 evt, _on_http_event_t *pcb, void *udata=NULL, _cstr_t host=NULL);
-	_on_http_event_t *get_event_handler(_u8 evt, void **pp_udata, _cstr_t host=NULL);
+	void on_route(_u8 method, _cstr_t path, _gatn_route_event_t *pcb, void *udata=NULL, _cstr_t host=NULL);
+	void on_event(_u8 evt, _gatn_http_event_t *pcb, void *udata=NULL, _cstr_t host=NULL);
+	_gatn_http_event_t *get_event_handler(_u8 evt, void **pp_udata, _cstr_t host=NULL);
 	void remove_route(_u8 method, _cstr_t path);
 	_request_t *get_request(iHttpServerConnection *pi_httpc);
 	_response_t *get_response(iHttpServerConnection *pi_httpc);
-	void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=NULL);
+	void enum_route(void (*)(_cstr_t path, _gatn_route_event_t *pcb, void *udata), void *udata=NULL);
 	bool add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key,
 				_cstr_t cache_exclude=NULL, _cstr_t path_disable=NULL);
 	_vhost_t *get_virtual_host(_cstr_t host);

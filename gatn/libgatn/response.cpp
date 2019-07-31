@@ -197,6 +197,14 @@ void response::process_content(void) {
 	}
 }
 
+_cstr_t response::text(_u16 rc) {
+	return mpi_httpc->res_text(rc);
+}
+
+_u16 response::error(void) {
+	return mpi_httpc->error_code();
+}
+
 void response::redirect(_cstr_t uri) {
 	var("Content-Type", "text/html");
 	_end(HTTPRC_OK, "<meta http-equiv=\"refresh\" content=\"0; url=%s\"/>", uri);

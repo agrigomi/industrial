@@ -34,6 +34,9 @@ typedef struct {
 	virtual _u32 end(_u16 response_code, _cstr_t str)=0;
 	virtual _u32 _end(_u16 response_code, _cstr_t fmt, ...)=0;
 	virtual void redirect(_cstr_t uri)=0;
+	virtual _cstr_t text(_u16 rc)=0;
+	virtual _u16 error(void)=0;
+
 #define RNDR_DONE	(1<<0) // done flag (end of transmission)
 #define RNDR_CACHE	(1<<1) // use file cache
 #define RNDR_RESOLVE_MT	(1<<2) // auto resolve mime (content) type if RNDR_DONE is set
@@ -48,9 +51,9 @@ typedef struct {
 #define ON_DATA		HTTP_ON_REQUEST_DATA
 #define ON_ERROR	HTTP_ON_ERROR
 #define ON_DISCONNECT	HTTP_ON_CLOSE
-#define ON_NOT_FOUND	HTTP_ON_RESERVED1
 
-typedef void _on_route_event_t(_u8 evt, _request_t *request, _response_t *response, void *udata);
+typedef void _gatn_route_event_t(_u8 evt, _request_t *request, _response_t *response, void *udata);
+typedef void _gatn_http_event_t(_request_t *request, _response_t *response, void *udata);
 
 struct gatn_server {
 	virtual bool is_running(void)=0;
@@ -58,13 +61,13 @@ struct gatn_server {
 	virtual void stop(void)=0;
 	virtual _cstr_t name(void)=0;
 	virtual _u32 port(void)=0;
-	virtual void on_route(_u8 method, _cstr_t path, _on_route_event_t *pcb, void *udata=NULL, _cstr_t host=NULL)=0;
-	virtual void on_event(_u8 evt, _on_http_event_t *pcb, void *udata=NULL, _cstr_t host=NULL)=0;
-	virtual _on_http_event_t *get_event_handler(_u8 evt, void **pp_udata, _cstr_t host=NULL)=0;
+	virtual void on_route(_u8 method, _cstr_t path, _gatn_route_event_t *pcb, void *udata=NULL, _cstr_t host=NULL)=0;
+	virtual void on_event(_u8 evt, _gatn_http_event_t *pcb, void *udata=NULL, _cstr_t host=NULL)=0;
+	virtual _gatn_http_event_t *get_event_handler(_u8 evt, void **pp_udata, _cstr_t host=NULL)=0;
 	virtual void remove_route(_u8 method, _cstr_t path)=0;
 	virtual _request_t *get_request(iHttpServerConnection *pi_httpc)=0;
 	virtual _response_t *get_response(iHttpServerConnection *pi_httpc)=0;
-	virtual void enum_route(void (*)(_cstr_t path, _on_route_event_t *pcb, void *udata), void *udata=NULL)=0;
+	virtual void enum_route(void (*)(_cstr_t path, _gatn_route_event_t *pcb, void *udata), void *udata=NULL)=0;
 	virtual bool add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key,
 				_cstr_t cache_exclude=NULL, _cstr_t path_disable=NULL)=0;
 	virtual bool remove_virtual_host(_cstr_t host)=0;
