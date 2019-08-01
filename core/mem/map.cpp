@@ -202,6 +202,13 @@ public:
 		unlock(hm);
 	}
 
+	void enumerate(_s32 (*pcb)(void *, _u32, void *), void *udata, HMUTEX hlock=0) {
+		HMUTEX hm = lock(hlock);
+
+		map_enum(&map_cxt, pcb,  udata);
+		unlock(hm);
+	}
+
 	void status(_map_status_t *p_st) {
 		p_st->capacity = map_cxt.capacity;
 		p_st->count = map_cxt.records;

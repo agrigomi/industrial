@@ -395,10 +395,24 @@ void map_enum_close(MAPENUM h) {
 
 void map_enum(_map_context_t *p_mcxt, _s32 (*pcb)(void *, _u32, void *), void *udata) {
 	_map_enum_t me;
+	void *data = NULL;
+	_u32 size = 0;
+	_s32 op = 0;
 
 	memset(&me, 0, sizeof(_map_enum_t));
 	me.p_mcxt = p_mcxt;
 
-	/* ... */
+	data = map_enum_first(&me, &size);
+
+	while(data) {
+		op = pcb(data, size, udata);
+
+		if(op == MAP_ENUM_BREAK)
+			break;
+		else if(op == MAP_ENUM_DELETE)
+			map_enum_del(&me);
+
+		data = map_enum_next(&me, &size);
+	}
 }
 

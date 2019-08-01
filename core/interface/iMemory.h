@@ -45,6 +45,10 @@ typedef struct {
 	_u32	collisions; // number of colisions
 }_map_status_t;
 
+#define	ENUM_NEXT	1
+#define	ENUM_CANCEL	2
+#define ENUM_DELETE	3
+
 class iMap: public iBase {
 public:
 	INTERFACE(iMap, I_MAP);
@@ -70,6 +74,8 @@ public:
 	virtual void *enum_next(_map_enum_t en, _u32 *sz_data, HMUTEX hlock=0)=0;
 	virtual void *enum_current(_map_enum_t en, _u32 *sz_data, HMUTEX hlock=0)=0;
 	virtual void enum_del(_map_enum_t en, HMUTEX hlock=0)=0;
+	// Advanced enumeration
+	virtual void enumerate(_s32 (*)(void *, _u32, void *), void *, HMUTEX hlock=0)=0;
 	virtual void status(_map_status_t *)=0;
 };
 
