@@ -404,19 +404,20 @@ public:
 	}
 
 	void enumerate(_enum_http_t *pcb, void *udata=NULL) {
-		_map_enum_t me = mpi_map->enum_open();
+		struct xenum {
+			_enum_http_t *pcb;
+			void *udata;
+		};
 
-		if(me) {
-			_u32 sz = 0;
-			_server_t *p_srv = (_server_t *)mpi_map->enum_first(me, &sz);
+		xenum xdata = {pcb, udata};
 
-			while(p_srv) {
-				pcb((p_srv->pi_http_server) ? true : false, p_srv->name, p_srv->port, p_srv->doc_root, udata);
-				p_srv = (_server_t *)mpi_map->enum_next(me, &sz);
-			}
+		mpi_map->enumerate([](void *data, _u32 size, void *udata)->_s32 {
+			xenum *px = (xenum *)udata;
+			_server_t *p_srv = (_server_t *)data;
 
-			mpi_map->enum_close(me);
-		}
+			px->pcb((p_srv->pi_http_server) ? true : false, p_srv->name, p_srv->port, p_srv->doc_root, px->udata);
+			return ENUM_NEXT;
+		}, &xdata);
 	}
 };
 
