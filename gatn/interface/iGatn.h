@@ -52,8 +52,8 @@ typedef struct {
 #define ON_ERROR	HTTP_ON_ERROR
 #define ON_DISCONNECT	HTTP_ON_CLOSE
 
-typedef void _gatn_route_event_t(_u8 evt, _request_t *request, _response_t *response, void *udata);
-typedef void _gatn_http_event_t(_request_t *request, _response_t *response, void *udata);
+typedef void _gatn_route_event_t(_u8, _request_t *, _response_t *, void *);
+typedef void _gatn_http_event_t(_request_t *, _response_t *, void *);
 
 struct gatn_server {
 	virtual bool is_running(void)=0;
