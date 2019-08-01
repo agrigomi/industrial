@@ -393,3 +393,12 @@ void map_enum_close(MAPENUM h) {
 	}
 }
 
+void map_enum(_map_context_t *p_mcxt, _s32 (*pcb)(void *, _u32, void *), void *udata) {
+	_map_enum_t me;
+
+	memset(&me, 0, sizeof(_map_enum_t));
+	me.p_mcxt = p_mcxt;
+
+	/* ... */
+}
+

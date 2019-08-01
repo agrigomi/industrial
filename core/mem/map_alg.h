@@ -52,6 +52,14 @@ void *map_enum_next(MAPENUM h, _u32 *sz_data);
 void map_enum_del(MAPENUM h);
 void *map_enum_current(MAPENUM h, _u32 *sz_data);
 void map_enum_close(MAPENUM h);
+
+// Advanced enumeration
+#define MAP_EMUN_CONTINUE	1
+#define MAP_ENUM_BREAK		2
+#define MAP_ENUM_DELETE		3
+
+void map_enum(_map_context_t *, _s32 (*)(void *, _u32, void *), void *);
+
 #ifdef __cplusplus
 }
 #endif
