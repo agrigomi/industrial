@@ -68,6 +68,10 @@ public:
 
 		return *r;
 	}
+
+	_V& operator [](const _K &key) {
+		return get(key);
+	}
 };
 
 template<>
@@ -94,6 +98,10 @@ public:
 
 		return r;
 	}
+
+	_cstr_t operator [](_cstr_t key) {
+		return get(key);
+	}
 };
 
 template<typename _V>
@@ -119,6 +127,10 @@ public:
 			r = static_cast<_V *>(mpi_map->add(key, strlen(key), &value, sizeof(value)));
 
 		return *r;
+	}
+
+	_V& operator [](_cstr_t key) {
+		return get(key);
 	}
 };
 
