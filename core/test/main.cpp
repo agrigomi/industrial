@@ -14,6 +14,7 @@
 #include "iHT.h"
 #include "iGatn.h"
 #include "tVector.h"
+#include "tMap.h"
 
 IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
