@@ -50,7 +50,6 @@ MAPENUM map_enum_open(_map_context_t *p_mcxt_);
 void *map_enum_first(MAPENUM h, _u32 *sz_data);
 void *map_enum_next(MAPENUM h, _u32 *sz_data);
 void map_enum_del(MAPENUM h);
-void *map_enum_current(MAPENUM h, _u32 *sz_data);
 void map_enum_close(MAPENUM h);
 
 // Advanced enumeration

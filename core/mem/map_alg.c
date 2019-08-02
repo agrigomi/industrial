@@ -302,7 +302,7 @@ void *map_enum_first(MAPENUM h, _u32 *sz_data) {
 			if(p_rec) {
 				memcpy(&pe->crec, p_rec, sizeof(_map_rec_hdr_t));
 				r = pe->p_data = (p_rec + 1);
-				*sz_data = p_rec->sz_rec;
+				*sz_data = p_rec->sz_rec -1;
 			}
 		}
 	}
@@ -319,7 +319,7 @@ void *map_enum_next(MAPENUM h, _u32 *sz_data) {
 		if(pe->crec.next) {
 			r = pe->p_data = (pe->crec.next + 1);
 			memcpy(&pe->crec, pe->crec.next, sizeof(_map_rec_hdr_t));
-			*sz_data = pe->crec.sz_rec;
+			*sz_data = pe->crec.sz_rec -1;
 			pe->uidx++;
 		} else {
 			while(p_rec == NULL && pe->aidx < pe->p_mcxt->capacity-1) {
@@ -330,7 +330,7 @@ void *map_enum_next(MAPENUM h, _u32 *sz_data) {
 			if(p_rec) {
 				memcpy(&pe->crec, p_rec, sizeof(_map_rec_hdr_t));
 				r = pe->p_data = (p_rec + 1);
-				*sz_data = p_rec->sz_rec;
+				*sz_data = p_rec->sz_rec -1;
 				pe->uidx++;
 			} else {
 				memset(&pe->crec, 0, sizeof(_map_rec_hdr_t));
@@ -338,16 +338,6 @@ void *map_enum_next(MAPENUM h, _u32 *sz_data) {
 			}
 		}
 	}
-
-	return r;
-}
-
-void *map_enum_current(MAPENUM h, _u32 *sz_data) {
-	void *r = NULL;
-	_map_enum_t *pe = (_map_enum_t *)h;
-
-	if(pe && pe->p_mcxt && pe->p_mcxt->pp_list)
-		r = pe->p_data;
 
 	return r;
 }
