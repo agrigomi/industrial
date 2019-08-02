@@ -10,7 +10,7 @@ private:
 	iMutex *mpi_mutex;
 	_map_context_t map_cxt;
 	SHA1Context sha1_cxt;
-	bool m_is_init;
+	bool m_is_init, m_my_heap;
 
 	static void *_alloc(_u32 size, void *udata) {
 		void *r = 0;
@@ -45,7 +45,7 @@ public:
 			case OCTL_INIT: {
 				iRepository *pi_repo = (iRepository *)arg;
 
-				m_is_init = false;
+				m_is_init = m_my_heap = false;
 				mpi_heap = 0;
 				mpi_mutex = (iMutex *)pi_repo->object_by_iname(I_MUTEX, RF_CLONE);
 
@@ -56,7 +56,8 @@ public:
 				iRepository *pi_repo = (iRepository *)arg;
 
 				uninit();
-				pi_repo->object_release(mpi_heap);
+				if(m_my_heap)
+					pi_repo->object_release(mpi_heap);
 				pi_repo->object_release(mpi_mutex);
 				r = true;
 			} break;
@@ -68,8 +69,10 @@ public:
 	bool init(_u32 capacity, iHeap *pi_heap=0) {
 		bool r = false;
 
-		if(!(mpi_heap = pi_heap))
-			mpi_heap = (iHeap *)_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL);
+		if(!(mpi_heap = pi_heap)) {
+			if((mpi_heap = (iHeap *)_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL)))
+				m_my_heap = true;
+		}
 
 		map_cxt.records = map_cxt.collisions = 0;
 		map_cxt.capacity = capacity;
