@@ -128,7 +128,7 @@ void *map_get(_map_context_t *p_mcxt, void *key, _u32 sz_key, _u32 *sz_data) {
 	_map_rec_hdr_t *p_rec = get_record(p_mcxt, key, sz_key, hash_key, &idx, &p_prev);
 
 	if(p_rec) {
-		*sz_data = p_rec->sz_rec;
+		*sz_data = p_rec->sz_rec -1;
 		r = (p_rec + 1);
 	}
 
