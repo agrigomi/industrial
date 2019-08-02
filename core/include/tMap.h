@@ -5,7 +5,7 @@
 #include "iMemory.h"
 #include "iRepository.h"
 
-class tMap_base {
+class _LOCAL_ tMap_base {
 protected:
 	iMap *mpi_map;
 	bool m_is_init;
@@ -45,7 +45,7 @@ public:
 };
 
 template <typename _K, typename _V>
-class tMap: public tMap_base {
+class _LOCAL_ tMap: public tMap_base {
 public:
 	tMap(): tMap_base() {}
 	tMap(_u32 capacity, iHeap *pi_heap=NULL) : tMap_base(capacity, pi_heap) {}
@@ -75,7 +75,7 @@ public:
 };
 
 template<>
-class tMap<_cstr_t, _cstr_t>: public tMap_base {
+class _LOCAL_ tMap<_cstr_t, _cstr_t>: public tMap_base {
 public:
 	tMap(): tMap_base() {}
 	tMap(_u32 capacity, iHeap *pi_heap=NULL) : tMap_base(capacity, pi_heap) {}
@@ -105,7 +105,7 @@ public:
 };
 
 template<typename _V>
-class tMap<_cstr_t, _V>: public tMap_base {
+class _LOCAL_ tMap<_cstr_t, _V>: public tMap_base {
 public:
 	tMap(): tMap_base() {}
 	tMap(_u32 capacity, iHeap *pi_heap=NULL) : tMap_base(capacity, pi_heap) {}
