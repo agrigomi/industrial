@@ -21,6 +21,7 @@ protected:
 
 	tMap_base(_u32 capacity, iHeap *pi_heap = NULL) {
 		m_is_init = false;
+		mpi_map = NULL;
 		init(capacity, pi_heap);
 	}
 
@@ -38,7 +39,7 @@ public:
 
 	void destroy(void) {
 		if(m_is_init) {
-			_gpi_repo_->object_release(mpi_map);
+			_gpi_repo_->object_release(mpi_map, false);
 			mpi_map = NULL;
 			m_is_init = false;
 		}
