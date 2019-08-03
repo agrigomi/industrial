@@ -512,26 +512,6 @@ void server::remove_route(_u8 method, _cstr_t path) {
 		host.pi_route_map->del(&key, sizeof(_route_key_t));
 }
 
-_request_t *server::get_request(iHttpServerConnection *pi_httpc) {
-	_request_t *r = NULL;
-	_connection_t *pc = (_connection_t *)pi_httpc->get_udata(IDX_CONNECTION);
-
-	if(pc)
-		r = &pc->req;
-
-	return r;
-}
-
-_response_t *server::get_response(iHttpServerConnection *pi_httpc) {
-	_response_t *r = NULL;
-	_connection_t *pc = (_connection_t *)pi_httpc->get_udata(IDX_CONNECTION);
-
-	if(pc)
-		r = &pc->res;
-
-	return r;
-}
-
 void server::enum_route(void (*enum_cb)(_cstr_t path, _gatn_route_event_t *pcb, void *udata), void *udata) {
 	_map_enum_t me = host.pi_route_map->enum_open();
 	_u32 sz = 0;
