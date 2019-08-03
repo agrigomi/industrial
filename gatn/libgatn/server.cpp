@@ -502,14 +502,15 @@ _gatn_http_event_t *server::get_event_handler(_u8 evt, void **pp_udata, _cstr_t 
 	return r;
 }
 
-void server::remove_route(_u8 method, _cstr_t path) {
+void server::remove_route(_u8 method, _cstr_t path, _cstr_t host) {
 	_route_key_t key;
+	_vhost_t *pvhost = get_host(host);
 
 	memset(&key, 0, sizeof(_route_key_t));
 	key.method = method;
 	strncpy(key.path, path, MAX_ROUTE_PATH-1);
-	if(host.pi_route_map)
-		host.pi_route_map->del(&key, sizeof(_route_key_t));
+	if(pvhost->pi_route_map)
+		pvhost->pi_route_map->del(&key, sizeof(_route_key_t));
 }
 
 void server::enum_route(void (*enum_cb)(_cstr_t path, _gatn_route_event_t *pcb, void *udata), void *udata) {
