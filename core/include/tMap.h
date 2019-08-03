@@ -20,6 +20,7 @@ protected:
 	}
 
 	tMap_base(_u32 capacity, iHeap *pi_heap = NULL) {
+		m_is_init = false;
 		init(capacity, pi_heap);
 	}
 
@@ -69,6 +70,11 @@ public:
 		return *r;
 	}
 
+	void del(_K &key) {
+		if(m_is_init)
+			mpi_map->del(&key, sizeof(key));
+	}
+
 	_V& operator [](const _K &key) {
 		return get(key);
 	}
@@ -99,6 +105,11 @@ public:
 		return r;
 	}
 
+	void del(_cstr_t key) {
+		if(m_is_init)
+			mpi_map->del(key, strlen(key));
+	}
+
 	_cstr_t operator [](_cstr_t key) {
 		return get(key);
 	}
@@ -127,6 +138,11 @@ public:
 			r = static_cast<_V *>(mpi_map->add(key, strlen(key), &value, sizeof(value)));
 
 		return *r;
+	}
+
+	void del(_cstr_t key) {
+		if(m_is_init)
+			mpi_map->del(key, strlen(key));
 	}
 
 	_V& operator [](_cstr_t key) {
