@@ -44,6 +44,20 @@ public:
 			m_is_init = false;
 		}
 	}
+
+	void clear(void) {
+		if(m_is_init)
+			mpi_map->clr();
+	}
+
+	_u32 size(void) {
+		_u32 r = 0;
+
+		if(m_is_init)
+			r = mpi_map->cnt();
+
+		return r;
+	}
 };
 
 template <typename _K, typename _V>
