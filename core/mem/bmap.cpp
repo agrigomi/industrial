@@ -139,7 +139,7 @@ public:
 	void free(HBUFFER hb) {
 		_buffer_t *b = (_buffer_t *)hb;
 
-		if(b) {
+		if(b && mpi_list) {
 			HMUTEX hm = mpi_list->lock();
 
 			if(m_bsize) {
@@ -170,7 +170,7 @@ public:
 	void dirty(HBUFFER hb) {
 		_buffer_t *b = (_buffer_t *)hb;
 
-		if(b) {
+		if(b && mpi_list) {
 			HMUTEX hm = mpi_list->lock();
 
 			if(m_bsize) {
