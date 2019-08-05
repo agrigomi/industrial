@@ -19,11 +19,16 @@
 IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
 _cstr_t g_body = "<!DOCTYPE HTML>\
+<html>\
+<body> \
 <form action=\"upload\" method=\"post\" enctype=\"multipart/form-data\">\
 Select image to upload:\
 <input type=\"file\" name=\"fileToUpload\" id=\"fileToUpload\">\
 <input type=\"submit\" value=\"Upload Image\" name=\"submit\">\
-</form>";
+</form> \
+<a href=\"/prepros-6.config\" download>Download<a> \
+</body>\
+<html>";
 
 _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
