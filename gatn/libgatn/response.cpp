@@ -161,6 +161,8 @@ void response::destroy(void) {
 				mpi_bmap->free(mp_hbarray[i]);
 		}
 		mpi_heap->free(mp_hbarray, m_hbcount * sizeof(HBUFFER));
+		mp_hbarray = NULL;
+		m_hbcount = 0;
 	}
 }
 

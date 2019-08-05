@@ -103,6 +103,7 @@ bool server::init(_cstr_t name, _u32 port, _cstr_t root,
 	attach_fs();
 	attach_network();
 	m_autorestore = false;
+	m_buffer_size = buffer_size;
 	if((mpi_bmap = dynamic_cast<iBufferMap *>(_gpi_repo_->object_by_iname(I_BUFFER_MAP, RF_CLONE|RF_NONOTIFY)))) {
 		mpi_bmap->init(m_buffer_size, [](_u8 op, void *bptr, _u32 sz, void *udata)->_u32 {
 			_u32 r = 0;
