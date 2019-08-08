@@ -114,7 +114,6 @@ bool server::init(_cstr_t name, _u32 port, _cstr_t root,
 			return r;
 		});
 	}
-	m_buffer_size = buffer_size;
 	m_max_workers = max_workers;
 	m_max_connections = max_connections;
 	m_connection_timeout = connection_timeout;
