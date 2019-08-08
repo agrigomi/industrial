@@ -17,10 +17,13 @@ bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 	mpi_fs = NULL;
 	mpi_fcache = NULL;
 	m_enable = false;
+	m_my_heap = false;
 	if(pi_heap)
 		mpi_heap = pi_heap;
-	else
+	else {
 		mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
+		m_my_heap = true;
+	}
 	m_nocache = NULL;
 	m_disabled = NULL;
 	m_sz_nocache = 0;
@@ -74,6 +77,8 @@ void root::destroy(void) {
 	object_release((iBase **)&mpi_handle_pool);
 	object_release((iBase **)&mpi_str);
 	object_release((iBase **)&mpi_mutex);
+	if(m_my_heap)
+		object_release((iBase **)&mpi_heap);
 }
 
 _str_t root::realloc_nocache(_u32 sz) {

@@ -103,6 +103,7 @@ private:
 	iPool		*mpi_handle_pool;
 	iStr		*mpi_str;
 	HMUTEX		m_hlock;
+	bool		m_my_heap;
 
 	void object_release(iBase **ppi);
 	void parse_nocache_list(_cstr_t nocache);
