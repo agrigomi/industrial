@@ -4,8 +4,9 @@
 #include "iNet.h"
 #include "private.h"
 
-#define CFREE	0 // column for pending connections
-#define CBUSY	1 // column for busy connections
+#define CFREE		0 // unused connections
+#define CPENDING	1 // column for pending connections
+#define CBUSY		2 // column for busy connections
 
 // bufferMap callback
 _u32 buffer_io(_u8 op, void *ptr, _u32 size, void *udata) {
@@ -147,7 +148,7 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 			mpi_list = (iLlist *)pi_repo->object_by_iname(I_LLIST, RF_CLONE|RF_NONOTIFY);
 			m_hconnection = pi_repo->handle_by_cname(CLASS_NAME_HTTP_SERVER_CONNECTION);
 			if(p_tcps && mpi_bmap && mpi_tmaker && mpi_list && m_hconnection) {
-				mpi_list->init(LL_VECTOR, 2);
+				mpi_list->init(LL_VECTOR, 3);
 				r = true;
 			}
 		} break;
