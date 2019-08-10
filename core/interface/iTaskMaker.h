@@ -5,8 +5,11 @@
 
 #define I_TASK_MAKER	"iTaskMaker"
 
+#define TM_SIG_START	1
+#define TM_SIG_STOP	2
+
 typedef void*	HTASK;
-typedef void *_task_proc_t(void *);
+typedef void *_task_proc_t(_u8 sig, void *);
 
 class iTaskMaker: public iBase {
 public:

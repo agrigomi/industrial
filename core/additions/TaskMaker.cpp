@@ -17,6 +17,7 @@ typedef struct {
 }_task_t;
 
 static void *starter(_task_t *task);
+typedef void *_thread_t(void *);
 
 class cTaskMaker: public iTaskMaker {
 private:
@@ -71,7 +72,7 @@ private:
 	HTASK start_task(_task_t *task) {
 		HTASK r = 0;
 
-		if(pthread_create(&task->thread, 0, (_task_proc_t *)starter, task) == ERR_NONE) {
+		if(pthread_create(&task->thread, 0, (_thread_t *)starter, task) == ERR_NONE) {
 			r = task;
 			usleep(1);
 		}
@@ -82,21 +83,31 @@ private:
 	bool stop_task(_task_t *task) {
 		bool r = false;
 
-		if(task->pi_base) {
+		if(task->pi_base && (task->state & TS_RUNNING)) {
 			if((r = task->pi_base->object_ctl(OCTL_STOP, 0))) {
 				_u32 n = 100;
 				while(task->state & TS_RUNNING) {
-					usleep(100);
+					usleep(10000);
 					n--;
 				}
 
 				if(!n)
 					r = false;
 			}
-		} else if(task->proc) {
-			if(pthread_cancel(task->thread) == ERR_NONE) {
-				remove_task(task);
-				r = true;
+		} else if(task->proc && (task->state & TS_RUNNING)) {
+			_u32 tm=10;
+
+			task->proc(TM_SIG_STOP, task->arg);
+			while(tm && (task->state & TS_RUNNING)) {
+				tm--;
+				usleep(10000);
+			}
+
+			if(!tm && (task->state & TS_RUNNING)) {
+				if(pthread_cancel(task->thread) == ERR_NONE) {
+					remove_task(task);
+					r = true;
+				}
 			}
 		}
 
@@ -248,7 +259,7 @@ static void *starter(_task_t *task) {
 	if(task->pi_base)
 		task->pi_base->object_ctl(OCTL_START, task->arg);
 	else if(task->proc)
-		r = task->proc(task->arg);
+		r = task->proc(TM_SIG_START, task->arg);
 
 	task->state &= ~TS_RUNNING;
 	task->state |= TS_STOPPED;
