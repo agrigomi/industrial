@@ -1,4 +1,5 @@
 #include <string.h>
+#include <assert.h>
 #include "iMemory.h"
 #include "iRepository.h"
 
@@ -140,11 +141,25 @@ public:
 			if(mp_cb)
 				mp_cb(POOL_OP_FREE, rec, mp_udata);
 			mpi_list->mov(rec, COL_FREE, hm);
+		} else {
+			assert(false);
 		}
 
 		mpi_list->unlock(hm);
 	}
 
+	bool verify(void *rec) {// returns true if record is in BUSY state
+		bool r = false;
+		HMUTEX hm = mpi_list->lock();
+
+		mpi_list->col(COL_BUSY, hm);
+		r = mpi_list->sel(rec, hm);
+
+		mpi_list->unlock(hm);
+
+		return r;
+
+	}
 	void free_all(void) {
 		_free_all(0);
 	}

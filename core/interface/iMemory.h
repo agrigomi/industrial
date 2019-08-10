@@ -92,6 +92,7 @@ public:
 			iHeap *p=0)=0;
 	virtual void *alloc(void)=0;
 	virtual void free(void *)=0;
+	virtual bool verify(void *)=0; // returns true if record is in BUSY state
 	virtual void free_all(void)=0;
 	virtual _u32 size(void)=0;
 	virtual void clear(void)=0;

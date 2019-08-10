@@ -417,7 +417,7 @@ _u8 ll_sel(_ll_context_t *p_cxt, void *p_data, _u64 hlock) {
 	_u8 r = 0;
 	_ll_item_hdr_t *p_hdr = (_ll_item_hdr_t *)p_data;
 	p_hdr -= 1;
-	if(p_hdr->cxt == p_cxt) {
+	if(p_hdr->cxt == p_cxt && p_hdr->col == p_cxt->ccol) {
 		_u64 hm = ll_lock(p_cxt, hlock);
 		p_cxt->state[p_hdr->col].p_current = p_hdr;
 		r = 1;
