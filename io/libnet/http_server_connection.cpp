@@ -144,6 +144,7 @@ bool cHttpServerConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap, _u32 ti
 	bool r = false;
 
 	if(!mp_sio && p_sio && (r = p_sio->alive())) {
+		clean_members();
 		mp_sio = p_sio;
 		mpi_bmap = pi_bmap;
 		m_timeout = timeout;

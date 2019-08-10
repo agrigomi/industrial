@@ -237,8 +237,9 @@ private:
 	bool stop_worker(void);
 	_http_connection_t *add_connection(void);
 	_http_connection_t *get_connection(void);
-	void free_connection(_http_connection_t *rec);
-	void remove_connection(_http_connection_t *rec);
+	_http_connection_t *alloc_connection(HMUTEX hlock);
+	void pending_connection(_http_connection_t *rec);
+	void release_connection(_http_connection_t *rec);
 	void clear_column(_u8 col, HMUTEX hlock);
 	void remove_all_connections(void);
 	bool call_event_handler(_u8 evt, iHttpServerConnection *pi_httpc);

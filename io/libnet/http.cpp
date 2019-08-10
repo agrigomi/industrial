@@ -108,13 +108,13 @@ void *_http_worker_thread(_u8 sig, void *udata) {
 						_u8 evt = rec->p_httpc->process();
 
 						p_https->call_event_handler(evt, rec->p_httpc);
-						p_https->free_connection(rec);
+						p_https->pending_connection(rec);
 					} else {
 						p_https->call_event_handler(HTTP_ON_CLOSE, rec->p_httpc);
-						p_https->remove_connection(rec);
+						p_https->release_connection(rec);
 					}
 				} else
-					p_https->remove_connection(rec);
+					p_https->release_connection(rec);
 			} else {
 				if(to_idle) {
 					usleep(10000);
@@ -232,38 +232,49 @@ bool cHttpServer::stop_worker(void) {
 	return r;
 }
 
+_http_connection_t *cHttpServer::alloc_connection(HMUTEX hlock) {
+	_http_connection_t rec;
+	_http_connection_t *r = NULL;
+	_u32 sz = 0;
+
+	mpi_list->col(CFREE, hlock);
+	if((r = (_http_connection_t *)mpi_list->first(&sz, hlock))) {
+		r->state = CPENDING;
+		mpi_list->mov(r, CPENDING, hlock);
+	} else if((rec.p_httpc = (cHttpServerConnection *)_gpi_repo_->object_by_handle(m_hconnection, RF_CLONE|RF_NONOTIFY))) {
+		mpi_list->col(CPENDING, hlock);
+		rec.state = CPENDING;
+		r = (_http_connection_t *)mpi_list->add(&rec, sizeof(_http_connection_t), hlock);
+	}
+
+	return r;
+}
+
 _http_connection_t *cHttpServer::add_connection(void) {
 	_http_connection_t *r = 0;
 	cSocketIO *p_sio = dynamic_cast<cSocketIO *>(p_tcps->listen());
 
 	if(p_sio) {
-		_http_connection_t rec;
+		HMUTEX hm = mpi_list->lock();
 
-		if((rec.p_httpc = (cHttpServerConnection *)_gpi_repo_->object_by_handle(m_hconnection, RF_CLONE|RF_NONOTIFY))) {
-			_u32 nfhttpc = 0;
-			_u32 nbhttpc = 0;
+		if((r = alloc_connection(hm))) {
+			if(r->p_httpc->_init(p_sio, mpi_bmap, m_connection_timeout)) {
+				_u32 nphttpc = 0;
+				_u32 nbhttpc = 0;
 
-			rec.state = CFREE;
-			if(rec.p_httpc->_init(p_sio, mpi_bmap, m_connection_timeout)) {
-				HMUTEX hm = mpi_list->lock();
-				mpi_list->col(CFREE, hm);
-				if((r = (_http_connection_t *)mpi_list->add(&rec, sizeof(_http_connection_t), hm))) {
-					m_num_connections = nfhttpc = mpi_list->cnt(hm);
-					mpi_list->col(CBUSY, hm);
-					nbhttpc = mpi_list->cnt(hm);
-				}
-				mpi_list->unlock(hm);
-				if((m_num_workers - nbhttpc) < nfhttpc && m_num_workers < m_max_workers)
+				mpi_list->col(CPENDING, hm);
+				m_num_connections = nphttpc = mpi_list->cnt(hm);
+				mpi_list->col(CBUSY, hm);
+				nbhttpc = mpi_list->cnt(hm);
+
+				if((m_num_workers - nbhttpc) < nphttpc && m_num_workers < m_max_workers)
 					// create worker
 					start_worker();
-			}
-		}
-
-		if(!r) {
+			} else
+				release_connection(r);
+		} else
 			p_tcps->close(p_sio);
-			if(rec.p_httpc)
-				_gpi_repo_->object_release(rec.p_httpc, false);
-		}
+		mpi_list->unlock(hm);
 	}
 
 	return r;
@@ -273,7 +284,7 @@ _http_connection_t *cHttpServer::get_connection(void) {
 	HMUTEX hm = mpi_list->lock();
 	_u32 sz = 0;
 
-	mpi_list->col(CFREE, hm);
+	mpi_list->col(CPENDING, hm);
 
 	_http_connection_t *rec = (_http_connection_t *)mpi_list->first(&sz, hm);
 
@@ -287,27 +298,25 @@ _http_connection_t *cHttpServer::get_connection(void) {
 	return rec;
 }
 
-void cHttpServer::free_connection(_http_connection_t *rec) {
+void cHttpServer::pending_connection(_http_connection_t *rec) {
 	HMUTEX hm = mpi_list->lock();
 
 	if(rec->state == CBUSY) {
-		if(mpi_list->mov(rec, CFREE, hm))
-			rec->state = CFREE;
+		if(mpi_list->mov(rec, CPENDING, hm))
+			rec->state = CPENDING;
 	}
 
 	mpi_list->unlock(hm);
 }
 
-void cHttpServer::remove_connection(_http_connection_t *rec) {
+void cHttpServer::release_connection(_http_connection_t *rec) {
 	HMUTEX hm = mpi_list->lock();
 
 	mpi_list->col(rec->state, hm);
 	if(mpi_list->sel(rec, hm)) {
 		if(rec->p_httpc)
-			_gpi_repo_->object_release(rec->p_httpc, false);
-		mpi_list->del(hm);
-		mpi_list->col(CFREE, hm);
-		m_num_connections = mpi_list->cnt(hm);
+			rec->p_httpc->close();
+		mpi_list->mov(rec, CFREE, hm);
 	}
 
 	mpi_list->unlock(hm);
@@ -332,7 +341,7 @@ void cHttpServer::remove_all_connections(void) {
 
 	clear_column(CFREE, hm);
 	clear_column(CBUSY, hm);
-
+	clear_column(CPENDING, hm);
 	mpi_list->unlock(hm);
 }
 
