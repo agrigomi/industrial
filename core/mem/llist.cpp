@@ -15,6 +15,7 @@ private:
 	_ll_context_t m_cxt;
 	iMutex *mpi_mutex;
 	iHeap  *mpi_heap;
+	bool	m_my_heap;
 
 	friend void *mem_alloc(_u32 size, _ulong limit, void *p_udata);
 	friend void mem_free(void *ptr, _u32 size, void *p_udata);
@@ -33,6 +34,7 @@ public:
 		switch(cmd) {
 			case OCTL_INIT: {
 				iRepository *p_repo = (iRepository *)arg;
+				m_my_heap = false;
 				if((mpi_mutex = (iMutex*)p_repo->object_by_iname(I_MUTEX, RF_CLONE)))
 					r = true;
 				break;
@@ -41,7 +43,8 @@ public:
 				iRepository *p_repo = (iRepository *)arg;
 				ll_uninit(&m_cxt);
 				p_repo->object_release(mpi_mutex);
-				p_repo->object_release(mpi_heap);
+				if(m_my_heap)
+					p_repo->object_release(mpi_heap);
 				mpi_mutex = 0;
 				mpi_heap = 0;
 				r = true;
@@ -52,8 +55,10 @@ public:
 	}
 
 	bool init(_u8 mode, _u8 ncol, iHeap *pi_heap=0) {
-		if(!(mpi_heap = pi_heap))
+		if(!(mpi_heap = pi_heap)) {
 			mpi_heap = (iHeap *)_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL);
+			m_my_heap = true;
+		}
 
 		memset(&m_cxt, 0, sizeof(_ll_context_t));
 		m_cxt.mode = mode;
