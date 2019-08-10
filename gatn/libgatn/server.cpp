@@ -362,11 +362,14 @@ void server::stop(void) {
 
 void server::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
-	_vhost_t *pvhost = (pc->p_vhost) ? pc->p_vhost : &host;
 
-	if(evt < HTTP_MAX_EVENTS) {
-		if(pvhost->event[evt].pcb)
-			pvhost->event[evt].pcb(&(pc->req), &(pc->res), pvhost->event[evt].udata);
+	if(pc) {
+		_vhost_t *pvhost = (pc->p_vhost) ? pc->p_vhost : &host;
+
+		if(evt < HTTP_MAX_EVENTS) {
+			if(pvhost->event[evt].pcb)
+				pvhost->event[evt].pcb(&(pc->req), &(pc->res), pvhost->event[evt].udata);
+		}
 	}
 }
 
