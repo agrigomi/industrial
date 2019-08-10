@@ -229,8 +229,8 @@ private:
 	_u32			m_num_connections;
 	_u32			m_port;
 
-	friend void *_http_worker_thread(void *);
-	friend void *_http_server_thread(void *);
+	friend void *_http_worker_thread(_u8 sig, void *);
+	friend void *_http_server_thread(_u8 sig, void *);
 
 	void http_server_thread(void);
 	bool start_worker(void);

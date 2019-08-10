@@ -20,9 +20,13 @@ _u32 buffer_io(_u8 op, void *ptr, _u32 size, void *udata) {
 	return r;
 }
 
-void *_http_server_thread(void *arg) {
+void *_http_server_thread(_u8 sig, void *arg) {
 	cHttpServer *srv = (cHttpServer *)arg;
-	srv->http_server_thread();
+
+	if(sig == TM_SIG_START)
+		srv->http_server_thread();
+	else if(sig == TM_SIG_STOP)
+		;
 	return NULL;
 }
 
@@ -83,41 +87,44 @@ void cHttpServer::http_server_thread(void) {
 	m_is_stopped = true;
 }
 
-void *_http_worker_thread(void *udata) {
+void *_http_worker_thread(_u8 sig, void *udata) {
 	void *r = 0;
 	cHttpServer *p_https = static_cast<cHttpServer *>(udata);
-	volatile _u32 num = p_https->m_active_workers++;
-	_u32 to_idle = 100;
 
-	p_https->m_num_workers++;
+	if(sig == TM_SIG_START) {
+		volatile _u32 num = p_https->m_active_workers++;
+		_u32 to_idle = 100;
 
-	while(num < p_https->m_active_workers) {
-		_http_connection_t *rec = p_https->get_connection();
+		p_https->m_num_workers++;
 
-		if(rec) {
-			to_idle = 100;
-			if(rec->p_httpc) {
-				if(rec->p_httpc->alive()) {
-					_u8 evt = rec->p_httpc->process();
+		while(num < p_https->m_active_workers) {
+			_http_connection_t *rec = p_https->get_connection();
 
-					p_https->call_event_handler(evt, rec->p_httpc);
-					p_https->free_connection(rec);
-				} else {
-					p_https->call_event_handler(HTTP_ON_CLOSE, rec->p_httpc);
+			if(rec) {
+				to_idle = 100;
+				if(rec->p_httpc) {
+					if(rec->p_httpc->alive()) {
+						_u8 evt = rec->p_httpc->process();
+
+						p_https->call_event_handler(evt, rec->p_httpc);
+						p_https->free_connection(rec);
+					} else {
+						p_https->call_event_handler(HTTP_ON_CLOSE, rec->p_httpc);
+						p_https->remove_connection(rec);
+					}
+				} else
 					p_https->remove_connection(rec);
-				}
-			} else
-				p_https->remove_connection(rec);
-		} else {
-			if(to_idle) {
-				usleep(10000);
-				to_idle--;
-			} else
-				usleep(100000);
+			} else {
+				if(to_idle) {
+					usleep(10000);
+					to_idle--;
+				} else
+					usleep(100000);
+			}
 		}
-	}
 
-	p_https->m_num_workers--;
+		p_https->m_num_workers--;
+	}
 
 	return r;
 }
