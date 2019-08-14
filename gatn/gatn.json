@@ -3,7 +3,7 @@
 			"name":		"server-0",
 			"port":		8080,
 			"buffer":	16384,
-			"threads":	32,
+			"threads":	8,
 			"connections":	1000,
 			"timeout":	10,
 			"cache": {
@@ -23,7 +23,7 @@
 					},
 					"attach": [
 						{
-							"cname":	"cGatnExtClass",
+							"cname":	"cHttpLog",
 							"options":	"-o --lopt=something"
 						}
 					]
@@ -48,7 +48,7 @@
 			},
 			"attach":	[
 				{
-					"cname":	"cGatnExtClass",
+					"cname":	"cHttpLog",
 					"options":	"--opt1 --opt2=value"
 				}
 			]
@@ -57,7 +57,7 @@
 			"name":		"server-1",
 			"port":		8081,
 			"buffer":	8192,
-			"threads":	32,
+			"threads":	8,
 			"connections":	1000,
 			"timeout":	10,
 			"cache": {
@@ -75,6 +75,6 @@
 		}
 	],
 	"extensions": [
-		{ "module":	"extsample.so", 	"alias":	"example" }
+		{ "module":	"extgatnmon.so", 	"alias":	"gatn-mon" }
 	]
 }

@@ -222,3 +222,4 @@ struct server: public _server_t {
 	bool detach_class(_cstr_t cname, _cstr_t host=NULL);
 	void release_class(_cstr_t cname);
 };
+

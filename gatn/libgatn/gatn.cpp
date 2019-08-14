@@ -12,6 +12,7 @@ private:
 	iMap		*mpi_map;// server map
 	iLog		*mpi_log;
 	_char_t		m_config_fname[256];
+	iJSON		*mpi_json;
 
 	void stop(bool autorestore=false) { // stop servers
 		_map_enum_t en = mpi_map->enum_open();
@@ -84,6 +85,20 @@ private:
 			mpi_map->enum_close(en);
 		}
 	}
+
+	void configure_servers(HTCONTEXT jcxt) {
+		HTVALUE htv_srv_array = mpi_json->select(jcxt, "server", NULL);
+
+		if(htv_srv_array) {
+			if(mpi_json->type(htv_srv_array) == JVT_ARRAY) {
+				//
+			} else
+				mpi_log->write(LMT_ERROR, "Gatn: Requres array 'server: []'");
+		} else
+			mpi_log->write(LMT_ERROR, "Gatn: Failed to configure servers");
+	}
+
+
 public:
 	BASE(cGatn, "cGatn", RF_ORIGINAL, 1,0,0);
 
@@ -169,7 +184,43 @@ public:
 	bool configure(_cstr_t json_fname) {
 		bool r = false;
 
-		//...
+		mpi_json = dynamic_cast<iJSON *>(_gpi_repo_->object_by_iname(I_JSON, RF_ORIGINAL));
+
+		if(mpi_json) {
+			HTCONTEXT jcxt = mpi_json->create_context();
+
+			if(jcxt) {
+				iFS *pi_fs = dynamic_cast<iFS *>(_gpi_repo_->object_by_iname(I_FS, RF_ORIGINAL));
+
+				if(pi_fs) {
+					iFileIO *pi_fio = pi_fs->open(json_fname, O_RDONLY);
+
+					if(pi_fio) {
+						_cstr_t ptr = (_cstr_t)pi_fio->map(MPF_READ);
+
+						if(ptr) {
+							if(mpi_json->parse(jcxt, ptr, pi_fio->size())) {
+								configure_servers(jcxt);
+							} else
+								mpi_log->fwrite(LMT_ERROR, "Gatn: Failed to parse configuration file '%s'", json_fname);
+						} else
+							mpi_log->fwrite(LMT_ERROR, "Unable to map content of '%s'", json_fname);
+
+						pi_fs->close(pi_fio);
+					} else
+						mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to open file '%s'", json_fname);
+
+					_gpi_repo_->object_release(pi_fs);
+				} else
+					mpi_log->write(LMT_ERROR, "Gatn: Unable to obtaian FS interface");
+
+				mpi_json->destroy_context(jcxt);
+			} else
+				mpi_log->write(LMT_ERROR, "Gatn: Unable to create context for JSON parser");
+
+			_gpi_repo_->object_release(mpi_json);
+		} else
+			mpi_log->write(LMT_ERROR, "Gatn: Unable to obtain JSON interface");
 
 		return r;
 	}
