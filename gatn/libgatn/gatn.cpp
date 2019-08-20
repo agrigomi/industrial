@@ -86,14 +86,26 @@ private:
 		}
 	}
 
+	void load_extensions(HTCONTEXT jcxt) {
+		HTVALUE htv_ext_array = mpi_json->select(jcxt, "extensions", NULL);
+
+		//...
+		if(htv_ext_array) {
+			if(mpi_json->type(htv_ext_array) == JVT_ARRAY) {
+				//
+			} else
+				mpi_log->write(LMT_ERROR, "Gatn: Requres array 'extensions: []'");
+		}
+	}
+
 	void configure_servers(HTCONTEXT jcxt) {
-		HTVALUE htv_srv_array = mpi_json->select(jcxt, "server", NULL);
+		HTVALUE htv_srv_array = mpi_json->select(jcxt, "servers", NULL);
 
 		if(htv_srv_array) {
 			if(mpi_json->type(htv_srv_array) == JVT_ARRAY) {
 				//
 			} else
-				mpi_log->write(LMT_ERROR, "Gatn: Requres array 'server: []'");
+				mpi_log->write(LMT_ERROR, "Gatn: Requres array 'servers: []'");
 		} else
 			mpi_log->write(LMT_ERROR, "Gatn: Failed to configure servers");
 	}
@@ -200,6 +212,7 @@ public:
 
 						if(ptr) {
 							if(mpi_json->parse(jcxt, ptr, pi_fio->size())) {
+								load_extensions(jcxt);
 								configure_servers(jcxt);
 							} else
 								mpi_log->fwrite(LMT_ERROR, "Gatn: Failed to parse configuration file '%s'", json_fname);
