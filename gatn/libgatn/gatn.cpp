@@ -97,6 +97,40 @@ private:
 		}
 	}
 
+	std::string json_string(HTVALUE htv) {
+		std::string r;
+		_u8 jvt = mpi_json->type(htv);
+
+		if(jvt == JVT_STRING || jvt == JVT_NUMBER) {
+			_u32 size = 0;
+			_cstr_t data = mpi_json->data(htv, &size);
+
+			r.assign(data, size);
+		}
+
+		return r;
+	}
+
+	std::string json_string(HTCONTEXT jcxt, _cstr_t var, HTVALUE parent=NULL) {
+		std::string r;
+		HTVALUE htv = mpi_json->select(jcxt, var, parent);
+
+		if(htv)
+			r = json_string(htv);
+
+		return r;
+	}
+
+	std::string json_string(HTVALUE parent, _u32 idx) {
+		std::string r;
+		HTVALUE htv = mpi_json->by_index(parent, idx);
+
+		if(htv)
+			r = json_string(htv);
+
+		return r;
+	}
+
 	void load_extensions(HTCONTEXT jcxt) {
 		HTVALUE htv_ext_array = mpi_json->select(jcxt, "extensions", NULL);
 
@@ -104,24 +138,12 @@ private:
 			if(mpi_json->type(htv_ext_array) == JVT_ARRAY) {
 				_u32 idx = 0;
 				HTVALUE htv_ext = NULL;
-				_u32 size = 0;
-				_cstr_t data = NULL;
 
 				while((htv_ext = mpi_json->by_index(htv_ext_array, idx))) {
-					HTVALUE htv_module;
-					HTVALUE htv_alias;
-					std::string module, alias;
+					std::string module = json_string(jcxt, "module", htv_ext);
+					std::string alias = json_string(jcxt, "alias", htv_ext);
 
-					if((htv_module = mpi_json->select(jcxt, "module", htv_ext))) {
-						if((htv_alias = mpi_json->select(jcxt, "alias", htv_ext))) {
-							if((data = mpi_json->data(htv_alias, &size)))
-								alias.assign(data, size);
-						}
-						if((data = mpi_json->data(htv_module, &size)))
-							module.assign(data, size);
-
-						_gpi_repo_->extension_load(module.c_str(), alias.c_str());
-					}
+					_gpi_repo_->extension_load(module.c_str(), alias.c_str());
 
 					idx++;
 				}
@@ -148,8 +170,6 @@ private:
 			if(mpi_json->type(htv_srv_array) == JVT_ARRAY) {
 				_u32 idx = 0;
 				HTVALUE htv_srv = NULL;
-				_u32 size = 0;
-				_cstr_t data = NULL;
 
 				while((htv_srv = mpi_json->by_index(htv_srv_array, idx))) {
 					//
