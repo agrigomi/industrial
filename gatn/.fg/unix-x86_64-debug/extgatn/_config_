@@ -1,4 +1,5 @@
 LIB_PATH=$(OUTDIR)/core/$(CONFIG)/libstartup-ext
 COMPILER_FLAGS+=-fPIC
 LINKER_FLAGS+=-fpic -shared -u init $(LIB_PATH)/libstartup-ext.a
+LIBRARY += -lssl -lcrypto
 
