@@ -1,4 +1,5 @@
 #include <string.h>
+#include <string>
 #include "startup.h"
 #include "iGatn.h"
 #include "iLog.h"
@@ -89,10 +90,31 @@ private:
 	void load_extensions(HTCONTEXT jcxt) {
 		HTVALUE htv_ext_array = mpi_json->select(jcxt, "extensions", NULL);
 
-		//...
 		if(htv_ext_array) {
 			if(mpi_json->type(htv_ext_array) == JVT_ARRAY) {
-				//
+				_u32 idx = 0;
+				HTVALUE htv_ext = NULL;
+				_u32 size = 0;
+				_cstr_t data = NULL;
+
+				while((htv_ext = mpi_json->by_index(htv_ext_array, idx))) {
+					HTVALUE htv_module;
+					HTVALUE htv_alias;
+					std::string module, alias;
+
+					if((htv_module = mpi_json->select(jcxt, "module", htv_ext))) {
+						if((htv_alias = mpi_json->select(jcxt, "alias", htv_ext))) {
+							if((data = mpi_json->data(htv_alias, &size)))
+								alias.assign(data, size);
+						}
+						if((data = mpi_json->data(htv_module, &size)))
+							module.assign(data, size);
+
+						_gpi_repo_->extension_load(module.c_str(), alias.c_str());
+					}
+
+					idx++;
+				}
 			} else
 				mpi_log->write(LMT_ERROR, "Gatn: Requres array 'extensions: []'");
 		}
@@ -103,7 +125,15 @@ private:
 
 		if(htv_srv_array) {
 			if(mpi_json->type(htv_srv_array) == JVT_ARRAY) {
-				//
+				_u32 idx = 0;
+				HTVALUE htv_srv = NULL;
+				_u32 size = 0;
+				_cstr_t data = NULL;
+
+				while((htv_srv = mpi_json->by_index(htv_srv_array, idx))) {
+					//
+					idx++;
+				}
 			} else
 				mpi_log->write(LMT_ERROR, "Gatn: Requres array 'servers: []'");
 		} else

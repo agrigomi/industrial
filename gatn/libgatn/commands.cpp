@@ -322,7 +322,14 @@ static void gatn_load_handler(iCmd *pi_cmd, // interface to command object
 			_u32 argc, // number of arguments
 			_cstr_t argv[] // arguments
 			) {
-	//...
+	iGatn *pi_gatn = get_gatn();
+
+	if(pi_gatn) {
+		_cstr_t arg2 = pi_cmd_host->argument(argc, argv, p_opt, 2); // server or host
+
+		if(arg2)
+			pi_gatn->configure(arg2);
+	}
 }
 
 static void gatn_reload_handler(iCmd *pi_cmd, // interface to command object
