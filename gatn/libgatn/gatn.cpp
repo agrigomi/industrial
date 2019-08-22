@@ -66,6 +66,19 @@ private:
 		}
 	}
 
+	void destroy(_server_t *p_srv) {
+		server *p = dynamic_cast<server *>(p_srv);
+
+		if(p) {
+			SSL_CTX *sslcxt = p->get_SSL_context();
+
+			p->destroy();
+
+			if(sslcxt) // destroy SSL context
+				SSL_CTX_free(sslcxt);
+		}
+	}
+
 	void destroy(void) {
 		_map_enum_t en = mpi_map->enum_open();
 
@@ -75,10 +88,7 @@ private:
 			_server_t *p_srv = (_server_t *)mpi_map->enum_first(en, &sz, hm);
 
 			while(p_srv) {
-				server *p = dynamic_cast<server *>(p_srv);
-
-				if(p)
-					p->destroy();
+				destroy(p_srv);
 				p_srv = (_server_t *)mpi_map->enum_next(en, &sz, hm);
 			}
 
@@ -117,6 +127,17 @@ private:
 				}
 			} else
 				mpi_log->write(LMT_ERROR, "Gatn: Requres array 'extensions: []'");
+		}
+	}
+
+	void configure_hosts(HTCONTEXT jcxt, HTVALUE htv_server) {
+		HTVALUE htv_vhost_array = mpi_json->select(jcxt, "vhost", htv_server);
+
+		if(htv_vhost_array) {
+			if(mpi_json->type(htv_vhost_array) == JVT_ARRAY) {
+				//...
+			} else
+				mpi_log->write(LMT_ERROR, "Gatn: Requires array 'servers.vhost: []'");
 		}
 	}
 
@@ -323,7 +344,7 @@ public:
 		server *p = dynamic_cast<server *>(p_srv);
 
 		if(p) {
-			p->destroy();
+			destroy(p);
 			mpi_map->del(p->m_name, strlen(p->m_name));
 		}
 	}
