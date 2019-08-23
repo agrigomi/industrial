@@ -163,6 +163,22 @@ private:
 		return r;
 	}
 
+	void attach_class(HTCONTEXT jcxt, HTVALUE htv_class_array, _server_t *pi_srv, _cstr_t host=NULL) {
+		HTVALUE htv_class = NULL;
+		_u32 idx = 0;
+
+		if(htv_class_array) {
+			while((htv_class = mpi_json->by_index(htv_class_array, idx))) {
+				std::string options = json_string(jcxt, "options", htv_class);
+				std::string cname = json_string(jcxt, "cname", htv_class);
+
+				pi_srv->attach_class(cname.c_str(), options.c_str(), host);
+
+				idx++;
+			}
+		}
+	}
+
 	void load_extensions(HTCONTEXT jcxt) {
 		HTVALUE htv_ext_array = mpi_json->select(jcxt, "extension", NULL);
 
@@ -202,9 +218,13 @@ private:
 
 					if(pi_srv->add_virtual_host(host.c_str(), root.c_str(),
 								cache_path.c_str(), cache_key.c_str(),
-								cache_exclude.c_str(), root_exclude.c_str()))
-						if(pi_srv->start_virtual_host(host.c_str()))
-							;//...
+								cache_exclude.c_str(), root_exclude.c_str())) {
+						if(pi_srv->start_virtual_host(host.c_str())) {
+							HTVALUE htv_class_array = mpi_json->select(jcxt, "attach", htv_vhost);
+
+							attach_class(jcxt, htv_class_array, pi_srv, host.c_str());
+						}
+					}
 
 					idx++;
 				}
@@ -248,7 +268,9 @@ private:
 								ssl_context);
 
 					if(pi_srv) {
-						//
+						HTVALUE htv_class_array = mpi_json->select(jcxt, "attach", htv_srv);
+
+						attach_class(jcxt, htv_class_array, pi_srv);
 						configure_hosts(jcxt, htv_srv, pi_srv);
 					}
 
