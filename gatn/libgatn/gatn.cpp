@@ -131,8 +131,31 @@ private:
 		return r;
 	}
 
+	std::string json_array_to_path(HTVALUE jarray) {
+		std::string r;
+
+		if(jarray && mpi_json->type(jarray) == JVT_ARRAY) {
+			HTVALUE item = NULL;
+			_u32 idx = 0;
+
+			while((item = mpi_json->by_index(jarray, idx))) {
+				std::string tmp;
+
+				if(mpi_json->type(item) == JVT_STRING) {
+					tmp = json_string(item);
+					r.append(tmp);
+					r.append(":");
+				}
+
+				idx++;
+			}
+		}
+
+		return r;
+	}
+
 	void load_extensions(HTCONTEXT jcxt) {
-		HTVALUE htv_ext_array = mpi_json->select(jcxt, "extensions", NULL);
+		HTVALUE htv_ext_array = mpi_json->select(jcxt, "extension", NULL);
 
 		if(htv_ext_array) {
 			if(mpi_json->type(htv_ext_array) == JVT_ARRAY) {
@@ -152,7 +175,7 @@ private:
 		}
 	}
 
-	void configure_hosts(HTCONTEXT jcxt, HTVALUE htv_server) {
+	void configure_hosts(HTCONTEXT jcxt, HTVALUE htv_server, _server_t *pi_srv) {
 		HTVALUE htv_vhost_array = mpi_json->select(jcxt, "vhost", htv_server);
 
 		if(htv_vhost_array) {
@@ -164,15 +187,44 @@ private:
 	}
 
 	void configure_servers(HTCONTEXT jcxt) {
-		HTVALUE htv_srv_array = mpi_json->select(jcxt, "servers", NULL);
+		HTVALUE htv_srv_array = mpi_json->select(jcxt, "server", NULL);
 
 		if(htv_srv_array) {
 			if(mpi_json->type(htv_srv_array) == JVT_ARRAY) {
 				_u32 idx = 0;
 				HTVALUE htv_srv = NULL;
+				SSL_CTX *ssl_context = NULL;
 
 				while((htv_srv = mpi_json->by_index(htv_srv_array, idx))) {
-					//
+					std::string name = json_string(jcxt, "name", htv_srv);
+					std::string root = json_string(jcxt, "root", htv_srv);
+					std::string port = json_string(jcxt, "port", htv_srv);
+					std::string buffer = json_string(jcxt, "buffer", htv_srv);
+					std::string threads = json_string(jcxt, "threads", htv_srv);
+					std::string connections = json_string(jcxt, "connections", htv_srv);
+					std::string timeout = json_string(jcxt, "timeout", htv_srv);
+					std::string cache_path = json_string(jcxt, "cache.path", htv_srv);
+					std::string cache_key = json_string(jcxt, "cache.key", htv_srv);
+					std::string cache_exclude = json_array_to_path(mpi_json->select(jcxt, "cache.exclude", htv_srv));
+					std::string root_exclude = json_array_to_path(mpi_json->select(jcxt, "exclude", htv_srv));
+
+					_server_t *pi_srv = create_server(name.c_str(),
+								atoi(port.c_str()),
+								root.c_str(),
+								cache_path.c_str(),
+								cache_exclude.c_str(),
+								root_exclude.c_str(),
+								atoi(buffer.c_str()),
+								atoi(threads.c_str()),
+								atoi(connections.c_str()),
+								atoi(timeout.c_str()),
+								ssl_context);
+
+					if(pi_srv) {
+						//
+						configure_hosts(jcxt, htv_srv, pi_srv);
+					}
+
 					idx++;
 				}
 			} else

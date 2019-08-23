@@ -1,5 +1,6 @@
 {
-	"servers": [{
+	"server": [
+		{
 			"name":		"server-0",
 			"port":		8080,
 			"buffer":	16384,
@@ -12,7 +13,8 @@
 				"exclude":	["folder1", "folder2"]
 			},
 			"root":		"../test/balay",
-			"vhost": [{
+			"vhost": [
+				{
 					"host":		"oland.ddns.net",
 					"root":		"../test/NiceAdmin",
 					"exclude":	"/folder1/:/folder2/",
@@ -74,7 +76,7 @@
 			}
 		}
 	],
-	"extensions": [
+	"extension": [
 		{ "module":	"extgatnmon.so", 	"alias":	"gatn-mon" }
 	]
 }
