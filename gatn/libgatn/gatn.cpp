@@ -154,6 +154,14 @@ private:
 		return r;
 	}
 
+	SSL_CTX *create_ssl_context(HTCONTEXT jcxt, HTVALUE htv_srv) {
+		SSL_CTX *r = NULL;
+
+		//...
+
+		return r;
+	}
+
 	void load_extensions(HTCONTEXT jcxt) {
 		HTVALUE htv_ext_array = mpi_json->select(jcxt, "extension", NULL);
 
@@ -180,7 +188,14 @@ private:
 
 		if(htv_vhost_array) {
 			if(mpi_json->type(htv_vhost_array) == JVT_ARRAY) {
-				//...
+				HTVALUE htv_vhost = NULL;
+				_u32 idx = 0;
+
+				while((htv_vhost = mpi_json->by_index(htv_vhost_array, idx))) {
+					//...
+
+					idx++;
+				}
 			} else
 				mpi_log->write(LMT_ERROR, "Gatn: Requires array 'servers.vhost: []'");
 		}
@@ -193,7 +208,7 @@ private:
 			if(mpi_json->type(htv_srv_array) == JVT_ARRAY) {
 				_u32 idx = 0;
 				HTVALUE htv_srv = NULL;
-				SSL_CTX *ssl_context = NULL;
+				SSL_CTX *ssl_context = create_ssl_context(jcxt, htv_srv);
 
 				while((htv_srv = mpi_json->by_index(htv_srv_array, idx))) {
 					std::string name = json_string(jcxt, "name", htv_srv);
