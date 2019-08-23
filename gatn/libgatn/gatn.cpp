@@ -149,7 +149,8 @@ private:
 
 				idx++;
 			}
-		}
+		} else if(jarray && mpi_json->type(jarray) == JVT_STRING)
+			r = json_string(jarray);
 
 		return r;
 	}
@@ -192,7 +193,18 @@ private:
 				_u32 idx = 0;
 
 				while((htv_vhost = mpi_json->by_index(htv_vhost_array, idx))) {
-					//...
+					std::string host = json_string(jcxt, "host", htv_vhost);
+					std::string root = json_string(jcxt, "root", htv_vhost);
+					std::string root_exclude = json_array_to_path(mpi_json->select(jcxt, "exclude", htv_vhost));
+					std::string cache_path = json_string(jcxt, "cache.path", htv_vhost);
+					std::string cache_key = json_string(jcxt, "cache.key", htv_vhost);
+					std::string cache_exclude = json_array_to_path(mpi_json->select(jcxt, "cache.exclude", htv_vhost));
+
+					if(pi_srv->add_virtual_host(host.c_str(), root.c_str(),
+								cache_path.c_str(), cache_key.c_str(),
+								cache_exclude.c_str(), root_exclude.c_str()))
+						if(pi_srv->start_virtual_host(host.c_str()))
+							;//...
 
 					idx++;
 				}
