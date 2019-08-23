@@ -161,7 +161,7 @@ private:
 		SSL_CTX *r = NULL;
 		HTVALUE htv_ssl = mpi_json->select(jcxt, "ssl", htv_srv);
 
-		if(htv_srv) {
+		if(htv_ssl) {
 			HTVALUE htv_ssl_enable = mpi_json->select(jcxt, "enable", htv_ssl);
 
 			if(htv_ssl_enable && mpi_json->type(htv_ssl_enable) == JVT_TRUE) {
@@ -249,7 +249,6 @@ private:
 			if(mpi_json->type(htv_srv_array) == JVT_ARRAY) {
 				_u32 idx = 0;
 				HTVALUE htv_srv = NULL;
-				SSL_CTX *ssl_context = create_ssl_context(jcxt, htv_srv);
 
 				while((htv_srv = mpi_json->by_index(htv_srv_array, idx))) {
 					std::string name = json_string(jcxt, "name", htv_srv);
@@ -263,6 +262,8 @@ private:
 					std::string cache_key = json_string(jcxt, "cache.key", htv_srv);
 					std::string cache_exclude = json_array_to_path(mpi_json->select(jcxt, "cache.exclude", htv_srv));
 					std::string root_exclude = json_array_to_path(mpi_json->select(jcxt, "exclude", htv_srv));
+
+					SSL_CTX *ssl_context = create_ssl_context(jcxt, htv_srv);
 
 					_server_t *pi_srv = create_server(name.c_str(),
 								atoi(port.c_str()),
