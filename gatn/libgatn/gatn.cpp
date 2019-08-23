@@ -159,8 +159,15 @@ private:
 
 	SSL_CTX *create_ssl_context(HTCONTEXT jcxt, HTVALUE htv_srv) {
 		SSL_CTX *r = NULL;
+		HTVALUE htv_ssl = mpi_json->select(jcxt, "ssl", htv_srv);
 
-		//...
+		if(htv_srv) {
+			HTVALUE htv_ssl_enable = mpi_json->select(jcxt, "enable", htv_ssl);
+
+			if(htv_ssl_enable && mpi_json->type(htv_ssl_enable) == JVT_TRUE) {
+				//...
+			}
+		}
 
 		return r;
 	}
@@ -198,7 +205,7 @@ private:
 					idx++;
 				}
 			} else
-				mpi_log->write(LMT_ERROR, "Gatn: Requres array 'extensions: []'");
+				mpi_log->write(LMT_ERROR, "Gatn: Requres array 'extension: []'");
 		}
 	}
 
@@ -231,7 +238,7 @@ private:
 					idx++;
 				}
 			} else
-				mpi_log->write(LMT_ERROR, "Gatn: Requires array 'servers.vhost: []'");
+				mpi_log->write(LMT_ERROR, "Gatn: Requires array 'server.vhost: []'");
 		}
 	}
 
@@ -279,7 +286,7 @@ private:
 					idx++;
 				}
 			} else
-				mpi_log->write(LMT_ERROR, "Gatn: Requres array 'servers: []'");
+				mpi_log->write(LMT_ERROR, "Gatn: Requres array 'server: []'");
 		} else
 			mpi_log->write(LMT_ERROR, "Gatn: Failed to configure servers");
 	}
