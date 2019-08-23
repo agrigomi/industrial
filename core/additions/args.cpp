@@ -148,15 +148,17 @@ public:
 		bool r = false;
 		_u32 sz = (sz_args) ? sz_args : strlen(args);
 
-		if(m_arg_line && m_sz_arg_line)
-			mpi_heap->free(m_arg_line, m_sz_arg_line);
+		if(sz) {
+			if(m_arg_line && m_sz_arg_line)
+				mpi_heap->free(m_arg_line, m_sz_arg_line);
 
-		if((m_arg_line = (_str_t)mpi_heap->alloc(sz))) {
-			mpi_str->mem_cpy(m_arg_line, (void *)args, sz);
-			m_sz_arg_line = sz;
-			m_argc = parse_argv(m_arg_line, sz);
-			m_argv = m_arg_array;
-			r = true;
+			if((m_arg_line = (_str_t)mpi_heap->alloc(sz))) {
+				mpi_str->mem_cpy(m_arg_line, (void *)args, sz);
+				m_sz_arg_line = sz;
+				m_argc = parse_argv(m_arg_line, sz);
+				m_argv = m_arg_array;
+				r = true;
+			}
 		}
 
 		return r;
