@@ -5,21 +5,19 @@
 			"port":		8080,
 			"buffer":	16384,
 			"threads":	8,
-			"connections":	1000,
+			"connections":	2000,
 			"timeout":	10,
 			"cache": {
 				"path":		"/tmp/",
-				"key":		"server-0",
-				"exclude":	["folder1", "folder2"]
+				"key":		"server-0"
 			},
-			"root":		"../test/balay",
+			"root":		"../test/AdminLTE",
 			"vhost": [
 				{
-					"host":		"oland.ddns.net",
-					"root":		"../test/NiceAdmin",
+					"host":		"oland.ddns.net:8080",
+					"root":		"../test/elaadmin-master",
 					"exclude":	"/folder1/:/folder2/",
 					"cache": {
-						"exclude":	["fldr1", "fldr2"],
 						"path":		"/tmp/",
 						"key":		"oland"
 					},
@@ -29,16 +27,6 @@
 							"options":	"-o --lopt=something"
 						}
 					]
-				},
-				{
-					"host":		"agrigomi.ddns.net",
-					"root":		"../test/StarAdmin",
-					"exclude":	["/folder1/", "/folder2/"],
-					"cache": {
-						"exclude":	["fldr1", "fldr2"],
-						"path":		"/tmp/",
-						"key":		"agrigomi"
-					}
 				}
 			],
 			"ssl": {
@@ -51,29 +39,9 @@
 			"attach":	[
 				{
 					"cname":	"cHttpLog",
-					"options":	"--opt1 --opt2=value"
+					"options":	""
 				}
 			]
-		},
-		{
-			"name":		"server-1",
-			"port":		8081,
-			"buffer":	8192,
-			"threads":	8,
-			"connections":	1000,
-			"timeout":	10,
-			"cache": {
-				"path":		"/tmp/",
-				"key":		"server-1"
-			},
-			"root":		"../test/philosophy-colorlib",
-			"ssl": {
-				"enable":	false,
-				"method":	"SSLv23",
-				"flags":	["NO_SSLv2", "NO_SSLv3", "NO_COMPRESSION"],
-				"certificate":	"certificate.crt",
-				"key":		"keyfile.key"
-			}
 		}
 	],
 	"extension": [
