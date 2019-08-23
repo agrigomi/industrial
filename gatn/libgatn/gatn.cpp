@@ -134,23 +134,25 @@ private:
 	std::string json_array_to_path(HTVALUE jarray) {
 		std::string r;
 
-		if(jarray && mpi_json->type(jarray) == JVT_ARRAY) {
-			HTVALUE item = NULL;
-			_u32 idx = 0;
+		if(jarray) {
+			if(mpi_json->type(jarray) == JVT_ARRAY) {
+				HTVALUE item = NULL;
+				_u32 idx = 0;
 
-			while((item = mpi_json->by_index(jarray, idx))) {
-				std::string tmp;
+				while((item = mpi_json->by_index(jarray, idx))) {
+					std::string tmp;
 
-				if(mpi_json->type(item) == JVT_STRING) {
-					tmp = json_string(item);
-					r.append(tmp);
-					r.append(":");
+					if(mpi_json->type(item) == JVT_STRING) {
+						tmp = json_string(item);
+						r.append(tmp);
+						r.append(":");
+					}
+
+					idx++;
 				}
-
-				idx++;
-			}
-		} else if(jarray && mpi_json->type(jarray) == JVT_STRING)
-			r = json_string(jarray);
+			} else if(mpi_json->type(jarray) == JVT_STRING)
+				r = json_string(jarray);
+		}
 
 		return r;
 	}
