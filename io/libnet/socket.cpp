@@ -13,6 +13,7 @@ bool cSocketIO::object_ctl(_u32 cmd, void *arg, ...) {
 	switch(cmd) {
 		case OCTL_INIT:
 			m_socket = 0;
+			mp_cSSL = NULL;
 			memset(&m_serveraddr, 0, sizeof(struct sockaddr_in));
 			memset(&m_clientaddr, 0, sizeof(struct sockaddr_in));
 			r = true;
@@ -95,13 +96,14 @@ void cSocketIO::_close(void) {
 
 		getsockopt(m_socket, SOL_SOCKET, SO_ERROR, (char *)&err, &len);
 
+		if(mp_cSSL)
+			SSL_free(mp_cSSL);
+
 		shutdown(m_socket, SHUT_RDWR);
 		::close(m_socket);
 
 		m_socket = 0;
 
-		if(mp_cSSL)
-			SSL_free(mp_cSSL);
 	}
 }
 
