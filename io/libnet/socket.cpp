@@ -96,8 +96,10 @@ void cSocketIO::_close(void) {
 
 		getsockopt(m_socket, SOL_SOCKET, SO_ERROR, (char *)&err, &len);
 
-		if(mp_cSSL)
+		if(mp_cSSL) {
+			SSL_shutdown(mp_cSSL);
 			SSL_free(mp_cSSL);
+		}
 
 		shutdown(m_socket, SHUT_RDWR);
 		::close(m_socket);
