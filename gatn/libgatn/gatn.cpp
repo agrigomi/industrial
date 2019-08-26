@@ -189,7 +189,7 @@ private:
 		return r;
 	}
 
-	void load_ssl_cert(HTCONTEXT jcxt, HTVALUE ht_ssl) {
+	void load_ssl_cert(HTCONTEXT jcxt, SSL_CTX *ssl_cxt, HTVALUE ht_ssl) {
 		//...
 	}
 
@@ -209,11 +209,14 @@ private:
 
 				if(ssl_method) {
 					if((r = SSL_CTX_new(ssl_method)))
-						load_ssl_cert(jcxt, htv_ssl);
+						load_ssl_cert(jcxt, r, htv_ssl);
 					else
 						mpi_log->write(LMT_ERROR, "Gatn: Failed to create SSL context");
 				} else
 					mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to select SSL method '%s'", method.c_str());
+
+				if(!r)
+					ERR_print_errors_fp(stderr);
 			}
 		}
 
