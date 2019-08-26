@@ -137,8 +137,14 @@ _u32 cSocketIO::read(void *data, _u32 size) {
 				if(_r > 0)
 					r = _r;
 				else {
-					if(SSL_get_error(mp_cSSL, _r) == SSL_ERROR_ZERO_RETURN)
-						m_alive = false;
+					_s32 err = SSL_get_error(mp_cSSL, _r);
+
+					switch(err) {
+						case SSL_ERROR_ZERO_RETURN:
+						case SSL_ERROR_SYSCALL:
+						case SSL_ERROR_SSL:
+							m_alive = false;
+					}
 				}
 			} break;
 		}
@@ -174,8 +180,14 @@ _u32 cSocketIO::write(const void *data, _u32 size) {
 				if(_r > 0)
 					r = _r;
 				else {
-					if(SSL_get_error(mp_cSSL, _r) == SSL_ERROR_ZERO_RETURN)
-						m_alive = false;
+					_s32 err = SSL_get_error(mp_cSSL, _r);
+
+					switch(err) {
+						case SSL_ERROR_ZERO_RETURN:
+						case SSL_ERROR_SYSCALL:
+						case SSL_ERROR_SSL:
+							m_alive = false;
+					}
 				}
 			} break;
 		}
