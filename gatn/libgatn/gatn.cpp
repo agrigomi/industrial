@@ -157,6 +157,42 @@ private:
 		return r;
 	}
 
+	const SSL_METHOD *select_ssl_method(_cstr_t method) {
+		const SSL_METHOD *r = NULL;
+		typedef const SSL_METHOD *_ssl_methodcb_t(void);
+		typedef struct {
+			_cstr_t	ind;
+			_ssl_methodcb_t *cb_method;
+		}_ssl_method_t;
+
+		_ssl_method_t mm[] = {
+			{"TLSv1",	TLSv1_server_method},
+			{"SSLv23",	SSLv23_server_method},
+			{"SSLv3",	SSLv3_server_method},
+			{"TLSv1_1",	TLSv1_1_server_method},
+			{"TLSv1_2",	TLSv1_2_server_method},
+			{"DTLSv1",	DTLSv1_server_method},
+			{NULL,		NULL}
+		};
+
+		_u32 n = 0;
+
+		while(mm[n].ind) {
+			if(strcmp(mm[n].ind, method) == 0) {
+				r = mm[n].cb_method();
+				break;
+			}
+
+			n++;
+		}
+
+		return r;
+	}
+
+	void load_ssl_cert(HTCONTEXT jcxt, HTVALUE ht_ssl) {
+		//...
+	}
+
 	SSL_CTX *create_ssl_context(HTCONTEXT jcxt, HTVALUE htv_srv) {
 		SSL_CTX *r = NULL;
 		HTVALUE htv_ssl = mpi_json->select(jcxt, "ssl", htv_srv);
@@ -165,7 +201,19 @@ private:
 			HTVALUE htv_ssl_enable = mpi_json->select(jcxt, "enable", htv_ssl);
 
 			if(htv_ssl_enable && mpi_json->type(htv_ssl_enable) == JVT_TRUE) {
-				//...
+				OpenSSL_add_all_algorithms();
+				SSL_load_error_strings();
+
+				std::string method = json_string(jcxt, "method", htv_ssl);
+				const SSL_METHOD *ssl_method = select_ssl_method(method.c_str());
+
+				if(ssl_method) {
+					if((r = SSL_CTX_new(ssl_method)))
+						load_ssl_cert(jcxt, htv_ssl);
+					else
+						mpi_log->write(LMT_ERROR, "Gatn: Failed to create SSL context");
+				} else
+					mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to select SSL method '%s'", method.c_str());
 			}
 		}
 
