@@ -133,7 +133,7 @@ _u32 cSocketIO::read(void *data, _u32 size) {
 			} break;
 			case SOCKET_IO_SSL_SERVER:
 			case SOCKET_IO_SSL_CLIENT: {
-				_u32 _r = SSL_read(mp_cSSL, data, size);
+				_s32 _r = SSL_read(mp_cSSL, data, size);
 				if(_r > 0)
 					r = _r;
 				else {
@@ -170,7 +170,7 @@ _u32 cSocketIO::write(const void *data, _u32 size) {
 			} break;
 			case SOCKET_IO_SSL_SERVER:
 			case SOCKET_IO_SSL_CLIENT: {
-				_u32 _r = SSL_write(mp_cSSL, data, size);
+				_s32 _r = SSL_write(mp_cSSL, data, size);
 				if(_r > 0)
 					r = _r;
 				else {
