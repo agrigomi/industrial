@@ -189,8 +189,18 @@ private:
 		return r;
 	}
 
-	void load_ssl_cert(HTCONTEXT jcxt, SSL_CTX *ssl_cxt, HTVALUE ht_ssl) {
-		//...
+	void load_ssl_cert(HTCONTEXT jcxt, SSL_CTX *ssl_cxt, HTVALUE htv_ssl) {
+		std::string cert = json_string(jcxt, "certificate", htv_ssl);
+		std::string key = json_string(jcxt, "key", htv_ssl);
+
+		if(SSL_CTX_use_certificate_file(ssl_cxt, cert.c_str(), SSL_FILETYPE_PEM) > 0) {
+			if(SSL_CTX_use_PrivateKey_file(ssl_cxt, key.c_str(), SSL_FILETYPE_PEM) > 0) {
+				if(!SSL_CTX_check_private_key(ssl_cxt))
+					mpi_log->write(LMT_ERROR, "Private key does not match the public certificate");
+			} else
+				mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to load private key '%s'", key.c_str());
+		} else
+			mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to load certificate '%s'", cert.c_str());
 	}
 
 	SSL_CTX *create_ssl_context(HTCONTEXT jcxt, HTVALUE htv_srv) {
@@ -201,6 +211,7 @@ private:
 			HTVALUE htv_ssl_enable = mpi_json->select(jcxt, "enable", htv_ssl);
 
 			if(htv_ssl_enable && mpi_json->type(htv_ssl_enable) == JVT_TRUE) {
+				SSL_library_init();
 				OpenSSL_add_all_algorithms();
 				SSL_load_error_strings();
 
