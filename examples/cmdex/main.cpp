@@ -52,7 +52,11 @@ _err_t main(int argc, char *argv[]) {
 		});
 		handle(SIGTSTP, [](int signum, siginfo_t *info, void *arg) {
 			g_signal = signum;
-			printf("SITTSTP\n");
+			printf("SIGTSTP\n");
+		});
+		handle(SIGPIPE, [](int signum, siginfo_t *info, void *arg) {
+			g_signal = signum;
+			printf("SIGPIPE\n");
 		});
 
 		iRepository *pi_repo = get_repository();
