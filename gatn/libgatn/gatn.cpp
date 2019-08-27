@@ -168,7 +168,6 @@ private:
 		_ssl_method_t mm[] = {
 			{"TLSv1",	TLSv1_server_method},
 			{"SSLv23",	SSLv23_server_method},
-			{"SSLv3",	SSLv3_server_method},
 			{"TLSv1_1",	TLSv1_1_server_method},
 			{"TLSv1_2",	TLSv1_2_server_method},
 			{"DTLSv1",	DTLSv1_server_method},
@@ -211,10 +210,6 @@ private:
 			HTVALUE htv_ssl_enable = mpi_json->select(jcxt, "enable", htv_ssl);
 
 			if(htv_ssl_enable && mpi_json->type(htv_ssl_enable) == JVT_TRUE) {
-				SSL_library_init();
-				OpenSSL_add_all_algorithms();
-				SSL_load_error_strings();
-
 				std::string method = json_string(jcxt, "method", htv_ssl);
 				const SSL_METHOD *ssl_method = select_ssl_method(method.c_str());
 
@@ -373,6 +368,10 @@ public:
 					pi_repo->monitoring_add(NULL, I_NET, NULL, this, SCAN_ORIGINAL);
 					pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
 					pi_repo->monitoring_add(NULL, I_GATN_EXTENSION, NULL, this);
+					// init SSL
+					SSL_library_init();
+					OpenSSL_add_all_algorithms();
+					SSL_load_error_strings();
 					r = true;
 				}
 			} break;
