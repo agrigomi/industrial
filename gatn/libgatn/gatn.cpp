@@ -294,7 +294,7 @@ private:
 								cache_path.c_str(),
 								cache_exclude.c_str(),
 								root_exclude.c_str(),
-								atoi(buffer.c_str()),
+								atoi(buffer.c_str()) * 1024,
 								atoi(threads.c_str()),
 								atoi(connections.c_str()),
 								atoi(timeout.c_str()),
