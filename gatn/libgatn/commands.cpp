@@ -84,9 +84,9 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 		_cstr_t threads = pi_cmd_host->option_value(OPT_THREADS, p_opt);
 		_cstr_t connections = pi_cmd_host->option_value(OPT_CONNECTIONS, p_opt);
 		_cstr_t timeout = pi_cmd_host->option_value(OPT_TIMEOUT, p_opt);
-		_cstr_t ssl_method = pi_cmd_host->option_value(OPT_SSL_METHOD, p_opt);
-		_cstr_t ssl_cert = pi_cmd_host->option_value(OPT_SSL_CERT, p_opt);
-		_cstr_t ssl_key = pi_cmd_host->option_value(OPT_SSL_KEY, p_opt);
+		_cstr_t ssl_method_str = pi_cmd_host->option_value(OPT_SSL_METHOD, p_opt);
+		_cstr_t ssl_cert_str = pi_cmd_host->option_value(OPT_SSL_CERT, p_opt);
+		_cstr_t ssl_key_str = pi_cmd_host->option_value(OPT_SSL_KEY, p_opt);
 		_cstr_t arg2 = pi_cmd_host->argument(argc, argv, p_opt, 2);
 		_cstr_t arg3 = pi_cmd_host->argument(argc, argv, p_opt, 3);
 
@@ -101,8 +101,20 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 					if(port && root) {
 						SSL_CTX *ssl_cxt = NULL;
 
-						if(ssl_method && ssl_cert && ssl_key) {
-							;//...
+						if(ssl_method_str && ssl_cert_str && ssl_key_str) {
+							const SSL_METHOD *method = ssl_select_method(ssl_method_str);
+
+							if(method) {
+								if((ssl_cxt = ssl_create_context(method))) {
+									if(ssl_load_cert(ssl_cxt, ssl_cert_str)) {
+										if(!ssl_load_key(ssl_cxt, ssl_key_str))
+											fout(pi_io, "%s\n", ssl_error_string());
+									} else
+										fout(pi_io, "%s\n", ssl_error_string());
+								} else
+									fout(pi_io, "%s\n", ssl_error_string());
+							} else
+								fout(pi_io, "%s\n", ssl_error_string());
 						}
 
 						pi_gatn->create_server(server_name, atoi(port), root, cache_path,

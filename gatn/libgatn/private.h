@@ -226,3 +226,13 @@ struct server: public _server_t {
 	void release_class(_cstr_t cname);
 };
 
+// SSL
+void ssl_init(void);
+const SSL_METHOD *ssl_select_method(_cstr_t method);
+bool ssl_load_cert(SSL_CTX *ssl_cxt, _cstr_t cert);
+bool ssl_load_key(SSL_CTX *ssl_cxt, _cstr_t key);
+SSL_CTX *ssl_create_context(const SSL_METHOD *method);
+_cstr_t ssl_error_string(void);
+
+
+
