@@ -31,6 +31,9 @@
 #define OPT_NOCACHE	"cache-exclude"
 #define OPT_DISABLE	"root-exclude"
 #define OPT_OPTIONS	"options"
+#define OPT_SSL_METHOD	"ssl-method"
+#define OPT_SSL_CERT	"ssl-cert"
+#define OPT_SSL_KEY	"ssl-key"
 
 static iGatn *gpi_gatn = NULL;
 
@@ -81,6 +84,9 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 		_cstr_t threads = pi_cmd_host->option_value(OPT_THREADS, p_opt);
 		_cstr_t connections = pi_cmd_host->option_value(OPT_CONNECTIONS, p_opt);
 		_cstr_t timeout = pi_cmd_host->option_value(OPT_TIMEOUT, p_opt);
+		_cstr_t ssl_method = pi_cmd_host->option_value(OPT_SSL_METHOD, p_opt);
+		_cstr_t ssl_cert = pi_cmd_host->option_value(OPT_SSL_CERT, p_opt);
+		_cstr_t ssl_key = pi_cmd_host->option_value(OPT_SSL_KEY, p_opt);
 		_cstr_t arg2 = pi_cmd_host->argument(argc, argv, p_opt, 2);
 		_cstr_t arg3 = pi_cmd_host->argument(argc, argv, p_opt, 3);
 
@@ -93,13 +99,20 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 
 				if(server_name) {
 					if(port && root) {
+						SSL_CTX *ssl_cxt = NULL;
+
+						if(ssl_method && ssl_cert && ssl_key) {
+							;//...
+						}
+
 						pi_gatn->create_server(server_name, atoi(port), root, cache_path,
 									(no_cache) ? no_cache : "",
 									(disable) ? disable : "",
 									(buffer && atoi(buffer) > 0) ? atoi(buffer) * 1024 : SERVER_BUFFER_SIZE,
 									(threads) ? atoi(threads) : HTTP_MAX_WORKERS,
 									(connections) ? atoi(connections) : HTTP_MAX_CONNECTIONS,
-									(timeout) ? atoi(timeout) : HTTP_CONNECTION_TIMEOUT);
+									(timeout) ? atoi(timeout) : HTTP_CONNECTION_TIMEOUT,
+									ssl_cxt);
 					} else {
 						fout(pi_io, "Mandatory parameter is missing\n");
 						fout(pi_io, "Usage: gatn create server <server name> | --name=<server name> --port=... --root=...\
@@ -463,6 +476,9 @@ static _cmd_opt_t _g_opt_[] = {
 	{ OPT_NOCACHE,		OF_LONG|OF_VALUE,		0,		"Disable caching for spec. folders (--cache-exclude=/fldr1/:/fldr2/)"},
 	{ OPT_DISABLE,		OF_LONG|OF_VALUE,		0,		"Disable folders inside documents root (--root-exclude=/folder1/:/folder2/)"},
 	{ OPT_OPTIONS,		OF_LONG|OF_VALUE,		0,		"Class arguments (--options='...')"},
+	{ OPT_SSL_METHOD,	OF_LONG|OF_VALUE,		0,		"SSL method (--ssl-method=TLSv1 | SSLv23 | TLSv1_1 | TLSv1_2 | DTLSv1)"},
+	{ OPT_SSL_CERT,		OF_LONG|OF_VALUE,		0,		"SSL sertificate file (--ssl-cert=<file name>.pem"},
+	{ OPT_SSL_KEY,		OF_LONG|OF_VALUE,		0,		"SSL primary key file (--ssl-key=<file name>.pem"},
 	{ 0,			0,				0,		0 } // terminate options list
 };
 
