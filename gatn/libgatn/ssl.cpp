@@ -3,7 +3,7 @@
 #include <openssl/err.h>
 #include "dtype.h"
 
-static _char_t _g_error_string_[2048];
+static _char_t _g_error_string_[2048] = "";
 
 void ssl_init(void) {
 	SSL_library_init();
@@ -71,6 +71,10 @@ SSL_CTX *ssl_create_context(const SSL_METHOD *method) {
 }
 
 _cstr_t ssl_error_string(void) {
-	ERR_error_string_n(ERR_get_error(), _g_error_string_, sizeof(_g_error_string_));
+	_ulong err = ERR_get_error();
+
+	if(err)
+		ERR_error_string_n(err, _g_error_string_, sizeof(_g_error_string_));
+
 	return _g_error_string_;
 }
