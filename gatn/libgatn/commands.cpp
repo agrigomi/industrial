@@ -458,7 +458,7 @@ static _cmd_opt_t _g_opt_[] = {
 	{ OPT_THREADS,		OF_LONG|OF_VALUE,		0,		"Max. number of HTTP worker threads (--threads=<num>)"},
 	{ OPT_CONNECTIONS,	OF_LONG|OF_VALUE,		0,		"Max. number of HTTP connections (--connections=<num>)"},
 	{ OPT_TIMEOUT,		OF_LONG|OF_VALUE,		0,		"Connection timeout in seconds (--timeout=<sec>)"},
-	{ OPT_CACHE_PATH,	OF_LONG|OF_VALUE|OF_PRESENT,	(_str_t)"/tmp",	"Path to cache foldef (/tmp by default)"},
+	{ OPT_CACHE_PATH,	OF_LONG|OF_VALUE|OF_PRESENT,	(_str_t)"/tmp",	"Path to cache folder (/tmp by default)"},
 	{ OPT_CACHE_KEY,	OF_LONG|OF_VALUE,		0,		"Cache key (folder name)"},
 	{ OPT_NOCACHE,		OF_LONG|OF_VALUE,		0,		"Disable caching for spec. folders (--cache-exclude=/fldr1/:/fldr2/)"},
 	{ OPT_DISABLE,		OF_LONG|OF_VALUE,		0,		"Disable folders inside documents root (--root-exclude=/folder1/:/folder2/)"},
