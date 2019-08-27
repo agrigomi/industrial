@@ -3,7 +3,7 @@
 		{
 			"name":		"server-0",
 			"port":		8080,
-			"buffer":	16384,
+			"buffer":	16,
 			"threads":	8,
 			"connections":	2000,
 			"timeout":	10,
@@ -32,9 +32,8 @@
 			"ssl": {
 				"enable":	false,
 				"method":	"SSLv23",
-				"flags":	["NO_SSLv2", "NO_SSLv3", "NO_COMPRESSION"],
-				"certificate":	"certificate.crt",
-				"key":		"keyfile.key"
+				"certificate":	"certificate.pem",
+				"key":		"keyfile.pem"
 			},
 			"attach":	[
 				{
