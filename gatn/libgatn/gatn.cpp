@@ -189,9 +189,6 @@ private:
 						mpi_log->fwrite(LMT_ERROR, "Gatn: '%s'", ssl_error_string());
 				} else
 					mpi_log->fwrite(LMT_ERROR, "Gatn: '%s'",ssl_error_string());
-
-				if(!r)
-					ERR_print_errors_fp(stderr);
 			}
 		}
 
@@ -338,9 +335,7 @@ public:
 					pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
 					pi_repo->monitoring_add(NULL, I_GATN_EXTENSION, NULL, this);
 					// init SSL
-					SSL_library_init();
-					OpenSSL_add_all_algorithms();
-					SSL_load_error_strings();
+					ssl_init();
 					r = true;
 				}
 			} break;
