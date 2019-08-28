@@ -135,6 +135,8 @@ _err_t main(int argc, char *argv[]) {
 			pi_repo->extension_unload(extensions[n]);
 			n++;
 		}
+
+		uninit();
 	}
 
 	return r;
