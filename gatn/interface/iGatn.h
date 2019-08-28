@@ -105,6 +105,8 @@ public:
 	virtual bool stop_server(_server_t *p_srv)=0;
 	virtual bool start_server(_server_t *p_srv)=0;
 	virtual void enum_servers(void (*)(_server_t *, void *), void *udata=NULL)=0;
+	virtual SSL_CTX *create_ssl_context(_cstr_t method, _cstr_t cert, _cstr_t key)=0;
+	virtual void destroy_ssl_context(SSL_CTX *)=0;
 };
 
 #endif

@@ -542,6 +542,35 @@ public:
 			mpi_map->enum_close(se);
 		}
 	}
+
+	SSL_CTX *create_ssl_context(_cstr_t method, _cstr_t cert, _cstr_t key) {
+		SSL_CTX *r = NULL;
+		const SSL_METHOD *p_method = ssl_select_method(method);
+
+		if(p_method) {
+			if((r = ssl_create_context(p_method))) {
+				if(ssl_load_cert(r, cert)) {
+					if(!ssl_load_key(r, key)) {
+						SSL_CTX_free(r);
+						r = NULL;
+					}
+				} else {
+					SSL_CTX_free(r);
+					r = NULL;
+				}
+			}
+		}
+
+		if(!r)
+			mpi_log->fwrite(LMT_ERROR, "Gatn: %s", ssl_error_string());
+
+
+		return r;
+	}
+
+	void destroy_ssl_context(SSL_CTX *cxt) {
+		SSL_CTX_free(cxt);
+	}
 };
 
 static cGatn _g_gatn_;
