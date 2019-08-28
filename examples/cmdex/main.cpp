@@ -128,11 +128,12 @@ _err_t main(int argc, char *argv[]) {
 
 			pi_repo->object_release(pi_cmd_host);
 
-			n = 0;
-			while(extensions[n]) {
-				pi_repo->extension_unload(extensions[n]);
-				n++;
-			}
+		}
+
+		n = 0;
+		while(extensions[n]) {
+			pi_repo->extension_unload(extensions[n]);
+			n++;
 		}
 	}
 
