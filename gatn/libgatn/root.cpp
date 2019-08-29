@@ -251,13 +251,16 @@ HDOCUMENT root::open(_cstr_t url) {
 						m_root_path,
 						(strcmp(url, "/") == 0) ? "/index.html" : url);
 
-					ph->mime = resolve_mime_type(doc);
-
 					if(use_cache) {
 						if((ph->hfc = mpi_fcache->open(doc)))
 							r = ph;
 					} else if((ph->pi_fio = mpi_fs->open(doc, O_RDONLY)))
 						r = ph;
+
+					if(r)
+						ph->mime = resolve_mime_type(doc);
+					else
+						mpi_handle_pool->free(ph);
 				}
 			}
 		}
