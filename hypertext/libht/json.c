@@ -10,14 +10,12 @@ _json_context_t *json_create_context(_mem_alloc_t *pf_alloc, _mem_free_t *pf_fre
 	if(pf_alloc && pf_free) {
 		if((r = (_json_context_t *)pf_alloc(sizeof(_json_context_t), udata))) {
 			memset(r, 0, sizeof(_json_context_t));
-
+			r->udata = udata;
 			/* create hypertext context */
 			if(!(r->p_htc = ht_create_context(pf_alloc, pf_free, udata))) {
 				pf_free(r, sizeof(_json_context_t), udata);
 				r = NULL;
 			}
-
-			r->udata = udata;
 		}
 	}
 
