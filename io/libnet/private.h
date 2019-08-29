@@ -102,6 +102,7 @@ private:
 	_u32		m_timeout;
 	_ulong		m_udata[HTTPC_MAX_UDATA_INDEX];
 	_char_t		m_res_protocol[16];
+	bool 		m_req_data;
 
 	_cstr_t get_rc_text(_u16 rc);
 	bool complete_req_header(void);

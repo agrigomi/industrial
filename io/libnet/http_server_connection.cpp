@@ -135,6 +135,7 @@ void cHttpServerConnection::clean_members(void) {
 	m_obuffer_sent = 0;
 	m_content_sent = 0;
 	m_header_len = 0;
+	m_req_data = false;
 	m_stime = time(NULL);
 	strncpy(m_res_protocol, "HTTP/1.1", sizeof(m_res_protocol)-1);
 	mpi_map->clr();
@@ -462,8 +463,11 @@ bool cHttpServerConnection::parse_req_header(void) {
 					// have request data
 					gpi_str->mem_cpy(hdr, hdr + m_header_len, m_ibuffer_offset - m_header_len);
 					m_ibuffer_offset -= m_header_len;
-				} else
+					m_req_data = true;
+				} else {
 					m_ibuffer_offset = 0;
+					m_req_data = false;
+				}
 
 				m_header_len = 0;
 
@@ -611,14 +615,16 @@ _u8 cHttpServerConnection::process(void) {
 			break;
 		case HTTPC_RECEIVE_CONTENT:
 			clear_ibuffer();
-			if(receive_content())
+			if(receive_content()) {
 				r = HTTP_ON_REQUEST_DATA;
-			else {
+				m_req_data = true;
+			} else {
 				if(alive()) {
 					if(m_req_content_rcv >= m_req_content_len)
 						m_state = HTTPC_SEND_HEADER;
 				} else
 					m_state = HTTPC_CLOSE;
+				m_req_data = false;
 			}
 			break;
 		case HTTPC_SEND_HEADER:
@@ -630,14 +636,18 @@ _u8 cHttpServerConnection::process(void) {
 						m_state = HTTPC_SEND_CONTENT;
 				} else
 					m_state = HTTPC_CLOSE;
-			} else
+				m_req_data = false;
+			} else {
+				m_req_data = true;
 				r = HTTP_ON_REQUEST_DATA;
+			}
 			break;
 		case HTTPC_SEND_CONTENT:
 			clear_ibuffer();
-			if(receive_content())
+			if(receive_content()) {
 				r = HTTP_ON_REQUEST_DATA;
-			else {
+				m_req_data = true;
+			} else {
 				if(alive()) {
 					send_content();
 					if(m_content_sent < m_res_content_len) {
@@ -656,6 +666,7 @@ _u8 cHttpServerConnection::process(void) {
 					}
 				} else
 					m_state = HTTPC_CLOSE;
+				m_req_data = false;
 			}
 			break;
 		case HTTPC_CLOSE:
@@ -738,7 +749,7 @@ _cstr_t cHttpServerConnection::req_var(_cstr_t name) {
 _u8 *cHttpServerConnection::req_data(_u32 *size) {
 	_u8 *r = 0;
 
-	if(m_ibuffer) {
+	if(m_ibuffer && m_req_data) {
 		if((r = (_u8 *)mpi_bmap->ptr(m_ibuffer)))
 			*size = m_ibuffer_offset;
 	}
