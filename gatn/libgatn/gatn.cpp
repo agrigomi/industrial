@@ -400,6 +400,11 @@ public:
 		return r;
 	}
 
+	void configure(HTCONTEXT jcxt) {
+		load_extensions(jcxt);
+		configure_servers(jcxt);
+	}
+
 	bool configure(_cstr_t json_fname) {
 		bool r = false;
 
@@ -418,10 +423,9 @@ public:
 						_cstr_t ptr = (_cstr_t)pi_fio->map(MPF_READ);
 
 						if(ptr) {
-							if(mpi_json->parse(jcxt, ptr, pi_fio->size())) {
-								load_extensions(jcxt);
-								configure_servers(jcxt);
-							} else
+							if(mpi_json->parse(jcxt, ptr, pi_fio->size()))
+								configure(jcxt);
+							else
 								mpi_log->fwrite(LMT_ERROR, "Gatn: Failed to parse configuration file '%s'", json_fname);
 						} else
 							mpi_log->fwrite(LMT_ERROR, "Unable to map content of '%s'", json_fname);
