@@ -21,6 +21,7 @@ private:
 
 	void backup_handlers(_server_t *psrv, _cstr_t host) {
 		m_original_evt[ON_REQUEST].p_cb = psrv->get_event_handler(ON_REQUEST, &(m_original_evt[ON_REQUEST].udata), host);
+		m_original_evt[ON_DATA].p_cb = psrv->get_event_handler(ON_DATA, &(m_original_evt[ON_DATA].udata), host);
 		m_original_evt[ON_ERROR].p_cb = psrv->get_event_handler(ON_ERROR, &(m_original_evt[ON_ERROR].udata), host);
 	}
 
@@ -41,7 +42,25 @@ private:
 						ip,
 						method, protocol, uri);
 
+			_u32 size = 0;
+			_cstr_t data = (_cstr_t)req->data(&size);
+
+			if(data)
+				pi_log->write(LMT_TEXT, data);
+
 			pobj->call_original_handler(ON_REQUEST, req, res);
+		}, this, host);
+
+		psrv->on_event(ON_DATA, [](_request_t *req, _response_t *res, void *udata) {
+			cHttpLog *pobj = (cHttpLog *)udata;
+			iLog *pi_log = pobj->mpi_log;
+			_u32 size = 0;
+			_cstr_t data = (_cstr_t)req->data(&size);
+
+			if(data)
+				pi_log->write(LMT_TEXT, data);
+
+			pobj->call_original_handler(ON_DATA, req, res);
 		}, this, host);
 
 		psrv->on_event(ON_ERROR, [](_request_t *req, _response_t *res, void *udata) {
@@ -66,6 +85,7 @@ private:
 
 	void restore_handlers(_server_t *psrv, _cstr_t host) {
 		psrv->on_event(ON_REQUEST, m_original_evt[ON_REQUEST].p_cb, m_original_evt[ON_REQUEST].udata, host);
+		psrv->on_event(ON_DATA, m_original_evt[ON_DATA].p_cb, m_original_evt[ON_DATA].udata, host);
 		psrv->on_event(ON_ERROR, m_original_evt[ON_ERROR].p_cb, m_original_evt[ON_ERROR].udata, host);
 	}
 
