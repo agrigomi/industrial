@@ -463,6 +463,7 @@ bool cHttpServerConnection::parse_req_header(void) {
 					// have request data
 					gpi_str->mem_cpy(hdr, hdr + m_header_len, m_ibuffer_offset - m_header_len);
 					m_ibuffer_offset -= m_header_len;
+					hdr[m_ibuffer_offset] = 0; // terminate content
 					m_req_data = true;
 				} else {
 					m_ibuffer_offset = 0;
