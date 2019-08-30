@@ -32,3 +32,6 @@
 *.app
 #..
 bin/*
+ams/*
+.fg/projects-*
+.fg/projects-*
