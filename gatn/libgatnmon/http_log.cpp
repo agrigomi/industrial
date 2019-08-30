@@ -45,8 +45,10 @@ private:
 			_u32 size = 0;
 			_cstr_t data = (_cstr_t)req->data(&size);
 
-			if(data)
+			if(data) {
 				pi_log->write(LMT_TEXT, data);
+				req->parse_content();
+			}
 
 			pobj->call_original_handler(ON_REQUEST, req, res);
 		}, this, host);
