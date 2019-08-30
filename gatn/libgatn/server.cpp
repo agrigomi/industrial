@@ -401,7 +401,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 			p_httpc->res_var("Server", m_name);
 			p_httpc->res_protocol("HTTP/2.0");
 
-			if(method == HTTP_METHOD_GET || method == HTTP_METHOD_HEAD) {
+			if(method == HTTP_METHOD_GET || method == HTTP_METHOD_HEAD || method == HTTP_METHOD_POST) {
 				// route not found
 				// try to resolve file name
 
@@ -410,7 +410,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 					p_httpc->res_var("Content-Type", root->mime(hdoc));
 					p_httpc->res_mtime(root->mtime(hdoc));
 
-					if(method == HTTP_METHOD_GET) {
+					if(method == HTTP_METHOD_GET || method == HTTP_METHOD_POST) {
 						_ulong doc_sz = 0;
 
 						_u8 *ptr = (_u8 *)root->ptr(hdoc, &doc_sz);
