@@ -120,6 +120,8 @@ public:
 	virtual _u8 *req_data(_u32 *size)=0;
 	// get requested protocol
 	virtual _cstr_t req_protocol(void)=0;
+	// parse request content
+	virtual bool req_parse_content(void)=0;
 	// set variable in response header
 	virtual bool res_var(_cstr_t name, _cstr_t value)=0;
 	// get error code

@@ -483,6 +483,56 @@ bool cHttpServerConnection::parse_req_header(void) {
 	return r;
 }
 
+bool cHttpServerConnection::req_parse_content(void) {
+	bool r = false;
+	_u32 sz = 0;
+	_cstr_t data = (_cstr_t)req_data(&sz);
+
+	if(data && sz) {
+		HBUFFER hbcontent = mpi_bmap->alloc();
+
+		if(hbcontent) {
+			_str_t decoded = (_str_t)mpi_bmap->ptr(hbcontent);
+			_u32 sz_decoded = UrlDecode(data, sz, decoded, mpi_bmap->size());
+			_u32 i = 0;
+			_str_t name = NULL, value = NULL;
+			_u32 sz_name = 0, sz_value = 0;
+
+			for(; i < sz_decoded; i++) {
+				switch(*(decoded + i)) {
+					case '=':
+						value = decoded + i + 1;
+						break;
+					case '&':
+						if(name && sz_name && value && sz_value)
+							mpi_map->add(name, sz_name, value, sz_value);
+						name = value = NULL;
+						sz_name = sz_value = 0;
+						break;
+					default:
+						if(value)
+							sz_value++;
+						else if(name)
+							sz_name++;
+						else {
+							name = decoded + i;
+							sz_name = 1;
+						}
+						break;
+				}
+			}
+
+			if(name && sz_name && value && sz_value)
+				mpi_map->add(name, sz_name, value, sz_value);
+
+			mpi_bmap->free(hbcontent);
+			r = true;
+		}
+	}
+
+	return r;
+}
+
 _u32 cHttpServerConnection::res_remainder(void) {
 	_u32 r = 0;
 

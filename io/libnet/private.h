@@ -158,6 +158,8 @@ public:
 	_u8 *req_data(_u32 *size);
 	// get requested protocol
 	_cstr_t req_protocol(void);
+	// parse request content
+	bool req_parse_content(void);
 	// set variable in response header
 	bool res_var(_cstr_t name, _cstr_t value);
 	// get error code
