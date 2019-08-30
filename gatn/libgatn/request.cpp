@@ -68,3 +68,7 @@ void request::destroy(void) {
 	mpi_httpc = NULL;
 	mpi_server = NULL;
 }
+
+bool request::parse_content(void) {
+	return mpi_httpc->req_parse_content();
+}

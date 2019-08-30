@@ -24,6 +24,7 @@ struct request: public _request_t{
 	_u32 content_len(void);
 	void *data(_u32 *size);
 	void destroy(void);
+	bool parse_content(void);
 };
 
 struct response: public _response_t {
