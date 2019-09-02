@@ -67,7 +67,7 @@ struct response: public _response_t {
 	_cstr_t text(_u16 rc);
 	_u16 error(void);
 	bool render(_cstr_t fname,
-		_u8 flags=RNDR_DONE|RNDR_CACHE|RNDR_RESOLVE_MT|RNDR_SET_MTIME);
+		_u8 flags=RNDR_DONE|RNDR_CACHE|RNDR_RESOLVE_MT|RNDR_SET_MTIME|RNDR_USE_DOCROOT);
 };
 
 #define MAX_SERVER_NAME		32

@@ -218,7 +218,10 @@ bool response::render(_cstr_t fname, _u8 flags) {
 	_ulong doc_sz = 0;
 	_u8 *ptr = NULL;
 
-	snprintf(doc, sizeof(doc), "%s/%s", m_doc_root, fname);
+	if(flags & RNDR_USE_DOCROOT)
+		snprintf(doc, sizeof(doc), "%s/%s", m_doc_root, fname);
+	else
+		snprintf(doc, sizeof(doc), "%s", fname);
 
 	if((flags & RNDR_RESOLVE_MT) && (flags & RNDR_DONE) ) {
 		_cstr_t ct = resolve_mime_type(doc);

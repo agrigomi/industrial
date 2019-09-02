@@ -37,11 +37,12 @@ typedef struct {
 	virtual _cstr_t text(_u16 rc)=0;
 	virtual _u16 error(void)=0;
 
-#define RNDR_DONE	(1<<0) // done flag (end of transmission)
-#define RNDR_CACHE	(1<<1) // use file cache
-#define RNDR_RESOLVE_MT	(1<<2) // auto resolve mime (content) type if RNDR_DONE is set
-#define RNDR_SET_MTIME	(1<<3) // auto set modify time if RNDR_DONE is set
-	virtual bool render(_cstr_t fname, _u8 flags=RNDR_DONE|RNDR_CACHE|RNDR_RESOLVE_MT|RNDR_SET_MTIME)=0;
+#define RNDR_DONE		(1<<0) // done flag (end of transmission)
+#define RNDR_CACHE		(1<<1) // use file cache
+#define RNDR_RESOLVE_MT		(1<<2) // auto resolve mime (content) type if RNDR_DONE is set
+#define RNDR_SET_MTIME		(1<<3) // auto set modify time if RNDR_DONE is set
+#define RNDR_USE_DOCROOT	(1<<4) // use documents root
+	virtual bool render(_cstr_t fname, _u8 flags=RNDR_DONE|RNDR_CACHE|RNDR_RESOLVE_MT|RNDR_SET_MTIME|RNDR_USE_DOCROOT)=0;
 	//...
 }_response_t;
 
