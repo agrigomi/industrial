@@ -513,7 +513,7 @@ void server::remove_route(_u8 method, _cstr_t path, _cstr_t host) {
 	key.method = method;
 	strncpy(key.path, path, MAX_ROUTE_PATH-1);
 	if(pvhost->pi_route_map)
-		pvhost->pi_route_map->del(&key, sizeof(_route_key_t));
+		pvhost->pi_route_map->del(&key, key.size());
 }
 
 void server::enum_route(void (*enum_cb)(_cstr_t path, _gatn_route_event_t *pcb, void *udata), void *udata) {
