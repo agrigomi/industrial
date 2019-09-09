@@ -58,9 +58,13 @@ static _cmd_opt_t _g_opt[] = {
 };
 
 static _cmd_t _g_cmd[] = {
-	{ "hello",	_g_opt,	hello_handler,	"example command",
-		"How to define a new command",
-		"hello [option] [arguments]"
+	{
+		"hello", // Command
+		_g_opt, // Options
+		hello_handler, // Handler
+		"example command", // Briefly
+		"How to define a new command", // Description
+		"hello [option] [arguments]" // Usage
 	},
 	{ 0,	0,	0,	0,	0,	0} // terminate command list
 };
