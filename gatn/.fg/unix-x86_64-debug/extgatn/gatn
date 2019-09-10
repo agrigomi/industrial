@@ -3,6 +3,7 @@ gatn/libgatn/gatn.cpp
 gatn/libgatn/request.cpp
 gatn/libgatn/response.cpp
 gatn/libgatn/root.cpp
+gatn/libgatn/vhost.cpp
 gatn/libgatn/server.cpp
 gatn/libgatn/mime_resolver.cpp
 gatn/libgatn/ssl.cpp
