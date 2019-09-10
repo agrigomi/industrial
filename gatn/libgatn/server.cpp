@@ -315,6 +315,8 @@ void server::stop(_vhost_t *pvhost) {
 	HMUTEX hm = pvhost->lock();
 	if(pvhost->root.is_enabled()) {
 		mpi_log->fwrite(LMT_INFO, "Gatn: Stop host '%s' on server '%s'", pvhost->host, m_name);
+		detach_all(pvhost);
+		pvhost->clear_events();
 		pvhost->root.stop();
 	}
 	pvhost->unlock(hm);
@@ -332,6 +334,7 @@ bool server::start(_vhost_t *pvhost) {
 	if(!(r = pvhost->root.is_enabled())) {
 		mpi_log->fwrite(LMT_INFO, "Gatn: Start host '%s' on server '%s'", pvhost->host, m_name);
 		pvhost->root.start();
+		attach_all(pvhost);
 		r = true;
 	}
 
@@ -576,16 +579,13 @@ bool server::remove_virtual_host(_cstr_t host) {
 	_u32 sz = 0;
 
 	if(mpi_vhost_map) {
-		HMUTEX hm = mpi_vhost_map->lock();
-		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz, hm);
+		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz);
 
 		if(pvhost) {
 			destroy(pvhost);
-			mpi_vhost_map->del(host, strlen(host), hm);
+			mpi_vhost_map->del(host, strlen(host));
 			r = true;
 		}
-
-		mpi_vhost_map->unlock(hm);
 	}
 
 	return r;
@@ -596,13 +596,10 @@ bool server::start_virtual_host(_cstr_t host) {
 	_u32 sz = 0;
 
 	if(mpi_vhost_map) {
-		HMUTEX hm = mpi_vhost_map->lock();
-		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz, hm);
+		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz);
 
 		if(pvhost)
 			r = start(pvhost);
-
-		mpi_vhost_map->unlock(hm);
 	}
 
 	return r;
@@ -613,15 +610,12 @@ bool server::stop_virtual_host(_cstr_t host) {
 	_u32 sz = 0;
 
 	if(mpi_vhost_map) {
-		HMUTEX hm = mpi_vhost_map->lock();
-		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz, hm);
+		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz);
 
 		if(pvhost) {
 			stop(pvhost);
 			r = true;
 		}
-
-		mpi_vhost_map->unlock(hm);
 	}
 
 	return r;
@@ -692,16 +686,14 @@ bool server::attach_class(_cstr_t cname, _cstr_t options, _cstr_t _host) {
 	return r;
 }
 
-void server::reattach(_cstr_t host) {
-	_vhost_t *pvhost = get_host(host);
+void server::detach_all(_vhost_t *pvhost) {
 	typedef struct {
 		_cstr_t host;
 		_server_t *pi_srv;
 	}_attach_info_t;
 
 	if(pvhost->pi_class_map) {
-		HMUTEX hm = pvhost->lock();
-		_attach_info_t tmp = {host, this};
+		_attach_info_t tmp = {pvhost->host, this};
 
 		pvhost->pi_class_map->enumerate([](void *p, _u32 sz, void *udata)->_s32 {
 			_attach_info_t *pa = (_attach_info_t *)udata;
@@ -710,8 +702,17 @@ void server::reattach(_cstr_t host) {
 			(*ppi_ext)->detach(pa->pi_srv, pa->host);
 			return ENUM_NEXT;
 		}, &tmp);
+	}
+}
 
-		pvhost->clear_events();
+void server::attach_all(_vhost_t *pvhost) {
+	typedef struct {
+		_cstr_t host;
+		_server_t *pi_srv;
+	}_attach_info_t;
+
+	if(pvhost->pi_class_map) {
+		_attach_info_t tmp = {pvhost->host, this};
 
 		pvhost->pi_class_map->enumerate([](void *p, _u32 sz, void *udata)->_s32 {
 			_attach_info_t *pa = (_attach_info_t *)udata;
@@ -720,9 +721,18 @@ void server::reattach(_cstr_t host) {
 			(*ppi_ext)->attach(pa->pi_srv, pa->host);
 			return ENUM_NEXT;
 		}, &tmp);
-
-		pvhost->unlock(hm);
 	}
+}
+
+void server::reattach(_cstr_t host) {
+	_vhost_t *pvhost = get_host(host);
+	HMUTEX hm = pvhost->lock();
+
+	detach_all(pvhost);
+	pvhost->clear_events();
+	attach_all(pvhost);
+
+	pvhost->unlock(hm);
 }
 
 bool server::detach_class(_cstr_t cname, _cstr_t _host) {

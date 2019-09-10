@@ -295,6 +295,8 @@ struct server: public _server_t {
 	void enum_virtual_hosts(void (*)(_vhost_t *, void *udata), void *udata=NULL);
 	bool attach_class(_cstr_t cname, _cstr_t options=NULL, _cstr_t host=NULL);
 	bool detach_class(_cstr_t cname, _cstr_t host=NULL);
+	void detach_all(_vhost_t *);
+	void attach_all(_vhost_t *);
 	void reattach(_cstr_t host);
 	void release_class(_cstr_t cname);
 };

@@ -47,10 +47,12 @@ bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 				case POOL_OP_FREE:
 				case POOL_OP_DELETE:
 					if(ph->hfc) {
-						p_root->mpi_fcache->close(ph->hfc);
+						if(p_root->mpi_fcache)
+							p_root->mpi_fcache->close(ph->hfc);
 						ph->hfc = NULL;
 					} else if(ph->pi_fio) {
-						p_root->mpi_fs->close(ph->pi_fio);
+						if(p_root->mpi_fs)
+							p_root->mpi_fs->close(ph->pi_fio);
 						ph->pi_fio = NULL;
 					}
 					break;
