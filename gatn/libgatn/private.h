@@ -161,6 +161,7 @@ private:
 	iMap		*pi_class_map;		// class (plugin) map
 	iHeap		*pi_heap;
 	_event_data_t 	event[HTTP_MAX_EVENTS];	// HTTP event handlers
+	volatile bool	m_running;
 
 	iMutex *get_mutex(void);
 	iMap *get_route_map(void);
@@ -169,6 +170,8 @@ private:
 	void _lock(void);
 	void _unlock(void);
 	void clear_events(void);
+	void start_extensions(void);
+	void stop_extensions(void);
 public:
 
 	vhost();
@@ -182,10 +185,18 @@ public:
 	_root_t *get_root(void) {
 		return &root;
 	}
+	bool is_running(void) {
+		return m_running;
+	}
 	void start(void);
 	void stop(void);
 	void add_route_handler(_u8 method, _cstr_t path, _gatn_route_event_t *pcb, void *udata);
 	void remove_route_handler(_u8 method, _cstr_t path);
+	void add_event_handler(_u8 evt, _gatn_http_event_t *pcb, void *udata);
+	_err_t add_class(_cstr_t cname, _cstr_t options);
+	bool remove_class(_cstr_t cname);
+	void start_class(_cstr_t cname);
+	void stop_class(_cstr_t cname);
 };
 
 struct server: public _server_t {

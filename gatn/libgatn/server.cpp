@@ -410,6 +410,7 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 				// try to resolve file name
 
 				HDOCUMENT hdoc = root->open(url);
+
 				if(hdoc) {
 					p_httpc->res_var("Content-Type", root->mime(hdoc));
 					p_httpc->res_mtime(root->mtime(hdoc));

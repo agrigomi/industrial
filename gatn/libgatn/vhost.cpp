@@ -1,6 +1,12 @@
 #include <string.h>
+#include "err.h"
 #include "private.h"
 #include "iRepository.h"
+
+typedef struct {
+	iGatnExtension	*pi_ext;
+	bool		active;
+}_class_t;
 
 bool vhost::init(_cstr_t name, _cstr_t root,
 		_cstr_t cache_path, _cstr_t cache_key, _cstr_t cache_exclude,
@@ -46,14 +52,19 @@ iMutex *vhost::get_mutex(void) {
 }
 
 iMap *get_route_map(void) {
-	if(!pi_route_map)
-		pi_route_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY));
+	if(!pi_route_map) {
+		if((pi_route_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
+			pi_route_map->init(31, pi_heap);
+	}
 	return pi_route_map;
 }
 
 iMap *get_class_map(void) {
-	if(!pi_class_map)
-		pi_class_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY));
+	if(!pi_class_map) {
+		if((pi_class_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
+			pi_class_map->init(31, pi_heap);
+	}
+
 	return pi_class_map;
 }
 
@@ -87,11 +98,51 @@ void vhost::clear_events(void) {
 	memset(event, 0, sizeof(event));
 }
 
+void vhost::start_extensions(void) {
+	//...
+}
+
+void vhost::stop_extensions(void) {
+	//...
+}
+
 void vhost::start(void) {
 	//...
 }
 
 void vhost::stop(void) {
+	//...
+}
+
+void vhost::add_route_handler(_u8 method, _cstr_t path, _gatn_route_event_t *pcb, void *udata) {
+	//...
+}
+
+void vhost::remove_route_handler(_u8 method, _cstr_t path) {
+	//...
+}
+
+_err_t vhost::add_class(_cstr_t cname, _cstr_t options) {
+	_err_t r = ERR_UNKNOWN;
+
+	//...
+
+	return r;
+}
+
+bool vhost::remove_class(_cstr_t cname) {
+	bool r = false;
+
+	//...
+
+	return r;
+}
+
+void vhost::start_class(_cstr_t cname) {
+	//...
+}
+
+void vhost::stop_class(_cstr_t cname) {
 	//...
 }
 
