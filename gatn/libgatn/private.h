@@ -1,9 +1,9 @@
+#include <string.h>
 #include "iMemory.h"
 #include "iGatn.h"
 #include "iLog.h"
 #include "iStr.h"
 #include "iSync.h"
-#include "tArray.h"
 
 struct request: public _request_t{
 	iHttpServerConnection *mpi_httpc;
@@ -78,6 +78,8 @@ struct response: public _response_t {
 #define MAX_CACHE_PATH		512
 #define MAX_CACHE_KEY		32
 #define MAX_HOSTNAME		256
+#define MAX_ROUTE_PATH		256
+#define IDX_CONNECTION		7
 
 typedef struct {
 	HFCACHE	hfc; // handle from file cache
@@ -87,6 +89,52 @@ typedef struct {
 
 typedef _handle_t* HDOCUMENT;
 typedef struct root _root_t;
+
+typedef struct {
+	_u8	method;
+	_char_t	path[MAX_ROUTE_PATH];
+
+	_u32 size(void) {
+		return sizeof(_u8) + strlen(path);
+	}
+}_route_key_t;
+
+typedef struct {
+	_gatn_route_event_t	*pcb;
+	void			*udata;
+	_char_t			path[MAX_ROUTE_PATH];
+
+	_u32 size(void) {
+		return (sizeof(_gatn_route_event_t *) + sizeof(void *) + strlen(path));
+	}
+}_route_data_t;
+
+typedef struct {
+	request		req;
+	response	res;
+	_cstr_t		url;
+	_vhost_t	*p_vhost;
+	HDOCUMENT	hdoc;
+
+	void clear(void) {
+		if(hdoc && p_vhost) // close handle
+			p_vhost->root.close(hdoc);
+		res.clear();
+		url = NULL;
+		hdoc = NULL;
+		p_vhost = NULL;
+	}
+
+	void destroy(void) {
+		if(hdoc && p_vhost) // close handle
+			p_vhost->root.close(hdoc);
+		req.destroy();
+		res.destroy();
+		url = NULL;
+		hdoc = NULL;
+		p_vhost = NULL;
+	}
+}_connection_t;
 
 struct root { // document root
 private:

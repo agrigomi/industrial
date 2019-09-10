@@ -1,57 +1,5 @@
-#include <string.h>
-#include "iGatn.h"
 #include "iRepository.h"
 #include "private.h"
-
-#define MAX_ROUTE_PATH	256
-
-#define IDX_CONNECTION	7
-
-typedef struct {
-	_u8	method;
-	_char_t	path[MAX_ROUTE_PATH];
-
-	_u32 size(void) {
-		return sizeof(_u8) + strlen(path);
-	}
-}_route_key_t;
-
-typedef struct {
-	_gatn_route_event_t	*pcb;
-	void			*udata;
-	_char_t			path[MAX_ROUTE_PATH];
-
-	_u32 size(void) {
-		return (sizeof(_gatn_route_event_t *) + sizeof(void *) + strlen(path));
-	}
-}_route_data_t;
-
-typedef struct {
-	request		req;
-	response	res;
-	_cstr_t		url;
-	_vhost_t	*p_vhost;
-	HDOCUMENT	hdoc;
-
-	void clear(void) {
-		if(hdoc && p_vhost) // close handle
-			p_vhost->root.close(hdoc);
-		res.clear();
-		url = NULL;
-		hdoc = NULL;
-		p_vhost = NULL;
-	}
-
-	void destroy(void) {
-		if(hdoc && p_vhost) // close handle
-			p_vhost->root.close(hdoc);
-		req.destroy();
-		res.destroy();
-		url = NULL;
-		hdoc = NULL;
-		p_vhost = NULL;
-	}
-}_connection_t;
 
 bool server::init(_cstr_t name, _u32 port, _cstr_t root,
 		_cstr_t cache_path, _cstr_t cache_exclude,
