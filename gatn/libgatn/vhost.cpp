@@ -328,6 +328,8 @@ bool vhost::detach_class(_cstr_t cname) {
 				// backup event handlers
 				memcpy(_event, event, sizeof(_event));
 
+				pi_log->fwrite(LMT_INFO, "Gatn: Detach class '%s' from '%s/%s'",
+						cname, pi_server->name(), host);
 				pclass->pi_ext->detach(pi_server, host);
 				pclass->active = false;
 

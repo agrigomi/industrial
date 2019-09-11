@@ -134,7 +134,7 @@ public:
 	}
 
 	bool attach(_server_t *p_srv, _cstr_t host=NULL) {
-		bool r = false;
+		bool r = true;
 
 		memset(m_original_evt, 0, sizeof(m_original_evt));
 		memset(m_host_name, 0, sizeof(m_host_name));
