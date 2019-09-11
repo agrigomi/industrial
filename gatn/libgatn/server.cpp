@@ -289,10 +289,9 @@ void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
 	if(pc) {
-		_vhost_t *pvhost = pc->p_vhost;
+		_vhost_t *pvhost = (pc->p_vhost) ? pc->p_vhost : &host;
 
-		if(pvhost)
-			pvhost->call_route_handler(evt, p_httpc);
+		pvhost->call_route_handler(evt, p_httpc);
 	}
 }
 
