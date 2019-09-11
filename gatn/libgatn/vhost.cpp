@@ -19,7 +19,7 @@ bool vhost::init(_server_t *server, _cstr_t name, _cstr_t doc_root,
 	m_hlock = 0;
 	pi_heap = _heap;
 	memset(event, 0, sizeof(event));
-	pi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL);
+	pi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL));
 
 	return root.init(doc_root, cache_path, cache_key, cache_exclude, root_exclude, pi_heap);
 }
@@ -112,7 +112,7 @@ void vhost::clear_events(void) {
 }
 
 void vhost::start_extensions(HMUTEX hlock) {
-	iMap pi_map = get_class_map();
+	iMap *pi_map = get_class_map();
 	HMUTEX hm = lock(hlock);
 	typedef struct {
 		_cstr_t host;
@@ -137,7 +137,7 @@ void vhost::start_extensions(HMUTEX hlock) {
 }
 
 void vhost::stop_extensions(HMUTEX hlock) {
-	iMap pi_map = get_class_map();
+	iMap *pi_map = get_class_map();
 	HMUTEX hm = lock(hlock);
 	typedef struct {
 		_cstr_t host;
@@ -164,8 +164,8 @@ void vhost::stop_extensions(HMUTEX hlock) {
 }
 
 void vhost::remove_extensions(void) {
-	iMap pi_map = get_class_map();
-	HMUTEX hm = lock(hlock);
+	iMap *pi_map = get_class_map();
+	HMUTEX hm = lock();
 	typedef struct {
 		_cstr_t host;
 		_server_t *pi_srv;
@@ -191,19 +191,20 @@ void vhost::remove_extensions(void) {
 
 	unlock(hm);
 }
-}
 
 bool vhost::start(void) {
 	bool r = false;
 	HMUTEX hm = lock();
 
 	if(!(r = root.is_enabled())) {
-		start_extensions();
+		start_extensions(hm);
 		root.start();
-		m_running = root.is_enabled();
+		r = m_running = root.is_enabled();
 	}
 
 	unlock(hm);
+
+	return r;
 }
 
 void vhost::stop(void) {
@@ -213,6 +214,7 @@ void vhost::stop(void) {
 		stop_extensions(hm);
 		clear_events();
 		root.stop();
+		m_running = root.is_enabled();
 	}
 
 	unlock(hm);
@@ -224,13 +226,11 @@ void vhost::add_route_handler(_u8 method, _cstr_t path, _gatn_route_event_t *pcb
 	iMap *pi_map = get_route_map();
 
 	if(pi_map) {
-		lock();
 		strncpy(data.path, path, sizeof(data.path)-1);
 		memset(&key, 0, sizeof(_route_key_t));
 		key.method = method;
 		strncpy(key.path, path, MAX_ROUTE_PATH-1);
 		pi_map->add(&key, key.size(), &data, data.size());
-		_unlock();
 	}
 }
 
@@ -239,19 +239,17 @@ void vhost::remove_route_handler(_u8 method, _cstr_t path) {
 	iMap *pi_map = get_route_map();
 
 	if(pi_map) {
-		_lock();
 		memset(&key, 0, sizeof(_route_key_t));
 		key.method = method;
 		strncpy(key.path, path, MAX_ROUTE_PATH-1);
 		pi_map->del(&key, key.size());
-		_unlock();
 	}
 }
 
 void vhost::set_event_handler(_u8 evt, _gatn_http_event_t *pcb, void *udata) {
 	if(evt < HTTP_MAX_EVENTS) {
-		pvhost->event[evt].pcb = pcb;
-		pvhost->event[evt].udata = udata;
+		event[evt].pcb = pcb;
+		event[evt].udata = udata;
 	}
 }
 
@@ -259,8 +257,8 @@ _gatn_http_event_t *vhost::get_event_handler(_u8 evt, void **pp_udata) {
 	_gatn_http_event_t *r = NULL;
 
 	if(evt < HTTP_MAX_EVENTS) {
-		r = pvhost->event[evt].pcb;
-		*pp_udata = pvhost->event[evt].udata;
+		r = event[evt].pcb;
+		*pp_udata = event[evt].udata;
 	}
 
 	return r;
@@ -287,7 +285,7 @@ bool vhost::attach_class(_cstr_t cname, _cstr_t options) {
 					tmp.pi_ext = dynamic_cast<iGatnExtension *>(pi_base);
 
 					if(tmp.pi_ext) {
-						if((pclass = pi_map->add(cname, strlen(cname), &tmp, sizeof(tmp))) {
+						if((pclass = (_class_t *)pi_map->add(cname, strlen(cname), &tmp, sizeof(tmp)))) {
 							pi_log->fwrite(LMT_INFO, "Gatn: Attach class '%s' to '%s/%s'",
 									cname, pi_server->name(), host);
 							if(options)
@@ -323,21 +321,121 @@ bool vhost::detach_class(_cstr_t cname) {
 		_class_t *pclass = (_class_t *)pi_map->get(cname, strlen(cname), &sz);
 
 		if(pclass) {
+			_event_data_t 	_event[HTTP_MAX_EVENTS];	// backup of HTTP event handlers
+			bool reset = false;
+
 			if(pclass->active) {
+				// backup event handlers
+				memcpy(_event, event, sizeof(_event));
+
 				pclass->pi_ext->detach(pi_server, host);
 				pclass->active = false;
+
+				if(memcmp(_event, event, sizeof(event)) != 0)
+					reset = true;
 			}
 
 			_gpi_repo_->object_release(pclass->pi_ext, false);
 			pi_map->del(cname, strlen(cname));
 
-			stop_extensions(hm);
-			start_extensions(hm);
+			if(reset) {
+				stop_extensions(hm);
+				clear_events();
+				start_extensions(hm);
+			}
 		}
 
 		unlock(hm);
 	}
 
 	return r;
+}
+
+void vhost::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
+	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
+
+	if(pc && pc->p_vhost == this) {
+		_lock();
+
+		if(evt < HTTP_MAX_EVENTS) {
+			if(event[evt].pcb)
+				event[evt].pcb(&(pc->req), &(pc->res), event[evt].udata);
+		}
+
+		_unlock();
+	}
+}
+
+void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
+	_lock();
+
+	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
+	iMap *pi_map = get_route_map();
+
+	if(pc && pi_map && pc->p_vhost == this) {
+		_cstr_t url = pc->url;
+
+		if(url) {
+			_route_data_t *prd = NULL;
+			_u8 method = p_httpc->req_method();
+			_route_key_t key;
+			_u32 sz = 0;
+
+			memset(&key, 0, sizeof(_route_key_t));
+			key.method = method;
+			strncpy(key.path, url, sizeof(key.path)-1);
+
+			prd = (_route_data_t *)pi_map->get(&key, key.size(), &sz);
+
+			if(prd)
+				// route found
+				prd->pcb(evt, &(pc->req), &(pc->res), prd->udata);
+			else if(root.is_enabled() && evt == HTTP_ON_REQUEST) {
+				// route not found
+				// try to resolve file name
+
+				p_httpc->res_var("Server", pi_server->name());
+				p_httpc->res_protocol("HTTP/2.0");
+
+				if(method == HTTP_METHOD_GET || method == HTTP_METHOD_HEAD || method == HTTP_METHOD_POST) {
+					HDOCUMENT hdoc = root.open(url);
+
+					if(hdoc) {
+						p_httpc->res_var("Content-Type", root.mime(hdoc));
+						p_httpc->res_mtime(root.mtime(hdoc));
+
+						if(method == HTTP_METHOD_GET || method == HTTP_METHOD_POST) {
+							_ulong doc_sz = 0;
+
+							_u8 *ptr = (_u8 *)root.ptr(hdoc, &doc_sz);
+							if(ptr) {
+								// response header
+								p_httpc->res_content_len(doc_sz);
+								p_httpc->res_code(HTTPRC_OK);
+								// response content
+								p_httpc->res_write(ptr, doc_sz);
+								pc->hdoc = hdoc;
+							} else {
+								p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
+								call_handler(ON_ERROR, p_httpc);
+								root.close(hdoc);
+							}
+						} else if(method == HTTP_METHOD_HEAD) {
+							p_httpc->res_code(HTTPRC_OK);
+							root.close(hdoc);
+						}
+					} else {
+						p_httpc->res_code(HTTPRC_NOT_FOUND);
+						call_handler(ON_ERROR, p_httpc);
+					}
+				} else {
+					p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
+					call_handler(ON_ERROR, p_httpc);
+				}
+			}
+		}
+	}
+
+	_unlock();
 }
 

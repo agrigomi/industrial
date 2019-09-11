@@ -326,14 +326,14 @@ static void gatn_list_handler(iCmd *pi_cmd, // interface to command object
 
 			if(psrv) {
 				fout(pi_io, "[%c] %d %s %s\n", (psrv->is_running()) ? 'R' : 'S',
-					psrv->port(), psrv->name(), psrv->host.root.get_doc_root());
+					psrv->port(), psrv->name(), psrv->host.get_root()->get_doc_root());
 
 				psrv->enum_virtual_hosts([](_vhost_t *pvhost, void *udata) {
 					iIO *pi_io = (iIO *)udata;
 
-					fout(pi_io, "\t[%c] %s %s\n", (pvhost->root.is_enabled()) ? 'R' : 'S',
-						pvhost->host,
-						pvhost->root.get_doc_root());
+					fout(pi_io, "\t[%c] %s %s\n", (pvhost->is_running()) ? 'R' : 'S',
+						pvhost->name(),
+						pvhost->get_root()->get_doc_root());
 				}, pi_io);
 			}
 		}, pi_io);

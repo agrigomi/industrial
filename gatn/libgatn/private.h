@@ -89,6 +89,7 @@ typedef struct {
 
 typedef _handle_t* HDOCUMENT;
 typedef struct root _root_t;
+typedef struct vhost _vhost_t;
 
 typedef struct {
 	_u8	method;
@@ -109,32 +110,6 @@ typedef struct {
 	}
 }_route_data_t;
 
-typedef struct {
-	request		req;
-	response	res;
-	_cstr_t		url;
-	_vhost_t	*p_vhost;
-	HDOCUMENT	hdoc;
-
-	void clear(void) {
-		if(hdoc && p_vhost) // close handle
-			p_vhost->root.close(hdoc);
-		res.clear();
-		url = NULL;
-		hdoc = NULL;
-		p_vhost = NULL;
-	}
-
-	void destroy(void) {
-		if(hdoc && p_vhost) // close handle
-			p_vhost->root.close(hdoc);
-		req.destroy();
-		res.destroy();
-		url = NULL;
-		hdoc = NULL;
-		p_vhost = NULL;
-	}
-}_connection_t;
 
 struct root { // document root
 private:
@@ -197,8 +172,6 @@ typedef struct {
 	void			*udata;
 }_event_data_t;
 
-typedef struct vhost _vhost_t;
-
 struct vhost {
 private:
 	iMutex		*pi_mutex;
@@ -217,6 +190,7 @@ private:
 	iMap *get_route_map(void);
 	iMap *get_class_map(void);
 	HMUTEX lock(HMUTEX hlock=0);
+	void unlock(HMUTEX hlock);
 	void _lock(void);
 	void _unlock(void);
 	void clear_events(void);
@@ -247,7 +221,36 @@ public:
 	_gatn_http_event_t *get_event_handler(_u8 evt, void **pp_udata);
 	bool attach_class(_cstr_t cname, _cstr_t options);
 	bool detach_class(_cstr_t cname);
+	void call_handler(_u8 evt, iHttpServerConnection *p_httpc);
+	void call_route_handler(_u8 evt, iHttpServerConnection *p_httpc);
 };
+
+typedef struct {
+	request		req;
+	response	res;
+	_cstr_t		url;
+	_vhost_t	*p_vhost;
+	HDOCUMENT	hdoc;
+
+	void clear(void) {
+		if(hdoc && p_vhost) // close handle
+			p_vhost->get_root()->close(hdoc);
+		res.clear();
+		url = NULL;
+		hdoc = NULL;
+		p_vhost = NULL;
+	}
+
+	void destroy(void) {
+		if(hdoc && p_vhost) // close handle
+			p_vhost->get_root()->close(hdoc);
+		req.destroy();
+		res.destroy();
+		url = NULL;
+		hdoc = NULL;
+		p_vhost = NULL;
+	}
+}_connection_t;
 
 struct server: public _server_t {
 	_char_t 	m_name[MAX_SERVER_NAME];
@@ -307,7 +310,6 @@ struct server: public _server_t {
 		return m_ssl_context;
 	}
 	void remove_route(_u8 method, _cstr_t path, _cstr_t host=NULL);
-	void enum_route(void (*)(_cstr_t path, _gatn_route_event_t *pcb, void *udata), void *udata=NULL);
 	bool add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key,
 				_cstr_t cache_exclude=NULL, _cstr_t path_disable=NULL);
 	_vhost_t *get_virtual_host(_cstr_t host);
@@ -317,6 +319,7 @@ struct server: public _server_t {
 	void enum_virtual_hosts(void (*)(_vhost_t *, void *udata), void *udata=NULL);
 	bool attach_class(_cstr_t cname, _cstr_t options=NULL, _cstr_t host=NULL);
 	bool detach_class(_cstr_t cname, _cstr_t host=NULL);
+	void release_class(_cstr_t cname);
 };
 
 // SSL

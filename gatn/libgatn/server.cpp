@@ -170,8 +170,8 @@ void server::set_handlers(void) {
 		pc->clear();
 		pc->p_vhost = p_srv->get_host(p_httpc->req_var("Host"));
 		pc->url = p_httpc->req_url();
-		pc->res.m_doc_root = pc->p_vhost->root.get_doc_root();
-		pc->res.mpi_fcache = pc->p_vhost->root.get_file_cache();
+		pc->res.m_doc_root = pc->p_vhost->get_root()->get_doc_root();
+		pc->res.mpi_fcache = pc->p_vhost->get_root()->get_file_cache();
 
 		p_srv->call_handler(HTTP_ON_REQUEST, p_httpc);
 		p_srv->call_route_handler(HTTP_ON_REQUEST, p_httpc);
@@ -226,7 +226,7 @@ bool server::start(void) {
 								m_max_connections, m_connection_timeout,
 								m_ssl_context);
 
-		if(host.root.is_enabled() && mpi_server) {
+		if(host.get_root()->is_enabled() && mpi_server) {
 			mpi_log->fwrite(LMT_INFO, "Gatn: Start server '%s'", m_name);
 			set_handlers();
 			r = true;
@@ -238,7 +238,7 @@ bool server::start(void) {
 
 void server::stop(_vhost_t *pvhost) {
 	if(pvhost->is_running()) {
-		mpi_log->fwrite(LMT_INFO, "Gatn: Stop host '%s' on server '%s'", pvhost->host, m_name);
+		mpi_log->fwrite(LMT_INFO, "Gatn: Stop host '%s' on server '%s'", pvhost->name(), m_name);
 		pvhost->stop();
 	}
 }
@@ -252,7 +252,7 @@ bool server::start(_vhost_t *pvhost) {
 	bool r = false;
 
 	if(!(r = pvhost->is_running())) {
-		mpi_log->fwrite(LMT_INFO, "Gatn: Start host '%s' on server '%s'", pvhost->host, m_name);
+		mpi_log->fwrite(LMT_INFO, "Gatn: Start host '%s' on server '%s'", pvhost->name(), m_name);
 		pvhost->start();
 		r = pvhost->is_running();
 	}
@@ -281,88 +281,18 @@ void server::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	if(pc) {
 		_vhost_t *pvhost = (pc->p_vhost) ? pc->p_vhost : &host;
 
-		pvhost->_lock();
-
-		if(evt < HTTP_MAX_EVENTS) {
-			if(pvhost->event[evt].pcb)
-				pvhost->event[evt].pcb(&(pc->req), &(pc->res), pvhost->event[evt].udata);
-		}
-
-		pvhost->_unlock();
+		pvhost->call_handler(evt, p_httpc);
 	}
 }
 
 void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
-	_u32 sz=0;
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
-	_vhost_t *pvhost = pc->p_vhost;
-	_cstr_t url = pc->url;
 
-	if(pvhost && url) {
-		_root_t *root = &pvhost->root;
-		_route_data_t *prd = NULL;
-		_u8 method = p_httpc->req_method();
+	if(pc) {
+		_vhost_t *pvhost = pc->p_vhost;
 
-		pvhost->_lock();
-
-		if(pvhost->pi_route_map) {
-			_route_key_t key;
-
-			memset(&key, 0, sizeof(_route_key_t));
-			key.method = method;
-			strncpy(key.path, url, sizeof(key.path)-1);
-
-			prd = (_route_data_t *)pvhost->pi_route_map->get(&key, key.size(), &sz);
-		}
-
-		if(prd)
-			// route found
-			prd->pcb(evt, &(pc->req), &(pc->res), prd->udata);
-		else if(root->is_enabled() && evt == HTTP_ON_REQUEST) {
-			p_httpc->res_var("Server", m_name);
-			p_httpc->res_protocol("HTTP/2.0");
-
-			if(method == HTTP_METHOD_GET || method == HTTP_METHOD_HEAD || method == HTTP_METHOD_POST) {
-				// route not found
-				// try to resolve file name
-
-				HDOCUMENT hdoc = root->open(url);
-
-				if(hdoc) {
-					p_httpc->res_var("Content-Type", root->mime(hdoc));
-					p_httpc->res_mtime(root->mtime(hdoc));
-
-					if(method == HTTP_METHOD_GET || method == HTTP_METHOD_POST) {
-						_ulong doc_sz = 0;
-
-						_u8 *ptr = (_u8 *)root->ptr(hdoc, &doc_sz);
-						if(ptr) {
-							// response header
-							p_httpc->res_content_len(doc_sz);
-							p_httpc->res_code(HTTPRC_OK);
-							// response content
-							p_httpc->res_write(ptr, doc_sz);
-							pc->hdoc = hdoc;
-						} else {
-							p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
-							call_handler(ON_ERROR, p_httpc);
-							root->close(hdoc);
-						}
-					} else if(method == HTTP_METHOD_HEAD) {
-						p_httpc->res_code(HTTPRC_OK);
-						root->close(hdoc);
-					}
-				} else {
-					p_httpc->res_code(HTTPRC_NOT_FOUND);
-					call_handler(ON_ERROR, p_httpc);
-				}
-			} else {
-				p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
-				call_handler(ON_ERROR, p_httpc);
-			}
-		}
-
-		pvhost->_unlock();
+		if(pvhost)
+			pvhost->call_route_handler(evt, p_httpc);
 	}
 }
 
@@ -370,24 +300,30 @@ void server::update_response(iHttpServerConnection *p_httpc) {
 	// write response remainder
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
-	if(pc->hdoc) {
-		// update content from file cache
-		_ulong sz = 0;
-		_vhost_t *pvhost = pc->p_vhost;
+	if(pc) {
+		if(pc->hdoc) {
+			// update content from file cache
+			_ulong sz = 0;
+			_vhost_t *pvhost = pc->p_vhost;
 
-		if(pvhost) {
-			_u8 *ptr = (_u8 *)pvhost->root.ptr(pc->hdoc, &sz);
+			if(pvhost) {
+				_root_t *proot = pvhost->get_root();
 
-			if(ptr) {
-				_u32 res_sent = p_httpc->res_content_sent();
-				_u32 res_remainder = p_httpc->res_remainder();
+				if(proot->is_enabled()) {
+					_u8 *ptr = (_u8 *)proot->ptr(pc->hdoc, &sz);
 
-				p_httpc->res_write(ptr + res_sent, res_remainder);
+					if(ptr) {
+						_u32 res_sent = p_httpc->res_content_sent();
+						_u32 res_remainder = p_httpc->res_remainder();
+
+						p_httpc->res_write(ptr + res_sent, res_remainder);
+					}
+				}
 			}
-		}
-	} else
-		// update content from response buffer
-		pc->res.process_content();
+		} else
+			// update content from response buffer
+			pc->res.process_content();
+	}
 }
 
 void server::on_route(_u8 method, _cstr_t path, _gatn_route_event_t *pcb, void *udata, _cstr_t _host) {
@@ -399,7 +335,7 @@ void server::on_route(_u8 method, _cstr_t path, _gatn_route_event_t *pcb, void *
 void server::on_event(_u8 evt, _gatn_http_event_t *pcb, void *udata, _cstr_t _host) {
 	_vhost_t *pvhost = get_host(_host);
 
-	pvhost->set_event_handler(evtm pcb, udata);
+	pvhost->set_event_handler(evt, pcb, udata);
 }
 
 _gatn_http_event_t *server::get_event_handler(_u8 evt, void **pp_udata, _cstr_t host) {
@@ -414,28 +350,10 @@ void server::remove_route(_u8 method, _cstr_t path, _cstr_t host) {
 	pvhost->remove_route_handler(method, path);
 }
 
-void server::enum_route(void (*enum_cb)(_cstr_t path, _gatn_route_event_t *pcb, void *udata), void *udata) {
-	_map_enum_t me = host.pi_route_map->enum_open();
-	_u32 sz = 0;
-
-	if(me) {
-		_route_data_t *rd = (_route_data_t *)host.pi_route_map->enum_first(me, &sz);
-
-		while(rd) {
-			enum_cb(rd->path, rd->pcb, udata);
-			rd = (_route_data_t *)host.pi_route_map->enum_next(me, &sz);
-		}
-
-		host.pi_route_map->enum_close(me);
-	}
-}
-
 bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _cstr_t cache_key,
 				_cstr_t cache_exclude, _cstr_t path_disable) {
 	bool r = false;
 	_vhost_t vhost;
-
-	strncpy(vhost.host, host, sizeof(vhost.host)-1);
 
 	if(!mpi_vhost_map) {
 		if((mpi_vhost_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
@@ -446,7 +364,7 @@ bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _c
 		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->add(host, strlen(host), &vhost, sizeof(_vhost_t));
 
 		if(pvhost)
-			r = pvhost->init(this, root, cache_path, cache_key,
+			r = pvhost->init(this, host, root, cache_path, cache_key,
 						cache_exclude, path_disable, mpi_heap);
 	}
 
@@ -526,7 +444,6 @@ void server::enum_virtual_hosts(void (*enum_cb)(_vhost_t *, void *udata), void *
 }
 
 bool server::attach_class(_cstr_t cname, _cstr_t options, _cstr_t _host) {
-	_u32 sz = 0;
 	_vhost_t *pvhost = get_host(_host);
 
 	return pvhost->attach_class(cname, options);
@@ -535,6 +452,22 @@ bool server::attach_class(_cstr_t cname, _cstr_t options, _cstr_t _host) {
 bool server::detach_class(_cstr_t cname, _cstr_t _host) {
 	_vhost_t *pvhost = get_host(_host);
 
-	pvhost->detach_class(cname);
+	return pvhost->detach_class(cname);
 }
 
+void server::release_class(_cstr_t cname) {
+	struct _xhost {
+		_cstr_t _cname;
+		server	*psrv;
+	};
+
+	_xhost tmp = { cname, this};
+
+	enum_virtual_hosts([](_vhost_t *pvhost, void *udata) {
+		_xhost *p = (_xhost *)udata;
+
+		p->psrv->detach_class(p->_cname, pvhost->name());
+	}, &tmp);
+
+	detach_class(cname);
+}
