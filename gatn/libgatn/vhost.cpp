@@ -18,6 +18,7 @@ bool vhost::init(_server_t *server, _cstr_t name, _cstr_t doc_root,
 	pi_mutex = NULL;
 	m_hlock = 0;
 	pi_heap = _heap;
+	m_running = false;
 	memset(event, 0, sizeof(event));
 	pi_log = dynamic_cast<iLog *>(_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL));
 
@@ -55,6 +56,7 @@ vhost::vhost() {
 	pi_mutex = 0;
 	pi_log = NULL;
 	m_hlock = 0;
+	m_running = false;
 	memset(event, 0, sizeof(event));
 }
 

@@ -152,7 +152,7 @@ public:
 	_cstr_t mime(HDOCUMENT);
 	void stop(void);
 	void start(void);
-	bool is_enabled(void) {
+	volatile bool is_enabled(void) {
 		return m_enable;
 	}
 	_cstr_t get_doc_root(void) {
@@ -210,7 +210,7 @@ public:
 	_root_t *get_root(void) {
 		return &root;
 	}
-	bool is_running(void) {
+	volatile bool is_running(void) {
 		return m_running;
 	}
 	bool start(void);
