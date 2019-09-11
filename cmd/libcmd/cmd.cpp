@@ -344,6 +344,7 @@ public:
 				_cmd_rec_t *p_rec = 0;
 
 				mpi_str->mem_set(argv, 0, sizeof(argv));
+				mpi_str->mem_set(cmd, 0, cmd_len);
 				mpi_str->str_cpy(cmd, cmd_line, cmd_len);
 				argc = parse_argv(cmd, cmd_len, argv);
 
