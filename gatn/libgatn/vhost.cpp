@@ -199,7 +199,8 @@ bool vhost::start(void) {
 	if(!(r = root.is_enabled())) {
 		start_extensions(hm);
 		root.start();
-		r = m_running = root.is_enabled();
+		if(!(r = m_running = root.is_enabled()))
+			pi_log->fwrite(LMT_ERROR, "Gatn: Unable to start '%s'", host);
 	}
 
 	unlock(hm);
@@ -374,7 +375,7 @@ void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 	iMap *pi_map = get_route_map();
 
-	if(pc && pi_map && pc->p_vhost == this) {
+	if(pc && pi_map) {
 		_cstr_t url = pc->url;
 
 		if(url) {

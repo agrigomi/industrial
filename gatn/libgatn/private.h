@@ -113,7 +113,7 @@ typedef struct {
 
 struct root { // document root
 private:
-	bool		m_enable;
+	volatile bool	m_enable;
 	_char_t		m_root_path[MAX_DOC_ROOT_PATH];
 	_char_t		m_cache_path[MAX_CACHE_PATH];
 	_char_t		m_cache_key[MAX_CACHE_KEY];
