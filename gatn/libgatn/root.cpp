@@ -74,9 +74,9 @@ void root::object_release(iBase **ppi) {
 void root::destroy(void) {
 	stop();
 
-	object_release((iBase **)&mpi_fs);
-	object_release((iBase **)&mpi_fcache);
 	object_release((iBase **)&mpi_handle_pool);
+	object_release((iBase **)&mpi_fcache);
+	object_release((iBase **)&mpi_fs);
 	object_release((iBase **)&mpi_str);
 	object_release((iBase **)&mpi_mutex);
 	if(m_my_heap)

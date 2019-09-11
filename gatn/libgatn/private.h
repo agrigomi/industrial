@@ -204,10 +204,12 @@ private:
 	iMutex		*pi_mutex;
 	HMUTEX		m_hlock;
 	_char_t		host[MAX_HOSTNAME];	// host name
+	_server_t	*pi_server;
 	_root_t		root;			// document root
 	iMap		*pi_route_map;		// URL routing map
 	iMap		*pi_class_map;		// class (plugin) map
 	iHeap		*pi_heap;
+	iLog		*pi_log;
 	_event_data_t 	event[HTTP_MAX_EVENTS];	// HTTP event handlers
 	volatile bool	m_running;
 
@@ -218,12 +220,13 @@ private:
 	void _lock(void);
 	void _unlock(void);
 	void clear_events(void);
-	void start_extensions(void);
-	void stop_extensions(void);
+	void start_extensions(HMUTEX hlock=0);
+	void stop_extensions(HMUTEX hlock=0);
+	void remove_extensions(void);
 public:
 
 	vhost();
-	bool init(_cstr_t name, _cstr_t root,
+	bool init(_server_t *server, _cstr_t name, _cstr_t root,
 		_cstr_t cache_path, _cstr_t cache_key, _cstr_t cache_exclude,
 		_cstr_t root_exclude, iHeap *pi_heap=NULL);
 	void destroy(void);
@@ -236,15 +239,14 @@ public:
 	bool is_running(void) {
 		return m_running;
 	}
-	void start(void);
+	bool start(void);
 	void stop(void);
 	void add_route_handler(_u8 method, _cstr_t path, _gatn_route_event_t *pcb, void *udata);
 	void remove_route_handler(_u8 method, _cstr_t path);
-	void add_event_handler(_u8 evt, _gatn_http_event_t *pcb, void *udata);
-	_err_t add_class(_cstr_t cname, _cstr_t options);
-	bool remove_class(_cstr_t cname);
-	void start_class(_cstr_t cname);
-	void stop_class(_cstr_t cname);
+	void set_event_handler(_u8 evt, _gatn_http_event_t *pcb, void *udata);
+	_gatn_http_event_t *get_event_handler(_u8 evt, void **pp_udata);
+	bool attach_class(_cstr_t cname, _cstr_t options);
+	bool detach_class(_cstr_t cname);
 };
 
 struct server: public _server_t {
@@ -315,10 +317,6 @@ struct server: public _server_t {
 	void enum_virtual_hosts(void (*)(_vhost_t *, void *udata), void *udata=NULL);
 	bool attach_class(_cstr_t cname, _cstr_t options=NULL, _cstr_t host=NULL);
 	bool detach_class(_cstr_t cname, _cstr_t host=NULL);
-	void detach_all(_vhost_t *);
-	void attach_all(_vhost_t *);
-	void reattach(_cstr_t host);
-	void release_class(_cstr_t cname);
 };
 
 // SSL

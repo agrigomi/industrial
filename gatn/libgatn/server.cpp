@@ -8,8 +8,6 @@ bool server::init(_cstr_t name, _u32 port, _cstr_t root,
 		_u32 connection_timeout, SSL_CTX *ssl_context) {
 	bool r = false;
 
-	memset(&host, 0, sizeof(_vhost_t)); // default host
-	strncpy(host.host, "defulthost", sizeof(host.host));
 	mpi_server = NULL; // HTTP server
 	mpi_vhost_map = NULL;
 	strncpy(m_name, name, sizeof(m_name)-1);
@@ -67,7 +65,7 @@ bool server::init(_cstr_t name, _u32 port, _cstr_t root,
 	m_connection_timeout = connection_timeout;
 	m_ssl_context = ssl_context;
 
-	r = host.root.init(root, cache_path, name, cache_exclude, path_disable, mpi_heap);
+	r = host.init(this, "defaulthost", root, cache_path, name, cache_exclude, path_disable, mpi_heap);
 
 	return r;
 }
@@ -128,27 +126,6 @@ void server::destroy(void) {
 
 void server::destroy(_vhost_t *pvhost) {
 	stop(pvhost);
-
-	if(pvhost->pi_class_map) {
-		// detach extensions
-		_map_enum_t me = pvhost->pi_class_map->enum_open();
-
-		if(me) {
-			_u32 sz = 0;
-			iBase **ppi_base = (iBase **)pvhost->pi_class_map->enum_first(me, &sz);
-
-			while(ppi_base) {
-				_object_info_t oi;
-
-				(*ppi_base)->object_info(&oi);
-				detach_class(oi.cname, pvhost->host);
-				ppi_base = (iBase **)pvhost->pi_class_map->enum_next(me, &sz);
-			}
-
-			pvhost->pi_class_map->enum_close(me);
-		}
-	}
-
 	pvhost->destroy();
 }
 
@@ -260,14 +237,10 @@ bool server::start(void) {
 }
 
 void server::stop(_vhost_t *pvhost) {
-	HMUTEX hm = pvhost->lock();
-	if(pvhost->root.is_enabled()) {
+	if(pvhost->is_running()) {
 		mpi_log->fwrite(LMT_INFO, "Gatn: Stop host '%s' on server '%s'", pvhost->host, m_name);
-		detach_all(pvhost);
-		pvhost->clear_events();
-		pvhost->root.stop();
+		pvhost->stop();
 	}
-	pvhost->unlock(hm);
 }
 
 _vhost_t *server::get_host(_cstr_t _host) {
@@ -277,16 +250,12 @@ _vhost_t *server::get_host(_cstr_t _host) {
 
 bool server::start(_vhost_t *pvhost) {
 	bool r = false;
-	HMUTEX hm = pvhost->lock();
 
-	if(!(r = pvhost->root.is_enabled())) {
+	if(!(r = pvhost->is_running())) {
 		mpi_log->fwrite(LMT_INFO, "Gatn: Start host '%s' on server '%s'", pvhost->host, m_name);
-		pvhost->root.start();
-		attach_all(pvhost);
-		r = true;
+		pvhost->start();
+		r = pvhost->is_running();
 	}
-
-	pvhost->unlock(hm);
 
 	return r;
 }
@@ -422,53 +391,27 @@ void server::update_response(iHttpServerConnection *p_httpc) {
 }
 
 void server::on_route(_u8 method, _cstr_t path, _gatn_route_event_t *pcb, void *udata, _cstr_t _host) {
-	_route_key_t key;
-	_route_data_t data = {pcb, udata};
 	_vhost_t *pvhost = get_host(_host);
 
-	strncpy(data.path, path, sizeof(data.path)-1);
-
-	memset(&key, 0, sizeof(_route_key_t));
-	key.method = method;
-	strncpy(key.path, path, MAX_ROUTE_PATH-1);
-	if(!pvhost->pi_route_map) {
-		if((pvhost->pi_route_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
-			pvhost->pi_route_map->init(33, mpi_heap);
-	}
-	if(pvhost->pi_route_map)
-		pvhost->pi_route_map->add(&key, key.size(), &data, data.size());
+	pvhost->add_route_handler(method, path, pcb, udata);
 }
 
 void server::on_event(_u8 evt, _gatn_http_event_t *pcb, void *udata, _cstr_t _host) {
 	_vhost_t *pvhost = get_host(_host);
 
-	if(evt < HTTP_MAX_EVENTS) {
-		pvhost->event[evt].pcb = pcb;
-		pvhost->event[evt].udata = udata;
-	}
+	pvhost->set_event_handler(evtm pcb, udata);
 }
 
 _gatn_http_event_t *server::get_event_handler(_u8 evt, void **pp_udata, _cstr_t host) {
-	_gatn_http_event_t *r = NULL;
 	_vhost_t *pvhost = get_host(host);
 
-	if(evt < HTTP_MAX_EVENTS) {
-		r = pvhost->event[evt].pcb;
-		*pp_udata = pvhost->event[evt].udata;
-	}
-
-	return r;
+	return pvhost->get_event_handler(evt, pp_udata);
 }
 
 void server::remove_route(_u8 method, _cstr_t path, _cstr_t host) {
-	_route_key_t key;
 	_vhost_t *pvhost = get_host(host);
 
-	memset(&key, 0, sizeof(_route_key_t));
-	key.method = method;
-	strncpy(key.path, path, MAX_ROUTE_PATH-1);
-	if(pvhost->pi_route_map)
-		pvhost->pi_route_map->del(&key, key.size());
+	pvhost->remove_route_handler(method, path);
 }
 
 void server::enum_route(void (*enum_cb)(_cstr_t path, _gatn_route_event_t *pcb, void *udata), void *udata) {
@@ -502,12 +445,9 @@ bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _c
 	if(mpi_vhost_map) {
 		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->add(host, strlen(host), &vhost, sizeof(_vhost_t));
 
-		if(pvhost) {
-			pvhost->_lock();
-			r = pvhost->root.init(root, cache_path, cache_key,
+		if(pvhost)
+			r = pvhost->init(this, root, cache_path, cache_key,
 						cache_exclude, path_disable, mpi_heap);
-			pvhost->_unlock();
-		}
 	}
 
 	return r;
@@ -586,144 +526,15 @@ void server::enum_virtual_hosts(void (*enum_cb)(_vhost_t *, void *udata), void *
 }
 
 bool server::attach_class(_cstr_t cname, _cstr_t options, _cstr_t _host) {
-	bool r = false;
 	_u32 sz = 0;
 	_vhost_t *pvhost = get_host(_host);
-	HMUTEX hm = pvhost->lock();
 
-	if(pvhost->pi_class_map == NULL) {
-		if((pvhost->pi_class_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
-			pvhost->pi_class_map->init(15, mpi_heap);
-	}
-
-	if(pvhost->pi_class_map) {
-		iGatnExtension **ppi_ext = (iGatnExtension **)pvhost->pi_class_map->get(cname, strlen(cname), &sz);
-
-		if(!ppi_ext) {
-			_object_info_t oi;
-			iBase *pi_base = _gpi_repo_->object_by_cname(cname, RF_CLONE|RF_NONOTIFY);
-
-			if(pi_base) {
-				pi_base->object_info(&oi);
-
-				if(strcmp(I_GATN_EXTENSION, oi.iname) == 0) {
-					iGatnExtension *pi_ext = dynamic_cast<iGatnExtension *>(pi_base);
-
-					if(pi_ext) {
-						if(pvhost->pi_class_map->add(cname, strlen(cname), &pi_ext, sizeof(pi_ext))) {
-							mpi_log->fwrite(LMT_INFO, "Gatn: Attach class '%s' to '%s/%s'",
-									cname, m_name, pvhost->host);
-							if(options)
-								pi_ext->options(options);
-							r = pi_ext->attach(this, _host);
-						} else
-							_gpi_repo_->object_release(pi_ext, false);
-					}
-				} else {
-					mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to attach class '%s'", cname);
-					_gpi_repo_->object_release(pi_base, false);
-				}
-			} else
-				mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to clone class '%s'", cname);
-		} else
-			mpi_log->fwrite(LMT_ERROR, "Gatn: class '%s' already attached to '%s/%s'",
-					cname, m_name, pvhost->host);
-	}
-
-	pvhost->unlock(hm);
-
-	return r;
-}
-
-void server::detach_all(_vhost_t *pvhost) {
-	typedef struct {
-		_cstr_t host;
-		_server_t *pi_srv;
-	}_attach_info_t;
-
-	if(pvhost->pi_class_map) {
-		_attach_info_t tmp = {pvhost->host, this};
-
-		pvhost->pi_class_map->enumerate([](void *p, _u32 sz, void *udata)->_s32 {
-			_attach_info_t *pa = (_attach_info_t *)udata;
-			iGatnExtension **ppi_ext = (iGatnExtension **)p;
-
-			(*ppi_ext)->detach(pa->pi_srv, pa->host);
-			return ENUM_NEXT;
-		}, &tmp);
-	}
-}
-
-void server::attach_all(_vhost_t *pvhost) {
-	typedef struct {
-		_cstr_t host;
-		_server_t *pi_srv;
-	}_attach_info_t;
-
-	if(pvhost->pi_class_map) {
-		_attach_info_t tmp = {pvhost->host, this};
-
-		pvhost->pi_class_map->enumerate([](void *p, _u32 sz, void *udata)->_s32 {
-			_attach_info_t *pa = (_attach_info_t *)udata;
-			iGatnExtension **ppi_ext = (iGatnExtension **)p;
-
-			(*ppi_ext)->attach(pa->pi_srv, pa->host);
-			return ENUM_NEXT;
-		}, &tmp);
-	}
-}
-
-void server::reattach(_cstr_t host) {
-	_vhost_t *pvhost = get_host(host);
-	HMUTEX hm = pvhost->lock();
-
-	detach_all(pvhost);
-	pvhost->clear_events();
-	attach_all(pvhost);
-
-	pvhost->unlock(hm);
+	return pvhost->attach_class(cname, options);
 }
 
 bool server::detach_class(_cstr_t cname, _cstr_t _host) {
-	bool r = false;
-	_u32 sz = 0;
 	_vhost_t *pvhost = get_host(_host);
 
-	if(pvhost->pi_class_map) {
-		iGatnExtension **ppi_ext = (iGatnExtension **)pvhost->pi_class_map->get(cname, strlen(cname), &sz);
-
-		if(ppi_ext) {
-			_object_info_t oi;
-
-			(*ppi_ext)->object_info(&oi);
-			mpi_log->fwrite(LMT_INFO, "Gatn: Detach class '%s' from '%s/%s'",
-					cname, m_name, pvhost->host);
-			HMUTEX hm = pvhost->lock();
-			(*ppi_ext)->detach(this, _host);
-			pvhost->unlock(hm);
-			_gpi_repo_->object_release(*ppi_ext, false);
-			pvhost->pi_class_map->del(cname, strlen(cname));
-			r = true;
-		}
-
-		reattach(_host);
-	}
-
-	return r;
+	pvhost->detach_class(cname);
 }
-void server::release_class(_cstr_t cname) {
-	struct _xhost {
-		_cstr_t _cname;
-		server	*psrv;
-	};
 
-	_xhost tmp = { cname, this};
-
-	enum_virtual_hosts([](_vhost_t *pvhost, void *udata) {
-		_xhost *p = (_xhost *)udata;
-
-		p->psrv->detach_class(p->_cname, pvhost->host);
-	}, &tmp);
-
-	detach_class(cname);
-}
