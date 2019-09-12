@@ -128,7 +128,7 @@ void vhost::start_extensions(HMUTEX hlock) {
 			_attach_info_t *pa = (_attach_info_t *)udata;
 			_class_t *pclass = (_class_t *)p;
 
-			if(!pclass->active)
+			if(!pclass->active && pclass->pi_ext)
 				pclass->active = pclass->pi_ext->attach(pa->pi_srv, pa->host);
 
 			return ENUM_NEXT;
@@ -153,7 +153,7 @@ void vhost::stop_extensions(HMUTEX hlock) {
 			_attach_info_t *pa = (_attach_info_t *)udata;
 			_class_t *pclass = (_class_t *)p;
 
-			if(pclass->active) {
+			if(pclass->active && pclass->pi_ext) {
 				pclass->pi_ext->detach(pa->pi_srv, pa->host);
 				pclass->active = false;
 			}
@@ -180,12 +180,13 @@ void vhost::remove_extensions(void) {
 			_attach_info_t *pa = (_attach_info_t *)udata;
 			_class_t *pclass = (_class_t *)p;
 
-			if(pclass->active) {
+			if(pclass->active && pclass->pi_ext) {
 				pclass->pi_ext->detach(pa->pi_srv, pa->host);
 				pclass->active = false;
 			}
 
 			_gpi_repo_->object_release(pclass->pi_ext, false);
+			pclass->pi_ext = NULL;
 
 			return ENUM_NEXT;
 		}, &tmp);
@@ -324,29 +325,31 @@ bool vhost::detach_class(_cstr_t cname) {
 		_class_t *pclass = (_class_t *)pi_map->get(cname, strlen(cname), &sz);
 
 		if(pclass) {
-			_event_data_t 	_event[HTTP_MAX_EVENTS];	// backup of HTTP event handlers
-			bool reset = false;
+			if(pclass->pi_ext) {
+				_event_data_t 	_event[HTTP_MAX_EVENTS];	// backup of HTTP event handlers
+				bool reset = false;
 
-			if(pclass->active) {
-				// backup event handlers
-				memcpy(_event, event, sizeof(_event));
+				if(pclass->active) {
+					// backup event handlers
+					memcpy(_event, event, sizeof(_event));
 
-				pi_log->fwrite(LMT_INFO, "Gatn: Detach class '%s' from '%s/%s'",
-						cname, pi_server->name(), host);
-				pclass->pi_ext->detach(pi_server, host);
-				pclass->active = false;
+					pi_log->fwrite(LMT_INFO, "Gatn: Detach class '%s' from '%s/%s'",
+							cname, pi_server->name(), host);
+					pclass->pi_ext->detach(pi_server, host);
+					pclass->active = false;
 
-				if(memcmp(_event, event, sizeof(event)) != 0)
-					reset = true;
-			}
+					if(memcmp(_event, event, sizeof(event)) != 0)
+						reset = true;
+				}
 
-			_gpi_repo_->object_release(pclass->pi_ext, false);
-			pi_map->del(cname, strlen(cname));
+				_gpi_repo_->object_release(pclass->pi_ext, false);
+				pi_map->del(cname, strlen(cname));
 
-			if(reset) {
-				stop_extensions(hm);
-				clear_events();
-				start_extensions(hm);
+				if(reset) {
+					stop_extensions(hm);
+					clear_events();
+					start_extensions(hm);
+				}
 			}
 		}
 
