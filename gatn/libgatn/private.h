@@ -28,49 +28,6 @@ struct request: public _request_t{
 	bool parse_content(void);
 };
 
-struct response: public _response_t {
-	iHttpServerConnection *mpi_httpc;
-	_server_t *mpi_server;
-	iHeap *mpi_heap;
-	iBufferMap *mpi_bmap;
-	HBUFFER	*mp_hbarray;
-	_u32 m_hbcount; // array capacity
-	_u32 m_buffers; // allocated buffers
-	_u32 m_content_len;
-	_cstr_t m_doc_root;
-	iFileCache *mpi_fcache;
-	iFS *mpi_fs;
-
-	iHttpServerConnection *connection(void) {
-		return mpi_httpc;
-	}
-
-	_server_t *server(void) {
-		return mpi_server;
-	}
-
-	bool alloc_buffer(void);
-	void clear(void);
-	_u32 capacity(void);
-	_u32 remainder(void);
-	bool resize_array(void);
-	void var(_cstr_t name, _cstr_t value);
-	void _var(_cstr_t name, _cstr_t fmt, ...);
-	_u32 write(void *data, _u32 size);
-	_u32 write(_cstr_t str);
-	_u32 _write(_cstr_t fmt, ...);
-	_u32 end(_u16 response_code, void *data, _u32 size);
-	_u32 end(_u16 response_code, _cstr_t str);
-	_u32 _end(_u16 response_code, _cstr_t fmt, ...);
-	void destroy(void);
-	void process_content(void);
-	void redirect(_cstr_t uri);
-	_cstr_t text(_u16 rc);
-	_u16 error(void);
-	bool render(_cstr_t fname,
-		_u8 flags=RNDR_DONE|RNDR_CACHE|RNDR_RESOLVE_MT|RNDR_SET_MTIME|RNDR_USE_DOCROOT);
-};
-
 #define MAX_SERVER_NAME		32
 #define SERVER_BUFFER_SIZE	16384
 #define HTTP_MAX_EVENTS		10
@@ -161,6 +118,49 @@ public:
 	iFileCache *get_file_cache(void) {
 		return mpi_fcache;
 	}
+};
+
+struct response: public _response_t {
+	iHttpServerConnection *mpi_httpc;
+	_server_t *mpi_server;
+	iHeap *mpi_heap;
+	iBufferMap *mpi_bmap;
+	HBUFFER	*mp_hbarray;
+	_u32 m_hbcount; // array capacity
+	_u32 m_buffers; // allocated buffers
+	_u32 m_content_len;
+	_root_t *mpi_root;
+	iFileCache *mpi_fcache;
+	iFS *mpi_fs;
+
+	iHttpServerConnection *connection(void) {
+		return mpi_httpc;
+	}
+
+	_server_t *server(void) {
+		return mpi_server;
+	}
+
+	bool alloc_buffer(void);
+	void clear(void);
+	_u32 capacity(void);
+	_u32 remainder(void);
+	bool resize_array(void);
+	void var(_cstr_t name, _cstr_t value);
+	void _var(_cstr_t name, _cstr_t fmt, ...);
+	_u32 write(void *data, _u32 size);
+	_u32 write(_cstr_t str);
+	_u32 _write(_cstr_t fmt, ...);
+	_u32 end(_u16 response_code, void *data, _u32 size);
+	_u32 end(_u16 response_code, _cstr_t str);
+	_u32 _end(_u16 response_code, _cstr_t fmt, ...);
+	void destroy(void);
+	void process_content(void);
+	void redirect(_cstr_t uri);
+	_cstr_t text(_u16 rc);
+	_u16 error(void);
+	bool render(_cstr_t fname,
+		_u8 flags=RNDR_DONE|RNDR_CACHE|RNDR_RESOLVE_MT|RNDR_SET_MTIME|RNDR_USE_DOCROOT);
 };
 
 void init_mime_type_resolver(void);

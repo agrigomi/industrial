@@ -170,7 +170,7 @@ void server::set_handlers(void) {
 		pc->clear();
 		pc->p_vhost = p_srv->get_host(p_httpc->req_var("Host"));
 		pc->url = p_httpc->req_url();
-		pc->res.m_doc_root = pc->p_vhost->get_root()->get_doc_root();
+		pc->res.mpi_root = pc->p_vhost->get_root();
 		pc->res.mpi_fcache = pc->p_vhost->get_root()->get_file_cache();
 
 		p_srv->call_handler(HTTP_ON_REQUEST, p_httpc);

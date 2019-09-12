@@ -219,11 +219,11 @@ bool response::render(_cstr_t fname, _u8 flags) {
 	_u8 *ptr = NULL;
 
 	if(flags & RNDR_USE_DOCROOT)
-		snprintf(doc, sizeof(doc), "%s/%s", m_doc_root, fname);
+		snprintf(doc, sizeof(doc), "%s/%s", mpi_root->get_doc_root(), fname);
 	else
 		snprintf(doc, sizeof(doc), "%s", fname);
 
-	if((flags & RNDR_RESOLVE_MT) && (flags & RNDR_DONE) ) {
+	if((flags & RNDR_RESOLVE_MT) && (flags & RNDR_DONE)) {
 		_cstr_t ct = resolve_mime_type(doc);
 
 		var("Content-Type", (ct) ? ct : "");
