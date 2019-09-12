@@ -60,10 +60,10 @@ public:
 			pi_heap->free(p, n * sizeof(T));
 	}
 	void construct(pointer p, const T& val) {
-		new(static_cast<void*>(p)) T(val);
+		new (static_cast<void*>(p))T(val);
 	}
 	void construct(pointer p) {
-		new(static_cast<void*>(p)) T();
+		new (static_cast<void*>(p))T();
 	}
 	void destroy(pointer p) {
 		p->~T();
