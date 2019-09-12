@@ -43,8 +43,18 @@ _err_t main(int argc, char *argv[]) {
 	_err_t r = init(argc, argv);
 
 	if(r == ERR_NONE) {
-		handle(SIGSEGV, NULL); // Set signal action to our handler.
-		handle(SIGABRT, NULL);
+		handle(SIGSEGV, [](int signum, siginfo_t *info, void *arg) {
+			g_signal = signum;
+			printf("SIGSEGV\n");
+			dump_stack();
+			exit(1);
+		});
+		handle(SIGABRT, [](int signum, siginfo_t *info, void *arg) {
+			g_signal = signum;
+			printf("SIGABRT\n");
+			dump_stack();
+			exit(1);
+		});
 		handle(SIGINT, [](int signum, siginfo_t *info, void *arg) {
 			g_signal = signum;
 			printf("SIGINT\n");
