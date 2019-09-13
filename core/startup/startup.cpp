@@ -90,8 +90,12 @@ _early_init_t ei[]= {
 };
 
 void _EXPORT_ uninit(void) {
-	if(_gpi_repo_)
+	if(_gpi_repo_) {
 		_gpi_repo_->destroy();
+		// uninit original heap
+		if(ei[1].p_entry)
+			ei[1].p_entry->pi_base->object_ctl(OCTL_UNINIT, _gpi_repo_);
+	}
 }
 
 _err_t _EXPORT_ init(int argc, char *argv[]) {

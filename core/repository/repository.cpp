@@ -282,9 +282,11 @@ private:
 			if(notification)
 				notify(flags, pi, hobj);
 
-			if((flags & NF_REMOVE) && *ref_cnt)
-				// the object still busy, can't be removed
-				return false;
+			if(mpi_heap->verify(pi, info->size) == false) {
+				if((flags & NF_REMOVE) && *ref_cnt)
+					// the object still busy, can't be removed
+					return false;
+			}
 
 			remove_notifications(pi);
 
