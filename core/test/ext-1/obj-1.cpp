@@ -20,6 +20,11 @@ private:
 		return r;
 	}
 
+	BEGIN_LINK_MAP
+		{ BASE_REF(mpi_log),	I_LOG,		NULL,	RF_ORIGINAL,	[](_u32 n, void *udata) {
+			//...
+		} },
+	END_LINK_MAP
 public:
 	BASE(cObj_1, "cObj_1", RF_CLONE|RF_TASK, 1,0,0);
 
