@@ -512,7 +512,7 @@ public:
 		}
 	}
 
-	iBase *object_by_handle(HOBJECT ho, _rf_t rf) {
+	iBase *object_by_handle(HOBJECT ho, _rf_t rf, iBase *parent=0) {
 		iBase *r = 0;
 		_base_entry_t *bentry = ho;
 
@@ -564,12 +564,12 @@ public:
 		return r;
 	}
 
-	iBase *object_request(_object_request_t *req, _rf_t rf) {
+	iBase *object_request(_object_request_t *req, _rf_t rf, iBase *parent=0) {
 		iBase *r = 0;
 		_base_entry_t *bentry = find(req);
 
 		if(bentry)
-			r = object_by_handle(bentry, rf);
+			r = object_by_handle(bentry, rf, parent);
 		 else
 			LOG("REPOSITORY: Unable to find object(iname='%s'; cname='%s')\n", req->iname, req->cname);
 
@@ -603,14 +603,14 @@ public:
 		}
 	}
 
-	iBase *object_by_cname(_cstr_t name, _rf_t rf) {
+	iBase *object_by_cname(_cstr_t name, _rf_t rf, iBase *parent=0) {
 		_object_request_t req = {RQ_NAME, name, NULL};
-		return object_request(&req, rf);
+		return object_request(&req, rf, parent);
 	}
 
-	iBase *object_by_iname(_cstr_t name, _rf_t rf) {
+	iBase *object_by_iname(_cstr_t name, _rf_t rf, iBase *parent=0) {
 		_object_request_t req = {RQ_INTERFACE, NULL, name};
-		return object_request(&req, rf);
+		return object_request(&req, rf, parent);
 	}
 
 	HOBJECT handle_by_iname(_cstr_t iname) {

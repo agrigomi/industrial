@@ -35,9 +35,15 @@ typedef struct {
 	_rf_t		flags;   // repository flags
 }_object_info_t;
 
+typedef struct link_info _link_info_t;
+
 class iBase {
 public:
 	INTERFACE(iBase, I_BASE);
+	virtual const _link_info_t *object_link(_u32 *cnt) {
+		*cnt = 0;
+		return 0;
+	}
 	virtual void object_info(_object_info_t *pi)=0;
 	virtual bool object_ctl(_u32 cmd, void *arg, ...)=0;
 };
@@ -48,6 +54,20 @@ public:
 #define OCTL_START	12 // arg: void*
 #define OCTL_STOP	13
 #define OCTL_NOTIFY	14 // arg: _notification_t*
+
+// reference controll
+#define RCTL_REF	10
+#define RCTL_UNREF	11
+
+typedef void _ref_ctl_t(_u32, void*);
+
+struct link_info {
+	iBase		**ppi_base;
+	_cstr_t 	iname;
+	_cstr_t		cname;
+	_rf_t		flags;
+	_ref_ctl_t	*p_ref_ctl;
+};
 
 #define CONSTRUCTOR(_class_) \
 	_class_()
@@ -62,6 +82,14 @@ public:
 		pi->version.minor = i; \
 		pi->version.revision = r; \
 	}
+
+#define BEGIN_LINK_MAP const _link_info_t *object_link(_u32 *cnt) {\
+	static const _link_info_t _link_map_[]= {
+#define END_LINK_MAP };\
+		 *cnt = sizeof(_link_map_) / sizeof(_link_info_t);\
+		 return _link_map_;}
+
+#define BASE_REF(x) (iBase**)&x
 
 #define DESTRUCTOR(_class_) \
 	virtual ~_class_()
