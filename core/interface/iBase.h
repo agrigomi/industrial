@@ -67,6 +67,7 @@ struct link_info {
 	_cstr_t		cname;
 	_rf_t		flags;
 	_ref_ctl_t	*p_ref_ctl;
+	void		*udata;
 };
 
 #define CONSTRUCTOR(_class_) \
