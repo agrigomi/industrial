@@ -22,10 +22,15 @@ typedef union {
 typedef _u8 	_rf_t;
 
 // flags
-#define RF_CLONE     (1<<0)
-#define RF_ORIGINAL  (1<<1)
-#define RF_TASK      (1<<2)
-#define RF_NONOTIFY  (1<<3)
+#define RF_CLONE     	(1<<0)
+#define RF_ORIGINAL  	(1<<1)
+#define RF_TASK      	(1<<2)
+#define RF_NONOTIFY  	(1<<3)
+#define RF_NOCRITICAL	(1<<4)
+#define RF_KEEP_PENDING	(1<<5)
+#define RF_POST_INIT	(1<<6)
+
+#define RF_PLUGIN	RF_NOCRITICAL | RF_KEEP_PENDING | RF_POST_INIT
 
 typedef struct {
 	_cstr_t		iname;   // interface name
