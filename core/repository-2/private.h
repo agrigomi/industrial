@@ -16,6 +16,8 @@ private:
 	_u64 get_handle(void);
 
 public:
+	mutex();
+	~mutex();
 	_mutex_handle_t lock(_mutex_handle_t h);
 	_mutex_handle_t try_lock(_mutex_handle_t h);
 	void unlock(_mutex_handle_t h);
