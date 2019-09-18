@@ -4,6 +4,7 @@
 #include "zone.h"
 
 static _mutex_t _g_zmutex_;
+static bool _g_is_init_ = false;
 
 static _mutex_handle_t zlock(_mutex_handle_t hlock, void *udata) {
 	return _g_zmutex_.lock(hlock);
@@ -28,7 +29,16 @@ static _zone_context_t _g_zcontext_ = {
 };
 
 bool zinit(void) {
-	return (zone_init(&_g_zcontext_)) ? true : false;
+	bool r = false;
+
+	if(!_g_is_init_)
+		r = _g_is_init_ = (zone_init(&_g_zcontext_)) ? true : false;
+
+	return r;
+}
+
+bool is_zinit(void) {
+	return _g_is_init_;
 }
 
 void *zalloc(_u32 size) {
@@ -48,5 +58,6 @@ bool zverify(void *ptr, _u32 size) {
 }
 
 void zdestroy(void) {
-	zone_destroy(&_g_zcontext_);
+	if(_g_is_init_)
+		zone_destroy(&_g_zcontext_);
 }
