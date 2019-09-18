@@ -29,7 +29,7 @@ public:
 	bool init(_u32 capacity, iHeap *pi_heap) {
 		bool r = false;
 
-		if(!m_is_init) {
+		if(!(r = m_is_init)) {
 			if((mpi_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
 				r = m_is_init = mpi_map->init(capacity, pi_heap);
 		}
