@@ -31,8 +31,8 @@ static _zone_context_t _g_zcontext_ = {
 bool zinit(void) {
 	bool r = false;
 
-	if(!_g_is_init_)
-		r = _g_is_init_ = (zone_init(&_g_zcontext_)) ? true : false;
+	if(!(r = _g_is_init_))
+		r = _g_is_init_ = (!zone_init(&_g_zcontext_)) ? true : false;
 
 	return r;
 }
@@ -58,6 +58,8 @@ bool zverify(void *ptr, _u32 size) {
 }
 
 void zdestroy(void) {
-	if(_g_is_init_)
+	if(_g_is_init_) {
 		zone_destroy(&_g_zcontext_);
+		_g_is_init_ = false;
+	}
 }
