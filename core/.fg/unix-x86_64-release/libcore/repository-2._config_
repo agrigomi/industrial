@@ -1,1 +1,2 @@
 COMPILER_FLAGS += -Icore/mem
+DEPENDENCY_FLAGS += -Icore/mem

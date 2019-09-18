@@ -21,5 +21,12 @@ public:
 	void unlock(_mutex_handle_t h);
 };
 
+// Zone allocator
+bool zinit(void);
+void *zalloc(_u32 size);
+void zfree(void *ptr, _u32 size);
+void zdestroy(void);
+bool zverify(void *ptr, _u32 size);
+
 #endif
 
