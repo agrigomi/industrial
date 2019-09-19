@@ -5,10 +5,12 @@
 #include "dtype.h"
 #include "map_alg.h"
 #include "sha1.h"
+#include "iRepository.h"
 
 typedef struct 	mutex _mutex_t;
 typedef _u64	_mutex_handle_t;
 typedef struct hash_map _map_t;
+typedef struct extension _extension_t;
 
 struct mutex {
 private:
@@ -96,6 +98,37 @@ public:
 	void  del(void *key, _u32 sz_key, _mutex_handle_t hlock=0);
 	void  clr(void);
 	void  enm(_s32 (*cb)(void *, _u32, void *), void *udata, _mutex_handle_t hlock=0);
+};
+
+#define MAX_ALIAS_LEN	64
+#define MAX_FILE_PATH	256
+
+typedef void*	_dl_handle_t;
+typedef _base_entry_t *_get_base_array_t(_u32 *count, _u32 *limit);
+typedef _err_t _init_t(iRepository *);
+
+struct extension {
+private:
+	_char_t m_alias[MAX_ALIAS_LEN];
+	_char_t m_file[MAX_FILE_PATH];
+	_dl_handle_t m_handle;
+	_get_base_array_t *m_get_base_array;
+	_init_t *m_init;
+public:
+	extension();
+
+	_cstr_t alias(void) {
+		return m_alias;
+	}
+
+	_cstr_t file(void) {
+		return m_file;
+	}
+
+	_err_t load(_cstr_t file, _cstr_t alias);
+	_err_t unload(void);
+	_base_entry_t *array(_u32 *count, _u32 *limit);
+	_err_t init(iRepository *pi_repo);
 };
 
 #endif
