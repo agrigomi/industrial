@@ -87,12 +87,15 @@ public:
 	hash_map();
 	~hash_map();
 
-	void *add(void *key, _u32 sz_key, void *data, _u32 sz_data);
-	void *set(void *key, _u32 sz_key, void *data, _u32 sz_data);
-	void *get(void *key, _u32 sz_key, _u32 *sz_data);
-	void  del(void *key, _u32 sz_key);
+	_mutex_handle_t lock(_mutex_handle_t hlock=0);
+	void unlock(_mutex_handle_t hlock);
+
+	void *add(void *key, _u32 sz_key, void *data, _u32 sz_data, _mutex_handle_t hlock=0);
+	void *set(void *key, _u32 sz_key, void *data, _u32 sz_data, _mutex_handle_t hlock=0);
+	void *get(void *key, _u32 sz_key, _u32 *sz_data, _mutex_handle_t hlock=0);
+	void  del(void *key, _u32 sz_key, _mutex_handle_t hlock=0);
 	void  clr(void);
-	void  enm(_s32 (*cb)(void *, _u32, void *), void *udata);
+	void  enm(_s32 (*cb)(void *, _u32, void *), void *udata, _mutex_handle_t hlock=0);
 };
 
 #endif
