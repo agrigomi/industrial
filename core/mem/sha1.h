@@ -10,6 +10,7 @@
 #ifndef _SHA1_H_
 #define _SHA1_H_
 
+#include "stdint.h"
 
 /* * If you do not have the ISO standard stdint.h header file, then you
 * must typdef the following:
@@ -18,10 +19,6 @@
 * uint8_t unsigned 8 bit integer (i.e., unsigned char)
 * int_least16_t integer of >= 16 bits
 * */
-typedef  unsigned long uint32_t;
-typedef  unsigned char uint8_t;
-typedef  unsigned long int_least16_t;
-
 #ifndef _SHA_enum_
 #define _SHA_enum_
 enum {

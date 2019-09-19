@@ -3,9 +3,12 @@
 
 #include <mutex>
 #include "dtype.h"
+#include "map_alg.h"
+#include "sha1.h"
 
 typedef struct 	mutex _mutex_t;
 typedef _u64	_mutex_handle_t;
+typedef struct hash_map _map_t;
 
 struct mutex {
 private:
@@ -18,7 +21,7 @@ private:
 public:
 	mutex();
 	~mutex();
-	_mutex_handle_t lock(_mutex_handle_t h);
+	_mutex_handle_t lock(_mutex_handle_t h=0);
 	_mutex_handle_t try_lock(_mutex_handle_t h);
 	void unlock(_mutex_handle_t h);
 };
@@ -73,6 +76,24 @@ public:
 	void destroy(pointer p) {
 		p->~T();
 	}
+};
+
+// Map
+struct hash_map {
+private:
+	_map_context_t 	m_context;
+	_mutex_t	m_mutex;
+	SHA1Context	m_sha1;
+public:
+	hash_map();
+	~hash_map();
+
+	void *add(void *key, _u32 sz_key, void *data, _u32 sz_data);
+	void *set(void *key, _u32 sz_key, void *data, _u32 sz_data);
+	void *get(void *key, _u32 sz_key, _u32 *sz_data);
+	void  del(void *key, _u32 sz_key);
+	void  clr(void);
+	void  enm(_s32 (*cb)(void *, _u32, void *), void *udata);
 };
 
 #endif
