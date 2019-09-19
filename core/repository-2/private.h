@@ -47,8 +47,7 @@ public:
 	typedef T value_type;
 
 	zAllocator(){
-		if(!is_zinit())
-			zinit();
+		zinit();
 	}
 	~zAllocator(){}
 
