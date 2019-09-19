@@ -230,7 +230,7 @@ void map_del(_map_context_t *p_mcxt, void *key, _u32 sz_key) {
 void map_clr(_map_context_t *p_mcxt) {
 	_u32 i = 0;
 
-	if(p_mcxt->pf_mem_free) {
+	if(p_mcxt->pf_mem_free && p_mcxt->pp_list) {
 		while(i < p_mcxt->capacity) {
 			_map_rec_hdr_t *p_rec = p_mcxt->pp_list[i];
 
@@ -253,10 +253,12 @@ void map_clr(_map_context_t *p_mcxt) {
 }
 
 void map_destroy(_map_context_t *p_mcxt) {
-	map_clr(p_mcxt);
-	if(p_mcxt->records == 0) {
-		p_mcxt->pf_mem_free(p_mcxt->pp_list, p_mcxt->capacity * sizeof(_map_rec_hdr_t *), p_mcxt->udata);
-		p_mcxt->pp_list = NULL;
+	if(p_mcxt->pp_list) {
+		map_clr(p_mcxt);
+		if(p_mcxt->records == 0) {
+			p_mcxt->pf_mem_free(p_mcxt->pp_list, p_mcxt->capacity * sizeof(_map_rec_hdr_t *), p_mcxt->udata);
+			p_mcxt->pp_list = NULL;
+		}
 	}
 }
 
