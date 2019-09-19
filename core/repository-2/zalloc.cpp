@@ -42,24 +42,44 @@ bool is_zinit(void) {
 }
 
 void *zalloc(_u32 size) {
-	return zone_alloc(&_g_zcontext_, size, ZONE_DEFAULT_LIMIT);
+	void *r = NULL;
+
+	if(_g_is_init_)
+		r = zone_alloc(&_g_zcontext_, size, ZONE_DEFAULT_LIMIT);
+	else {
+		assert(_g_is_init_);
+	}
+
+	return r;
 }
 
 void zfree(void *ptr, _u32 size) {
+	if(_g_is_init_)
 #ifndef NDEBUG
-	assert(!zone_free(&_g_zcontext_, ptr, size));
+		assert(!zone_free(&_g_zcontext_, ptr, size));
+	else {
+		assert(_g_is_init_);
+	}
 #else
-	zone_free(&_g_zcontext_, ptr, size);
+		zone_free(&_g_zcontext_, ptr, size);
 #endif
 }
 
 bool zverify(void *ptr, _u32 size) {
-	return (zone_verify(&_g_zcontext_, ptr, size)) ? true : false;
+	bool r = false;
+
+	if(_g_is_init_)
+		r = (zone_verify(&_g_zcontext_, ptr, size)) ? true : false;
+	else {
+		assert(_g_is_init_);
+	}
+
+	return r;
 }
 
 void zdestroy(void) {
 	if(_g_is_init_) {
-		zone_destroy(&_g_zcontext_);
 		_g_is_init_ = false;
+		zone_destroy(&_g_zcontext_);
 	}
 }
