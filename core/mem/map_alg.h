@@ -53,7 +53,7 @@ void map_enum_del(MAPENUM h);
 void map_enum_close(MAPENUM h);
 
 // Advanced enumeration
-#define MAP_EMUN_CONTINUE	1
+#define MAP_ENUM_CONTINUE	1
 #define MAP_ENUM_BREAK		2
 #define MAP_ENUM_DELETE		3
 
