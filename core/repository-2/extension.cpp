@@ -88,7 +88,7 @@ _err_t unload_extension(_cstr_t alias) {
 
 	if(pext) {
 		if((r = pext->unload()) == ERR_NONE)
-			_g_ext_map_.del((void *)pext->alias(), strlen(pext->alias()));
+			_g_ext_map_.del((void *)alias, strlen(alias));
 	} else
 		r = ERR_MISSING;
 
