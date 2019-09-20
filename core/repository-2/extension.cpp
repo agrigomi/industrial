@@ -95,6 +95,15 @@ _err_t unload_extension(_cstr_t alias) {
 	return r;
 }
 
+void unload_extensions(void) {
+	enum_extensions([](_extension_t *pext, void *udata)->_s32 {
+		if(pext->unload() == ERR_NONE)
+			return MAP_ENUM_DELETE;
+		else
+			return MAP_ENUM_CONTINUE;
+	}, NULL);
+}
+
 _extension_t *find_extension(_cstr_t alias) {
 	_u32 sz = 0;
 
@@ -130,13 +139,16 @@ void enum_extensions(_s32 (*enum_cb)(_extension_t *, void *), void *udata) {
 	}_ext_enum_t;
 
 	_ext_enum_t enum_data = {enum_cb, udata};
-	_mutex_handle_t hlock = _g_ext_map_.lock();
 
 	_g_ext_map_.enm([](void *p, _u32 sz, void *udata)->_s32 {
 		_ext_enum_t *p_ext_enum = (_ext_enum_t *)udata;
 
 		return p_ext_enum->_enum_cb((_extension_t *)p, p_ext_enum->udata);
-	}, &enum_data, hlock);
-
-	_g_ext_map_.unlock(hlock);
+	}, &enum_data);
 }
+
+void destroy_extension_storage(void) {
+	unload_extensions();
+	_g_ext_map_.destroy();
+}
+

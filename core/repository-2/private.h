@@ -138,10 +138,12 @@ public:
 
 _err_t load_extension(_cstr_t file, _cstr_t alias);
 _err_t unload_extension(_cstr_t alias);
+void unload_extensions(void);
 _extension_t *find_extension(_cstr_t alias);
 _err_t init_extension(_cstr_t alias, iRepository *pi_repo);
 _base_entry_t *get_base_array(_cstr_t alias, _u32 *count, _u32 *limit);
 void enum_extensions(_s32 (*enum_cb)(_extension_t *, void *), void *udata);
+void destroy_extension_storage(void);
 
 #endif
 
