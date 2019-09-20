@@ -122,3 +122,21 @@ _base_entry_t *get_base_array(_cstr_t alias, _u32 *count, _u32 *limit) {
 
 	return r;
 }
+
+void enum_extensions(_s32 (*enum_cb)(_extension_t *, void *), void *udata) {
+	typedef struct {
+		_s32 (*_enum_cb)(_extension_t *, void *);
+		void *udata;
+	}_ext_enum_t;
+
+	_ext_enum_t enum_data = {enum_cb, udata};
+	_mutex_handle_t hlock = _g_ext_map_.lock();
+
+	_g_ext_map_.enm([](void *p, _u32 sz, void *udata)->_s32 {
+		_ext_enum_t *p_ext_enum = (_ext_enum_t *)udata;
+
+		return p_ext_enum->_enum_cb((_extension_t *)p, p_ext_enum->udata);
+	}, &enum_data, hlock);
+
+	_g_ext_map_.unlock(hlock);
+}
