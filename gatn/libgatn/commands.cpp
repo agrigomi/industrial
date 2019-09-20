@@ -497,13 +497,13 @@ static _cmd_opt_t _g_opt_[] = {
 static _cmd_t _g_cmd_[] = {
 	{ "gatn",	_g_opt_,	gatn_handler,	"Gatn management",
 		"Manage Gatn servers and hosts:\n"
-		ACT_CREATE "\t:Create server or host (gatn create <server|host> options)\n"
-		ACT_REMOVE "\t:Remove server or host (gatn remove <server|host> name)\n"
-		ACT_START  "\t:Start server or host (gatn start <server|host> name)\n"
-		ACT_STOP   "\t:Stop server or host (gatn start <server|host> name)\n"
+		ACT_CREATE "\t:Create server or host (gatn create server|host <options> [--server=<server name>])\n"
+		ACT_REMOVE "\t:Remove server or host (gatn remove server|host <name> [--server=<server name>])\n"
+		ACT_START  "\t:Start server or host (gatn start server|host <name> [--server=<server name>])\n"
+		ACT_STOP   "\t:Stop server or host (gatn stop server|host <name> [--server=<server name>])\n"
 		ACT_LIST   "\t:List servers\n"
 		ACT_LOAD   "\t:Configure Gatn by JSON file (gatn load <JSON file name>)\n"
-		ACT_RELOAD "\t:Reload configuration for server or host (gatn reload [<server|host>])\n"
+		ACT_RELOAD "\t:Reload configuration for server or host (gatn reload [server|host])\n"
 		ACT_ATTACH "\t:Attach class (gatn attach <class name ...> | --name=<class name> --server=... [--host=... --options='...'])\n"
 		ACT_DETACH "\t:Detach class (gatn detach <class name ...> | --name=<class name> --server=... [--host=...])\n\n"
 		"Usage: gatn <command> [options] [arguments]\n"
