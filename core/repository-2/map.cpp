@@ -28,6 +28,10 @@ hash_map::hash_map() {
 }
 
 hash_map::~hash_map() {
+	destroy();
+}
+
+void hash_map::destroy(void) {
 	_mutex_handle_t hm = m_mutex.lock();
 
 	map_destroy(&m_context);

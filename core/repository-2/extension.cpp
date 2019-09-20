@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include "private.h"
 
+static _map_t	_g_ext_map_;
+
 extension::extension() {
 	memset(m_alias, 0, sizeof(m_alias));
 	memset(m_file, 0, sizeof(m_file));
@@ -59,6 +61,64 @@ _err_t extension::init(iRepository *pi_repo) {
 
 	if(m_handle && m_init)
 		r = m_init(pi_repo);
+
+	return r;
+}
+
+_err_t load_extension(_cstr_t file, _cstr_t alias) {
+	_err_t r = ERR_UNKNOWN;
+	_extension_t ext;
+
+	if(!find_extension(alias)) {
+		if((r = ext.load(file, alias)) == ERR_NONE) {
+			_cstr_t alias = ext.alias();
+
+			_g_ext_map_.add((void *)alias, strlen(alias), &ext, sizeof(ext));
+		}
+	} else
+		r = ERR_DUPLICATED;
+
+	return r;
+}
+
+_err_t unload_extension(_cstr_t alias) {
+	_err_t r = ERR_UNKNOWN;
+	_u32 sz = 0;
+	_extension_t *pext = (_extension_t *)_g_ext_map_.get((void *)alias, strlen(alias), &sz);
+
+	if(pext) {
+		if((r = pext->unload()) == ERR_NONE)
+			_g_ext_map_.del((void *)pext->alias(), strlen(pext->alias()));
+	} else
+		r = ERR_MISSING;
+
+	return r;
+}
+
+_extension_t *find_extension(_cstr_t alias) {
+	_u32 sz = 0;
+
+	return (_extension_t *)_g_ext_map_.get((void *)alias, strlen(alias), &sz);
+}
+
+_err_t init_extension(_cstr_t alias, iRepository *pi_repo) {
+	_err_t r = ERR_UNKNOWN;
+	_extension_t *pext = find_extension(alias);
+
+	if(pext)
+		r = pext->init(pi_repo);
+	else
+		r = ERR_MISSING;
+
+	return r;
+}
+
+_base_entry_t *get_base_array(_cstr_t alias, _u32 *count, _u32 *limit) {
+	_base_entry_t *r = NULL;
+	_extension_t *pext = find_extension(alias);
+
+	if(pext)
+		r = pext->array(count, limit);
 
 	return r;
 }

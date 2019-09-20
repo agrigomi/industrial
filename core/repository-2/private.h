@@ -6,6 +6,7 @@
 #include "map_alg.h"
 #include "sha1.h"
 #include "iRepository.h"
+#include "err.h"
 
 typedef struct 	mutex _mutex_t;
 typedef _u64	_mutex_handle_t;
@@ -92,6 +93,8 @@ public:
 	_mutex_handle_t lock(_mutex_handle_t hlock=0);
 	void unlock(_mutex_handle_t hlock);
 
+	void destroy(void);
+
 	void *add(void *key, _u32 sz_key, void *data, _u32 sz_data, _mutex_handle_t hlock=0);
 	void *set(void *key, _u32 sz_key, void *data, _u32 sz_data, _mutex_handle_t hlock=0);
 	void *get(void *key, _u32 sz_key, _u32 *sz_data, _mutex_handle_t hlock=0);
@@ -100,6 +103,8 @@ public:
 	void  enm(_s32 (*cb)(void *, _u32, void *), void *udata, _mutex_handle_t hlock=0);
 };
 
+
+// Extensions
 #define MAX_ALIAS_LEN	64
 #define MAX_FILE_PATH	256
 
@@ -130,6 +135,12 @@ public:
 	_base_entry_t *array(_u32 *count, _u32 *limit);
 	_err_t init(iRepository *pi_repo);
 };
+
+_err_t load_extension(_cstr_t file, _cstr_t alias);
+_err_t unload_extension(_cstr_t alias);
+_extension_t *find_extension(_cstr_t alias);
+_err_t init_extension(_cstr_t alias, iRepository *pi_repo);
+_base_entry_t *get_base_array(_cstr_t alias, _u32 *count, _u32 *limit);
 
 #endif
 
