@@ -65,15 +65,23 @@ _err_t extension::init(iRepository *pi_repo) {
 	return r;
 }
 
-_err_t load_extension(_cstr_t file, _cstr_t alias) {
+_mutex_handle_t lock_extensions(void) {
+	return _g_ext_map_.lock();
+}
+
+void unlock_extensions(_mutex_handle_t hlock) {
+	_g_ext_map_.unlock(hlock);
+}
+
+_err_t load_extension(_cstr_t file, _cstr_t alias, _mutex_handle_t hlock) {
 	_err_t r = ERR_UNKNOWN;
 	_extension_t ext;
 
-	if(!find_extension(alias)) {
+	if(!find_extension(alias, hlock)) {
 		if((r = ext.load(file, alias)) == ERR_NONE) {
 			_cstr_t alias = ext.alias();
 
-			_g_ext_map_.add((void *)alias, strlen(alias), &ext, sizeof(ext));
+			_g_ext_map_.add((void *)alias, strlen(alias), &ext, sizeof(ext), hlock);
 		}
 	} else
 		r = ERR_DUPLICATED;
@@ -81,38 +89,39 @@ _err_t load_extension(_cstr_t file, _cstr_t alias) {
 	return r;
 }
 
-_err_t unload_extension(_cstr_t alias) {
+_err_t unload_extension(_cstr_t alias, _mutex_handle_t hlock) {
 	_err_t r = ERR_UNKNOWN;
 	_u32 sz = 0;
-	_extension_t *pext = (_extension_t *)_g_ext_map_.get((void *)alias, strlen(alias), &sz);
+	_extension_t *pext = (_extension_t *)_g_ext_map_.get((void *)alias,
+				strlen(alias), &sz, hlock);
 
 	if(pext) {
 		if((r = pext->unload()) == ERR_NONE)
-			_g_ext_map_.del((void *)alias, strlen(alias));
+			_g_ext_map_.del((void *)alias, strlen(alias), hlock);
 	} else
 		r = ERR_MISSING;
 
 	return r;
 }
 
-void unload_extensions(void) {
+void unload_extensions(_mutex_handle_t hlock) {
 	enum_extensions([](_extension_t *pext, void *udata)->_s32 {
 		if(pext->unload() == ERR_NONE)
 			return MAP_ENUM_DELETE;
 		else
 			return MAP_ENUM_CONTINUE;
-	}, NULL);
+	}, NULL, hlock);
 }
 
-_extension_t *find_extension(_cstr_t alias) {
+_extension_t *find_extension(_cstr_t alias, _mutex_handle_t hlock) {
 	_u32 sz = 0;
 
-	return (_extension_t *)_g_ext_map_.get((void *)alias, strlen(alias), &sz);
+	return (_extension_t *)_g_ext_map_.get((void *)alias, strlen(alias), &sz, hlock);
 }
 
-_err_t init_extension(_cstr_t alias, iRepository *pi_repo) {
+_err_t init_extension(_cstr_t alias, iRepository *pi_repo, _mutex_handle_t hlock) {
 	_err_t r = ERR_UNKNOWN;
-	_extension_t *pext = find_extension(alias);
+	_extension_t *pext = find_extension(alias, hlock);
 
 	if(pext)
 		r = pext->init(pi_repo);
@@ -122,9 +131,9 @@ _err_t init_extension(_cstr_t alias, iRepository *pi_repo) {
 	return r;
 }
 
-_base_entry_t *get_base_array(_cstr_t alias, _u32 *count, _u32 *limit) {
+_base_entry_t *get_base_array(_cstr_t alias, _u32 *count, _u32 *limit, _mutex_handle_t hlock) {
 	_base_entry_t *r = NULL;
-	_extension_t *pext = find_extension(alias);
+	_extension_t *pext = find_extension(alias, hlock);
 
 	if(pext)
 		r = pext->array(count, limit);
@@ -132,7 +141,7 @@ _base_entry_t *get_base_array(_cstr_t alias, _u32 *count, _u32 *limit) {
 	return r;
 }
 
-void enum_extensions(_s32 (*enum_cb)(_extension_t *, void *), void *udata) {
+void enum_extensions(_s32 (*enum_cb)(_extension_t *, void *), void *udata, _mutex_handle_t hlock) {
 	typedef struct {
 		_s32 (*_enum_cb)(_extension_t *, void *);
 		void *udata;
@@ -144,11 +153,11 @@ void enum_extensions(_s32 (*enum_cb)(_extension_t *, void *), void *udata) {
 		_ext_enum_t *p_ext_enum = (_ext_enum_t *)udata;
 
 		return p_ext_enum->_enum_cb((_extension_t *)p, p_ext_enum->udata);
-	}, &enum_data);
+	}, &enum_data, hlock);
 }
 
-void destroy_extension_storage(void) {
-	unload_extensions();
-	_g_ext_map_.destroy();
+void destroy_extension_storage(_mutex_handle_t hlock) {
+	unload_extensions(hlock);
+	_g_ext_map_.destroy(hlock);
 }
 

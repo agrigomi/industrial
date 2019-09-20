@@ -93,13 +93,13 @@ public:
 	_mutex_handle_t lock(_mutex_handle_t hlock=0);
 	void unlock(_mutex_handle_t hlock);
 
-	void destroy(void);
+	void destroy(_mutex_handle_t hlock=0);
 
 	void *add(void *key, _u32 sz_key, void *data, _u32 sz_data, _mutex_handle_t hlock=0);
 	void *set(void *key, _u32 sz_key, void *data, _u32 sz_data, _mutex_handle_t hlock=0);
 	void *get(void *key, _u32 sz_key, _u32 *sz_data, _mutex_handle_t hlock=0);
 	void  del(void *key, _u32 sz_key, _mutex_handle_t hlock=0);
-	void  clr(void);
+	void  clr(_mutex_handle_t hlock=0);
 	void  enm(_s32 (*cb)(void *, _u32, void *), void *udata, _mutex_handle_t hlock=0);
 };
 
@@ -136,14 +136,16 @@ public:
 	_err_t init(iRepository *pi_repo);
 };
 
-_err_t load_extension(_cstr_t file, _cstr_t alias);
-_err_t unload_extension(_cstr_t alias);
-void unload_extensions(void);
-_extension_t *find_extension(_cstr_t alias);
-_err_t init_extension(_cstr_t alias, iRepository *pi_repo);
-_base_entry_t *get_base_array(_cstr_t alias, _u32 *count, _u32 *limit);
-void enum_extensions(_s32 (*enum_cb)(_extension_t *, void *), void *udata);
-void destroy_extension_storage(void);
+_mutex_handle_t lock_extensions(void);
+void unlock_extensions(_mutex_handle_t hlock);
+_err_t load_extension(_cstr_t file, _cstr_t alias, _mutex_handle_t hlock=0);
+_err_t unload_extension(_cstr_t alias, _mutex_handle_t hlock=0);
+void unload_extensions(_mutex_handle_t hlock=0);
+_extension_t *find_extension(_cstr_t alias, _mutex_handle_t hlock=0);
+_err_t init_extension(_cstr_t alias, iRepository *pi_repo, _mutex_handle_t hlock=0);
+_base_entry_t *get_base_array(_cstr_t alias, _u32 *count, _u32 *limit, _mutex_handle_t hlock=0);
+void enum_extensions(_s32 (*enum_cb)(_extension_t *, void *), void *udata, _mutex_handle_t hlock=0);
+void destroy_extension_storage(_mutex_handle_t hlock=0);
 
 #endif
 

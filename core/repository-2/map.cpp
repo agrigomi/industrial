@@ -31,8 +31,8 @@ hash_map::~hash_map() {
 	destroy();
 }
 
-void hash_map::destroy(void) {
-	_mutex_handle_t hm = m_mutex.lock();
+void hash_map::destroy(_mutex_handle_t hlock) {
+	_mutex_handle_t hm = m_mutex.lock(hlock);
 
 	map_destroy(&m_context);
 	m_mutex.unlock(hm);
@@ -83,8 +83,8 @@ void  hash_map::del(void *key, _u32 sz_key, _mutex_handle_t hlock) {
 	m_mutex.unlock(hm);
 }
 
-void  hash_map::clr(void) {
-	_mutex_handle_t hm = m_mutex.lock();
+void  hash_map::clr(_mutex_handle_t hlock) {
+	_mutex_handle_t hm = m_mutex.lock(hlock);
 
 	map_clr(&m_context);
 	m_mutex.unlock(hm);
