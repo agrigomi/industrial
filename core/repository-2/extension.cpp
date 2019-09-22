@@ -73,15 +73,17 @@ void unlock_extensions(_mutex_handle_t hlock) {
 	_g_ext_map_.unlock(hlock);
 }
 
-_err_t load_extension(_cstr_t file, _cstr_t alias, _mutex_handle_t hlock) {
+_err_t load_extension(_cstr_t file, _cstr_t alias, _extension_t **pp_ext, _mutex_handle_t hlock) {
 	_err_t r = ERR_UNKNOWN;
 	_extension_t ext;
 
 	if(!find_extension(alias, hlock)) {
 		if((r = ext.load(file, alias)) == ERR_NONE) {
 			_cstr_t alias = ext.alias();
+			_extension_t *p_ext = (_extension_t *)_g_ext_map_.add((void *)alias, strlen(alias), &ext, sizeof(ext), hlock);
 
-			_g_ext_map_.add((void *)alias, strlen(alias), &ext, sizeof(ext), hlock);
+			if(pp_ext)
+				*pp_ext = p_ext;
 		}
 	} else
 		r = ERR_DUPLICATED;

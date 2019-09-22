@@ -138,7 +138,7 @@ public:
 
 _mutex_handle_t lock_extensions(void);
 void unlock_extensions(_mutex_handle_t hlock);
-_err_t load_extension(_cstr_t file, _cstr_t alias, _mutex_handle_t hlock=0);
+_err_t load_extension(_cstr_t file, _cstr_t alias, _extension_t **pp_ext=NULL, _mutex_handle_t hlock=0);
 _err_t unload_extension(_cstr_t alias, _mutex_handle_t hlock=0);
 void unload_extensions(_mutex_handle_t hlock=0);
 _extension_t *find_extension(_cstr_t alias, _mutex_handle_t hlock=0);
