@@ -76,11 +76,12 @@ void unlock_extensions(_mutex_handle_t hlock) {
 _err_t load_extension(_cstr_t file, _cstr_t alias, _extension_t **pp_ext, _mutex_handle_t hlock) {
 	_err_t r = ERR_UNKNOWN;
 	_extension_t ext;
+	_cstr_t _alias = (alias) ? alias : "";
 
-	if(!find_extension(alias, hlock)) {
-		if((r = ext.load(file, alias)) == ERR_NONE) {
-			_cstr_t alias = ext.alias();
-			_extension_t *p_ext = (_extension_t *)_g_ext_map_.add((void *)alias, strlen(alias), &ext, sizeof(ext), hlock);
+	if(!find_extension(_alias, hlock)) {
+		if((r = ext.load(file, _alias)) == ERR_NONE) {
+			_alias = ext.alias();
+			_extension_t *p_ext = (_extension_t *)_g_ext_map_.add((void *)_alias, strlen(_alias), &ext, sizeof(ext), hlock);
 
 			if(pp_ext)
 				*pp_ext = p_ext;
