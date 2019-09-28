@@ -147,5 +147,16 @@ _base_entry_t *get_base_array(_cstr_t alias, _u32 *count, _u32 *limit, _mutex_ha
 void enum_extensions(_s32 (*enum_cb)(_extension_t *, void *), void *udata, _mutex_handle_t hlock=0);
 void destroy_extension_storage(_mutex_handle_t hlock=0);
 
+
+// base array
+#define MAX_INAME	64
+#define MAX_CNAME	64
+
+typedef struct {
+	_char_t	iname[MAX_INAME];
+	_char_t cname[MAX_CNAME];
+	iBase 	*pi_base;
+}_base_kay_t;
+
 #endif
 
