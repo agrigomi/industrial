@@ -156,7 +156,14 @@ typedef struct {
 	_char_t	iname[MAX_INAME];
 	_char_t cname[MAX_CNAME];
 	iBase 	*pi_base;
-}_base_kay_t;
+}_base_key_t;
+
+void add_base_array(_base_entry_t *pb_entry, _u32 count);
+void remove_base_array(_base_entry_t *pb_entry, _u32 count);
+_base_entry_t *find_object(_base_key_t *p_key);
+_base_entry_t *find_object_by_iname(_cstr_t iname);
+_base_entry_t *find_object_by_cname(_cstr_t cname);
+_base_entry_t *find_object_by_pointer(iBase *pi_base);
 
 #endif
 
