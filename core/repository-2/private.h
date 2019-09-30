@@ -170,11 +170,6 @@ void destroy_base_array_storage(void);
 // object users
 typedef std::vector<iBase *, zAllocator<iBase *>> _v_pi_object_t;
 
-typedef struct {
-	iBase *pi_base;
-	_v_pi_object_t v_users;
-}_object_users_t;
-
 void users_add_object(iBase *pi_object);
 void users_remove_object(iBase *pi_object);
 void users_add_object_user(iBase *pi_object, iBase *pi_user);

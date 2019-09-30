@@ -1,5 +1,10 @@
 #include "private.h"
 
+typedef struct {
+	iBase *pi_base;
+	_v_pi_object_t v_users;
+}_object_users_t;
+
 static _map_t _g_users_map_;
 
 void users_add_object(iBase *pi_object) {
