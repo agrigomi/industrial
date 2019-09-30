@@ -3,3 +3,4 @@ core/repository-2/zalloc.cpp
 core/repository-2/map.cpp
 core/repository-2/extension.cpp
 core/repository-2/base_array.cpp
+core/repository-2/users.cpp
