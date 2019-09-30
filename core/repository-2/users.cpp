@@ -3,10 +3,14 @@
 static _map_t _g_users_map_;
 
 void users_add_object(iBase *pi_object) {
-	_object_users_t bo;
+	_u32 sz = 0;
 
-	bo.pi_base = pi_object;
-	_g_users_map_.add(&pi_object, sizeof(pi_object), &bo, sizeof(_object_users_t));
+	if(!_g_users_map_.get(&pi_object, sizeof(pi_object), &sz)) {
+		_object_users_t bo;
+
+		bo.pi_base = pi_object;
+		_g_users_map_.add(&pi_object, sizeof(pi_object), &bo, sizeof(_object_users_t));
+	}
 }
 
 void users_remove_object(iBase *pi_object) {
