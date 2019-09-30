@@ -159,7 +159,7 @@ void enum_extensions(_s32 (*enum_cb)(_extension_t *, void *), void *udata, _mute
 	}, &enum_data, hlock);
 }
 
-void destroy_extension_storage(_mutex_handle_t hlock) {
+void destroy_extensions_storage(_mutex_handle_t hlock) {
 	unload_extensions(hlock);
 	_g_ext_map_.destroy(hlock);
 }

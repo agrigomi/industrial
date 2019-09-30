@@ -179,3 +179,7 @@ _base_entry_t *find_object_by_pointer(iBase *pi_base) {
 	key.pi_base = pi_base;
 	return find_object(&key);
 }
+
+void destroy_base_array_storage(void) {
+	_g_base_map_.destroy();
+}

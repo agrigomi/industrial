@@ -2,6 +2,7 @@
 #define __REPOSITORY_PRIVATE_H__
 
 #include <mutex>
+#include <vector>
 #include "dtype.h"
 #include "map_alg.h"
 #include "sha1.h"
@@ -145,7 +146,7 @@ _extension_t *find_extension(_cstr_t alias, _mutex_handle_t hlock=0);
 _err_t init_extension(_cstr_t alias, iRepository *pi_repo, _mutex_handle_t hlock=0);
 _base_entry_t *get_base_array(_cstr_t alias, _u32 *count, _u32 *limit, _mutex_handle_t hlock=0);
 void enum_extensions(_s32 (*enum_cb)(_extension_t *, void *), void *udata, _mutex_handle_t hlock=0);
-void destroy_extension_storage(_mutex_handle_t hlock=0);
+void destroy_extensions_storage(_mutex_handle_t hlock=0);
 
 
 // base array
@@ -164,6 +165,21 @@ _base_entry_t *find_object(_base_key_t *p_key);
 _base_entry_t *find_object_by_iname(_cstr_t iname);
 _base_entry_t *find_object_by_cname(_cstr_t cname);
 _base_entry_t *find_object_by_pointer(iBase *pi_base);
+void destroy_base_array_storage(void);
+
+// object users
+typedef std::vector<iBase *, zAllocator<iBase *>> _v_pi_object_t;
+
+typedef struct {
+	iBase *pi_base;
+	_v_pi_object_t v_users;
+}_object_users_t;
+
+void users_add_object(iBase *pi_object);
+void users_remove_object(iBase *pi_object);
+void users_add_object_user(iBase *pi_object, iBase *pi_user);
+_v_pi_object_t *get_object_users(iBase *pi_object);
+void destroy_object_users_storage(void);
 
 #endif
 
