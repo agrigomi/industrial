@@ -169,12 +169,14 @@ void destroy_base_array_storage(void);
 
 // object users
 typedef std::vector<iBase *, zAllocator<iBase *>> _v_pi_object_t;
+typedef void _users_enum_cb_t(iBase *pi_base, void *udata);
 
 void users_add_object(iBase *pi_object);
 void users_remove_object(iBase *pi_object);
 void users_add_object_user(iBase *pi_object, iBase *pi_user);
 _v_pi_object_t *get_object_users(iBase *pi_object);
-void destroy_object_users_storage(void);
+void users_enum(iBase *pi_object, _users_enum_cb_t *pcb, void *udata);
+void destroy_users_storage(void);
 
 // Monitoring
 typedef void _monitoring_enum_cb_t(iBase *pi_obj, iBase *pi_handler, void *udata);

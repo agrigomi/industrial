@@ -54,7 +54,20 @@ _v_pi_object_t *get_object_users(iBase *pi_object) {
 	return r;
 }
 
-void destroy_object_users_storage(void) {
+void users_enum(iBase *pi_object, _users_enum_cb_t *pcb, void *udata) {
+	_v_pi_object_t *p_vpi = get_object_users(pi_object);
+
+	if(p_vpi) {
+		_v_pi_object_t::iterator it = p_vpi->begin();
+
+		while(it != p_vpi->end()) {
+			pcb(*it, udata);
+			it++;
+		}
+	}
+}
+
+void destroy_users_storage(void) {
 	_mutex_handle_t hlock = _g_users_map_.lock();
 
 	_g_users_map_.enm([](void *p, _u32 sz, void *udata)->_s32 {
