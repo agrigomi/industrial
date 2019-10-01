@@ -67,7 +67,7 @@ void remove_monitoring(iBase *pi_handler) {
 	}
 }
 
-void enum_monitoring(iBase *pi_obj, _monitoring_enum_cb_t *pcb) {
+void enum_monitoring(iBase *pi_obj, _monitoring_enum_cb_t *pcb, void *udata) {
 	_v_it_mon_t it = _gv_mon_.begin();
 	_object_info_t oi;
 
@@ -89,7 +89,7 @@ void enum_monitoring(iBase *pi_obj, _monitoring_enum_cb_t *pcb) {
 			notify = true;
 
 		if(notify)
-			pcb(pi_obj, p->handler);
+			pcb(pi_obj, p->handler, udata);
 
 		it++;
 	}

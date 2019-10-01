@@ -177,12 +177,12 @@ _v_pi_object_t *get_object_users(iBase *pi_object);
 void destroy_object_users_storage(void);
 
 // Monitoring
-typedef void _monitoring_enum_cb_t(iBase *pi_obj, iBase *pi_handler);
+typedef void _monitoring_enum_cb_t(iBase *pi_obj, iBase *pi_handler, void *udata);
 
 HNOTIFY add_monitoring(iBase *mon_object, _cstr_t iname, _cstr_t cname, iBase *pi_handler);
 void remove_monitoring(HNOTIFY hn);
 void remove_monitoring(iBase *pi_handler);
-void enum_monitoring(iBase *pi_obj, _monitoring_enum_cb_t *pcb);
+void enum_monitoring(iBase *pi_obj, _monitoring_enum_cb_t *pcb, void *udata);
 
 #endif
 
