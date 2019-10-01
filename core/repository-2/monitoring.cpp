@@ -37,6 +37,16 @@ HNOTIFY add_monitoring(iBase *mon_object, _cstr_t iname, _cstr_t cname, iBase *p
 	return &_gv_mon_.back();
 }
 
+static void clean_record(_mon_rec_t *p_rec) {
+	_u32 sz_iname = (p_rec->iname) ? strlen(p_rec->iname) + 1 : 0;
+	_u32 sz_cname = (p_rec->cname) ? strlen(p_rec->cname) + 1 : 0;
+
+	if(sz_iname)
+		zfree((void *)p_rec->iname, sz_iname);
+	if(sz_cname)
+		zfree((void *)p_rec->cname, sz_cname);
+}
+
 void remove_monitoring(HNOTIFY hn) {
 	_v_it_mon_t it = _gv_mon_.begin();
 
@@ -44,6 +54,7 @@ void remove_monitoring(HNOTIFY hn) {
 		_mon_rec_t *p = &*it;
 
 		if(p == hn) {
+			clean_record(p);
 			_gv_mon_.erase(it);
 			break;
 		}
@@ -59,6 +70,7 @@ void remove_monitoring(iBase *pi_handler) {
 		_mon_rec_t *p = &*it;
 
 		if(p->handler == pi_handler) {
+			clean_record(p);
 			_gv_mon_.erase(it);
 			break;
 		}
@@ -93,5 +105,17 @@ void enum_monitoring(iBase *pi_obj, _monitoring_enum_cb_t *pcb, void *udata) {
 
 		it++;
 	}
+}
+
+void destroy_monitoring_storage(void) {
+	_v_it_mon_t it = _gv_mon_.begin();
+
+	while(it != _gv_mon_.end()) {
+		_mon_rec_t *p = &*it;
+
+		clean_record(p);
+	}
+
+	_gv_mon_.clear();
 }
 

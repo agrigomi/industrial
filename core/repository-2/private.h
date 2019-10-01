@@ -183,6 +183,7 @@ HNOTIFY add_monitoring(iBase *mon_object, _cstr_t iname, _cstr_t cname, iBase *p
 void remove_monitoring(HNOTIFY hn);
 void remove_monitoring(iBase *pi_handler);
 void enum_monitoring(iBase *pi_obj, _monitoring_enum_cb_t *pcb, void *udata);
+void destroy_monitoring_storage(void);
 
 #endif
 
