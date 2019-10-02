@@ -74,7 +74,7 @@ static bool add_pointer(_base_entry_t *pb_entry) {
 	memset(&key, 0, sizeof(_base_key_t));
 	key.pi_base = pb_entry->pi_base;
 
-	if(_g_base_map_.add(&key, sizeof(_base_key_t), &pb_entry, sizeof(pb_entry)))
+	if(_g_base_map_.add(&key, sizeof(_base_key_t), &pb_entry->pi_base, sizeof(pb_entry->pi_base)))
 		r = true;
 
 	return r;
