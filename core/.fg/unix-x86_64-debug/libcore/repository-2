@@ -5,3 +5,4 @@ core/repository-2/extension.cpp
 core/repository-2/base_array.cpp
 core/repository-2/users.cpp
 core/repository-2/monitoring.cpp
+core/repository-2/list.cpp
