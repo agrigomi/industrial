@@ -8,6 +8,7 @@
 
 #define ST_INITIALIZED	(1<<0)
 #define ST_DISABLED	(1<<1)
+#define ST_PENDING	(1<<2)
 
 typedef struct {
 	iBase *pi_base;
