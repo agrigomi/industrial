@@ -5,14 +5,16 @@
 #include <vector>
 #include "dtype.h"
 #include "map_alg.h"
+#include "ll_alg.h"
 #include "sha1.h"
 #include "iRepository.h"
 #include "err.h"
 
-typedef struct 	mutex _mutex_t;
-typedef _u64	_mutex_handle_t;
-typedef struct hash_map _map_t;
-typedef struct extension _extension_t;
+typedef struct 	mutex 		_mutex_t;
+typedef _u64			_mutex_handle_t;
+typedef struct hash_map 	_map_t;
+typedef struct linked_list	_list_t;
+typedef struct extension 	_extension_t;
 
 struct mutex {
 private:
@@ -104,6 +106,29 @@ public:
 	void  enm(_s32 (*cb)(void *, _u32, void *), void *udata, _mutex_handle_t hlock=0);
 };
 
+struct linked_list {
+private:
+	_mutex_t	m_mutex;
+	_ll_context_t	m_context;
+
+public:
+	linked_list();
+	~linked_list();
+
+	_mutex_handle_t lock(_mutex_handle_t hlock=0);
+	void unlock(_mutex_handle_t hlock);
+
+	void *add(void *ptr, _u32 size, _mutex_handle_t hlock=0);
+	void del(_mutex_handle_t hlock=0);
+	void col(_u8 col, _mutex_handle_t hlock=0);
+	void clr(_mutex_handle_t hlock=0);
+	_u32 cnt(_mutex_handle_t hlock=0);
+	bool sel(void *rec, _mutex_handle_t hlock=0);
+	bool mov(void *rec, _u8 col, _mutex_handle_t hlock=0);
+	void *first(_u32 *p_size, _mutex_handle_t hlock=0);
+	void *next(_u32 *p_size, _mutex_handle_t hlock=0);
+	void *current(_u32 *p_size, _mutex_handle_t hlock=0);
+};
 
 // Extensions
 #define MAX_ALIAS_LEN	64
