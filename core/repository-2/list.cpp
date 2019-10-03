@@ -24,6 +24,7 @@ linked_list::linked_list() {
 }
 
 linked_list::~linked_list() {
+	ll_uninit(&m_context);
 }
 
 _mutex_handle_t linked_list::lock(_mutex_handle_t hlock) {
@@ -72,4 +73,8 @@ void *linked_list::next(_u32 *p_size, _mutex_handle_t hlock) {
 
 void *linked_list::current(_u32 *p_size, _mutex_handle_t hlock) {
 	return ll_current(&m_context, p_size, hlock);
+}
+
+void linked_list::destroy(void) {
+	ll_uninit(&m_context);
 }

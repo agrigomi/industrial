@@ -128,6 +128,7 @@ public:
 	void *first(_u32 *p_size, _mutex_handle_t hlock=0);
 	void *next(_u32 *p_size, _mutex_handle_t hlock=0);
 	void *current(_u32 *p_size, _mutex_handle_t hlock=0);
+	void destroy(void);
 };
 
 // Extensions
@@ -218,6 +219,8 @@ void dcs_unlock(_mutex_handle_t hlock);
 iBase *dcs_create_pending_context(_base_entry_t *p_bentry, _rf_t flags, _mutex_handle_t hlock=0);
 bool dcs_remove_context(iBase *pi_base, _mutex_handle_t hlock=0);
 bool dcs_end_pending(iBase *pi_base, _mutex_handle_t hlock=0);
+_cstat_t dcs_get_context_state(iBase *pi_base);
+void dcs_set_context_state(iBase *pi_base, _cstat_t state);
 void dcs_destroy_storage(void);
 
 #endif
