@@ -212,5 +212,13 @@ void remove_monitoring(iBase *pi_handler);
 void enum_monitoring(iBase *pi_obj, _monitoring_enum_cb_t *pcb, void *udata);
 void destroy_monitoring_storage(void);
 
+// Dynamic Context Storage (DCS)
+_mutex_handle_t dcs_lock(_mutex_handle_t hlock=0);
+void dcs_unlock(_mutex_handle_t hlock);
+iBase *dcs_create_pending_context(_base_entry_t *p_bentry, _rf_t flags, _mutex_handle_t hlock=0);
+bool dcs_remove_context(iBase *pi_base, _mutex_handle_t hlock=0);
+bool dcs_end_pending(iBase *pi_base, _mutex_handle_t hlock=0);
+void dcs_destroy_storage(void);
+
 #endif
 
