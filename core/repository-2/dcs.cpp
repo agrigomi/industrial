@@ -104,6 +104,8 @@ void dcs_enum_pending(_enum_cb_t *pcb, void *udata, _mutex_handle_t hlock) {
 
 	while(pi_base) {
 		pcb(pi_base, udata);
+		if(!_gl_dcs_.sel(pi_base))
+			break;
 		pi_base = (iBase *)_gl_dcs_.next(&sz, hlock);
 	}
 }
