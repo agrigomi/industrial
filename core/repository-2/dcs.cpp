@@ -23,7 +23,7 @@ iBase *dcs_create_pending_context(_base_entry_t *p_bentry, _rf_t flags, _mutex_h
 
 	if((info.flags & flags) & RF_CLONE) {
 		_mutex_handle_t hm = dcs_lock(hlock);
-		_u32 size = info.size + 1; // one byte more space to keep state
+		_u32 size = info.size + sizeof(_cstat_t); // one byte more space to keep state
 		_cstat_t *p_state = NULL;
 
 		_gl_dcs_.col(CPENDING, hm);
@@ -32,7 +32,6 @@ iBase *dcs_create_pending_context(_base_entry_t *p_bentry, _rf_t flags, _mutex_h
 
 			p_state = (_cstat_t *)(p + info.size);
 			*p_state = ST_PENDING;
-			p_bentry->ref_cnt++;
 		}
 
 		dcs_unlock(hm);
@@ -66,16 +65,33 @@ void dcs_set_context_state(iBase *pi_base, _cstat_t state) {
 
 bool dcs_remove_context(iBase *pi_base, _mutex_handle_t hlock) {
 	bool r = false;
+	_mutex_handle_t hm = dcs_lock(hlock);
+	_cstat_t state = dcs_get_context_state(pi_base);
 
-	//...
+	if(state & ST_PENDING)
+		_gl_dcs_.col(CPENDING, hm);
+	else
+		_gl_dcs_.col(CREADY, hm);
 
+	if((r = _gl_dcs_.sel(pi_base, hm)))
+		_gl_dcs_.del(hm);
+
+	dcs_unlock(hm);
 	return r;
 }
 
 bool dcs_end_pending(iBase *pi_base, _mutex_handle_t hlock) {
 	bool r = false;
+	_cstat_t state = dcs_get_context_state(pi_base);
 
-	//...
+	if(state & ST_PENDING) {
+		_mutex_handle_t hm = dcs_lock(hlock);
+		_gl_dcs_.col(CPENDING, hm);
+		if((r = _gl_dcs_.mov(pi_base, CREADY, hm)))
+			dcs_set_context_state(pi_base, (state & ~ST_PENDING));
+
+		dcs_unlock(hm);
+	}
 
 	return r;
 }
