@@ -10,10 +10,12 @@
 #define ST_DISABLED	(1<<1)
 #define ST_PENDING	(1<<2)
 
+typedef _u8 _cstat_t;
+
 typedef struct {
-	iBase *pi_base;
-	_u32  ref_cnt;
-	_u8   state;
+	iBase    *pi_base;
+	_u32  	 ref_cnt;
+	_cstat_t state;
 }_base_entry_t;
 
 // ogject request flags
