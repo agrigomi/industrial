@@ -54,7 +54,7 @@ _v_pi_object_t *get_object_users(iBase *pi_object) {
 	return r;
 }
 
-void users_enum(iBase *pi_object, _users_enum_cb_t *pcb, void *udata) {
+void users_enum(iBase *pi_object, _enum_cb_t *pcb, void *udata) {
 	_v_pi_object_t *p_vpi = get_object_users(pi_object);
 
 	if(p_vpi) {

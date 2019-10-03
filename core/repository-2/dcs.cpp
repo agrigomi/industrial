@@ -96,6 +96,18 @@ bool dcs_end_pending(iBase *pi_base, _mutex_handle_t hlock) {
 	return r;
 }
 
+void dcs_enum_pending(_enum_cb_t *pcb, void *udata, _mutex_handle_t hlock) {
+	_u32 sz = 0;
+
+	_gl_dcs_.col(CPENDING, hlock);
+	iBase *pi_base = (iBase *)_gl_dcs_.first(&sz, hlock);
+
+	while(pi_base) {
+		pcb(pi_base, udata);
+		pi_base = (iBase *)_gl_dcs_.next(&sz, hlock);
+	}
+}
+
 void dcs_destroy_storage(void) {
 	_gl_dcs_.destroy();
 }

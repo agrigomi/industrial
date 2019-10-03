@@ -193,15 +193,16 @@ _base_entry_t *find_object_by_cname(_cstr_t cname);
 _base_entry_t *find_object_by_pointer(iBase *pi_base);
 void destroy_base_array_storage(void);
 
+typedef void _enum_cb_t(iBase *pi_base, void *udata);
+
 // object users
 typedef std::vector<iBase *, zAllocator<iBase *>> _v_pi_object_t;
-typedef void _users_enum_cb_t(iBase *pi_base, void *udata);
 
 void users_add_object(iBase *pi_object);
 void users_remove_object(iBase *pi_object);
 void users_add_object_user(iBase *pi_object, iBase *pi_user);
 _v_pi_object_t *get_object_users(iBase *pi_object);
-void users_enum(iBase *pi_object, _users_enum_cb_t *pcb, void *udata);
+void users_enum(iBase *pi_object, _enum_cb_t *pcb, void *udata);
 void destroy_users_storage(void);
 
 // Monitoring
@@ -221,6 +222,7 @@ bool dcs_remove_context(iBase *pi_base, _mutex_handle_t hlock=0);
 bool dcs_end_pending(iBase *pi_base, _mutex_handle_t hlock=0);
 _cstat_t dcs_get_context_state(iBase *pi_base);
 void dcs_set_context_state(iBase *pi_base, _cstat_t state);
+void dcs_enum_pending(_enum_cb_t *pcb, void *udata, _mutex_handle_t hlock=0);
 void dcs_destroy_storage(void);
 
 #endif
