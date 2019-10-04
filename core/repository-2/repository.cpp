@@ -2,6 +2,7 @@
 
 class cRepository: public iRepository {
 private:
+	_cstr_t	m_ext_dir;
 	_v_pi_object_t	mv_pending; // vector for original pending objects
 	_v_pi_object_t::iterator mv_it_pending; // iterator for original pending objects
 
@@ -116,6 +117,7 @@ public:
 
 	// extensions
 	void extension_dir(_cstr_t dir) {
+		m_ext_dir = dir;
 	}
 
 	_err_t extension_load(_cstr_t file, _cstr_t alias=0) {
