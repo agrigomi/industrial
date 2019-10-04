@@ -2,6 +2,28 @@
 
 class cRepository: public iRepository {
 private:
+	_v_pi_object_t	mv_pending; // vector for original pending objects
+	_v_pi_object_t::iterator mv_it_pending; // iterator for original pending objects
+
+	void enum_original_pending(_enum_cb_t *pcb, void *udata) {
+		mv_it_pending = mv_pending.begin();
+
+		while(mv_it_pending != mv_pending.end()) {
+			iBase *pi_base = *mv_it_pending;
+
+			pcb(pi_base, udata);
+			mv_it_pending++;
+		}
+	}
+
+	void process_link_map(iBase *pi_base) {
+		_u32 count;
+		const _link_info_t *pl = pi_base->object_link(&count);
+
+		if(pl) {
+			//...
+		}
+	}
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 2,0,0);
 
@@ -9,7 +31,7 @@ public:
 		return true;
 	}
 
-	iBase *object_request(_object_request_t *, _rf_t) {
+	iBase *object_request(_object_request_t *req, _rf_t) {
 		iBase *r = NULL;
 
 		//...
@@ -17,7 +39,7 @@ public:
 		return r;
 	}
 
-	void   object_release(iBase *, bool notify=true) {
+	void object_release(iBase *pi_base, bool notify=true) {
 		//...
 	}
 
