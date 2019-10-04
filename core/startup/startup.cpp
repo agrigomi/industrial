@@ -83,9 +83,8 @@ typedef struct {
 
 _early_init_t ei[]= {
 	{I_REPOSITORY,	0}, //0
-	{I_HEAP,	0}, //1
-	{I_ARGS,	0}, //2
-	{I_LOG,		0}, //3
+	{I_ARGS,	0}, //1
+	{I_LOG,		0}, //2
 	{0,		0}
 };
 
@@ -99,16 +98,11 @@ void _EXPORT_ uninit(void) {
 }
 
 _err_t _EXPORT_ init(int argc, char *argv[]) {
-#else
-_err_t _EXPORT_ init(iRepository *pi_repo) {
-	_gpi_repo_ = pi_repo;
-#endif
 	_err_t r = ERR_UNKNOWN;
 	_u32 count, limit;
 	_base_entry_t *array = get_base_array(&count, &limit);
-
-#ifdef _CORE_
 	_u32 i = 0;
+
 	while(array && i < count) {
 		_object_info_t oinfo;
 		if(array[i].pi_base) {
@@ -125,48 +119,39 @@ _err_t _EXPORT_ init(iRepository *pi_repo) {
 
 	if(ei[0].p_entry && (_gpi_repo_ = (iRepository*)ei[0].p_entry->pi_base)) {
 		// the repo is here !
-		iHeap *pi_heap=0;
-		if(ei[1].p_entry && (pi_heap = (iHeap*)ei[1].p_entry->pi_base)) {
-			// the heap is here !
-			if(!pi_heap->object_ctl(OCTL_INIT, _gpi_repo_))
-				goto _init_done_;
-			ei[1].p_entry->ref_cnt++;
-			ei[1].p_entry->state |= ST_INITIALIZED;
-			// init repository object
-			if(!_gpi_repo_->object_ctl(OCTL_INIT, 0))
-				goto _init_done_;
-			ei[0].p_entry->ref_cnt++;
-			ei[0].p_entry->state |= ST_INITIALIZED;
-			// init args
-			iArgs *pi_args = 0;
-			if(ei[2].p_entry && (pi_args = (iArgs*)ei[2].p_entry->pi_base)) {
-				// args is here
-				if(pi_args->object_ctl(OCTL_INIT, _gpi_repo_)) {
-					ei[2].p_entry->state |= ST_INITIALIZED;
-					ei[2].p_entry->ref_cnt++;
-					pi_args->init(argc, argv);
-				}
+		// init repository object
+		if(!_gpi_repo_->object_ctl(OCTL_INIT, 0))
+			goto _init_done_;
+		ei[0].p_entry->ref_cnt++;
+		ei[0].p_entry->state |= ST_INITIALIZED;
+		_gpi_repo_->init_array(array, count);
+		// init args
+		iArgs *pi_args = 0;
+		if(ei[1].p_entry && (pi_args = (iArgs*)ei[1].p_entry->pi_base)) {
+			// args is here
+			if(pi_args->object_ctl(OCTL_INIT, _gpi_repo_)) {
+				ei[1].p_entry->state |= ST_INITIALIZED;
+				ei[1].p_entry->ref_cnt++;
+				pi_args->init(argc, argv);
 			}
-			// init log
-			iLog *pi_log = 0;
-			if(ei[3].p_entry &&
-					!(ei[3].p_entry->state & ST_INITIALIZED) &&
-					(pi_log = (iLog*)ei[3].p_entry->pi_base)) {
-				// log is here
-				if(pi_log->object_ctl(OCTL_INIT, _gpi_repo_)) {
-					ei[3].p_entry->state |= ST_INITIALIZED;
-					ei[3].p_entry->ref_cnt++;
-				}
+		}
+		// init log
+		iLog *pi_log = 0;
+		if(ei[2].p_entry &&
+				!(ei[2].p_entry->state & ST_INITIALIZED) &&
+				(pi_log = (iLog*)ei[2].p_entry->pi_base)) {
+			// log is here
+			if(pi_log->object_ctl(OCTL_INIT, _gpi_repo_)) {
+				ei[2].p_entry->state |= ST_INITIALIZED;
+				ei[2].p_entry->ref_cnt++;
 			}
 		}
 	}
-#endif
-	if(_gpi_repo_) {
-		_gpi_repo_->init_array(array, count);
-		r = ERR_NONE;
-	}
-#ifdef _CORE_
 _init_done_:
+#else // EXTENSION
+_err_t _EXPORT_ init(iRepository *pi_repo) {
+	_gpi_repo_ = pi_repo;
+	_err_t r = ERR_NONE;
 #endif
 	return r;
 }
