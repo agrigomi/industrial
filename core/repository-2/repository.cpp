@@ -97,6 +97,16 @@ private:
 		return r;
 	}
 
+	void update_users(iBase *pi_base) {
+		_u32 count;
+		const _link_info_t *pl = pi_base->object_link(&count);
+
+		for(_u32 i = 0; pl && i < count; i++) {
+			if(*pl[i].ppi_base)
+				users_add_object_user(*pl[i].ppi_base, pi_base);
+		}
+	}
+
 	void clean_link_map(iBase *pi_base) {
 		_u32 count;
 		const _link_info_t *pl = pi_base->object_link(&count);
