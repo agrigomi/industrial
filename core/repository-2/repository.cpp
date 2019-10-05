@@ -56,6 +56,7 @@ private:
 #define PLMR_READY		0
 #define PLMR_PENDING		1
 #define PLMR_KEEP_PENDING	2
+#define PLMR_FAILED		3
 
 	_u32 process_link_map(iBase *pi_base, bool post_init=false) {
 		_u32 r = PLMR_READY;
@@ -63,11 +64,37 @@ private:
 		_u32 count;
 		const _link_info_t *pl = pi_base->object_link(&count);
 
-		if(pl && count) {
+		if(pl) {
 			//...
 		}
 
 		return r;
+	}
+
+	void clean_link_map(iBase *pi_base) {
+		_u32 count;
+		const _link_info_t *pl = pi_base->object_link(&count);
+
+		if(pl) {
+			for(_u32 i = 0; i < count; i++)
+				*pl[i].ppi_base = NULL;
+		}
+	}
+
+	void release_link_map(iBase *pi_base) {
+		_u32 count;
+		const _link_info_t *pl = pi_base->object_link(&count);
+
+		if(pl) {
+			for(_u32 i = 0; i < count; i++) {
+				if(*pl[i].ppi_base) {
+					if(pl[i].p_ref_ctl)
+						pl[i].p_ref_ctl(RCTL_UNREF, pl[i].udata);
+					object_release(*pl[i].ppi_base);
+					*pl[i].ppi_base = NULL;
+				}
+			}
+		}
 	}
 
 public:
