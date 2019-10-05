@@ -54,14 +54,12 @@ private:
 			dcs_set_context_state(pi_base, state);
 	}
 
-#define PLMR_READY		0
-#define PLMR_PENDING		1
-#define PLMR_KEEP_PENDING	2
-#define PLMR_FAILED		3
+#define PLMR_READY		(1<<0)
+#define PLMR_KEEP_PENDING	(1<<1)
+#define PLMR_FAILED		(1<<2)
 
 	_u32 process_link_map(iBase *pi_base) {
 		_u32 r = PLMR_READY;
-		_cstat_t state = get_context_state(pi_base);
 		_u32 count;
 		const _link_info_t *pl = pi_base->object_link(&count);
 
@@ -83,21 +81,13 @@ private:
 					if(pl[i].p_ref_ctl)
 						pl[i].p_ref_ctl(RCTL_REF, pl[i].udata);
 
-					if(pl[i].flags & RF_KEEP_PENDING) {
-						if(state & ST_PENDING)
-							r = PLMR_KEEP_PENDING;
-						else
-							r = PLMR_PENDING;
-					}
+					if(pl[i].flags & RF_KEEP_PENDING)
+						r |= PLMR_KEEP_PENDING;
 				} else {
 					if(!(pl->flags & RF_NOCRITICAL))
 						r = PLMR_FAILED;
-					else {
-						if(state & ST_PENDING)
-							r = PLMR_KEEP_PENDING;
-						else
-							r = PLMR_PENDING;
-					}
+					else
+						r |= PLMR_KEEP_PENDING;
 
 					break;
 				}
