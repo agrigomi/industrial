@@ -1,3 +1,4 @@
+#include <string.h>
 #include "private.h"
 
 class cRepository: public iRepository {
@@ -58,14 +59,49 @@ private:
 #define PLMR_KEEP_PENDING	2
 #define PLMR_FAILED		3
 
-	_u32 process_link_map(iBase *pi_base, bool post_init=false) {
+	_u32 process_link_map(iBase *pi_base) {
 		_u32 r = PLMR_READY;
 		_cstat_t state = get_context_state(pi_base);
 		_u32 count;
 		const _link_info_t *pl = pi_base->object_link(&count);
 
-		if(pl) {
-			//...
+		for(_u32 i = 0; pl && i < count; i++) {
+			if(*pl[i].ppi_base == NULL) {
+				_object_request_t orq;
+
+				memset(&orq, 0, sizeof(_object_request_t));
+				if(pl[i].iname) {
+					orq.flags |= RQ_INTERFACE;
+					orq.iname = pl[i].iname;
+				}
+				if(pl[i].cname) {
+					orq.flags |= RQ_NAME;
+					orq.cname = pl[i].cname;
+				}
+
+				if((*pl[i].ppi_base = object_request(&orq, pl[i].flags))) {
+					if(pl[i].p_ref_ctl)
+						pl[i].p_ref_ctl(RCTL_REF, pl[i].udata);
+
+					if(pl[i].flags & RF_KEEP_PENDING) {
+						if(state & ST_PENDING)
+							r = PLMR_KEEP_PENDING;
+						else
+							r = PLMR_PENDING;
+					}
+				} else {
+					if(!(pl->flags & RF_NOCRITICAL))
+						r = PLMR_FAILED;
+					else {
+						if(state & ST_PENDING)
+							r = PLMR_KEEP_PENDING;
+						else
+							r = PLMR_PENDING;
+					}
+
+					break;
+				}
+			}
 		}
 
 		return r;
