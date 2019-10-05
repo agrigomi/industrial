@@ -17,22 +17,69 @@ private:
 		}
 	}
 
-	void process_link_map(iBase *pi_base) {
+	bool is_original(iBase *pi_base) {
+		bool r = false;
+		_base_entry_t *p_bentry = find_object_by_pointer(pi_base);
+
+		if(p_bentry)
+			// original object context
+			r = true;
+
+		return r;
+	}
+
+	_cstat_t get_context_state(iBase *pi_base) {
+		_cstat_t r = 0;
+		_base_entry_t *p_bentry = find_object_by_pointer(pi_base);
+
+		if(p_bentry)
+			// original object context
+			r = p_bentry->state;
+		else
+			// dynamic object context
+			r = dcs_get_context_state(pi_base);
+
+		return r;
+	}
+
+	void set_context_state(iBase *pi_base, _cstat_t state) {
+		_base_entry_t *p_bentry = find_object_by_pointer(pi_base);
+
+		if(p_bentry)
+			// original object context
+			p_bentry->state = state;
+		else
+			// dynamic object context
+			dcs_set_context_state(pi_base, state);
+	}
+
+#define PLMR_READY		0
+#define PLMR_PENDING		1
+#define PLMR_KEEP_PENDING	2
+
+	_u32 process_link_map(iBase *pi_base, bool post_init=false) {
+		_u32 r = PLMR_READY;
+		_cstat_t state = get_context_state(pi_base);
 		_u32 count;
 		const _link_info_t *pl = pi_base->object_link(&count);
 
-		if(pl) {
+		if(pl && count) {
 			//...
 		}
+
+		return r;
 	}
+
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 2,0,0);
 
 	bool object_ctl(_u32 cmd, void *arg, ...) {
+		if(cmd == OCTL_UNINIT)
+			destroy();
 		return true;
 	}
 
-	iBase *object_request(_object_request_t *req, _rf_t) {
+	iBase *object_request(_object_request_t *req, _rf_t flags) {
 		iBase *r = NULL;
 
 		//...
@@ -44,7 +91,7 @@ public:
 		//...
 	}
 
-	iBase *object_by_cname(_cstr_t cname, _rf_t) {
+	iBase *object_by_cname(_cstr_t cname, _rf_t flags) {
 		iBase *r = NULL;
 
 		//...
@@ -52,7 +99,7 @@ public:
 		return r;
 	}
 
-	iBase *object_by_iname(_cstr_t iname, _rf_t) {
+	iBase *object_by_iname(_cstr_t iname, _rf_t flags) {
 		iBase *r = NULL;
 
 		//...
@@ -60,7 +107,7 @@ public:
 		return r;
 	}
 
-	iBase *object_by_handle(HOBJECT, _rf_t) {
+	iBase *object_by_handle(HOBJECT, _rf_t flags) {
 		iBase *r = NULL;
 
 		//...
