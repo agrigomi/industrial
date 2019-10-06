@@ -139,7 +139,20 @@ private:
 	// returns true, if have one or more successful initialized objects
 	bool process_original_pending(iBase *pi_base) {
 		bool r = false;
-		//...
+		typedef struct {
+			cRepository	*p_repo;
+			bool		result;
+		}_enum_info_t;
+		_enum_info_t e = {this, false};
+
+		enum_original_pending([](iBase *pi_base, void *udata) {
+			_enum_info_t *pe = (_enum_info_t *)udata;
+
+			//...
+		}, &e);
+
+		r = e.result;
+
 		return r;
 	}
 
@@ -147,15 +160,38 @@ private:
 	// returns true, if have one or more successful initialized objects
 	bool process_clone_pending(iBase *pi_base) {
 		bool r = false;
-		//...
+		_mutex_handle_t hm = dcs_lock();
+		typedef struct {
+			cRepository	*p_repo;
+			bool		result;
+			_mutex_handle_t	hlock;
+		}_enum_info_t;
+		_enum_info_t e = {this, false, hm};
+
+		dcs_enum_pending([](iBase *pi_base, void *udata) {
+			_enum_info_t *pe = (_enum_info_t *)udata;
+
+			//...
+		}, &e, hm);
+
+		r = e.result;
+		dcs_unlock(hm);
+
 		return r;
 	}
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 2,0,0);
 
 	bool object_ctl(_u32 cmd, void *arg, ...) {
-		if(cmd == OCTL_UNINIT)
-			destroy();
+		switch(cmd) {
+			case OCTL_INIT:
+				zinit();
+				break;
+			case OCTL_UNINIT:
+				destroy();
+				break;
+		}
+
 		return true;
 	}
 
