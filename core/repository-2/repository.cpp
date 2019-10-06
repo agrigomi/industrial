@@ -58,7 +58,7 @@ private:
 #define PLMR_KEEP_PENDING	(1<<1)
 #define PLMR_FAILED		(1<<2)
 
-	_u32 process_link_map(iBase *pi_base) {
+	_u32 process_link_map(iBase *pi_base, iBase *pi_plugin=NULL) {
 		_u32 r = PLMR_READY;
 		_u32 count;
 		const _link_info_t *pl = pi_base->object_link(&count);
