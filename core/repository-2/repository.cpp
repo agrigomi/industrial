@@ -135,9 +135,9 @@ private:
 		}
 	}
 
-	// process original pending list for requested object
-	// returns true, if have one or more successful initialized objects
-	bool process_original_pending(iBase *pi_base) {
+	// Process original pending list.
+	// Returns true, if have one or more successful initialized objects
+	bool process_original_pending(iBase *pi_base=NULL) {
 		bool r = false;
 		typedef struct {
 			cRepository	*p_repo;
@@ -156,9 +156,9 @@ private:
 		return r;
 	}
 
-	// process dynamic pending list for requested object
-	// returns true, if have one or more successful initialized objects
-	bool process_clone_pending(iBase *pi_base) {
+	// Process dynamic pending list.
+	// Returns true, if have one or more successful initialized objects
+	bool process_clone_pending(iBase *pi_base=NULL) {
 		bool r = false;
 		_mutex_handle_t hm = dcs_lock();
 		typedef struct {
