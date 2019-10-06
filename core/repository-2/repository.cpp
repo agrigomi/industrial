@@ -101,9 +101,11 @@ private:
 		_u32 count;
 		const _link_info_t *pl = pi_base->object_link(&count);
 
-		for(_u32 i = 0; pl && i < count; i++) {
-			if(*pl[i].ppi_base)
-				users_add_object_user(*pl[i].ppi_base, pi_base);
+		if(pl) {
+			for(_u32 i = 0; i < count; i++) {
+				if(*pl[i].ppi_base)
+					users_add_object_user(*pl[i].ppi_base, pi_base);
+			}
 		}
 	}
 
@@ -133,6 +135,21 @@ private:
 		}
 	}
 
+	// process original pending list for requested object
+	// returns true, if have one or more successful initialized objects
+	bool process_original_pending(iBase *pi_base) {
+		bool r = false;
+		//...
+		return r;
+	}
+
+	// process dynamic pending list for requested object
+	// returns true, if have one or more successful initialized objects
+	bool process_clone_pending(iBase *pi_base) {
+		bool r = false;
+		//...
+		return r;
+	}
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 2,0,0);
 
@@ -170,7 +187,7 @@ public:
 		return r;
 	}
 
-	iBase *object_by_handle(HOBJECT, _rf_t flags) {
+	iBase *object_by_handle(HOBJECT h, _rf_t flags) {
 		iBase *r = NULL;
 
 		//...
