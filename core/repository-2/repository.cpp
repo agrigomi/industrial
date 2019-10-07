@@ -181,6 +181,8 @@ private:
 
 			if(f & PLMR_KEEP_PENDING)
 				state |= ST_PENDING;
+			else
+				state &= ~ST_PENDING;
 
 			if(f & PLMR_READY) {
 				if((r = pi_base->object_ctl(OCTL_INIT, this)))
