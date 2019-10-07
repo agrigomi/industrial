@@ -1,11 +1,13 @@
 #include <string.h>
 #include "private.h"
+#include "iTaskMaker.h"
 
 class cRepository: public iRepository {
 private:
 	_cstr_t	m_ext_dir;
 	_v_pi_object_t	mv_pending; // vector for original pending objects
 	_v_pi_object_t::iterator mv_it_pending; // iterator for original pending objects
+	iTaskMaker *mpi_tasks;
 
 	void enum_original_pending(_enum_cb_t *pcb, void *udata) {
 		mv_it_pending = mv_pending.begin();
@@ -21,6 +23,13 @@ private:
 
 			mv_it_pending++;
 		}
+	}
+
+	iTaskMaker *get_task_maker(void) {
+		if(!mpi_tasks)
+			mpi_tasks = (iTaskMaker *)object_by_iname(I_TASK_MAKER, RF_ORIGINAL);
+
+		return mpi_tasks;
 	}
 
 	bool is_original(iBase *pi_base) {
@@ -187,7 +196,10 @@ private:
 			if(f & PLMR_READY) {
 				if((r = pi_base->object_ctl(OCTL_INIT, this)))
 					state |= ST_INITIALIZED;
-			}
+				else
+					release_link_map(pi_base);
+			} else if(f & PLMR_FAILED)
+				release_link_map(pi_base);
 
 			set_context_state(pi_base, state);
 
@@ -253,6 +265,26 @@ private:
 		process_original_pending(pi_plugin);
 		process_clone_pending(pi_plugin);
 	}
+
+	iBase *init_object(_base_entry_t *p_bentry, _rf_t rf) {
+		iBase *r = NULL;
+
+		//...
+
+		return r;
+	}
+
+	void init_base_array(_base_entry_t *p_bentry, _u32 count) {
+		for(_u32 i = 0; i < count; i++) {
+			_object_info_t oi;
+
+			p_bentry->pi_base->object_info(&oi);
+
+			if(oi.flags & RF_ORIGINAL)
+				init_object(&p_bentry[i], oi.flags);
+		}
+	}
+
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 2,0,0);
 
@@ -331,7 +363,7 @@ public:
 
 	void init_array(_base_entry_t *array, _u32 count) {
 		add_base_array(array, count);
-		//...
+		init_base_array(array, count);
 	}
 
 	// notifications
