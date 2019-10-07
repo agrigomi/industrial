@@ -196,6 +196,7 @@ void destroy_base_array_storage(void);
 #define ENUM_CONTINUE	0
 #define ENUM_BREAK	1
 #define ENUM_DELETE	2
+#define ENUM_CURRENT	3
 
 typedef _s32 _enum_cb_t(iBase *pi_base, void *udata);
 
@@ -226,6 +227,7 @@ bool dcs_remove_context(iBase *pi_base, _mutex_handle_t hlock=0);
 bool dcs_end_pending(iBase *pi_base, _mutex_handle_t hlock=0);
 _cstat_t dcs_get_context_state(iBase *pi_base);
 void dcs_set_context_state(iBase *pi_base, _cstat_t state);
+#define ENUM_END_PENDING	4
 void dcs_enum_pending(_enum_cb_t *pcb, void *udata, _mutex_handle_t hlock=0);
 void dcs_destroy_storage(void);
 

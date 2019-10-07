@@ -105,16 +105,27 @@ void dcs_enum_pending(_enum_cb_t *pcb, void *udata, _mutex_handle_t hlock) {
 	while(pi_base) {
 		_s32 x = pcb(pi_base, udata);
 
-		if(!_gl_dcs_.sel(pi_base))
-			break;
+		_gl_dcs_.col(CPENDING, hlock);
 
-		if(x == ENUM_BREAK)
-			break;
-		else if(x == ENUM_DELETE) {
-			_gl_dcs_.del(hlock);
+		if(x == ENUM_CURRENT)
 			pi_base = (iBase *)_gl_dcs_.current(&sz, hlock);
-		} else
-			pi_base = (iBase *)_gl_dcs_.next(&sz, hlock);
+		else {
+			if(!_gl_dcs_.sel(pi_base))
+				break;
+
+			if(x == ENUM_BREAK)
+				break;
+			else if(x == ENUM_DELETE) {
+				_gl_dcs_.del(hlock);
+				pi_base = (iBase *)_gl_dcs_.current(&sz, hlock);
+			} else if(x == ENUM_END_PENDING) {
+				if(dcs_end_pending(pi_base, hlock))
+					pi_base = (iBase *)_gl_dcs_.current(&sz, hlock);
+				else
+					pi_base = (iBase *)_gl_dcs_.next(&sz, hlock);
+			} else
+				pi_base = (iBase *)_gl_dcs_.next(&sz, hlock);
+		}
 	}
 }
 
