@@ -100,7 +100,7 @@ private:
 					}
 				}
 			}
-		} else if(pi_plugin) {
+		} else if(pi_plugin && pi_plugin != pi_base) {
 			_object_info_t oi;
 
 			pi_plugin->object_info(&oi);
@@ -119,7 +119,7 @@ private:
 
 					if(attach) {
 						if(pl[i].flags & RF_KEEP_PENDING)
-							r |= PLMR_KEEP_PENDING;
+							r = PLMR_KEEP_PENDING;
 
 						*pl[i].ppi_base = pi_plugin;
 						if(pl[i].p_ref_ctl)
@@ -128,7 +128,8 @@ private:
 					}
 				}
 			}
-		}
+		} else
+			r = 0;
 
 		return r;
 	}
@@ -171,6 +172,31 @@ private:
 		}
 	}
 
+	bool init_object(iBase *pi_base, bool notify=true) {
+		bool r = false;
+		_cstat_t state = get_context_state(pi_base);
+
+		if(!(state & ST_INITIALIZED)) {
+			_u32 f = process_link_map(pi_base);
+
+			if(f & PLMR_KEEP_PENDING)
+				state |= ST_PENDING;
+
+			if(f & PLMR_READY) {
+				if((r = pi_base->object_ctl(OCTL_INIT, this)))
+					state |= ST_INITIALIZED;
+			}
+
+			set_context_state(pi_base, state);
+
+			if(r)
+				process_pending_lists(pi_base);
+		} else
+			r = true;
+
+		return r;
+	}
+
 	// Process original pending list.
 	void process_original_pending(iBase *pi_base=NULL) {
 		typedef struct {
@@ -184,7 +210,12 @@ private:
 			_enum_info_t *pe = (_enum_info_t *)udata;
 			_u32 f = pe->p_repo->process_link_map(pi_base, pe->pi_base);
 
-			//...
+			if(!(f & PLMR_KEEP_PENDING))
+				r = ENUM_DELETE;
+
+			if(f & PLMR_READY)
+				pe->p_repo->init_object(pi_base);
+
 			return r;
 		}, &e);
 	}
@@ -204,11 +235,21 @@ private:
 			_enum_info_t *pe = (_enum_info_t *)udata;
 			_u32 f = pe->p_repo->process_link_map(pi_base, pe->pi_base);
 
-			//...
+			if(!(f & PLMR_KEEP_PENDING))
+				r = ENUM_END_PENDING;
+
+			if(f & PLMR_READY)
+				pe->p_repo->init_object(pi_base);
+
 			return r;
 		}, &e, hm);
 
 		dcs_unlock(hm);
+	}
+
+	void process_pending_lists(iBase *pi_plugin=NULL) {
+		process_original_pending(pi_plugin);
+		process_clone_pending(pi_plugin);
 	}
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 2,0,0);
