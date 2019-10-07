@@ -12,8 +12,13 @@ private:
 
 		while(mv_it_pending != mv_pending.end()) {
 			iBase *pi_base = *mv_it_pending;
+			_s32 x = pcb(pi_base, udata);
 
-			pcb(pi_base, udata);
+			if(x == ENUM_BREAK)
+				break;
+			else if(x == ENUM_DELETE)
+				mv_pending.erase(mv_it_pending);
+
 			mv_it_pending++;
 		}
 	}
@@ -62,34 +67,65 @@ private:
 		_u32 r = PLMR_READY;
 		_u32 count;
 		const _link_info_t *pl = pi_base->object_link(&count);
+		_cstat_t state = get_context_state(pi_base);
 
-		for(_u32 i = 0; pl && i < count; i++) {
-			if(*pl[i].ppi_base == NULL) {
-				_object_request_t orq;
+		if(!(state & ST_INITIALIZED)) {
+			for(_u32 i = 0; pl && i < count; i++) {
+				if(*pl[i].ppi_base == NULL && !(pl[i].flags & RF_POST_INIT)) {
+					_object_request_t orq;
 
-				memset(&orq, 0, sizeof(_object_request_t));
-				if(pl[i].iname) {
-					orq.flags |= RQ_INTERFACE;
-					orq.iname = pl[i].iname;
-				}
-				if(pl[i].cname) {
-					orq.flags |= RQ_NAME;
-					orq.cname = pl[i].cname;
-				}
-
-				if((*pl[i].ppi_base = object_request(&orq, pl[i].flags))) {
-					if(pl[i].p_ref_ctl)
-						pl[i].p_ref_ctl(RCTL_REF, pl[i].udata);
+					memset(&orq, 0, sizeof(_object_request_t));
+					if(pl[i].iname) {
+						orq.flags |= RQ_INTERFACE;
+						orq.iname = pl[i].iname;
+					}
+					if(pl[i].cname) {
+						orq.flags |= RQ_NAME;
+						orq.cname = pl[i].cname;
+					}
 
 					if(pl[i].flags & RF_KEEP_PENDING)
 						r |= PLMR_KEEP_PENDING;
-				} else {
-					if(!(pl->flags & RF_NOCRITICAL))
-						r = PLMR_FAILED;
-					else
-						r |= PLMR_KEEP_PENDING;
 
-					break;
+					if((*pl[i].ppi_base = object_request(&orq, pl[i].flags))) {
+						if(pl[i].p_ref_ctl)
+							pl[i].p_ref_ctl(RCTL_REF, pl[i].udata);
+
+					} else {
+						if(!(pl->flags & RF_NOCRITICAL) || !is_original(pi_base))
+							r = PLMR_FAILED;
+						else
+							r = PLMR_KEEP_PENDING;
+						break;
+					}
+				}
+			}
+		} else if(pi_plugin) {
+			_object_info_t oi;
+
+			pi_plugin->object_info(&oi);
+
+			for(_u32 i = 0; pl && i < count; i++) {
+				if(pl[i].flags & RF_POST_INIT) {
+					bool attach = false;
+
+					if(pl[i].cname) {
+						if(strcmp(pl[i].cname, oi.cname) == 0)
+							attach = true;
+					} else if(pl[i].iname) {
+						if(strcmp(pl[i].iname, oi.iname) == 0)
+							attach = true;
+					}
+
+					if(attach) {
+						if(pl[i].flags & RF_KEEP_PENDING)
+							r |= PLMR_KEEP_PENDING;
+
+						*pl[i].ppi_base = pi_plugin;
+						if(pl[i].p_ref_ctl)
+							pl[i].p_ref_ctl(RCTL_REF, pl[i].udata);
+						break;
+					}
 				}
 			}
 		}
@@ -136,48 +172,43 @@ private:
 	}
 
 	// Process original pending list.
-	// Returns true, if have one or more successful initialized objects
-	bool process_original_pending(iBase *pi_base=NULL) {
-		bool r = false;
+	void process_original_pending(iBase *pi_base=NULL) {
 		typedef struct {
 			cRepository	*p_repo;
-			bool		result;
+			iBase		*pi_base;
 		}_enum_info_t;
-		_enum_info_t e = {this, false};
+		_enum_info_t e = {this, pi_base};
 
-		enum_original_pending([](iBase *pi_base, void *udata) {
+		enum_original_pending([](iBase *pi_base, void *udata)->_s32 {
+			_s32 r = ENUM_CONTINUE;
 			_enum_info_t *pe = (_enum_info_t *)udata;
+			_u32 f = pe->p_repo->process_link_map(pi_base, pe->pi_base);
 
 			//...
+			return r;
 		}, &e);
-
-		r = e.result;
-
-		return r;
 	}
 
 	// Process dynamic pending list.
-	// Returns true, if have one or more successful initialized objects
-	bool process_clone_pending(iBase *pi_base=NULL) {
-		bool r = false;
+	void process_clone_pending(iBase *pi_base=NULL) {
 		_mutex_handle_t hm = dcs_lock();
 		typedef struct {
 			cRepository	*p_repo;
-			bool		result;
+			iBase		*pi_base;
 			_mutex_handle_t	hlock;
 		}_enum_info_t;
-		_enum_info_t e = {this, false, hm};
+		_enum_info_t e = {this, pi_base, hm};
 
-		dcs_enum_pending([](iBase *pi_base, void *udata) {
+		dcs_enum_pending([](iBase *pi_base, void *udata)->_s32 {
+			_s32 r = ENUM_CONTINUE;
 			_enum_info_t *pe = (_enum_info_t *)udata;
+			_u32 f = pe->p_repo->process_link_map(pi_base, pe->pi_base);
 
 			//...
+			return r;
 		}, &e, hm);
 
-		r = e.result;
 		dcs_unlock(hm);
-
-		return r;
 	}
 public:
 	BASE(cRepository, "cRepository", RF_ORIGINAL, 2,0,0);

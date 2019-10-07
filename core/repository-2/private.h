@@ -193,7 +193,11 @@ _base_entry_t *find_object_by_cname(_cstr_t cname);
 _base_entry_t *find_object_by_pointer(iBase *pi_base);
 void destroy_base_array_storage(void);
 
-typedef void _enum_cb_t(iBase *pi_base, void *udata);
+#define ENUM_CONTINUE	0
+#define ENUM_BREAK	1
+#define ENUM_DELETE	2
+
+typedef _s32 _enum_cb_t(iBase *pi_base, void *udata);
 
 // object users
 typedef std::vector<iBase *, zAllocator<iBase *>> _v_pi_object_t;
