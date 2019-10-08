@@ -99,8 +99,11 @@ private:
 			}, pe->p_repo);
 
 			if(lmr & PLMR_READY) {
-				if(!(lmr & PLMR_KEEP_PENDING))
+				if(!(lmr & PLMR_KEEP_PENDING)) {
 					r = ENUM_DELETE;
+					pe->p_repo->set_context_state(pi_base,
+						(pe->p_repo->get_context_state(pi_base) & ~ST_PENDING));
+				}
 			}
 
 			return r;
@@ -158,10 +161,10 @@ private:
 
 			p_bentry[i].pi_base->object_info(&oi);
 
-			if(oi.flags & RF_ORIGINAL)
-				init_object(p_bentry[i].pi_base);
-
-			process_pending_list(&p_bentry[i]);
+			if(oi.flags & RF_ORIGINAL && !(p_bentry->state & ST_INITIALIZED)) {
+				if(init_object(p_bentry[i].pi_base))
+					process_pending_list(&p_bentry[i]);
+			}
 		}
 	}
 
