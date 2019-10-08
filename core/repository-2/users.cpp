@@ -2,7 +2,7 @@
 
 typedef struct {
 	iBase *pi_base;
-	_v_pi_object_t v_users;
+	_set_pi_object_t s_users;
 }_object_users_t;
 
 static _map_t _g_users_map_;
@@ -23,7 +23,7 @@ void users_remove_object(iBase *pi_object) {
 	_object_users_t *pbo = (_object_users_t *)_g_users_map_.get(&pi_object, sizeof(pi_object), &sz);
 
 	if(pbo) {
-		pbo->v_users.~_v_pi_object_t(); // destroy vector
+		pbo->s_users.~_set_pi_object_t(); // destroy vector
 		_g_users_map_.del(&pi_object, sizeof(pi_object));
 	}
 }
@@ -40,27 +40,27 @@ void users_add_object_user(iBase *pi_object, iBase *pi_user) {
 	}
 
 	if(pbo)
-		pbo->v_users.push_back(pi_user);
+		pbo->s_users.insert(pi_user);
 }
 
-_v_pi_object_t *get_object_users(iBase *pi_object) {
-	_v_pi_object_t *r = NULL;
+_set_pi_object_t *get_object_users(iBase *pi_object) {
+	_set_pi_object_t *r = NULL;
 	_u32 sz = 0;
 	_object_users_t *pbo = (_object_users_t *)_g_users_map_.get(&pi_object, sizeof(pi_object), &sz);
 
 	if(pbo)
-		r = &pbo->v_users;
+		r = &pbo->s_users;
 
 	return r;
 }
 
 void users_enum(iBase *pi_object, _enum_cb_t *pcb, void *udata) {
-	_v_pi_object_t *p_vpi = get_object_users(pi_object);
+	_set_pi_object_t *p_spi = get_object_users(pi_object);
 
-	if(p_vpi) {
-		_v_pi_object_t::iterator it = p_vpi->begin();
+	if(p_spi) {
+		_set_pi_object_t::iterator it = p_spi->begin();
 
-		while(it != p_vpi->end()) {
+		while(it != p_spi->end()) {
 			pcb(*it, udata);
 			it++;
 		}
@@ -73,7 +73,7 @@ void destroy_users_storage(void) {
 	_g_users_map_.enm([](void *p, _u32 sz, void *udata)->_s32 {
 		_object_users_t *p_users = (_object_users_t *)p;
 
-		p_users->v_users.~_v_pi_object_t();
+		p_users->s_users.~_set_pi_object_t();
 		return MAP_ENUM_CONTINUE;
 	}, NULL, hlock);
 

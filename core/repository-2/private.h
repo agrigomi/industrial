@@ -3,6 +3,7 @@
 
 #include <mutex>
 #include <vector>
+#include <unordered_set>
 #include "dtype.h"
 #include "map_alg.h"
 #include "ll_alg.h"
@@ -199,14 +200,14 @@ void destroy_base_array_storage(void);
 #define ENUM_CURRENT	3
 
 typedef _s32 _enum_cb_t(iBase *pi_base, void *udata);
+typedef std::vector<iBase *, zAllocator<iBase *>> _v_pi_object_t;
+typedef std::unordered_set<iBase *, std::hash<iBase *>, std::equal_to<iBase *>, zAllocator<iBase *>> _set_pi_object_t;
 
 // object users
-typedef std::vector<iBase *, zAllocator<iBase *>> _v_pi_object_t;
-
 void users_add_object(iBase *pi_object);
 void users_remove_object(iBase *pi_object);
 void users_add_object_user(iBase *pi_object, iBase *pi_user);
-_v_pi_object_t *get_object_users(iBase *pi_object);
+_set_pi_object_t *get_object_users(iBase *pi_object);
 void users_enum(iBase *pi_object, _enum_cb_t *pcb, void *udata);
 void destroy_users_storage(void);
 
@@ -222,14 +223,23 @@ void destroy_monitoring_storage(void);
 // Dynamic Context Storage (DCS)
 _mutex_handle_t dcs_lock(_mutex_handle_t hlock=0);
 void dcs_unlock(_mutex_handle_t hlock);
-iBase *dcs_create_pending_context(_base_entry_t *p_bentry, _rf_t flags, _mutex_handle_t hlock=0);
+iBase *dcs_create_context(_base_entry_t *p_bentry, _rf_t flags, _mutex_handle_t hlock=0);
 bool dcs_remove_context(iBase *pi_base, _mutex_handle_t hlock=0);
-bool dcs_end_pending(iBase *pi_base, _mutex_handle_t hlock=0);
 _cstat_t dcs_get_context_state(iBase *pi_base);
 void dcs_set_context_state(iBase *pi_base, _cstat_t state);
-#define ENUM_END_PENDING	4
-void dcs_enum_pending(_enum_cb_t *pcb, void *udata, _mutex_handle_t hlock=0);
 void dcs_destroy_storage(void);
+
+// Link map
+#define PLMR_READY		(1<<0)
+#define PLMR_KEEP_PENDING	(1<<1)
+#define PLMR_FAILED		(1<<2)
+
+typedef iBase *_cb_object_request_t(const _link_info_t *p_link_info, void *udata);
+typedef iBase *_cb_create_object_t(_base_entry_t *p_bentry, void *udata);
+
+void lm_clean(iBase *pi_base);
+_u32 lm_init(iBase *pi_base, _cb_object_request_t *pcb, void *udata);
+_u32 lm_post_init(iBase *pi_base, _base_entry_t *p_bentry, _cb_create_object_t *pcb, void *udata);
 
 #endif
 
