@@ -135,19 +135,16 @@ private:
 				return p_repo->object_request(&orq, pl->flags);
 			}, this);
 
-			if(!(lmr & PLMR_FAILED)) {
-				if(lmr & PLMR_READY) {
+			if(lmr & PLMR_READY) {
+				if((r = pi_base->object_ctl(OCTL_INIT, this))) {
+					state |= ST_INITIALIZED;
 					if(lmr & PLMR_KEEP_PENDING) {
 						// insert in pending list
 						ms_pending.insert(pi_base);
 						state |= ST_PENDING;
 					}
-					if((r = pi_base->object_ctl(OCTL_INIT, this))) {
-						state |= ST_INITIALIZED;
-						update_users(pi_base);
-					}
-
 					set_context_state(pi_base, state);
+					update_users(pi_base);
 				}
 			}
 		}
@@ -161,7 +158,7 @@ private:
 
 			p_bentry[i].pi_base->object_info(&oi);
 
-			if(oi.flags & RF_ORIGINAL && !(p_bentry->state & ST_INITIALIZED)) {
+			if((oi.flags & RF_ORIGINAL) && !(p_bentry->state & ST_INITIALIZED)) {
 				if(init_object(p_bentry[i].pi_base))
 					process_pending_list(&p_bentry[i]);
 			}
