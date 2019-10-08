@@ -200,7 +200,6 @@ void destroy_base_array_storage(void);
 #define ENUM_CURRENT	3
 
 typedef _s32 _enum_cb_t(iBase *pi_base, void *udata);
-typedef std::vector<iBase *, zAllocator<iBase *>> _v_pi_object_t;
 typedef std::unordered_set<iBase *, std::hash<iBase *>, std::equal_to<iBase *>, zAllocator<iBase *>> _set_pi_object_t;
 
 // object users

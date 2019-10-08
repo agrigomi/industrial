@@ -5,23 +5,23 @@
 class cRepository: public iRepository {
 private:
 	_cstr_t	m_ext_dir;
-	_v_pi_object_t	mv_pending; // vector for original pending objects
-	_v_pi_object_t::iterator mv_it_pending; // iterator for original pending objects
+	_set_pi_object_t	ms_pending; // set for  pending objects
+	_set_pi_object_t::iterator ms_it_pending; // iterator for pending objects
 	iTaskMaker *mpi_tasks;
 
 	void enum_pending(_enum_cb_t *pcb, void *udata) {
-		mv_it_pending = mv_pending.begin();
+		ms_it_pending = ms_pending.begin();
 
-		while(mv_it_pending != mv_pending.end()) {
-			iBase *pi_base = *mv_it_pending;
+		while(ms_it_pending != ms_pending.end()) {
+			iBase *pi_base = *ms_it_pending;
 			_s32 x = pcb(pi_base, udata);
 
 			if(x == ENUM_BREAK)
 				break;
 			else if(x == ENUM_DELETE)
-				mv_pending.erase(mv_it_pending);
+				ms_pending.erase(ms_it_pending);
 
-			mv_it_pending++;
+			ms_it_pending++;
 		}
 	}
 
@@ -81,12 +81,12 @@ private:
 	}
 
 	// Process original pending list.
-	void process_pending_list(iBase *pi_base=NULL) {
+	void process_pending_list(_base_entry_t *p_bentry) {
 		typedef struct {
 			cRepository	*p_repo;
-			iBase		*pi_base;
+			_base_entry_t	*p_bentry;
 		}_enum_info_t;
-		_enum_info_t e = {this, pi_base};
+		_enum_info_t e = {this, p_bentry};
 
 		enum_pending([](iBase *pi_base, void *udata)->_s32 {
 			_s32 r = ENUM_CONTINUE;
@@ -98,15 +98,57 @@ private:
 		}, &e);
 	}
 
+	bool init_object(iBase *pi_base) {
+		bool r = false;
+		_cstat_t state = get_context_state(pi_base);
+
+		if(!(r = (state & ST_INITIALIZED))) {
+			_u32 lmr = lm_init(pi_base, [](const _link_info_t *pl, void *udata)->iBase* {
+				_object_request_t orq;
+				cRepository *p_repo = (cRepository *)udata;
+
+				memset(&orq, 0, sizeof(_object_request_t));
+
+				if(pl->iname) {
+					orq.flags |= RQ_INTERFACE;
+					orq.iname = pl->iname;
+				}
+				if(pl->cname) {
+					orq.flags |= RQ_NAME;
+					orq.cname = pl->cname;
+				}
+
+				return p_repo->object_request(&orq, pl->flags);
+			}, this);
+
+			if(!(lmr & PLMR_FAILED)) {
+				if(lmr & PLMR_READY) {
+					if(lmr & PLMR_KEEP_PENDING) {
+						// insert in pending list
+						ms_pending.insert(pi_base);
+						state |= ST_PENDING;
+					}
+					if((r = pi_base->object_ctl(OCTL_INIT, this)))
+						state |= ST_INITIALIZED;
+
+					set_context_state(pi_base, state);
+				}
+			}
+		}
+
+		return r;
+	}
+
 	void init_base_array(_base_entry_t *p_bentry, _u32 count) {
 		for(_u32 i = 0; i < count; i++) {
 			_object_info_t oi;
 
-			p_bentry->pi_base->object_info(&oi);
+			p_bentry[i].pi_base->object_info(&oi);
 
-			if(oi.flags & RF_ORIGINAL) {
-				//...
-			}
+			if(oi.flags & RF_ORIGINAL)
+				init_object(p_bentry[i].pi_base);
+
+			process_pending_list(&p_bentry[i]);
 		}
 	}
 
