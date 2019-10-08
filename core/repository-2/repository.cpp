@@ -92,7 +92,16 @@ private:
 			_s32 r = ENUM_CONTINUE;
 			_enum_info_t *pe = (_enum_info_t *)udata;
 
-			//...
+			_u32 lmr = lm_post_init(pi_base, pe->p_bentry, [](_base_entry_t *p_bentry, _rf_t flags, void *udata)->iBase* {
+				cRepository *p_repo = (cRepository *)udata;
+
+				return p_repo->object_by_handle(p_bentry, flags);
+			}, pe->p_repo);
+
+			if(lmr & PLMR_READY) {
+				if(!(lmr & PLMR_KEEP_PENDING))
+					r = ENUM_DELETE;
+			}
 
 			return r;
 		}, &e);
@@ -103,6 +112,8 @@ private:
 		_cstat_t state = get_context_state(pi_base);
 
 		if(!(r = (state & ST_INITIALIZED))) {
+			lm_clean(pi_base);
+
 			_u32 lmr = lm_init(pi_base, [](const _link_info_t *pl, void *udata)->iBase* {
 				_object_request_t orq;
 				cRepository *p_repo = (cRepository *)udata;

@@ -234,7 +234,7 @@ void dcs_destroy_storage(void);
 #define PLMR_FAILED		(1<<2)
 
 typedef iBase *_cb_object_request_t(const _link_info_t *p_link_info, void *udata);
-typedef iBase *_cb_create_object_t(_base_entry_t *p_bentry, void *udata);
+typedef iBase *_cb_create_object_t(_base_entry_t *p_bentry, _rf_t flags, void *udata);
 
 void lm_clean(iBase *pi_base);
 _u32 lm_init(iBase *pi_base, _cb_object_request_t *pcb, void *udata);
