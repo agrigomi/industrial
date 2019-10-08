@@ -128,8 +128,10 @@ private:
 						ms_pending.insert(pi_base);
 						state |= ST_PENDING;
 					}
-					if((r = pi_base->object_ctl(OCTL_INIT, this)))
+					if((r = pi_base->object_ctl(OCTL_INIT, this))) {
 						state |= ST_INITIALIZED;
+						update_users(pi_base);
+					}
 
 					set_context_state(pi_base, state);
 				}
@@ -150,6 +152,14 @@ private:
 
 			process_pending_list(&p_bentry[i]);
 		}
+	}
+
+	bool uninit_object(iBase *pi_base) {
+		bool r = false;
+
+		//...
+
+		return r;
 	}
 
 public:
