@@ -193,6 +193,9 @@ private:
 
 					p_repo->object_release(pi_base, false);
 				}, this);
+
+				ms_pending.erase(pi_base);
+				set_context_state(pi_base, get_context_state(pi_base) & ~(ST_PENDING | ST_INITIALIZED));
 			}
 		} else
 			r = true;
@@ -201,8 +204,36 @@ private:
 	}
 
 	void uninit_base_array(_base_entry_t *p_bentry, _u32 count) {
+		typedef struct {
+			cRepository 	*p_repo;
+			_base_entry_t	*p_bentry;
+		}_enum_info_t;
+
 		for(_u32 i = 0; i < count; i++) {
-			//...
+			_enum_info_t e = {this, p_bentry};
+
+			users_enum(&p_bentry[i], [](iBase *pi_base, void *udata)->_s32 {
+				_enum_info_t *pe = (_enum_info_t *)udata;
+				_u32 lmr = lm_remove(pi_base, pe->p_bentry, [](iBase *pi_base, void *udata) {
+					cRepository *p_repo = (cRepository *)udata;
+
+					p_repo->object_release(pi_base, false);
+				}, pe->p_repo);
+
+				if(lmr & PLMR_UNINIT)
+					pe->p_repo->uninit_object(pi_base);
+				else {
+					if(!(lmr & PLMR_KEEP_PENDING)) {
+						pe->p_repo->ms_pending.erase(pi_base);
+						pe->p_repo->set_context_state(pi_base,
+							pe->p_repo->get_context_state(pi_base) & ~ST_PENDING);
+					}
+				}
+
+				return ENUM_CONTINUE;
+			}, &e);
+
+			users_remove_object(p_bentry);
 		}
 	}
 
@@ -212,6 +243,7 @@ public:
 	bool object_ctl(_u32 cmd, void *arg, ...) {
 		switch(cmd) {
 			case OCTL_INIT:
+				mpi_tasks = NULL;
 				zinit();
 				break;
 			case OCTL_UNINIT:
