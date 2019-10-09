@@ -89,3 +89,34 @@ _u32 lm_post_init(iBase *pi_base, _base_entry_t *p_bentry, _cb_create_object_t *
 
 	return r;
 }
+
+_u32 lm_uninit(iBase *pi_base, _cb_release_object_t *pcb, void *udata) {
+	_u32 r = PLMR_READY;
+	_u32 count;
+	const _link_info_t *pl = pi_base->object_link(&count);
+
+	if(pl) {
+		for(_u32 i = 0; i < count; i++) {
+			if(*pl[i].ppi_base) {
+				pcb(*pl[i].ppi_base, udata);
+				*pl[i].ppi_base = NULL;
+			}
+		}
+	}
+
+	return r;
+}
+
+_u32 lm_remove(iBase *pi_base, _base_entry_t *pb_entry, _cb_release_object_t *pcb, void *udata) {
+	_u32 r = PLMR_READY;
+	_u32 count;
+	const _link_info_t *pl = pi_base->object_link(&count);
+
+	if(pl) {
+		for(_u32 i = 0; i < count; i++) {
+		}
+	}
+
+	return r;
+}
+

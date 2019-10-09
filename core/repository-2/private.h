@@ -232,13 +232,17 @@ void dcs_destroy_storage(void);
 #define PLMR_READY		(1<<0)
 #define PLMR_KEEP_PENDING	(1<<1)
 #define PLMR_FAILED		(1<<2)
+#define PLMR_UNINIT		(1<<3)
 
 typedef iBase *_cb_object_request_t(const _link_info_t *p_link_info, void *udata);
 typedef iBase *_cb_create_object_t(_base_entry_t *p_bentry, _rf_t flags, void *udata);
+typedef void _cb_release_object_t(iBase *pi_base, void *udata);
 
 void lm_clean(iBase *pi_base);
 _u32 lm_init(iBase *pi_base, _cb_object_request_t *pcb, void *udata);
 _u32 lm_post_init(iBase *pi_base, _base_entry_t *p_bentry, _cb_create_object_t *pcb, void *udata);
+_u32 lm_uninit(iBase *pi_base, _cb_release_object_t *pcb, void *udata);
+_u32 lm_remove(iBase *pi_base, _base_entry_t *pb_entry, _cb_release_object_t *pcb, void *udata);
 
 #endif
 

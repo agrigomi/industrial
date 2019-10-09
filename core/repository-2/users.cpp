@@ -61,7 +61,15 @@ void users_enum(iBase *pi_object, _enum_cb_t *pcb, void *udata) {
 		_set_pi_object_t::iterator it = p_spi->begin();
 
 		while(it != p_spi->end()) {
-			pcb(*it, udata);
+			_s32 x = pcb(*it, udata);
+
+			if(x == ENUM_DELETE)
+				p_spi->erase(it);
+			else if(x == ENUM_BREAK)
+				break;
+			else if(x == ENUM_CURRENT)
+				continue;
+
 			it++;
 		}
 	}

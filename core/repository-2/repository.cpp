@@ -68,6 +68,19 @@ private:
 			dcs_set_context_state(pi_base, state);
 	}
 
+	_base_entry_t *find_object_entry(iBase *pi_base) {
+		_base_entry_t *r = find_object_by_pointer(pi_base);
+
+		if(!r) { // cloning may be
+			_object_info_t oi;
+
+			pi_base->object_info(&oi);
+			r = find_object_by_cname(oi.cname);
+		}
+
+		return r;
+	}
+
 	void update_users(iBase *pi_base) {
 		_u32 count;
 		const _link_info_t *pl = pi_base->object_link(&count);
@@ -159,9 +172,8 @@ private:
 
 			p_bentry[i].pi_base->object_info(&oi);
 
-			if((oi.flags & RF_ORIGINAL) && !(p_bentry->state & ST_INITIALIZED)) {
+			if((oi.flags & RF_ORIGINAL) && !(p_bentry->state & ST_INITIALIZED))
 				process_pending = init_object(p_bentry[i].pi_base);
-			}
 
 			if(process_pending)
 				process_pending_list(&p_bentry[i]);
@@ -171,7 +183,13 @@ private:
 	bool uninit_object(iBase *pi_base) {
 		bool r = false;
 
-		//...
+		if((r = pi_base->object_ctl(OCTL_UNINIT, this))) {
+			lm_uninit(pi_base, [](iBase *pi_base, void *udata) {
+				cRepository *p_repo = (cRepository *)udata;
+
+				p_repo->object_release(pi_base, false);
+			}, this);
+		}
 
 		return r;
 	}
