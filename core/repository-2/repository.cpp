@@ -200,6 +200,16 @@ private:
 		_cstat_t state = get_context_state(pi_base);
 
 		if(state & ST_INITIALIZED) {
+			_object_info_t oi;
+
+			pi_base->object_info(&oi);
+			if(oi.flags & RF_TASK) {
+				iTaskMaker *pi_tasks = get_task_maker();
+
+				if(pi_tasks)
+					pi_tasks->stop(pi_base);
+			}
+
 			if((r = pi_base->object_ctl(OCTL_UNINIT, this))) {
 				lm_uninit(pi_base, [](iBase *pi_base, void *udata) {
 					cRepository *p_repo = (cRepository *)udata;
