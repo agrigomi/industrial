@@ -113,6 +113,8 @@ private:
 				return p_repo->object_by_handle(p_bentry, flags);
 			}, pe->p_repo);
 
+			pe->p_repo->update_users(pi_base);
+
 			if(lmr & PLMR_READY) {
 				if(!(lmr & PLMR_KEEP_PENDING)) {
 					r = ENUM_DELETE;
