@@ -89,7 +89,8 @@ private:
 			for(_u32 i = 0; i < count; i++) {
 				if(*pl[i].ppi_base) {
 					_base_entry_t *p_bentry = find_object_entry(*pl[i].ppi_base);
-					users_add_object_user(p_bentry, pi_base);
+					if(p_bentry)
+						users_add_object_user(p_bentry, pi_base);
 				}
 			}
 		}
@@ -154,6 +155,8 @@ private:
 
 			if(lmr & PLMR_READY) {
 				if((r = pi_base->object_ctl(OCTL_INIT, this))) {
+					_object_info_t oi;
+
 					state |= ST_INITIALIZED;
 					if(lmr & PLMR_KEEP_PENDING) {
 						// insert in pending list
@@ -162,6 +165,14 @@ private:
 					}
 					set_context_state(pi_base, state);
 					update_users(pi_base);
+
+					pi_base->object_info(&oi);
+					if(oi.flags & RF_TASK) {
+						iTaskMaker *pi_tasks = get_task_maker();
+
+						if(pi_tasks)
+							pi_tasks->start(pi_base);
+					}
 				}
 			}
 		}
