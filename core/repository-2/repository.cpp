@@ -184,16 +184,26 @@ private:
 
 	bool uninit_object(iBase *pi_base) {
 		bool r = false;
+		_cstat_t state = get_context_state(pi_base);
 
-		if((r = pi_base->object_ctl(OCTL_UNINIT, this))) {
-			lm_uninit(pi_base, [](iBase *pi_base, void *udata) {
-				cRepository *p_repo = (cRepository *)udata;
+		if(state & ST_INITIALIZED) {
+			if((r = pi_base->object_ctl(OCTL_UNINIT, this))) {
+				lm_uninit(pi_base, [](iBase *pi_base, void *udata) {
+					cRepository *p_repo = (cRepository *)udata;
 
-				p_repo->object_release(pi_base, false);
-			}, this);
-		}
+					p_repo->object_release(pi_base, false);
+				}, this);
+			}
+		} else
+			r = true;
 
 		return r;
+	}
+
+	void uninit_base_array(_base_entry_t *p_bentry, _u32 count) {
+		for(_u32 i = 0; i < count; i++) {
+			//...
+		}
 	}
 
 public:
