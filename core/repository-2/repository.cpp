@@ -212,7 +212,7 @@ private:
 		}_enum_info_t;
 
 		for(_u32 i = 0; i < count; i++) {
-			_enum_info_t e = {this, p_bentry};
+			_enum_info_t e = {this, &p_bentry[i]};
 
 			users_enum(&p_bentry[i], [](iBase *pi_base, void *udata)->_s32 {
 				_enum_info_t *pe = (_enum_info_t *)udata;
