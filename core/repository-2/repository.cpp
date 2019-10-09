@@ -87,8 +87,10 @@ private:
 
 		if(pl) {
 			for(_u32 i = 0; i < count; i++) {
-				if(*pl[i].ppi_base)
-					users_add_object_user(*pl[i].ppi_base, pi_base);
+				if(*pl[i].ppi_base) {
+					_base_entry_t *p_bentry = find_object_entry(*pl[i].ppi_base);
+					users_add_object_user(p_bentry, pi_base);
+				}
 			}
 		}
 	}

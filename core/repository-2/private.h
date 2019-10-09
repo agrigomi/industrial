@@ -203,11 +203,11 @@ typedef _s32 _enum_cb_t(iBase *pi_base, void *udata);
 typedef std::unordered_set<iBase *, std::hash<iBase *>, std::equal_to<iBase *>, zAllocator<iBase *>> _set_pi_object_t;
 
 // object users
-void users_add_object(iBase *pi_object);
-void users_remove_object(iBase *pi_object);
-void users_add_object_user(iBase *pi_object, iBase *pi_user);
-_set_pi_object_t *get_object_users(iBase *pi_object);
-void users_enum(iBase *pi_object, _enum_cb_t *pcb, void *udata);
+void users_add_object(_base_entry_t *p_bentry);
+void users_remove_object(_base_entry_t *p_bentry);
+void users_add_object_user(_base_entry_t *p_bentry, iBase *pi_user);
+_set_pi_object_t *get_object_users(_base_entry_t *p_bentry);
+void users_enum(_base_entry_t *p_bentry, _enum_cb_t *pcb, void *udata);
 void destroy_users_storage(void);
 
 // Monitoring
@@ -242,7 +242,7 @@ void lm_clean(iBase *pi_base);
 _u32 lm_init(iBase *pi_base, _cb_object_request_t *pcb, void *udata);
 _u32 lm_post_init(iBase *pi_base, _base_entry_t *p_bentry, _cb_create_object_t *pcb, void *udata);
 _u32 lm_uninit(iBase *pi_base, _cb_release_object_t *pcb, void *udata);
-_u32 lm_remove(iBase *pi_base, _base_entry_t *pb_entry, _cb_release_object_t *pcb, void *udata);
+_u32 lm_remove(iBase *pi_base, _base_entry_t *p_bentry, _cb_release_object_t *pcb, void *udata);
 
 #endif
 
