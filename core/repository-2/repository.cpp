@@ -402,16 +402,41 @@ public:
 
 	_err_t extension_load(_cstr_t file, _cstr_t alias=0) {
 		_err_t r = ERR_UNKNOWN;
+		_extension_t *p_ext = NULL;
 
-		//...
+		if((r = load_extension(file, alias, &p_ext)) == ERR_NONE) {
+			if((r = p_ext->init(this)) == ERR_NONE) {
+				_u32 count = 0, limit = 0;
+				_base_entry_t *p_base_array = p_ext->array(&count, &limit);
+
+				if(p_base_array) {
+					add_base_array(p_base_array, count);
+					init_base_array(p_base_array, count);
+				} else {
+					r = ERR_UNKNOWN;
+					p_ext->unload();
+				}
+			}
+		}
 
 		return r;
 	}
 
 	_err_t extension_unload(_cstr_t alias) {
 		_err_t r = ERR_UNKNOWN;
+		_extension_t *p_ext = find_extension(alias);
 
-		//...
+		if(p_ext) {
+			_u32 count = 0, limit = 0;
+			_base_entry_t *p_base_array = p_ext->array(&count, &limit);
+
+			if(p_base_array) {
+				uninit_base_array(p_base_array, count);
+				remove_base_array(p_base_array, count);
+			}
+
+			unload_extension(alias);
+		}
 
 		return r;
 	}
