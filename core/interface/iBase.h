@@ -96,6 +96,8 @@ struct link_info {
 		 return _link_map_;}
 
 #define BASE_REF(x) (iBase**)&x
+#define LINK(p, i, c, f, r, u) \
+	{ BASE_REF(p), i, c, f, r, u }
 
 #define DESTRUCTOR(_class_) \
 	virtual ~_class_()
