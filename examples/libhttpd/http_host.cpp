@@ -243,6 +243,35 @@ private:
 		}
 	}
 
+BEGIN_LINK_MAP
+	LINK(mpi_fs, I_FS, NULL, RF_ORIGINAL|RF_PLUGIN, [](_u32 n, void *udata) {
+		cHttpHost *p = (cHttpHost *)udata;
+
+		switch(n) {
+			case RCTL_REF:
+				p->mpi_log->write(LMT_INFO, "ExtHttp: attach FS");
+				break;
+			case RCTL_UNREF:
+				p->mpi_log->write(LMT_INFO, "ExtHttp: detach FS");
+				p->stop_host();
+				break;
+		};
+	}, this),
+	LINK(mpi_net, I_NET, NULL, RF_ORIGINAL|RF_PLUGIN, [](_u32 n, void *udata) {
+		cHttpHost *p = (cHttpHost *)udata;
+
+		switch(n) {
+			case RCTL_REF:
+				p->mpi_log->write(LMT_INFO, "ExtHttp: attach networking");
+				break;
+			case RCTL_UNREF:
+				p->mpi_log->write(LMT_INFO, "ExtHttp: detach networking");
+				p->stop_host();
+				break;
+		};
+	}, this)
+END_LINK_MAP
+
 public:
 	BASE(cHttpHost, "cHttpHost", RF_ORIGINAL, 1,0,0);
 
