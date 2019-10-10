@@ -402,9 +402,12 @@ public:
 
 	_err_t extension_load(_cstr_t file, _cstr_t alias=0) {
 		_err_t r = ERR_UNKNOWN;
+		_char_t path[1024]="";
 		_extension_t *p_ext = NULL;
 
-		if((r = load_extension(file, alias, &p_ext)) == ERR_NONE) {
+		sprintf(path, "%s/%s", m_ext_dir, file);
+
+		if((r = load_extension(path, alias, &p_ext)) == ERR_NONE) {
 			if((r = p_ext->init(this)) == ERR_NONE) {
 				_u32 count = 0, limit = 0;
 				_base_entry_t *p_base_array = p_ext->array(&count, &limit);
