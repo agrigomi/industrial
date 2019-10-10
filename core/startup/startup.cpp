@@ -146,6 +146,8 @@ _err_t _EXPORT_ init(int argc, char *argv[]) {
 				ei[2].p_entry->ref_cnt++;
 			}
 		}
+
+		r = ERR_NONE;
 	}
 _init_done_:
 #else // EXTENSION
