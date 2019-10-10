@@ -98,6 +98,50 @@ private:
 	}
 
 	// Process original pending list.
+	void process_pending_list(void) {
+		enum_pending([](iBase *pi_base, void *udata)->_s32 {
+			_s32 r = ENUM_CONTINUE;
+			cRepository *p_repo = (cRepository *)udata;
+
+			_u32 lmr = lm_post_init(pi_base, [](const _link_info_t *pl, void *udata)->iBase* {
+				_object_request_t orq;
+				cRepository *p_repo = (cRepository *)udata;
+
+				memset(&orq, 0, sizeof(_object_request_t));
+
+				if(pl->iname) {
+					orq.flags |= RQ_INTERFACE;
+					orq.iname = pl->iname;
+				}
+				if(pl->cname) {
+					orq.flags |= RQ_NAME;
+					orq.cname = pl->cname;
+				}
+
+				return p_repo->object_request(&orq, pl->flags);
+			}, p_repo);
+
+			if(lmr & PLMR_READY) {
+				_cstat_t state = p_repo->get_context_state(pi_base);
+
+				if(!(state & ST_INITIALIZED)) {
+					if(pi_base->object_ctl(OCTL_INIT, p_repo))
+						state |= ST_INITIALIZED;
+				}
+
+				if(!(lmr & PLMR_KEEP_PENDING)) {
+					r = ENUM_DELETE;
+					state &= ST_PENDING;
+				}
+
+				p_repo->set_context_state(pi_base, state);
+				p_repo->update_users(pi_base);
+			}
+
+			return r;
+		}, this);
+	}
+
 	void process_pending_list(_base_entry_t *p_bentry) {
 		typedef struct {
 			cRepository	*p_repo;
@@ -184,16 +228,18 @@ private:
 	void init_base_array(_base_entry_t *p_bentry, _u32 count) {
 		for(_u32 i = 0; i < count; i++) {
 			_object_info_t oi;
+			bool post_init = true;
 
 			p_bentry[i].pi_base->object_info(&oi);
 
 			if((oi.flags & RF_ORIGINAL) && !(p_bentry[i].state & ST_INITIALIZED))
-				init_object(p_bentry[i].pi_base);
+				post_init = init_object(p_bentry[i].pi_base);
 
+			if(post_init)
+				process_pending_list(&p_bentry[i]);
 		}
 
-		for(_u32 i = 0; i < count; i++)
-			process_pending_list(&p_bentry[i]);
+		process_pending_list();
 	}
 
 	bool uninit_object(iBase *pi_base) {
