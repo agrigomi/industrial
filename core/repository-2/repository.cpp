@@ -184,16 +184,16 @@ private:
 	void init_base_array(_base_entry_t *p_bentry, _u32 count) {
 		for(_u32 i = 0; i < count; i++) {
 			_object_info_t oi;
-			bool process_pending = true;
 
 			p_bentry[i].pi_base->object_info(&oi);
 
 			if((oi.flags & RF_ORIGINAL) && !(p_bentry[i].state & ST_INITIALIZED))
-				process_pending = init_object(p_bentry[i].pi_base);
+				init_object(p_bentry[i].pi_base);
 
-			if(process_pending)
-				process_pending_list(&p_bentry[i]);
 		}
+
+		for(_u32 i = 0; i < count; i++)
+			process_pending_list(&p_bentry[i]);
 	}
 
 	bool uninit_object(iBase *pi_base) {

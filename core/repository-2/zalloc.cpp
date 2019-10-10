@@ -55,14 +55,16 @@ void *zalloc(_u32 size) {
 
 void zfree(void *ptr, _u32 size) {
 	if(_g_is_init_)
+/*
 #ifndef NDEBUG
 		assert(!zone_free(&_g_zcontext_, ptr, size));
 	else {
 		assert(_g_is_init_);
 	}
 #else
+*/
 		zone_free(&_g_zcontext_, ptr, size);
-#endif
+//#endif
 }
 
 bool zverify(void *ptr, _u32 size) {
