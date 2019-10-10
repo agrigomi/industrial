@@ -134,7 +134,7 @@ _err_t init_extension(_cstr_t alias, iRepository *pi_repo, _mutex_handle_t hlock
 	return r;
 }
 
-_base_entry_t *get_base_array(_cstr_t alias, _u32 *count, _u32 *limit, _mutex_handle_t hlock) {
+_base_entry_t *extension_array(_cstr_t alias, _u32 *count, _u32 *limit, _mutex_handle_t hlock) {
 	_base_entry_t *r = NULL;
 	_extension_t *pext = find_extension(alias, hlock);
 

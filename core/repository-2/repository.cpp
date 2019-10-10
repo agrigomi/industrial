@@ -1,4 +1,5 @@
 #include <string.h>
+#include "startup.h"
 #include "private.h"
 #include "iTaskMaker.h"
 
@@ -451,6 +452,12 @@ public:
 		}_enum_t;
 
 		_enum_t e = {pcb, udata};
+
+		// core
+		_u32 count = 0, limit = 0;
+		_base_entry_t *p_base_array = get_base_array(&count, &limit);
+
+		pcb("core", p_base_array, count, limit, udata);
 
 		enum_extensions([](_extension_t *p_ext, void *udata)->_s32 {
 			_enum_t *pe = (_enum_t *)udata;
