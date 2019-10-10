@@ -56,39 +56,35 @@ static void flags2str(_u32 f, _str_t str, _u32 sz) {
 static void cmd_repo_list(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 			iIO *pi_io, _cmd_opt_t *p_opt,
 			_u32 argc, _cstr_t argv[]) {
-	_enum_ext_t eext = _gpi_repo_->enum_ext_first();
+	typedef struct {
+		iIO *pi_io;
+		bool ext_only;
+	}_enum_t;
+
 	bool ext_only = pi_cmd_host->option_check(OPT_EXT_ONLY, p_opt);
+	_enum_t e = {pi_io, ext_only};
 
-	while(eext) {
-		_u32 count = _gpi_repo_->enum_ext_array_count(eext);
-		_u32 i = 0;
+	_gpi_repo_->extension_enum([](_cstr_t alias, _base_entry_t *p_barray, _u32 count, _u32 limit, void *udata) {
+		_enum_t *pe = (_enum_t *)udata;
 
-		fout(pi_io, "%s\tobjects:%d; limit:%d\n",
-				_gpi_repo_->enum_ext_alias(eext),
-				_gpi_repo_->enum_ext_array_count(eext),
-				_gpi_repo_->enum_ext_array_limit(eext));
-		if(!ext_only) {
-			for(; i < count; i++) {
-				_base_entry_t be;
+		fout(pe->pi_io, "%s\tobjects:%d; limit:%d\n", alias, count, limit);
+		if(!pe->ext_only) {
+			for(_u32 i = 0; i < count; i++) {
+				_object_info_t oi;
 
-				if(_gpi_repo_->enum_ext_array(eext, i, &be)) {
-					_object_info_t oi;
+				if(p_barray[i].pi_base) {
+					_char_t sf[10]="";
+					p_barray[i].pi_base->object_info(&oi);
 
-					if(be.pi_base) {
-						_char_t sf[10]="";
-						be.pi_base->object_info(&oi);
-
-						flags2str(oi.flags, sf, sizeof(sf));
-						fout(pi_io, "\t'%s'; '%s'; '%s'; %u.%u.%u; %u; %u\n",
-								oi.iname, oi.cname, sf,
-								oi.version.major, oi.version.minor, oi.version.revision,
-								oi.size, be.ref_cnt);
-					}
+					flags2str(oi.flags, sf, sizeof(sf));
+					fout(pe->pi_io, "\t'%s'; '%s'; '%s'; %u.%u.%u; %u; %u\n",
+							oi.iname, oi.cname, sf,
+							oi.version.major, oi.version.minor, oi.version.revision,
+							oi.size, p_barray[i].ref_cnt);
 				}
 			}
 		}
-		eext = _gpi_repo_->enum_ext_next(eext);
-	}
+	}, &e);
 }
 
 static void cmd_ext_load(iCmd *pi_cmd, iCmdHost *pi_cmd_host,

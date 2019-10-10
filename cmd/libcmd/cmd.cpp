@@ -277,6 +277,23 @@ private:
 		}
 		return r;
 	}
+
+	iCmd *mpi_cmd;
+
+	BEGIN_LINK_MAP
+	LINK(mpi_cmd, I_CMD, NULL, RF_ORIGINAL|RF_CLONE|RF_PLUGIN, [](_u32 n, void *udata) {
+		cCmdHost *p = (cCmdHost *)udata;
+
+		switch(n) {
+			case RCTL_REF:
+				p->add_command(p->mpi_cmd);
+				break;
+			case RCTL_UNREF:
+				p->remove_command(p->mpi_cmd);
+				break;
+		};
+	}, this)
+	END_LINK_MAP
 public:
 	BASE(cCmdHost, "cCmdHost", RF_ORIGINAL, 1,0,0);
 
