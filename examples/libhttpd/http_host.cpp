@@ -14,7 +14,6 @@
 class cHttpHost: public iHttpHost {
 private:
 	iNet		*mpi_net;
-	iFS		*mpi_fs;
 	iFileCache	*mpi_fcache;
 	iLog		*mpi_log;
 	iArgs		*mpi_args;
@@ -244,25 +243,15 @@ private:
 	}
 
 BEGIN_LINK_MAP
-	LINK(mpi_fs, I_FS, NULL, RF_ORIGINAL|RF_PLUGIN, [](_u32 n, void *udata) {
-		cHttpHost *p = (cHttpHost *)udata;
-
-		switch(n) {
-			case RCTL_REF:
-				p->mpi_log->write(LMT_INFO, "ExtHttp: attach FS");
-				break;
-			case RCTL_UNREF:
-				p->mpi_log->write(LMT_INFO, "ExtHttp: detach FS");
-				p->stop_host();
-				break;
-		};
-	}, this),
 	LINK(mpi_fcache, I_FILE_CACHE, NULL, RF_CLONE|RF_PLUGIN, [](_u32 n, void *udata) {
 		cHttpHost *p = (cHttpHost *)udata;
 
 		if(n == RCTL_REF) {
 			p->mpi_fcache->init("/tmp", "ExtHttp");
-			p->mpi_log->write(LMT_INFO, "Init file cache");
+			p->mpi_log->write(LMT_INFO, "ExtHttp: Init file cache");
+		} else if(n == RCTL_UNREF) {
+			p->mpi_log->write(LMT_INFO, "ExtHttp: Detach file cache");
+			p->stop_host();
 		}
 
 	}, this),
@@ -292,66 +281,26 @@ public:
 				iRepository *pi_repo = (iRepository *)arg;
 
 				mpi_net = NULL;
-				mpi_fs = NULL;
 				mpi_fcache = NULL;
 				httpd_index = 1;
 
 				mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
 				mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
 				mpi_args = (iArgs *)pi_repo->object_by_iname(I_ARGS, RF_ORIGINAL);
-
-				pi_repo->monitoring_add(NULL, I_NET, NULL, this, SCAN_ORIGINAL);
-				pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
-
 				if(mpi_log && mpi_map)
 					r = mpi_map->init(31);
 
-				if(mpi_net && mpi_fs && mpi_fcache)
+				if(mpi_net && mpi_fcache)
 					create_first_server();
 			} break;
 			case OCTL_UNINIT: {
 				iRepository *pi_repo = (iRepository *)arg;
 
 				stop_host();
-				//release_object(pi_repo, (iBase **)&mpi_net);
-				//release_object(pi_repo, (iBase **)&mpi_fcache);
-				//release_object(pi_repo, (iBase **)&mpi_fs);
 				release_object(pi_repo, (iBase **)&mpi_map);
 				release_object(pi_repo, (iBase **)&mpi_log);
 				release_object(pi_repo, (iBase **)&mpi_args);
 				r = true;
-			} break;
-			case OCTL_NOTIFY: {
-				_notification_t *pn = (_notification_t *)arg;
-				_object_info_t oi;
-
-				memset(&oi, 0, sizeof(_object_info_t));
-				if(pn->object) {
-					pn->object->object_info(&oi);
-
-					if(pn->flags & NF_INIT) { // catch
-						if(strcmp(oi.iname, I_NET) == 0) {
-							mpi_log->write(LMT_INFO, "ExtHttp: catch networking");
-							mpi_net = dynamic_cast<iNet *>(_gpi_repo_->object_by_handle(pn->hobj, RF_ORIGINAL));
-						} else if(strcmp(oi.iname, I_FS) == 0) {
-							mpi_log->write(LMT_INFO, "ExtHttp: catch FS support");
-							mpi_fs = dynamic_cast<iFS *>(_gpi_repo_->object_by_handle(pn->hobj, RF_ORIGINAL));
-							if((mpi_fcache = (iFileCache *)_gpi_repo_->object_by_iname(I_FILE_CACHE, RF_CLONE)))
-								mpi_fcache->init("/tmp", "ExtHttp");
-						}
-					} else if(pn->flags & (NF_UNINIT | NF_REMOVE)) { // release
-						if(strcmp(oi.iname, I_NET) == 0) {
-							mpi_log->write(LMT_INFO, "ExtHttp: release networking");
-							stop_host();
-							release_object(_gpi_repo_, (iBase **)&mpi_net);
-						} else if(strcmp(oi.iname, I_FS) == 0) {
-							mpi_log->write(LMT_INFO, "ExtHttp: release FS support");
-							stop_host();
-							release_object(_gpi_repo_, (iBase **)&mpi_fcache);
-							release_object(_gpi_repo_, (iBase **)&mpi_fs);
-						}
-					}
-				}
 			} break;
 		}
 
