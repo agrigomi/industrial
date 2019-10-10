@@ -187,7 +187,7 @@ private:
 
 			p_bentry[i].pi_base->object_info(&oi);
 
-			if((oi.flags & RF_ORIGINAL) && !(p_bentry->state & ST_INITIALIZED))
+			if((oi.flags & RF_ORIGINAL) && !(p_bentry[i].state & ST_INITIALIZED))
 				process_pending = init_object(p_bentry[i].pi_base);
 
 			if(process_pending)
@@ -256,7 +256,7 @@ private:
 				return ENUM_CONTINUE;
 			}, &e);
 
-			users_remove_object(p_bentry);
+			users_remove_object(&p_bentry[i]);
 		}
 	}
 
