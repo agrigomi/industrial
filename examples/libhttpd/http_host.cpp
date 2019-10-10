@@ -257,6 +257,15 @@ BEGIN_LINK_MAP
 				break;
 		};
 	}, this),
+	LINK(mpi_fcache, I_FILE_CACHE, NULL, RF_CLONE|RF_PLUGIN, [](_u32 n, void *udata) {
+		cHttpHost *p = (cHttpHost *)udata;
+
+		if(n == RCTL_REF) {
+			p->mpi_fcache->init("/tmp", "ExtHttp");
+			p->mpi_log->write(LMT_INFO, "Init file cache");
+		}
+
+	}, this),
 	LINK(mpi_net, I_NET, NULL, RF_ORIGINAL|RF_PLUGIN, [](_u32 n, void *udata) {
 		cHttpHost *p = (cHttpHost *)udata;
 
@@ -304,9 +313,9 @@ public:
 				iRepository *pi_repo = (iRepository *)arg;
 
 				stop_host();
-				release_object(pi_repo, (iBase **)&mpi_net);
-				release_object(pi_repo, (iBase **)&mpi_fcache);
-				release_object(pi_repo, (iBase **)&mpi_fs);
+				//release_object(pi_repo, (iBase **)&mpi_net);
+				//release_object(pi_repo, (iBase **)&mpi_fcache);
+				//release_object(pi_repo, (iBase **)&mpi_fs);
 				release_object(pi_repo, (iBase **)&mpi_map);
 				release_object(pi_repo, (iBase **)&mpi_log);
 				release_object(pi_repo, (iBase **)&mpi_args);
