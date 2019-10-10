@@ -125,8 +125,10 @@ private:
 				_cstat_t state = p_repo->get_context_state(pi_base);
 
 				if(!(state & ST_INITIALIZED)) {
-					if(pi_base->object_ctl(OCTL_INIT, p_repo))
+					if(pi_base->object_ctl(OCTL_INIT, p_repo)) {
 						state |= ST_INITIALIZED;
+						p_repo->update_users(pi_base);
+					}
 				}
 
 				if(!(lmr & PLMR_KEEP_PENDING)) {
@@ -159,14 +161,14 @@ private:
 				return p_repo->object_by_handle(p_bentry, flags);
 			}, pe->p_repo);
 
-			pe->p_repo->update_users(pi_base);
-
 			if(lmr & PLMR_READY) {
 				if(!(lmr & PLMR_KEEP_PENDING)) {
 					r = ENUM_DELETE;
 					pe->p_repo->set_context_state(pi_base,
 						(pe->p_repo->get_context_state(pi_base) & ~ST_PENDING));
 				}
+
+				pe->p_repo->update_users(pi_base);
 			}
 
 			return r;
@@ -257,6 +259,12 @@ private:
 					pi_tasks->stop(pi_base);
 			}
 
+			lm_pre_uninit(pi_base, [](iBase *pi_base, void *udata) {
+				cRepository *p_repo = (cRepository *)udata;
+
+				p_repo->object_release(pi_base, false);
+			}, this);
+
 			if((r = pi_base->object_ctl(OCTL_UNINIT, this))) {
 				lm_uninit(pi_base, [](iBase *pi_base, void *udata) {
 					cRepository *p_repo = (cRepository *)udata;
@@ -304,6 +312,8 @@ private:
 			}, &e);
 
 			users_remove_object(&p_bentry[i]);
+			if(p_bentry[i].state & ST_INITIALIZED)
+				uninit_object(p_bentry[i].pi_base);
 		}
 	}
 

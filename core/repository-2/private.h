@@ -242,6 +242,7 @@ void lm_clean(iBase *pi_base);
 _u32 lm_init(iBase *pi_base, _cb_object_request_t *pcb, void *udata);
 _u32 lm_post_init(iBase *pi_base, _cb_object_request_t *pcb, void *udata);
 _u32 lm_post_init(iBase *pi_base, _base_entry_t *p_bentry, _cb_create_object_t *pcb, void *udata);
+_u32 lm_pre_uninit(iBase *pi_base, _cb_release_object_t *pcb, void *udata);
 _u32 lm_uninit(iBase *pi_base, _cb_release_object_t *pcb, void *udata);
 _u32 lm_remove(iBase *pi_base, _base_entry_t *p_bentry, _cb_release_object_t *pcb, void *udata);
 
