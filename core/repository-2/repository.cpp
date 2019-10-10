@@ -279,60 +279,95 @@ public:
 
 	iBase *object_request(_object_request_t *req, _rf_t flags) {
 		iBase *r = NULL;
+		_base_entry_t *p_bentry = NULL;
 
-		//...
+		if((req->flags & RQ_NAME) && req->cname)
+			p_bentry = find_object_by_cname(req->cname);
+		else if((req->flags & RQ_INTERFACE) && req->iname)
+			p_bentry = find_object_by_iname(req->iname);
+
+		if(p_bentry)
+			r = object_by_handle(p_bentry, flags);
 
 		return r;
 	}
 
 	void object_release(iBase *pi_base, bool notify=true) {
-		//...
+		_base_entry_t *p_bentry = find_object_entry(pi_base);
+		bool unref = true;
+
+		if(p_bentry) {
+			if(p_bentry->pi_base != pi_base) {
+				// cloning
+				if((unref = uninit_object(pi_base)))
+					dcs_remove_context(pi_base);
+			}
+
+			if(p_bentry->ref_cnt && unref)
+				p_bentry->ref_cnt--;
+		}
 	}
 
 	iBase *object_by_cname(_cstr_t cname, _rf_t flags) {
-		iBase *r = NULL;
+		_object_request_t req = {RQ_NAME, cname, NULL};
 
-		//...
-
-		return r;
+		return object_request(&req, flags);
 	}
 
 	iBase *object_by_iname(_cstr_t iname, _rf_t flags) {
-		iBase *r = NULL;
+		_object_request_t req = {RQ_INTERFACE, NULL, iname};
 
-		//...
-
-		return r;
+		return object_request(&req, flags);
 	}
 
 	iBase *object_by_handle(HOBJECT h, _rf_t flags) {
 		iBase *r = NULL;
+		_base_entry_t *bentry = h;
 
-		//...
+		if(bentry) {
+			_object_info_t info;
+
+			bentry->pi_base->object_info(&info);
+			if(info.flags & flags) { // validate flags
+				if((info.flags & flags) & RF_CLONE) {
+					if((r = dcs_create_context(bentry, flags))) {
+						if(!init_object(r)) {
+							uninit_object(r);
+							dcs_remove_context(r);
+							r = NULL;
+						} else
+							bentry->ref_cnt++;
+					}
+				} else if((info.flags & flags) & RF_ORIGINAL) {
+					if(init_object(bentry->pi_base)) {
+						r = bentry->pi_base;
+						bentry->ref_cnt++;
+					}
+				}
+			}
+		}
 
 		return r;
 	}
 
 	HOBJECT handle_by_iname(_cstr_t iname) {
-		HOBJECT r = NULL;
-
-		//...
-
-		return r;
+		return find_object_by_iname(iname);
 	}
 
 	HOBJECT handle_by_cname(_cstr_t cname) {
-		HOBJECT r = NULL;
-
-		//...
-
-		return r;
+		return find_object_by_cname(cname);
 	}
 
 	bool object_info(HOBJECT h, _object_info_t *poi) {
 		bool r = false;
+		_base_entry_t *bentry = h;
 
-		//...
+		if(bentry) {
+			if(bentry->pi_base) {
+				bentry->pi_base->object_info(poi);
+				r = true;
+			}
+		}
 
 		return r;
 	}
