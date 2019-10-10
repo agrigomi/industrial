@@ -441,8 +441,22 @@ public:
 		return r;
 	}
 
-	void extension_enum(_enum_ext_t *pcb, void *udata) {
-		//...
+	void extension_enum(_cb_enum_ext_t *pcb, void *udata) {
+		typedef struct {
+			_cb_enum_ext_t	*pcb;
+			void		*udata;
+		}_enum_t;
+
+		_enum_t e = {pcb, udata};
+
+		enum_extensions([](_extension_t *p_ext, void *udata)->_s32 {
+			_enum_t *pe = (_enum_t *)udata;
+			_u32 count = 0, limit = 0;
+			_base_entry_t *p_base_array = p_ext->array(&count, &limit);
+
+			pe->pcb(p_ext->alias(), p_base_array, count, limit, pe->udata);
+			return ENUM_CONTINUE;
+		}, &e);
 	}
 
 	void destroy(void) {

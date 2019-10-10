@@ -33,7 +33,7 @@ typedef struct {
 
 typedef _base_entry_t* HOBJECT;
 typedef void* HNOTIFY;
-typedef void _enum_ext_t(_cstr_t alias, _base_entry_t *p_base_array, _u32 count, _u32 limit, void *udata);
+typedef void _cb_enum_ext_t(_cstr_t alias, _base_entry_t *p_bentry, _u32 count, _u32 limit, void *udata);
 
 #define SCAN_ORIGINAL	1
 #define SCAN_CLONE	2
@@ -80,7 +80,7 @@ public:
 	virtual void extension_dir(_cstr_t dir)=0;
 	virtual _err_t extension_load(_cstr_t file, _cstr_t alias=0)=0;
 	virtual _err_t extension_unload(_cstr_t alias)=0;
-	virtual void extension_enum(_enum_ext_t *pcb, void *udata)=0;
+	virtual void extension_enum(_cb_enum_ext_t *pcb, void *udata)=0;
 	virtual void destroy(void)=0;
 };
 
