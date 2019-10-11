@@ -90,15 +90,11 @@ private:
 
 		_enum_t e = {pcb, udata};
 
-		enum_extensions([](_extension_t *p_ext, void *udata)->_s32 {
+		extension_enum([](_cstr_t alias, _base_entry_t *p_base_array, _u32 count, _u32 limit, void *udata) {
 			_enum_t *pe = (_enum_t *)udata;
-			_u32 count = 0, limit = 0;
-			_base_entry_t *p_array = p_ext->array(&count, &limit);
 
 			for(_u32 i = 0; i < count; i++)
-				pe->pcb(&p_array[i], pe->udata);
-
-			return ENUM_CONTINUE;
+				pe->pcb(&p_base_array[i], pe->udata);
 		}, &e);
 	}
 
@@ -553,7 +549,7 @@ public:
 				remove_base_array(p_base_array, count);
 			}
 
-			unload_extension(alias);
+			r = unload_extension(alias);
 		}
 
 		return r;
