@@ -46,6 +46,8 @@ public:
 	virtual _cmd_t *get_info(void)=0;
 };
 
+typedef _s32 _cb_enum_cmd_t(_cmd_t *, void *udata);
+
 class iCmdHost: public iBase {
 public:
 	INTERFACE(iCmdHost, I_CMD_HOST);
@@ -60,12 +62,8 @@ public:
 	// note: idx=0 should return the command name
 	//       idx=1 should return arg1
 	virtual _cstr_t argument(_u32 argc, _cstr_t argv[], _cmd_opt_t *p_opt_array, _u32 idx)=0;
-	// enumeration: get first
-	virtual _cmd_enum_t enum_first(void)=0;
-	// enumeration: get next
-	virtual _cmd_enum_t enum_next(_cmd_enum_t)=0;
-	// enumeration: get data
-	virtual _cmd_t *enum_get(_cmd_enum_t)=0;
+	// enumeration
+	virtual void enumerate(_cb_enum_cmd_t *pcb, void *udata)=0;
 };
 
 #endif

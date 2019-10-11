@@ -76,14 +76,19 @@ static void help_handler(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 		}
 	} else {
 		// enum commands
-		_cmd_enum_t en = pi_cmd_host->enum_first();
+		typedef struct {
+			bool bfull;
+			iIO *pi_io;
+		}_enum_t;
 
-		while(en) {
-			_cmd_t *p_cmd = pi_cmd_host->enum_get(en);
-			if(p_cmd)
-				help_command(p_cmd, pi_io, bfull);
-			en = pi_cmd_host->enum_next(en);
-		}
+		_enum_t e = {bfull, pi_io};
+
+		pi_cmd_host->enumerate([](_cmd_t *p_cmd, void *udata)->_s32 {
+			_enum_t *pe = (_enum_t *)udata;
+
+			help_command(p_cmd, pe->pi_io, pe->bfull);
+			return 0;
+		}, &e);
 	}
 }
 

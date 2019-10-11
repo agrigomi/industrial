@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include "iCmd.h"
@@ -19,38 +20,16 @@ typedef struct {
 
 class cCmdHost: public iCmdHost {
 private:
-	iLlist	*mpi_cmd_list;
+	iMap	*mpi_cmd_map;
 	iStr	*mpi_str;
 	iHeap	*mpi_heap;
-	HNOTIFY	mh_notify;
 
-	_cmd_rec_t *find_command(iBase *pi_cmd, _cstr_t cmd_name) {
+	_cmd_rec_t *find_command(_cstr_t cmd_name) {
 		_cmd_rec_t *r = 0;
-		iCmd *pi_cmd_obj = dynamic_cast<iCmd *>(pi_cmd);
+		_u32 sz = 0;
 
-		if(mpi_cmd_list) {
-			_u32 sz = 0;
-			HMUTEX hm = mpi_cmd_list->lock();
-			_cmd_rec_t *rec = (_cmd_rec_t *)mpi_cmd_list->first(&sz, hm);
-
-			while(rec) {
-				if(pi_cmd) {
-					if(pi_cmd_obj == rec->pi_cmd) {
-						r = rec;
-						break;
-					}
-				}
-				if(cmd_name) {
-					if(mpi_str->str_cmp(cmd_name, (_str_t)rec->cmd_name) == 0 && rec->pi_cmd) {
-						r = rec;
-						break;
-					}
-				}
-				rec = (_cmd_rec_t *)mpi_cmd_list->next(&sz, hm);
-			}
-
-			mpi_cmd_list->unlock(hm);
-		}
+		if(mpi_cmd_map)
+			r = (_cmd_rec_t *)mpi_cmd_map->get(cmd_name, strlen(cmd_name), &sz);
 
 		return r;
 	}
@@ -70,7 +49,7 @@ private:
 				rec.pi_cmd = pi_cmd_obj;
 				rec.running = false;
 
-				mpi_cmd_list->add(&rec, sizeof(_cmd_rec_t));
+				mpi_cmd_map->set(rec.cmd_name, strlen(rec.cmd_name), &rec, sizeof(_cmd_rec_t));
 				n++;
 			}
 		}
@@ -81,21 +60,8 @@ private:
 		iCmd *pi_cmd_obj = dynamic_cast<iCmd *>(pi_cmd);
 
 		if(pi_cmd_obj) {
-			HMUTEX hm = mpi_cmd_list->lock();
-			_u32 sz = 0;
-			_cmd_rec_t *p_rec = (_cmd_rec_t *)mpi_cmd_list->first(&sz, hm);
-
-			while(p_rec) {
-				if(p_rec->pi_cmd == pi_cmd_obj) {
-					while(p_rec->running)
-						usleep(1000);
-					mpi_cmd_list->del(hm);
-					p_rec = (_cmd_rec_t *)mpi_cmd_list->current(&sz, hm);
-				} else
-					p_rec = (_cmd_rec_t *)mpi_cmd_list->next(&sz, hm);
-			}
-
-			mpi_cmd_list->unlock(hm);
+			_cmd_t *p_cmd_info = pi_cmd_obj->get_info();
+			mpi_cmd_map->del(p_cmd_info->cmd_name, strlen(p_cmd_info->cmd_name));
 		}
 	}
 
@@ -256,7 +222,7 @@ private:
 	}
 
 	_cmd_t *get_cmd_info(_cstr_t cmd_name, iCmd **pi_cmd, _cmd_rec_t **pp_rec) {
-		_cmd_rec_t *cmd_rec = find_command(0, cmd_name);
+		_cmd_rec_t *cmd_rec = find_command(cmd_name);
 		_cmd_t *r = (cmd_rec) ? cmd_rec->pi_cmd->get_info() : 0;
 
 		if(r) {
@@ -281,19 +247,23 @@ private:
 	iCmd *mpi_cmd;
 
 	BEGIN_LINK_MAP
-	LINK(mpi_cmd, I_CMD, NULL, RF_ORIGINAL|RF_CLONE|RF_PLUGIN, [](_u32 n, void *udata) {
-		cCmdHost *p = (cCmdHost *)udata;
+		LINK(mpi_str, I_STR, NULL, RF_ORIGINAL, NULL, NULL),
+		LINK(mpi_heap, I_HEAP, NULL, RF_ORIGINAL, NULL, NULL),
+		LINK(mpi_cmd_map, I_MAP, NULL, RF_CLONE, NULL, NULL),
+		LINK(mpi_cmd, I_CMD, NULL, RF_ORIGINAL|RF_CLONE|RF_PLUGIN, [](_u32 n, void *udata) {
+			cCmdHost *p = (cCmdHost *)udata;
 
-		switch(n) {
-			case RCTL_REF:
-				p->add_command(p->mpi_cmd);
-				break;
-			case RCTL_UNREF:
-				p->remove_command(p->mpi_cmd);
-				break;
-		};
-	}, this)
+			switch(n) {
+				case RCTL_REF:
+					p->add_command(p->mpi_cmd);
+					break;
+				case RCTL_UNREF:
+					p->remove_command(p->mpi_cmd);
+					break;
+			};
+		}, this)
 	END_LINK_MAP
+
 public:
 	BASE(cCmdHost, "cCmdHost", RF_ORIGINAL, 1,0,0);
 
@@ -301,37 +271,15 @@ public:
 		bool r = false;
 
 		switch(cmd) {
-			case OCTL_INIT: {
-					iRepository *pi_repo = (iRepository *)arg;
-					mpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
-					mpi_heap = (iHeap*) pi_repo->object_by_iname(I_HEAP, RF_ORIGINAL);
-					if((mpi_cmd_list = (iLlist *)pi_repo->object_by_iname(I_LLIST, RF_CLONE)))
-						mpi_cmd_list->init(LL_VECTOR, 1);
-					if(mpi_str && mpi_heap && mpi_cmd_list) {
-						mh_notify = pi_repo->monitoring_add(0, I_CMD, 0, this, SCAN_ORIGINAL|SCAN_CLONE);
-						r = true;
-					}
-				} break;
-			case OCTL_UNINIT: {
-					iRepository *pi_repo = (iRepository *)arg;
-					if(mh_notify)
-						pi_repo->monitoring_remove(mh_notify);
-					if(mpi_str)
-						pi_repo->object_release(mpi_str);
-					if(mpi_heap)
-						pi_repo->object_release(mpi_heap);
-					if(mpi_cmd_list)
-						pi_repo->object_release(mpi_cmd_list);
+			case OCTL_INIT:
+				if(mpi_cmd_map) {
+					mpi_cmd_map->init(15);
 					r = true;
-				} break;
-			case OCTL_NOTIFY: {
-					_notification_t *pn = (_notification_t *)arg;
-					if(pn->flags & NF_INIT)
-						add_command(pn->object);
-					if(pn->flags & (NF_REMOVE|NF_UNINIT))
-						remove_command(pn->object);
-					r = true;
-				} break;
+				}
+				break;
+			case OCTL_UNINIT:
+				r = true;
+				break;
 		}
 
 		return r;
@@ -454,41 +402,21 @@ public:
 		return r;
 	}
 
-	// enumeration: get first
-	_cmd_enum_t enum_first(void) {
-		_u32 sz = 0;
+	void enumerate(_cb_enum_cmd_t *pcb, void *udata) {
+		typedef struct {
+			_cb_enum_cmd_t *pcb;
+			void *udata;
+		}_enum_t;
 
-		return mpi_cmd_list->first(&sz);
-	}
+		_enum_t e = {pcb, udata};
 
-	// enumeration: get next
-	_cmd_enum_t enum_next(_cmd_enum_t e) {
-		_cmd_enum_t r = 0;
-		HMUTEX hm = mpi_cmd_list->lock();
-		_u32 sz = 0;
+		mpi_cmd_map->enumerate([](void *data, _u32 size, void *udata)->_s32 {
+			_enum_t *pe = (_enum_t *)udata;
+			_cmd_rec_t *p_rec = (_cmd_rec_t *)data;
 
-		if(mpi_cmd_list->sel(e, hm))
-			r = mpi_cmd_list->next(&sz, hm);
-
-		mpi_cmd_list->unlock(hm);
-
-		return r;
-	}
-
-	// enumeration: get data
-	_cmd_t *enum_get(_cmd_enum_t e) {
-		_cmd_t *r = 0;
-		_u32 sz = 0;
-		HMUTEX hm = mpi_cmd_list->lock();
-
-		if(mpi_cmd_list->sel(e, hm)) {
-			_cmd_rec_t *rec = (_cmd_rec_t *)mpi_cmd_list->current(&sz, hm);
-			if(rec && rec->pi_cmd)
-				r = rec->pi_cmd->get_info();
-		}
-
-		mpi_cmd_list->unlock(hm);
-		return r;
+			pe->pcb(p_rec->pi_cmd->get_info(), pe->udata);
+			return ENUM_NEXT;
+		}, &e);
 	}
 };
 
