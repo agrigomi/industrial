@@ -449,7 +449,7 @@ public:
 							r = NULL;
 						} else {
 							bentry->ref_cnt++;
-							if(bentry->state & ST_PENDING)
+							if(dcs_get_context_state(r) & ST_PENDING)
 								scan_base_array(r);
 						}
 					}
