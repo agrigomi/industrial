@@ -116,14 +116,10 @@ public:
 
 				mpi_log->fwrite(LMT_INFO, "%s"
 						"Uninit", NC_LOG_PREFIX);
-				pi_repo->monitoring_remove(mhn_net);
-				pi_repo->monitoring_remove(mhn_cmd_host);
 
 				close_connections();
 				release(pi_repo, (iBase **)&mpi_list);
 				release(pi_repo, (iBase **)&mpi_server);
-				release(pi_repo, (iBase **)&mpi_net);
-				release(pi_repo, (iBase **)&mpi_cmd_host);
 				release(pi_repo, (iBase **)&mpi_log);
 				release(pi_repo, (iBase **)&mpi_mutex);
 				r = true;
@@ -132,6 +128,7 @@ public:
 				m_stopped = false;
 				m_running = true;
 
+				mpi_log->fwrite(LMT_INFO, "%sStart thread", NC_LOG_PREFIX);
 				while(m_running) {
 					HMUTEX hm = mpi_mutex->lock();
 
@@ -203,6 +200,7 @@ public:
 				if(m_running) {
 					_u32 t = 10;
 
+					mpi_log->fwrite(LMT_INFO, "%sStop thread", NC_LOG_PREFIX);
 					m_running = false;
 					while(!m_stopped && t) {
 						t--;
@@ -211,62 +209,44 @@ public:
 				}
 				r = m_stopped;
 			} break;
-			case OCTL_NOTIFY: {
-				_notification_t *pn = (_notification_t *)arg;
-				_object_info_t oi;
-
-				memset(&oi, 0, sizeof(_object_info_t));
-				if(pn->object)
-					pn->object->object_info(&oi);
-
-				if(pn->flags & NF_INIT) { // catch
-					if(strcmp(oi.iname, I_CMD_HOST) == 0) {
-						mpi_cmd_host = (iCmdHost *)pn->object;
-						mpi_log->fwrite(LMT_INFO, "%s"
-								"Catch command host", NC_LOG_PREFIX);
-					}
-					if(strcmp(oi.iname, I_NET) == 0) {
-						mpi_net = (iNet *)pn->object;
-						mpi_log->fwrite(LMT_INFO, "%s"
-								"Catch networking", NC_LOG_PREFIX);
-						// Create server
-						if(mpi_net) {
-							if((mpi_server = mpi_net->create_tcp_server(m_port))) {
-								mpi_log->fwrite(LMT_INFO, "%s"
-										"Create TCP server on port %d",
-										NC_LOG_PREFIX, m_port);
-								// waiting for connections in non blocking mode
-								mpi_server->blocking(false);
-							} else
-								mpi_log->fwrite(LMT_ERROR, "%s"
-										"Failed to create TCP server on port %d",
-										NC_LOG_PREFIX, m_port);
-						}
-					}
-				} else if(pn->flags & (NF_UNINIT | NF_REMOVE)) { // release
-					if(strcmp(oi.iname, I_CMD_HOST) == 0) {
-						release(_gpi_repo_, (iBase **)&mpi_cmd_host);
-						mpi_log->fwrite(LMT_INFO, "%s"
-								"Release command host", NC_LOG_PREFIX);
-					}
-					if(strcmp(oi.iname, I_NET) == 0) {
-						close_connections();
-
-						// Close server
-						mpi_log->fwrite(LMT_INFO, "%sClose server", NC_LOG_PREFIX);
-						release(_gpi_repo_, (iBase **)&mpi_server);
-
-						mpi_log->fwrite(LMT_INFO, "%s"
-								"Release networking", NC_LOG_PREFIX);
-						release(_gpi_repo_, (iBase **)&mpi_net);
-					}
-				}
-				r = true;
-			} break;
 		}
 
 		return r;
 	}
+
+BEGIN_LINK_MAP
+	LINK(mpi_cmd_host, I_CMD_HOST, NULL, RF_ORIGINAL|RF_PLUGIN, NULL, NULL),
+	LINK(mpi_net, I_NET, NULL, RF_ORIGINAL|RF_PLUGIN, [](_u32 n, void *udata) {
+		cNetCmd *p = (cNetCmd *)udata;
+
+		if(n == RCTL_REF) {
+			p->mpi_log->fwrite(LMT_INFO, "%s"
+					"Attach networking", NC_LOG_PREFIX);
+			// Create server
+			if(p->mpi_net) {
+				if((p->mpi_server = p->mpi_net->create_tcp_server(p->m_port))) {
+					p->mpi_log->fwrite(LMT_INFO, "%s"
+							"Create TCP server on port %d",
+							NC_LOG_PREFIX, p->m_port);
+					// waiting for connections in non blocking mode
+					p->mpi_server->blocking(false);
+				} else
+					p->mpi_log->fwrite(LMT_ERROR, "%s"
+							"Failed to create TCP server on port %d",
+							NC_LOG_PREFIX, p->m_port);
+			}
+		} else if(n == RCTL_UNREF)  {
+				p->close_connections();
+
+				// Close server
+				p->mpi_log->fwrite(LMT_INFO, "%sClose server", NC_LOG_PREFIX);
+				p->release(_gpi_repo_, (iBase **)&p->mpi_server);
+
+				p->mpi_log->fwrite(LMT_INFO, "%s"
+						"Detach networking", NC_LOG_PREFIX);
+		}
+	}, this)
+END_LINK_MAP
 };
 
 static cNetCmd _g_net_cmd_;

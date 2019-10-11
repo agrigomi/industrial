@@ -242,33 +242,36 @@ private:
 		}
 	}
 
-BEGIN_LINK_MAP
-	LINK(mpi_fcache, I_FILE_CACHE, NULL, RF_CLONE|RF_PLUGIN, [](_u32 n, void *udata) {
-		cHttpHost *p = (cHttpHost *)udata;
+	BEGIN_LINK_MAP
+		LINK(mpi_log, I_LOG, NULL, RF_ORIGINAL, NULL, NULL),
+		LINK(mpi_map, I_MAP, NULL, RF_CLONE, NULL, NULL),
+		LINK(mpi_args, I_ARGS, NULL, RF_ORIGINAL, NULL, NULL),
+		LINK(mpi_fcache, I_FILE_CACHE, NULL, RF_CLONE|RF_PLUGIN, [](_u32 n, void *udata) {
+			cHttpHost *p = (cHttpHost *)udata;
 
-		if(n == RCTL_REF) {
-			p->mpi_fcache->init("/tmp", "ExtHttp");
-			p->mpi_log->write(LMT_INFO, "ExtHttp: Init file cache");
-		} else if(n == RCTL_UNREF) {
-			p->mpi_log->write(LMT_INFO, "ExtHttp: Detach file cache");
-			p->stop_host();
-		}
-
-	}, this),
-	LINK(mpi_net, I_NET, NULL, RF_ORIGINAL|RF_PLUGIN, [](_u32 n, void *udata) {
-		cHttpHost *p = (cHttpHost *)udata;
-
-		switch(n) {
-			case RCTL_REF:
-				p->mpi_log->write(LMT_INFO, "ExtHttp: attach networking");
-				break;
-			case RCTL_UNREF:
-				p->mpi_log->write(LMT_INFO, "ExtHttp: detach networking");
+			if(n == RCTL_REF) {
+				p->mpi_fcache->init("/tmp", "ExtHttp");
+				p->mpi_log->write(LMT_INFO, "ExtHttp: Init file cache");
+			} else if(n == RCTL_UNREF) {
+				p->mpi_log->write(LMT_INFO, "ExtHttp: Detach file cache");
 				p->stop_host();
-				break;
-		};
-	}, this)
-END_LINK_MAP
+			}
+
+		}, this),
+		LINK(mpi_net, I_NET, NULL, RF_ORIGINAL|RF_PLUGIN, [](_u32 n, void *udata) {
+			cHttpHost *p = (cHttpHost *)udata;
+
+			switch(n) {
+				case RCTL_REF:
+					p->mpi_log->write(LMT_INFO, "ExtHttp: attach networking");
+					break;
+				case RCTL_UNREF:
+					p->mpi_log->write(LMT_INFO, "ExtHttp: detach networking");
+					p->stop_host();
+					break;
+			};
+		}, this)
+	END_LINK_MAP
 
 public:
 	BASE(cHttpHost, "cHttpHost", RF_ORIGINAL, 1,0,0);
@@ -278,28 +281,15 @@ public:
 
 		switch(cmd) {
 			case OCTL_INIT: {
-				iRepository *pi_repo = (iRepository *)arg;
-
-				mpi_net = NULL;
-				mpi_fcache = NULL;
 				httpd_index = 1;
-
-				mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
-				mpi_map = (iMap *)pi_repo->object_by_iname(I_MAP, RF_CLONE);
-				mpi_args = (iArgs *)pi_repo->object_by_iname(I_ARGS, RF_ORIGINAL);
-				if(mpi_log && mpi_map)
+				if(mpi_map)
 					r = mpi_map->init(31);
 
 				if(mpi_net && mpi_fcache)
 					create_first_server();
 			} break;
 			case OCTL_UNINIT: {
-				iRepository *pi_repo = (iRepository *)arg;
-
 				stop_host();
-				release_object(pi_repo, (iBase **)&mpi_map);
-				release_object(pi_repo, (iBase **)&mpi_log);
-				release_object(pi_repo, (iBase **)&mpi_args);
 				r = true;
 			} break;
 		}

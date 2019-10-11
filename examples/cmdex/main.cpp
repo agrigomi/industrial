@@ -28,12 +28,12 @@ void log_listener(_u8 lmt, _str_t msg) {
 }
 
 static _cstr_t extensions[] = {
-	"extcmd.so",
 	"extnet.so",
 	"extnetcmd.so",
 	"extfs.so",
 	"extht.so",
 	"extgatn.so",
+	"extcmd.so",
 	0
 };
 
