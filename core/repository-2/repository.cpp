@@ -82,6 +82,26 @@ private:
 		return r;
 	}
 
+	void enum_base_array(void (*pcb)(_base_entry_t *, void *), void *udata) {
+		typedef struct {
+			void (*pcb)(_base_entry_t *, void *);
+			void *udata;
+		}_enum_t;
+
+		_enum_t e = {pcb, udata};
+
+		enum_extensions([](_extension_t *p_ext, void *udata)->_s32 {
+			_enum_t *pe = (_enum_t *)udata;
+			_u32 count = 0, limit = 0;
+			_base_entry_t *p_array = p_ext->array(&count, &limit);
+
+			for(_u32 i = 0; i < count; i++)
+				pe->pcb(&p_array[i], pe->udata);
+
+			return ENUM_CONTINUE;
+		}, &e);
+	}
+
 	void update_users(iBase *pi_base) {
 		_u32 count;
 		const _link_info_t *pl = pi_base->object_link(&count);
