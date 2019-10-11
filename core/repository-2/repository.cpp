@@ -164,6 +164,40 @@ private:
 		}, this);
 	}
 
+	void scan_base_array(iBase *pi_base, _base_entry_t *p_exclude_array, _u32 count) {
+		typedef struct {
+			iBase *pi_base;
+			cRepository *p_repo;
+			_base_entry_t *p_exclude_array;
+			_u32 count;
+		}_enum_t;
+
+		_enum_t e = {pi_base, this, p_exclude_array, count};
+
+		enum_base_array([](_base_entry_t *p_base_entry, void *udata) {
+			_enum_t *pe = (_enum_t *)udata;
+			bool exclude = false;
+
+			for(_u32 i = 0; i < pe->count; i++) {
+				if(p_base_entry == &pe->p_exclude_array[i]) {
+					exclude = true;
+					break;
+				}
+			}
+
+			if(!exclude) {
+				_u32 lmr = lm_post_init(pe->pi_base, p_base_entry, [](_base_entry_t *p_bentry, _rf_t flags, void *udata)->iBase* {
+					cRepository *p_repo = (cRepository *)udata;
+
+					return p_repo->object_by_handle(p_bentry, flags);
+				}, pe->p_repo);
+
+				if(lmr & PLMR_READY)
+					pe->p_repo->update_users(pe->pi_base);
+			}
+		}, &e);
+	}
+
 	void process_pending_list(_base_entry_t *p_bentry) {
 		typedef struct {
 			cRepository	*p_repo;
@@ -257,11 +291,11 @@ private:
 			if((oi.flags & RF_ORIGINAL) && !(p_bentry[i].state & ST_INITIALIZED))
 				post_init = init_object(p_bentry[i].pi_base);
 
-			if(post_init)
+			if(post_init) {
+				scan_base_array(p_bentry[i].pi_base, p_bentry, count);
 				process_pending_list(&p_bentry[i]);
+			}
 		}
-
-		process_pending_list();
 	}
 
 	bool uninit_object(iBase *pi_base) {
@@ -276,7 +310,7 @@ private:
 				iTaskMaker *pi_tasks = get_task_maker();
 
 				if(pi_tasks)
-					pi_tasks->stop(pi_base);
+					pi_tasks->stop(pi_tasks->handle(pi_base));
 			}
 
 			lm_pre_uninit(pi_base, [](iBase *pi_base, void *udata) {
@@ -331,9 +365,10 @@ private:
 				return ENUM_CONTINUE;
 			}, &e);
 
-			users_remove_object(&p_bentry[i]);
-			if(p_bentry[i].state & ST_INITIALIZED)
+			if(p_bentry[i].state & ST_INITIALIZED) {
 				uninit_object(p_bentry[i].pi_base);
+				users_remove_object(&p_bentry[i]);
+			}
 		}
 	}
 
