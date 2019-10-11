@@ -164,7 +164,7 @@ private:
 		}, this);
 	}
 
-	void scan_base_array(iBase *pi_base, _base_entry_t *p_exclude_array, _u32 count) {
+	void scan_base_array(iBase *pi_base, _base_entry_t *p_exclude_array=NULL, _u32 count=0) {
 		typedef struct {
 			iBase *pi_base;
 			cRepository *p_repo;
@@ -288,13 +288,13 @@ private:
 
 			p_bentry[i].pi_base->object_info(&oi);
 
-			if((oi.flags & RF_ORIGINAL) && !(p_bentry[i].state & ST_INITIALIZED))
-				post_init = init_object(p_bentry[i].pi_base);
-
-			if(post_init) {
-				scan_base_array(p_bentry[i].pi_base, p_bentry, count);
-				process_pending_list(&p_bentry[i]);
+			if((oi.flags & RF_ORIGINAL) && !(p_bentry[i].state & ST_INITIALIZED)) {
+				if((post_init = init_object(p_bentry[i].pi_base)))
+					scan_base_array(p_bentry[i].pi_base, p_bentry, count);
 			}
+
+			if(post_init)
+				process_pending_list(&p_bentry[i]);
 		}
 	}
 
@@ -447,8 +447,11 @@ public:
 							uninit_object(r);
 							dcs_remove_context(r);
 							r = NULL;
-						} else
+						} else {
 							bentry->ref_cnt++;
+							if(bentry->state & ST_PENDING)
+								scan_base_array(r);
+						}
 					}
 				} else if((info.flags & flags) & RF_ORIGINAL) {
 					if(init_object(bentry->pi_base)) {
