@@ -2,6 +2,7 @@
 #include "startup.h"
 #include "private.h"
 #include "iTaskMaker.h"
+#include "iMemory.h"
 
 class cRepository: public iRepository {
 private:
@@ -580,7 +581,26 @@ public:
 	}
 
 	void destroy(void) {
-		//...
+		// remove extensions
+		enum_extensions([](_extension_t *p_ext, void *udata)->_s32 {
+			cRepository *p_repo = (cRepository *)udata;
+			_u32 count = 0, limit = 0;
+			_base_entry_t *p_base_array = p_ext->array(&count, &limit);
+
+			p_repo->uninit_base_array(p_base_array, count);
+			return ENUM_CONTINUE;
+		}, this);
+
+		iHeap *pi_heap = (iHeap *)object_by_iname(I_HEAP, RF_ORIGINAL);
+
+		if(pi_heap)
+			pi_heap->object_ctl(OCTL_UNINIT, this);
+
+		destroy_extensions_storage();
+		destroy_users_storage();
+		destroy_base_array_storage();
+		dcs_destroy_storage();
+		zdestroy();
 	}
 };
 
