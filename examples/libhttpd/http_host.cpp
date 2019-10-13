@@ -246,7 +246,7 @@ private:
 		LINK(mpi_log, I_LOG, NULL, RF_ORIGINAL, NULL, NULL),
 		LINK(mpi_map, I_MAP, NULL, RF_CLONE, NULL, NULL),
 		LINK(mpi_args, I_ARGS, NULL, RF_ORIGINAL, NULL, NULL),
-		LINK(mpi_fcache, I_FILE_CACHE, NULL, RF_CLONE|RF_KEEP_PENDING|RF_NOCRITICAL, [](_u32 n, void *udata) {
+		LINK(mpi_fcache, I_FILE_CACHE, NULL, RF_CLONE|RF_PLUGIN, [](_u32 n, void *udata) {
 			cHttpHost *p = (cHttpHost *)udata;
 
 			if(n == RCTL_REF) {
@@ -258,12 +258,14 @@ private:
 			}
 
 		}, this),
-		LINK(mpi_net, I_NET, NULL, RF_ORIGINAL|RF_KEEP_PENDING|RF_NOCRITICAL, [](_u32 n, void *udata) {
+		LINK(mpi_net, I_NET, NULL, RF_ORIGINAL|RF_PLUGIN, [](_u32 n, void *udata) {
 			cHttpHost *p = (cHttpHost *)udata;
 
 			switch(n) {
 				case RCTL_REF:
 					p->mpi_log->write(LMT_INFO, "ExtHttp: attach networking");
+					if(p->mpi_fcache)
+						p->create_first_server();
 					break;
 				case RCTL_UNREF:
 					p->mpi_log->write(LMT_INFO, "ExtHttp: detach networking");
@@ -284,9 +286,6 @@ public:
 				httpd_index = 1;
 				if(mpi_map)
 					r = mpi_map->init(31);
-
-				if(mpi_net && mpi_fcache)
-					create_first_server();
 			} break;
 			case OCTL_UNINIT: {
 				stop_host();
