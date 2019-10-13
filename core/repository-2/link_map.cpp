@@ -6,8 +6,10 @@ void lm_clean(iBase *pi_base) {
 	const _link_info_t *pl = pi_base->object_link(&count);
 
 	if(pl) {
-		for(_u32 i = 0; i < count; i++)
-			*pl[i].ppi_base = NULL;
+		for(_u32 i = 0; i < count; i++) {
+			if(pl[i].ppi_base)
+				*pl[i].ppi_base = NULL;
+		}
 	}
 }
 
@@ -18,21 +20,23 @@ _u32 lm_init(iBase *pi_base, _cb_object_request_t *pcb, void *udata) {
 
 	if(pl) {
 		for(_u32 i = 0; i < count; i++) {
-			if(*pl[i].ppi_base == NULL) {
-				if(pl[i].flags & RF_KEEP_PENDING)
-					// permanently pending
-					r |= PLMR_KEEP_PENDING;
+			if(pl[i].flags & RF_KEEP_PENDING)
+				// permanently pending
+				r |= PLMR_KEEP_PENDING;
 
-				if(!(pl[i].flags & RF_POST_INIT)) {
-					if((*pl[i].ppi_base = pcb(&pl[i], udata))) {
-						if(pl[i].p_ref_ctl)
-							pl[i].p_ref_ctl(RCTL_REF, pl[i].udata);
-					} else {
-						if(!(pl[i].flags & RF_NOCRITICAL)) {
-							r = PLMR_FAILED;
-							break;
-						} else // pending once
-							r |= PLMR_KEEP_PENDING;
+			if(pl[i].ppi_base) {
+				if(*pl[i].ppi_base == NULL) {
+					if(!(pl[i].flags & RF_POST_INIT)) {
+						if((*pl[i].ppi_base = pcb(&pl[i], udata))) {
+							if(pl[i].p_ref_ctl)
+								pl[i].p_ref_ctl(RCTL_REF, pl[i].udata);
+						} else {
+							if(!(pl[i].flags & RF_NOCRITICAL)) {
+								r = PLMR_FAILED;
+								break;
+							} else // pending once
+								r |= PLMR_KEEP_PENDING;
+						}
 					}
 				}
 			}
@@ -49,16 +53,18 @@ _u32 lm_post_init(iBase *pi_base, _cb_object_request_t *pcb, void *udata) {
 
 	if(pl) {
 		for(_u32 i = 0; i < count; i++) {
-			if(*pl[i].ppi_base == NULL) {
-				if((*pl[i].ppi_base = pcb(&pl[i], udata))) {
-					if(pl[i].p_ref_ctl)
-						pl[i].p_ref_ctl(RCTL_REF, pl[i].udata);
-				} else {
-					if(!(pl[i].flags & RF_NOCRITICAL)) {
-						r = PLMR_FAILED;
-						break;
-					} else // pending once
-						r |= PLMR_KEEP_PENDING;
+			if(pl[i].ppi_base) {
+				if(*pl[i].ppi_base == NULL) {
+					if((*pl[i].ppi_base = pcb(&pl[i], udata))) {
+						if(pl[i].p_ref_ctl)
+							pl[i].p_ref_ctl(RCTL_REF, pl[i].udata);
+					} else {
+						if(!(pl[i].flags & RF_NOCRITICAL)) {
+							r = PLMR_FAILED;
+							break;
+						} else // pending once
+							r |= PLMR_KEEP_PENDING;
+					}
 				}
 			}
 
@@ -98,8 +104,20 @@ _u32 lm_post_init(iBase *pi_base, _base_entry_t *p_bentry, _cb_create_object_t *
 				create = true;
 			}
 
-			if(*pl[i].ppi_base == NULL)
-				create = true;
+			if(pl[i].ppi_base) {
+				if(*pl[i].ppi_base == NULL)
+					create = true;
+			} else {
+				create = false;
+				if(lm_compare(&pl[i], p_bentry->pi_base)) {
+					if(pl[i].p_info_ctl) {
+						_object_info_t oi;
+
+						p_bentry->pi_base->object_info(&oi);
+						pl[i].p_info_ctl(RCTL_LOAD, &oi, pl[i].udata);
+					}
+				}
+			}
 
 			if(create) {
 				if(lm_compare(&pl[i], p_bentry->pi_base)) {
@@ -125,11 +143,13 @@ _u32 lm_pre_uninit(iBase *pi_base, _cb_release_object_t *pcb, void *udata) {
 
 	if(pl) {
 		for(_u32 i = 0; i < count; i++) {
-			if(*pl[i].ppi_base && (pl[i].flags & RF_POST_INIT)) {
-				if(pl[i].p_ref_ctl)
-					pl[i].p_ref_ctl(RCTL_UNREF, pl[i].udata);
-				pcb(*pl[i].ppi_base, udata);
-				*pl[i].ppi_base = NULL;
+			if(pl[i].ppi_base) {
+				if(*pl[i].ppi_base && (pl[i].flags & RF_POST_INIT)) {
+					if(pl[i].p_ref_ctl)
+						pl[i].p_ref_ctl(RCTL_UNREF, pl[i].udata);
+					pcb(*pl[i].ppi_base, udata);
+					*pl[i].ppi_base = NULL;
+				}
 			}
 		}
 	}
@@ -144,11 +164,13 @@ _u32 lm_uninit(iBase *pi_base, _cb_release_object_t *pcb, void *udata) {
 
 	if(pl) {
 		for(_u32 i = 0; i < count; i++) {
-			if(*pl[i].ppi_base) {
-				if(pl[i].p_ref_ctl)
-					pl[i].p_ref_ctl(RCTL_UNREF, pl[i].udata);
-				pcb(*pl[i].ppi_base, udata);
-				*pl[i].ppi_base = NULL;
+			if(pl[i].ppi_base) {
+				if(*pl[i].ppi_base) {
+					if(pl[i].p_ref_ctl)
+						pl[i].p_ref_ctl(RCTL_UNREF, pl[i].udata);
+					pcb(*pl[i].ppi_base, udata);
+					*pl[i].ppi_base = NULL;
+				}
 			}
 		}
 	}
@@ -163,17 +185,28 @@ _u32 lm_remove(iBase *pi_base, _base_entry_t *p_bentry, _cb_release_object_t *pc
 
 	if(pl) {
 		for(_u32 i = 0; i < count; i++) {
-			if(*pl[i].ppi_base && lm_compare(&pl[i], p_bentry->pi_base)) {
-				if(pl[i].flags & RF_KEEP_PENDING)
-					r |= PLMR_KEEP_PENDING;
+			if(pl[i].ppi_base) {
+				if(*pl[i].ppi_base && lm_compare(&pl[i], p_bentry->pi_base)) {
+					if(pl[i].flags & RF_KEEP_PENDING)
+						r |= PLMR_KEEP_PENDING;
 
-				if(!(pl[i].flags & RF_NOCRITICAL))
-					r = PLMR_UNINIT;
+					if(!(pl[i].flags & RF_NOCRITICAL))
+						r = PLMR_UNINIT;
 
-				if(pl[i].p_ref_ctl)
-					pl[i].p_ref_ctl(RCTL_UNREF, pl[i].udata);
-				pcb(*pl[i].ppi_base, udata);
-				*pl[i].ppi_base = NULL;
+					if(pl[i].p_ref_ctl)
+						pl[i].p_ref_ctl(RCTL_UNREF, pl[i].udata);
+					pcb(*pl[i].ppi_base, udata);
+					*pl[i].ppi_base = NULL;
+				}
+			} else {
+				if(lm_compare(&pl[i], p_bentry->pi_base)) {
+					if(pl[i].p_info_ctl) {
+						_object_info_t oi;
+
+						p_bentry->pi_base->object_info(&oi);
+						pl[i].p_info_ctl(RCTL_UNLOAD, &oi, pl[i].udata);
+					}
+				}
 			}
 		}
 	}

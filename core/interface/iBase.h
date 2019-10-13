@@ -61,10 +61,13 @@ public:
 #define OCTL_NOTIFY	14 // arg: _notification_t*
 
 // reference controll
-#define RCTL_REF	10
-#define RCTL_UNREF	11
+#define RCTL_LOAD	10
+#define RCTL_REF	11
+#define RCTL_UNREF	12
+#define RCTL_UNLOAD	13
 
 typedef void _ref_ctl_t(_u32, void*);
+typedef void _info_ctl_t(_u32, _object_info_t *, void *);
 
 struct link_info {
 	iBase		**ppi_base;
@@ -72,13 +75,14 @@ struct link_info {
 	_cstr_t		cname;
 	_rf_t		flags;
 	_ref_ctl_t	*p_ref_ctl;
+	_info_ctl_t	*p_info_ctl;
 	void		*udata;
 };
 
 #define CONSTRUCTOR(_class_) \
 	_class_()
 
-#define INFO(_class_, name, f, a, i, r) \
+#define OBJECT_INFO(_class_, name, f, a, i, r) \
 	virtual void object_info(_object_info_t *pi) { \
 		pi->iname = interface_name(); \
 		pi->cname = name; \
@@ -97,7 +101,9 @@ struct link_info {
 
 #define BASE_REF(x) (iBase**)&x
 #define LINK(p, i, c, f, r, u) \
-	{ BASE_REF(p), i, c, f, r, u }
+	{ BASE_REF(p), i, c, f, r, NULL, u }
+#define INFO(i, c, r, u) \
+	{ NULL, i, c, 0, NULL, r, u}
 
 #define DESTRUCTOR(_class_) \
 	virtual ~_class_()
@@ -107,7 +113,7 @@ struct link_info {
 		register_object(dynamic_cast<iBase *>(this)); \
 	} \
 	DESTRUCTOR(_class_) {} \
-	INFO(_class_, name, flags, a, i, r)
+	OBJECT_INFO(_class_, name, flags, a, i, r)
 
 
 extern void register_object(iBase *);

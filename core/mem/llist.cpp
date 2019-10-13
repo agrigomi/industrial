@@ -21,7 +21,7 @@ private:
 	friend void mem_free(void *ptr, _u32 size, void *p_udata);
 
 public:
-	INFO(cLlist, "cLlist", RF_CLONE, 1, 0, 0);
+	OBJECT_INFO(cLlist, "cLlist", RF_CLONE, 1, 0, 0);
 	CONSTRUCTOR(cLlist) {
 		mpi_mutex = 0;
 		mpi_heap = 0;
