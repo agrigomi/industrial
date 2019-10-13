@@ -105,13 +105,21 @@ private:
 
 		if(pl) {
 			for(_u32 i = 0; i < count; i++) {
+				_base_entry_t *p_bentry = NULL;
+
 				if(pl[i].ppi_base) {
-					if(*pl[i].ppi_base) {
-						_base_entry_t *p_bentry = find_object_entry(*pl[i].ppi_base);
-						if(p_bentry)
-							users_add_object_user(p_bentry, pi_base);
-					}
+					if(*pl[i].ppi_base)
+						p_bentry = find_object_entry(*pl[i].ppi_base);
+				} else {
+
+					if(pl[i].cname)
+						p_bentry = find_object_by_cname(pl[i].cname);
+					else if(pl[i].iname)
+						p_bentry = find_object_by_iname(pl[i].iname);
 				}
+
+				if(p_bentry)
+					users_add_object_user(p_bentry, pi_base);
 			}
 		}
 	}

@@ -103,7 +103,7 @@ struct link_info {
 #define LINK(p, i, c, f, r, u) \
 	{ BASE_REF(p), i, c, f, r, NULL, u }
 #define INFO(i, c, r, u) \
-	{ NULL, i, c, 0, NULL, r, u}
+	{ NULL, i, c, RF_PLUGIN, NULL, r, u}
 
 #define DESTRUCTOR(_class_) \
 	virtual ~_class_()
