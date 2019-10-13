@@ -324,81 +324,64 @@ public:
 
 		switch(cmd) {
 			case OCTL_INIT: {
-				iRepository *pi_repo = (iRepository *)arg;
-
-				if((mpi_map = dynamic_cast<iMap *>(pi_repo->object_by_iname(I_MAP, RF_CLONE|RF_NONOTIFY))))
+				if(mpi_map)
 					mpi_map->init(31);
-				mpi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
 				init_mime_type_resolver();
-				if(mpi_map && mpi_log) {
-					pi_repo->monitoring_add(NULL, I_NET, NULL, this, SCAN_ORIGINAL);
-					pi_repo->monitoring_add(NULL, I_FS, NULL, this, SCAN_ORIGINAL);
-					pi_repo->monitoring_add(NULL, I_GATN_EXTENSION, NULL, this);
-					// init SSL
-					ssl_init();
-					r = true;
-				}
-			} break;
-			case OCTL_UNINIT: {
-				iRepository *pi_repo = (iRepository *)arg;
-
-				destroy();
-				pi_repo->object_release(mpi_map, false);
-				pi_repo->object_release(mpi_log);
-				uninit_mime_type_resolver();
+				// init SSL
+				ssl_init();
 				r = true;
 			} break;
-			case OCTL_NOTIFY: {
-				_notification_t *pn = (_notification_t *)arg;
-				_object_info_t oi;
-
-				memset(&oi, 0, sizeof(_object_info_t));
-				if(pn->object) {
-					pn->object->object_info(&oi);
-
-					if(pn->flags & NF_LOAD) {
-						if(strcmp(oi.iname, I_GATN_EXTENSION) == 0) {
-							// register extension
-							mpi_log->fwrite(LMT_INFO, "Gatn: register class '%s'", oi.cname);
-							//...
-						}
-					}
-					if(pn->flags & NF_INIT) { // catch
-						if(strcmp(oi.iname, I_NET) == 0) {
-							mpi_log->write(LMT_INFO, "Gatn: attach networking");
-							restore();
-						} else if(strcmp(oi.iname, I_FS) == 0) {
-							mpi_log->write(LMT_INFO, "Gatn: attach FS");
-							restore();
-						}
-					} else if(pn->flags & (NF_UNINIT | NF_REMOVE)) { // release
-						if(strcmp(oi.iname, I_NET) == 0) {
-							mpi_log->write(LMT_INFO, "Gatn: detach networking");
-							stop(true);
-						} else if(strcmp(oi.iname, I_FS) == 0) {
-							mpi_log->write(LMT_INFO, "Gatn: detach FS");
-							stop(true);
-						}
-					}
-					if(pn->flags & NF_UNLOAD) {
-						if(strcmp(oi.iname, I_GATN_EXTENSION) == 0) {
-							// unregister extension
-							mpi_log->fwrite(LMT_INFO, "Gatn: unregister class '%s'", oi.cname);
-							enum_servers([](_server_t *psrv, void *udata) {
-								_object_info_t *poi = (_object_info_t *)udata;
-								server *ps = (server *)psrv;
-
-								ps->release_class(poi->cname);
-							}, &oi);
-
-						}
-					}
-				}
+			case OCTL_UNINIT: {
+				destroy();
+				uninit_mime_type_resolver();
+				r = true;
 			} break;
 		}
 
 		return r;
 	}
+
+BEGIN_LINK_MAP
+	LINK(mpi_log, I_LOG, NULL, RF_ORIGINAL, NULL, NULL),
+	LINK(mpi_map, I_MAP, NULL, RF_CLONE, NULL, NULL),
+	INFO(I_GATN_EXTENSION, NULL, [](_u32 n, _object_info_t *poi, void *udata) {
+		cGatn *p = (cGatn *)udata;
+
+		if(n == RCTL_LOAD)
+			p->mpi_log->fwrite(LMT_INFO, "Gatn: register class '%s'", poi->cname);
+		else if(n == RCTL_UNLOAD) {
+			p->mpi_log->fwrite(LMT_INFO, "Gatn: unregister class '%s'", poi->cname);
+			p->enum_servers([](_server_t *psrv, void *udata) {
+				_object_info_t *poi = (_object_info_t *)udata;
+				server *ps = (server *)psrv;
+
+				ps->release_class(poi->cname);
+			}, poi);
+		}
+	}, this),
+	INFO(I_NET, NULL, [](_u32 n, _object_info_t *poi, void *udata) {
+		cGatn *p = (cGatn *)udata;
+
+		if(n == RCTL_LOAD) {
+			p->mpi_log->write(LMT_INFO, "Gatn: attach networking");
+			p->restore();
+		} else if(n == RCTL_UNLOAD) {
+			p->mpi_log->write(LMT_INFO, "Gatn: detach networking");
+			p->stop(true);
+		}
+	}, this),
+	INFO(I_FS, NULL, [](_u32 n, _object_info_t *poi, void *udata) {
+		cGatn *p = (cGatn *)udata;
+
+		if(n == RCTL_LOAD) {
+			p->mpi_log->write(LMT_INFO, "Gatn: attach FS");
+			p->restore();
+		} else if(n == RCTL_UNLOAD) {
+			p->mpi_log->write(LMT_INFO, "Gatn: detach FS");
+			p->stop(true);
+		}
+	}, this),
+END_LINK_MAP
 
 	void configure(HTCONTEXT jcxt) {
 		load_extensions(jcxt);
