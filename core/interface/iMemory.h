@@ -45,9 +45,9 @@ typedef struct {
 	_u32	collisions; // number of colisions
 }_map_status_t;
 
-#define	ENUM_NEXT	1
-#define	ENUM_CANCEL	2
-#define ENUM_DELETE	3
+#define	ENUM_NEXT	0
+#define	ENUM_CANCEL	1
+#define ENUM_ERASE	2
 
 class iMap: public iBase {
 public:
