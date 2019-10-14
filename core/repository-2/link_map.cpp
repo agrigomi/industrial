@@ -185,11 +185,11 @@ _u32 lm_remove(iBase *pi_base, _base_entry_t *p_bentry, _cb_release_object_t *pc
 
 	if(pl) {
 		for(_u32 i = 0; i < count; i++) {
+			if(pl[i].flags & RF_KEEP_PENDING)
+				r |= PLMR_KEEP_PENDING;
+
 			if(pl[i].ppi_base) {
 				if(*pl[i].ppi_base && lm_compare(&pl[i], p_bentry->pi_base)) {
-					if(pl[i].flags & RF_KEEP_PENDING)
-						r |= PLMR_KEEP_PENDING;
-
 					if(!(pl[i].flags & RF_NOCRITICAL))
 						r = PLMR_UNINIT;
 
