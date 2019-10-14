@@ -32,8 +32,8 @@ static _cstr_t extensions[] = {
 	"extnetcmd.so",
 	"extfs.so",
 	"extht.so",
-	"extgatn.so",
 	"extcmd.so",
+	"extgatn.so",
 	0
 };
 
