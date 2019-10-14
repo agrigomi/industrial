@@ -136,7 +136,11 @@ _u32 lm_post_init(iBase *pi_base, _base_entry_t *p_bentry, _cb_create_object_t *
 	return r;
 }
 
-_u32 lm_pre_uninit(iBase *pi_base, _cb_release_object_t *pcb_release, _cb_object_info_t *pcb_info, void *udata) {
+_u32 lm_pre_uninit(iBase *pi_base,
+			_cb_release_object_t *pcb_release,
+			_cb_object_info_t *pcb_info,
+			_cb_remove_user_t *pcb_remove_user,
+			void *udata) {
 	_u32 r = PLMR_READY;
 	_u32 count;
 	const _link_info_t *pl = pi_base->object_link(&count);
@@ -155,8 +159,10 @@ _u32 lm_pre_uninit(iBase *pi_base, _cb_release_object_t *pcb_release, _cb_object
 					if(pl[i].p_info_ctl) {
 						_object_info_t oi;
 
-						if(pcb_info(&pl[i], &oi, udata))
+						if(pcb_info(&pl[i], &oi, udata)) {
 							pl[i].p_info_ctl(RCTL_UNLOAD, &oi, pl[i].udata);
+							pcb_remove_user(&pl[i], pi_base, udata);
+						}
 					}
 				}
 			}

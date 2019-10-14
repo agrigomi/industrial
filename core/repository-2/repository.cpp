@@ -321,6 +321,17 @@ private:
 		return r;
 	}
 
+	_base_entry_t *object_by_link(const _link_info_t *p_li) {
+		_base_entry_t *r = NULL;
+
+		if(p_li->cname)
+			r = find_object_by_cname(p_li->cname);
+		else if(p_li->iname)
+			r = find_object_by_iname(p_li->iname);
+
+		return r;
+	}
+
 	bool uninit_object(iBase *pi_base) {
 		bool r = false;
 		_cstat_t state = get_context_state(pi_base);
@@ -344,6 +355,12 @@ private:
 				cRepository *p_repo = (cRepository *)udata;
 
 				return p_repo->info_by_link(p_link_info, poi);
+			}, [](const _link_info_t *p_link_info, iBase *pi_user, void *udata) {
+				cRepository *p_repo = (cRepository *)udata;
+				_base_entry_t *p_bentry = p_repo->object_by_link(p_link_info);
+
+				if(p_bentry)
+					users_remove_object_user(p_bentry, pi_user);
 			}, this);
 
 			if((r = pi_base->object_ctl(OCTL_UNINIT, this))) {
@@ -355,6 +372,7 @@ private:
 
 				ms_pending.erase(pi_base);
 				set_context_state(pi_base, get_context_state(pi_base) & ~(ST_PENDING | ST_INITIALIZED));
+				users_remove_object(find_object_entry(pi_base));
 			}
 		} else
 			r = true;

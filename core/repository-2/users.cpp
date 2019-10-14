@@ -43,6 +43,14 @@ void users_add_object_user(_base_entry_t *p_bentry, iBase *pi_user) {
 		pbo->s_users.insert(pi_user);
 }
 
+void users_remove_object_user(_base_entry_t *p_bentry, iBase *pi_user) {
+	_u32 sz = 0;
+	_object_users_t *pbo = (_object_users_t *)_g_users_map_.get(&p_bentry, sizeof(p_bentry), &sz);
+
+	if(pbo)
+		pbo->s_users.erase(pi_user);
+}
+
 _set_pi_object_t *get_object_users(_base_entry_t *p_bentry) {
 	_set_pi_object_t *r = NULL;
 	_u32 sz = 0;
