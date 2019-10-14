@@ -136,19 +136,28 @@ _u32 lm_post_init(iBase *pi_base, _base_entry_t *p_bentry, _cb_create_object_t *
 	return r;
 }
 
-_u32 lm_pre_uninit(iBase *pi_base, _cb_release_object_t *pcb, void *udata) {
+_u32 lm_pre_uninit(iBase *pi_base, _cb_release_object_t *pcb_release, _cb_object_info_t *pcb_info, void *udata) {
 	_u32 r = PLMR_READY;
 	_u32 count;
 	const _link_info_t *pl = pi_base->object_link(&count);
 
 	if(pl) {
 		for(_u32 i = 0; i < count; i++) {
-			if(pl[i].ppi_base) {
-				if(*pl[i].ppi_base && (pl[i].flags & RF_POST_INIT)) {
-					if(pl[i].p_ref_ctl)
-						pl[i].p_ref_ctl(RCTL_UNREF, pl[i].udata);
-					pcb(*pl[i].ppi_base, udata);
-					*pl[i].ppi_base = NULL;
+			if(pl[i].flags & RF_POST_INIT) {
+				if(pl[i].ppi_base) {
+					if(*pl[i].ppi_base) {
+						if(pl[i].p_ref_ctl)
+							pl[i].p_ref_ctl(RCTL_UNREF, pl[i].udata);
+						pcb_release(*pl[i].ppi_base, udata);
+						*pl[i].ppi_base = NULL;
+					}
+				} else {
+					if(pl[i].p_info_ctl) {
+						_object_info_t oi;
+
+						if(pcb_info(&pl[i], &oi, udata))
+							pl[i].p_info_ctl(RCTL_UNLOAD, &oi, pl[i].udata);
+					}
 				}
 			}
 		}
@@ -193,8 +202,10 @@ _u32 lm_remove(iBase *pi_base, _base_entry_t *p_bentry, _cb_release_object_t *pc
 					if(!(pl[i].flags & RF_NOCRITICAL))
 						r = PLMR_UNINIT;
 
-					if(pl[i].p_ref_ctl)
+					if(pl[i].p_ref_ctl) {
+						*pl[i].ppi_base = p_bentry->pi_base;
 						pl[i].p_ref_ctl(RCTL_UNREF, pl[i].udata);
+					}
 					pcb(*pl[i].ppi_base, udata);
 					*pl[i].ppi_base = NULL;
 				}

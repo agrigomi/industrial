@@ -111,7 +111,6 @@ private:
 					if(*pl[i].ppi_base)
 						p_bentry = find_object_entry(*pl[i].ppi_base);
 				} else {
-
 					if(pl[i].cname)
 						p_bentry = find_object_by_cname(pl[i].cname);
 					else if(pl[i].iname)
@@ -305,6 +304,23 @@ private:
 		}
 	}
 
+	bool info_by_link(const _link_info_t *p_li, _object_info_t *poi) {
+		bool r = false;
+		_base_entry_t *p_bentry = NULL;
+
+		if(p_li->cname)
+			p_bentry = find_object_by_cname(p_li->cname);
+		else if(p_li->iname)
+			p_bentry = find_object_by_iname(p_li->iname);
+
+		if(p_bentry) {
+			p_bentry->pi_base->object_info(poi);
+			r = true;
+		}
+
+		return r;
+	}
+
 	bool uninit_object(iBase *pi_base) {
 		bool r = false;
 		_cstat_t state = get_context_state(pi_base);
@@ -324,6 +340,10 @@ private:
 				cRepository *p_repo = (cRepository *)udata;
 
 				p_repo->object_release(pi_base, false);
+			}, [](const _link_info_t *p_link_info, _object_info_t *poi, void *udata)->bool {
+				cRepository *p_repo = (cRepository *)udata;
+
+				return p_repo->info_by_link(p_link_info, poi);
 			}, this);
 
 			if((r = pi_base->object_ctl(OCTL_UNINIT, this))) {
@@ -352,6 +372,7 @@ private:
 			_enum_info_t e = {this, &p_bentry[i]};
 
 			users_enum(&p_bentry[i], [](iBase *pi_base, void *udata)->_s32 {
+				_s32 r = ENUM_CONTINUE;
 				_enum_info_t *pe = (_enum_info_t *)udata;
 				_u32 lmr = lm_remove(pi_base, pe->p_bentry, [](iBase *pi_base, void *udata) {
 					cRepository *p_repo = (cRepository *)udata;
@@ -359,6 +380,8 @@ private:
 					p_repo->object_release(pi_base, false);
 				}, pe->p_repo);
 
+				if(lmr & PLMR_READY)
+					r = ENUM_DELETE;
 				if(lmr & PLMR_UNINIT)
 					pe->p_repo->uninit_object(pi_base);
 				else {
@@ -369,13 +392,11 @@ private:
 					}
 				}
 
-				return ENUM_CONTINUE;
+				return r;
 			}, &e);
 
-			if(p_bentry[i].state & ST_INITIALIZED) {
+			if(p_bentry[i].state & ST_INITIALIZED)
 				uninit_object(p_bentry[i].pi_base);
-				users_remove_object(&p_bentry[i]);
-			}
 		}
 	}
 
