@@ -317,7 +317,7 @@ private:
 
 
 public:
-	BASE(cGatn, "cGatn", RF_ORIGINAL, 1,0,0);
+	BASE(cGatn, "cGatn", RF_ORIGINAL, 2,0,0);
 
 	bool object_ctl(_u32 cmd, void *arg, ...) {
 		bool r = false;
