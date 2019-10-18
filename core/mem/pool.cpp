@@ -67,6 +67,20 @@ private:
 
 		mpi_list->unlock(hm);
 	}
+
+	void enumerate(_pool_enum_t *pcb, void *udata, HMUTEX hlock) {
+		_u32 size = 0;
+		void *rec = mpi_list->first(&size, hlock);
+
+		while(rec) {
+			_s32 x = pcb(rec, size, udata);
+
+			if(x == ENUM_CANCEL)
+				break;
+
+			rec = mpi_list->next(&size, hlock);
+		}
+	}
 public:
 	BASE(cPool, "cPool", RF_CLONE, 1,0,0);
 
@@ -190,6 +204,24 @@ public:
 		mpi_list->unlock(hm);
 
 		return r;
+	}
+
+	void enum_busy(_pool_enum_t *pcb, void *udata) {
+		HMUTEX hm = mpi_list->lock();
+
+		mpi_list->col(COL_BUSY, hm);
+		enumerate(pcb, udata, hm);
+
+		mpi_list->unlock(hm);
+	}
+
+	void enum_free(_pool_enum_t *pcb, void *udata) {
+		HMUTEX hm = mpi_list->lock();
+
+		mpi_list->col(COL_FREE, hm);
+		enumerate(pcb, udata, hm);
+
+		mpi_list->unlock(hm);
 	}
 };
 

@@ -83,6 +83,8 @@ public:
 #define POOL_OP_FREE	3
 #define POOL_OP_DELETE	4
 
+typedef _s32 _pool_enum_t(void *data, _u32 size, void *udata);
+
 class iPool: public iBase {
 public:
 	INTERFACE(iPool, I_POOL);
@@ -98,6 +100,8 @@ public:
 	virtual void clear(void)=0;
 	virtual _u32 num_busy(void)=0;
 	virtual _u32 num_free(void)=0;
+	virtual void enum_busy(_pool_enum_t *pcb, void *udata)=0;
+	virtual void enum_free(_pool_enum_t *pcb, void *udata)=0;
 };
 
 #define LL_VECTOR	1
