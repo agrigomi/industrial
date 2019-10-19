@@ -53,9 +53,9 @@ void map_enum_del(MAPENUM h);
 void map_enum_close(MAPENUM h);
 
 // Advanced enumeration
-#define MAP_ENUM_CONTINUE	1
-#define MAP_ENUM_BREAK		2
-#define MAP_ENUM_DELETE		3
+#define MAP_ENUM_CONTINUE	0
+#define MAP_ENUM_BREAK		1
+#define MAP_ENUM_DELETE		2
 
 void map_enum(_map_context_t *, _s32 (*)(void *, _u32, void *), void *);
 
