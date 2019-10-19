@@ -324,34 +324,6 @@ private:
 		}
 	}
 
-	bool info_by_link(const _link_info_t *p_li, _object_info_t *poi) {
-		bool r = false;
-		_base_entry_t *p_bentry = NULL;
-
-		if(p_li->cname)
-			p_bentry = find_object_by_cname(p_li->cname);
-		else if(p_li->iname)
-			p_bentry = find_object_by_iname(p_li->iname);
-
-		if(p_bentry) {
-			p_bentry->pi_base->object_info(poi);
-			r = true;
-		}
-
-		return r;
-	}
-
-	_base_entry_t *object_by_link(const _link_info_t *p_li) {
-		_base_entry_t *r = NULL;
-
-		if(p_li->cname)
-			r = find_object_by_cname(p_li->cname);
-		else if(p_li->iname)
-			r = find_object_by_iname(p_li->iname);
-
-		return r;
-	}
-
 	bool uninit_object(iBase *pi_base) {
 		bool r = false;
 		_cstat_t state = get_context_state(pi_base);
