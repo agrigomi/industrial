@@ -91,8 +91,5 @@ void  hash_map::clr(_mutex_handle_t hlock) {
 }
 
 void  hash_map::enm(_s32 (*cb)(void *, _u32, void *), void *udata, _mutex_handle_t hlock) {
-	_mutex_handle_t hm = m_mutex.lock(hlock);
-
 	map_enum(&m_context, cb, udata);
-	m_mutex.unlock(hm);
 }

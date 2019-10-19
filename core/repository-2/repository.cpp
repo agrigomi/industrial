@@ -109,16 +109,36 @@ private:
 
 				if(pl[i].ppi_base) {
 					if(*pl[i].ppi_base)
-						p_bentry = find_object_entry(*pl[i].ppi_base);
+						if((p_bentry = find_object_entry(*pl[i].ppi_base)))
+							users_add_object_user(p_bentry, pi_base);
 				} else {
-					if(pl[i].cname)
-						p_bentry = find_object_by_cname(pl[i].cname);
-					else if(pl[i].iname)
-						p_bentry = find_object_by_iname(pl[i].iname);
-				}
+					typedef struct {
+						const _link_info_t *pl;
+						iBase *pi_base;
+					}_enum_t;
 
-				if(p_bentry)
-					users_add_object_user(p_bentry, pi_base);
+					_enum_t e = {&pl[i], pi_base};
+
+					enum_base_array([](_base_entry_t *p_bentry, void *udata) {
+						_enum_t *pe = (_enum_t *)udata;
+						_object_info_t oi;
+						bool add_user = false;
+
+						p_bentry->pi_base->object_info(&oi);
+						if(pe->pl->cname) {
+							if(strcmp(oi.cname, pe->pl->cname) == 0)
+								add_user = true;
+						}
+
+						if(pe->pl->iname) {
+							if(strcmp(oi.iname, pe->pl->iname) == 0)
+								add_user = true;
+						}
+
+						if(add_user)
+							users_add_object_user(p_bentry, pe->pi_base);
+					}, &e);
+				}
 			}
 		}
 	}
@@ -347,20 +367,41 @@ private:
 					pi_tasks->stop(pi_tasks->handle(pi_base));
 			}
 
-			lm_pre_uninit(pi_base, [](iBase *pi_base, void *udata) {
+			lm_pre_uninit(pi_base, [](iBase *pi_base, void *udata) { // release object
 				cRepository *p_repo = (cRepository *)udata;
 
 				p_repo->object_release(pi_base, false);
-			}, [](const _link_info_t *p_link_info, _object_info_t *poi, void *udata)->bool {
+			},[](const _link_info_t *p_link_info, iBase *pi_user, void *udata) { // remove user
+				typedef struct {
+					const _link_info_t *p_link_info;
+					cRepository *p_repo;
+					iBase *pi_user;
+				}_enum_t;
 				cRepository *p_repo = (cRepository *)udata;
 
-				return p_repo->info_by_link(p_link_info, poi);
-			}, [](const _link_info_t *p_link_info, iBase *pi_user, void *udata) {
-				cRepository *p_repo = (cRepository *)udata;
-				_base_entry_t *p_bentry = p_repo->object_by_link(p_link_info);
+				_enum_t e = {p_link_info, p_repo, pi_user};
 
-				if(p_bentry)
-					users_remove_object_user(p_bentry, pi_user);
+				p_repo->enum_base_array([](_base_entry_t *p_bentry, void *udata) {
+					_enum_t *pe = (_enum_t *)udata;
+					_object_info_t oi;
+					bool remove_user = false;
+
+					p_bentry->pi_base->object_info(&oi);
+					if(pe->p_link_info->iname) {
+						if(strcmp(pe->p_link_info->iname, oi.iname) == 0)
+							remove_user = true;
+					}
+					if(pe->p_link_info->cname) {
+						if(strcmp(pe->p_link_info->cname, oi.cname) == 0)
+							remove_user = true;
+					}
+
+					if(remove_user) {
+						if(pe->p_link_info->p_info_ctl)
+							pe->p_link_info->p_info_ctl(RCTL_UNLOAD, &oi, pe->p_link_info->udata);
+						users_remove_object_user(p_bentry, pe->pi_user);
+					}
+				}, &e);
 			}, this);
 
 			if((r = pi_base->object_ctl(OCTL_UNINIT, this))) {
@@ -398,8 +439,6 @@ private:
 					p_repo->object_release(pi_base, false);
 				}, pe->p_repo);
 
-				if(lmr & PLMR_READY)
-					r = ENUM_DELETE;
 				if(lmr & PLMR_UNINIT)
 					pe->p_repo->uninit_object(pi_base);
 				else {

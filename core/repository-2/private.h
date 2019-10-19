@@ -194,10 +194,10 @@ _base_entry_t *find_object_by_cname(_cstr_t cname);
 _base_entry_t *find_object_by_pointer(iBase *pi_base);
 void destroy_base_array_storage(void);
 
-#define ENUM_CONTINUE	0
-#define ENUM_BREAK	1
-#define ENUM_DELETE	2
-#define ENUM_CURRENT	3
+#define ENUM_CONTINUE	MAP_ENUM_CONTINUE
+#define ENUM_BREAK	MAP_ENUM_BREAK
+#define ENUM_DELETE	MAP_ENUM_DELETE
+#define ENUM_CURRENT	10
 
 typedef _s32 _enum_cb_t(iBase *pi_base, void *udata);
 typedef std::unordered_set<iBase *, std::hash<iBase *>, std::equal_to<iBase *>, zAllocator<iBase *>> _set_pi_object_t;
@@ -212,12 +212,11 @@ void users_enum(_base_entry_t *p_bentry, _enum_cb_t *pcb, void *udata);
 void destroy_users_storage(void);
 
 // Monitoring
-typedef void _monitoring_enum_cb_t(iBase *pi_obj, iBase *pi_handler, void *udata);
+typedef void _monitoring_enum_cb_t(_cstr_t iname, _cstr_t cname, void *udata);
 
-HNOTIFY add_monitoring(iBase *mon_object, _cstr_t iname, _cstr_t cname, iBase *pi_handler);
-void remove_monitoring(HNOTIFY hn);
+void add_monitoring(_cstr_t iname, _cstr_t cname, iBase *pi_handler);
 void remove_monitoring(iBase *pi_handler);
-void enum_monitoring(iBase *pi_obj, _monitoring_enum_cb_t *pcb, void *udata);
+void enum_monitoring(iBase *pi_handler, _monitoring_enum_cb_t *pcb, void *udata);
 void destroy_monitoring_storage(void);
 
 // Dynamic Context Storage (DCS)
@@ -239,7 +238,6 @@ typedef iBase *_cb_object_request_t(const _link_info_t *p_link_info, void *udata
 typedef iBase *_cb_create_object_t(_base_entry_t *p_bentry, _rf_t flags, void *udata);
 typedef void _cb_release_object_t(iBase *pi_base, void *udata);
 typedef void _cb_remove_user_t(const _link_info_t *p_link_info, iBase *pi_user, void *udata);
-typedef bool _cb_object_info_t(const _link_info_t *p_link_info, _object_info_t *poi, void *udata);
 
 void lm_clean(iBase *pi_base);
 _u32 lm_init(iBase *pi_base, _cb_object_request_t *pcb, void *udata);
@@ -247,7 +245,6 @@ _u32 lm_post_init(iBase *pi_base, _cb_object_request_t *pcb, void *udata);
 _u32 lm_post_init(iBase *pi_base, _base_entry_t *p_bentry, _cb_create_object_t *pcb, void *udata);
 _u32 lm_pre_uninit(iBase *pi_base,
 			_cb_release_object_t *pcb_release,
-			_cb_object_info_t *pcb_info,
 			_cb_remove_user_t *pcb_remove_user,
 			void *udata);
 _u32 lm_uninit(iBase *pi_base, _cb_release_object_t *pcb, void *udata);
