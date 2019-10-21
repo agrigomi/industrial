@@ -79,9 +79,6 @@ public:
 				mpi_cmd_host = 0;
 				mpi_net = 0;
 				mpi_server = 0;
-				mpi_log = (iLog *)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL);
-				mpi_list = (iLlist *)pi_repo->object_by_iname(I_LLIST, RF_CLONE);
-				mpi_mutex = (iMutex *)pi_repo->object_by_iname(I_MUTEX, RF_CLONE);
 				if(mpi_list && mpi_mutex && mpi_log) {
 					iArgs *pi_arg = (iArgs *)pi_repo->object_by_iname(I_ARGS,
 											RF_ORIGINAL);
@@ -100,15 +97,7 @@ public:
 						pi_repo->object_release(pi_arg);
 					}
 
-					mpi_list->init(LL_VECTOR, 1);
-
-					// we wants to receive notifications for I_NET and I_CMD_HOST
-					mhn_net = pi_repo->monitoring_add(0, I_NET,
-									0, this, SCAN_ORIGINAL);
-					mhn_cmd_host = pi_repo->monitoring_add(0, I_CMD_HOST,
-									0, this, SCAN_ORIGINAL);
-
-					r = true;
+					r = mpi_list->init(LL_VECTOR, 1);
 				}
 			} break;
 			case OCTL_UNINIT: {
@@ -118,10 +107,7 @@ public:
 						"Uninit", NC_LOG_PREFIX);
 
 				close_connections();
-				release(pi_repo, (iBase **)&mpi_list);
 				release(pi_repo, (iBase **)&mpi_server);
-				release(pi_repo, (iBase **)&mpi_log);
-				release(pi_repo, (iBase **)&mpi_mutex);
 				r = true;
 			} break;
 			case OCTL_START: {
@@ -215,6 +201,9 @@ public:
 	}
 
 BEGIN_LINK_MAP
+	LINK(mpi_list, I_LLIST, NULL, RF_CLONE, NULL, NULL),
+	LINK(mpi_log, I_LOG, NULL, RF_ORIGINAL, NULL, NULL),
+	LINK(mpi_mutex, I_MUTEX, NULL, RF_CLONE, NULL, NULL),
 	LINK(mpi_cmd_host, I_CMD_HOST, NULL, RF_ORIGINAL|RF_PLUGIN, NULL, NULL),
 	LINK(mpi_net, I_NET, NULL, RF_ORIGINAL|RF_PLUGIN, [](_u32 n, void *udata) {
 		cNetCmd *p = (cNetCmd *)udata;
