@@ -70,32 +70,31 @@ private:
 		return r;
 	}
 
+	bool wait_for_idle(_task_t *task, _u32 timeout) {
+		bool r = false;
+		_u32 n = timeout;
+
+		while(!(task->state & TS_IDLE)) {
+			n--;
+			usleep(1000);
+		}
+
+		if(task->state & TS_IDLE)
+			r = true;
+
+		return r;
+	}
+
 	bool stop_task(_task_t *task) {
 		bool r = false;
 
 		if(!(task->state & TS_IDLE) && (task->state & TS_RUNNING)) {
 			if(task->pi_base) {
-				if((r = task->pi_base->object_ctl(OCTL_STOP, 0))) {
-					_u32 n = 100;
-					while(!(task->state & TS_IDLE)) {
-						usleep(10000);
-						n--;
-					}
-
-					if(!n)
-						r = false;
-				}
+				if((r = task->pi_base->object_ctl(OCTL_STOP, 0)))
+					r = wait_for_idle(task, 100);
 			} else if(task->proc) {
-				_u32 tm=10;
-
 				task->proc(TM_SIG_STOP, task->arg);
-				while(tm && !(task->state & TS_IDLE)) {
-					tm--;
-					usleep(10000);
-				}
-
-				if(task->state & TS_IDLE)
-					r = true;
+				r = wait_for_idle(task, 100);
 			}
 		} else
 			r = true;
