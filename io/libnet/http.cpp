@@ -50,10 +50,8 @@ bool cHttpServer::_init(_u32 port,
 			m_port = port;
 			p_tcps->blocking(false);
 
-			HTASK ht = mpi_tmaker->start(_http_server_thread, this);
-
 			snprintf(sname, sizeof(sname) - 1, "http-s:%u", m_port);
-			mpi_tmaker->set_name(ht, sname);
+			mpi_tmaker->start(_http_server_thread, this, sname);
 		}
 	}
 
@@ -206,15 +204,12 @@ bool cHttpServer::call_event_handler(_u8 evt, iHttpServerConnection *pi_httpc) {
 
 bool cHttpServer::start_worker(void) {
 	bool r = false;
-	HTASK ht = 0;
+	_char_t wname[17]="";
 
-	if((ht = mpi_tmaker->start(_http_worker_thread, this))) {
-		_char_t wname[17]="";
+	snprintf(wname, sizeof(wname) - 1, "http-w:%u", m_port);
 
-		snprintf(wname, sizeof(wname) - 1, "http-w:%u", m_port);
-		mpi_tmaker->set_name(ht, wname);
+	if(mpi_tmaker->start(_http_worker_thread, this, wname))
 		r = true;
-	}
 
 	return r;
 }
