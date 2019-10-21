@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -6,7 +7,8 @@
 #include "iMemory.h"
 
 #define TS_RUNNING	(1<<0)
-#define TS_STOPPED	(1<<1)
+#define TS_IDLE		(1<<1)
+#define TS_STOPPED	(1<<2)
 
 typedef struct {
 	iBase 		*pi_base;
@@ -14,6 +16,7 @@ typedef struct {
 	pthread_t 	thread;
 	void		*arg;
 	_u8		state;
+	_char_t		name[20];
 }_task_t;
 
 static void *starter(_task_t *task);
@@ -21,52 +24,39 @@ typedef void *_thread_t(void *);
 
 class cTaskMaker: public iTaskMaker {
 private:
-	iLlist	*mpi_list;
+	iPool	*mpi_pool;
 
 	friend void *starter(_task_t *task);
 
-	HTASK get_handle(void *p) {
+	HTASK get_handle(iBase *pi_base) {
 		HTASK r = 0;
 
-		if(mpi_list) {
-			_u32 sz;
-			HMUTEX hm = mpi_list->lock();
-			_task_t *t = (_task_t *)mpi_list->first(&sz, hm);
+		if(mpi_pool) {
+			typedef struct {
+				cTaskMaker *p_tmaker;
+				iBase *pi_base;
+				HTASK res;
+			}_enum_t;
 
-			if(t) {
-				do {
-					if(p == t->pi_base || p == t->proc) {
-						r = (HTASK)t;
-						break;
-					}
-				} while((t = (_task_t *)mpi_list->next(&sz, hm)));
-			}
+			_enum_t e = {this, pi_base, NULL};
 
-			mpi_list->unlock(hm);
+			mpi_pool->enum_busy([](void *data, _u32 size, void *udata)->_s32 {
+				_s32 r = ENUM_NEXT;
+				_enum_t *pe = (_enum_t *)udata;
+				_task_t *p_task = (_task_t *)data;
+
+				if(pe->pi_base == p_task->pi_base) {
+					pe->res = p_task;
+					r = ENUM_CANCEL;
+				}
+
+				return r;
+			}, &e);
+
+			r = e.res;
 		}
 
 		return r;
-	}
-
-	_task_t *add_task(_task_t *task) {
-		_task_t *r = 0;
-
-		if(mpi_list) {
-			HMUTEX hm = mpi_list->lock();
-			r = (_task_t *)mpi_list->add(task, sizeof(_task_t), hm);
-			mpi_list->unlock(hm);
-		}
-
-		return r;
-	}
-
-	void remove_task(_task_t *task) {
-		if(mpi_list) {
-			HMUTEX hm = mpi_list->lock();
-			if((mpi_list->sel(task, hm)))
-				mpi_list->del(hm);
-			mpi_list->unlock(hm);
-		}
 	}
 
 	HTASK start_task(_task_t *task) {
@@ -83,48 +73,71 @@ private:
 	bool stop_task(_task_t *task) {
 		bool r = false;
 
-		if(task->pi_base && (task->state & TS_RUNNING)) {
-			if((r = task->pi_base->object_ctl(OCTL_STOP, 0))) {
-				_u32 n = 100;
-				while(task->state & TS_RUNNING) {
+		if(!(task->state & TS_IDLE) && (task->state & TS_RUNNING)) {
+			if(task->pi_base) {
+				if((r = task->pi_base->object_ctl(OCTL_STOP, 0))) {
+					_u32 n = 100;
+					while(!(task->state & TS_IDLE)) {
+						usleep(10000);
+						n--;
+					}
+
+					if(!n)
+						r = false;
+				}
+			} else if(task->proc) {
+				_u32 tm=10;
+
+				task->proc(TM_SIG_STOP, task->arg);
+				while(tm && !(task->state & TS_IDLE)) {
+					tm--;
 					usleep(10000);
-					n--;
 				}
 
-				if(!n)
-					r = false;
-			}
-		} else if(task->proc && (task->state & TS_RUNNING)) {
-			_u32 tm=10;
-
-			task->proc(TM_SIG_STOP, task->arg);
-			while(tm && (task->state & TS_RUNNING)) {
-				tm--;
-				usleep(10000);
-			}
-
-			if(!tm && (task->state & TS_RUNNING)) {
-				if(pthread_cancel(task->thread) == ERR_NONE) {
-					remove_task(task);
+				if(task->state & TS_IDLE)
 					r = true;
-				}
 			}
-		}
+		} else
+			r = true;
 
 		return r;
+	}
+
+	void free_task(_task_t *task) {
+		mpi_pool->free(task);
 	}
 
 	_task_t *validate_handle(HTASK h) {
 		_task_t *r = 0;
 
-		if(mpi_list) {
-			HMUTEX hm = mpi_list->lock();
-			if(mpi_list->sel((_task_t *)h, hm))
+		if(mpi_pool) {
+			if(mpi_pool->verify(h))
 				r = (_task_t *)h;
-			mpi_list->unlock(hm);
 		}
 
 		return r;
+	}
+
+	bool init_pool(void) {
+		return mpi_pool->init(sizeof(_task_t), [](_u8 op, void *data, void *udata) {
+			cTaskMaker *p_tmaker = (cTaskMaker *)udata;
+			_task_t *p_task = (_task_t *)data;
+
+			switch(op) {
+				case POOL_OP_NEW:
+					break;
+				case POOL_OP_BUSY:
+					break;
+				case POOL_OP_FREE:
+					break;
+				case POOL_OP_DELETE:
+					p_tmaker->stop_task(p_task);
+					p_task->state &= ~TS_RUNNING;
+					while(!(p_task->state & TS_STOPPED))
+						usleep(10000);
+					break;
+			};
+		}, this);
 	}
 
 public:
@@ -136,14 +149,12 @@ public:
 		switch(cmd) {
 			case OCTL_INIT: {
 				iRepository *pi_repo = (iRepository*)arg;
-				if((mpi_list = (iLlist*)pi_repo->object_by_iname(I_LLIST, RF_CLONE))) {
-					mpi_list->init(LL_VECTOR, 1);
-					r = true;
-				}
+				if((mpi_pool = (iPool*)pi_repo->object_by_iname(I_POOL, RF_CLONE)))
+					r = init_pool();
 			} break;
 			case OCTL_UNINIT: {
 				iRepository *pi_repo = (iRepository*)arg;
-				pi_repo->object_release(mpi_list);
+				pi_repo->object_release(mpi_pool);
 				r = true;
 			} break;
 		}
@@ -155,40 +166,44 @@ public:
 		HTASK r = 0;
 
 		if(!(r = get_handle(pi_base))) {
-			_task_t task;
+			_task_t *p_task = (_task_t *)mpi_pool->alloc();
 
-			memset(&task, 0, sizeof(_task_t));
-			task.pi_base = pi_base;
-			task.arg = arg;
-
-			_task_t *t = add_task(&task);
-			r = start_task(t);
-		} else {
-			_task_t *task = (_task_t *)r;
-			if(!(task->state & TS_RUNNING))
-				start_task(task);
+			if(p_task) {
+				p_task->arg = arg;
+				p_task->pi_base = pi_base;
+				if(!(p_task->state & TS_RUNNING))
+					r = start_task(p_task);
+				else
+					r = p_task;
+			}
 		}
 
 		return r;
 	}
 
-	HTASK start(_task_proc_t *proc, void *arg=0) {
-		_task_t task;
+	HTASK start(_task_proc_t *proc, void *arg=0, _cstr_t name=0) {
+		HTASK r = 0;
 
-		memset(&task, 0, sizeof(_task_t));
-		task.proc = proc;
-		task.arg = arg;
+		_task_t *p_task = (_task_t *)mpi_pool->alloc();
 
-		_task_t *t = add_task(&task);
-		return start_task(t);
+		if(p_task) {
+			p_task->arg = arg;
+			p_task->proc = proc;
+			if(name)
+				strncpy(p_task->name, name, sizeof(p_task->name)-1);
+			else
+				snprintf(p_task->name, sizeof(p_task->name), "%p", proc);
+			if(!(p_task->state & TS_RUNNING))
+				r = start_task(p_task);
+			else
+				r = p_task;
+		}
+
+		return r;
 	}
 
 	HTASK handle(iBase *pi_base) {
-		return get_handle((void *)pi_base);
-	}
-
-	HTASK handle(_task_proc_t *proc) {
-		return get_handle((void *)proc);
+		return get_handle(pi_base);
 	}
 
 	bool stop(HTASK h) {
@@ -198,10 +213,6 @@ public:
 		if(task) {
 			if(task->state & TS_RUNNING)
 				r = stop_task(task);
-			else {
-				remove_task(task);
-				r = true;
-			}
 		}
 
 		return r;
@@ -253,17 +264,34 @@ static cTaskMaker _g_task_maker_;
 static void *starter(_task_t *task) {
 	void *r = 0;
 
-	task->state |= TS_RUNNING;
-	task->state &= ~TS_STOPPED;
+	task->state = TS_RUNNING;
 
-	if(task->pi_base)
-		task->pi_base->object_ctl(OCTL_START, task->arg);
-	else if(task->proc)
-		r = task->proc(TM_SIG_START, task->arg);
+	while(task->state & TS_RUNNING) {
+		if(task->pi_base) {
+			_object_info_t oi;
 
-	task->state &= ~TS_RUNNING;
-	task->state |= TS_STOPPED;
-	_g_task_maker_.remove_task(task);
+			task->pi_base->object_info(&oi);
+			task->state &= ~TS_IDLE;
+			_g_task_maker_.set_name(task, oi.cname);
+			task->pi_base->object_ctl(OCTL_START, task->arg);
+		} else if(task->proc) {
+			_g_task_maker_.set_name(task, task->name);
+			task->state &= ~TS_IDLE;
+			r = task->proc(TM_SIG_START, task->arg);
+		}
+
+		if(!(task->state & TS_IDLE)) {
+			task->state |= TS_IDLE;
+			task->pi_base = NULL;
+			task->proc = NULL;
+			_g_task_maker_.set_name(task, "idle");
+			_g_task_maker_.free_task(task);
+		}
+
+		usleep(100000);
+	}
+
+	task->state = TS_STOPPED;
 
 	pthread_exit(0);
 
