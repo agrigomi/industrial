@@ -310,7 +310,7 @@ private:
 					idx++;
 				}
 			} else
-				mpi_log->write(LMT_ERROR, "Gatn: Requres array 'server: []'");
+				mpi_log->write(LMT_ERROR, "Gatn: Requires array 'server: []'");
 		} else
 			mpi_log->write(LMT_ERROR, "Gatn: Failed to configure servers");
 	}
@@ -324,10 +324,7 @@ public:
 
 		switch(cmd) {
 			case OCTL_INIT: {
-				if(mpi_map)
-					mpi_map->init(31);
 				init_mime_type_resolver();
-				// init SSL
 				ssl_init();
 				r = true;
 			} break;
@@ -343,7 +340,12 @@ public:
 
 BEGIN_LINK_MAP
 	LINK(mpi_log, I_LOG, NULL, RF_ORIGINAL, NULL, NULL),
-	LINK(mpi_map, I_MAP, NULL, RF_CLONE, NULL, NULL),
+	LINK(mpi_map, I_MAP, NULL, RF_CLONE, [](_u32 n, void *udata) {
+		cGatn *p = (cGatn *)udata;
+
+		if(n == RCTL_REF)
+			p->mpi_map->init(31);
+	}, this),
 	INFO(I_GATN_EXTENSION, NULL, [](_u32 n, _object_info_t *poi, void *udata) {
 		cGatn *p = (cGatn *)udata;
 
