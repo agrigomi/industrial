@@ -146,14 +146,14 @@ public:
 
 	bool init(_cstr_t args, _u32 sz_args=0) {
 		bool r = false;
-		_u32 sz = (sz_args) ? sz_args : strlen(args);
+		_u32 sz = (sz_args) ? sz_args : strlen(args)+1;
 
 		if(sz) {
 			if(m_arg_line && m_sz_arg_line)
 				mpi_heap->free(m_arg_line, m_sz_arg_line);
 
-			if((m_arg_line = (_str_t)mpi_heap->alloc(sz+1))) {
-				mpi_str->mem_set(m_arg_line, 0, sz+1);
+			if((m_arg_line = (_str_t)mpi_heap->alloc(sz))) {
+				mpi_str->mem_set(m_arg_line, 0, sz);
 				mpi_str->mem_cpy(m_arg_line, (void *)args, sz);
 				m_sz_arg_line = sz;
 				m_argc = parse_argv(m_arg_line, sz);
