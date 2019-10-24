@@ -47,27 +47,32 @@ private:
 
 	_cstat_t get_context_state(iBase *pi_base) {
 		_cstat_t r = 0;
-		_base_entry_t *p_bentry = find_object_by_pointer(pi_base);
 
-		if(p_bentry)
-			// original object context
-			r = p_bentry->state;
-		else
-			// dynamic object context
-			r = dcs_get_context_state(pi_base);
+		if(pi_base) {
+			_base_entry_t *p_bentry = find_object_by_pointer(pi_base);
+
+			if(p_bentry)
+				// original object context
+				r = p_bentry->state;
+			else
+				// dynamic object context
+				r = dcs_get_context_state(pi_base);
+		}
 
 		return r;
 	}
 
 	void set_context_state(iBase *pi_base, _cstat_t state) {
-		_base_entry_t *p_bentry = find_object_by_pointer(pi_base);
+		if(pi_base) {
+			_base_entry_t *p_bentry = find_object_by_pointer(pi_base);
 
-		if(p_bentry)
-			// original object context
-			p_bentry->state = state;
-		else
-			// dynamic object context
-			dcs_set_context_state(pi_base, state);
+			if(p_bentry)
+				// original object context
+				p_bentry->state = state;
+			else
+				// dynamic object context
+				dcs_set_context_state(pi_base, state);
+		}
 	}
 
 	_base_entry_t *find_object_entry(iBase *pi_base) {
@@ -462,18 +467,20 @@ public:
 	}
 
 	void object_release(iBase *pi_base, bool notify=true) {
-		_base_entry_t *p_bentry = find_object_entry(pi_base);
-		bool unref = true;
+		if(pi_base) {
+			_base_entry_t *p_bentry = find_object_entry(pi_base);
+			bool unref = true;
 
-		if(p_bentry) {
-			if(p_bentry->pi_base != pi_base) {
-				// cloning
-				if((unref = uninit_object(pi_base)))
-					dcs_remove_context(pi_base);
+			if(p_bentry) {
+				if(p_bentry->pi_base != pi_base) {
+					// cloning
+					if((unref = uninit_object(pi_base)))
+						dcs_remove_context(pi_base);
+				}
+
+				if(p_bentry->ref_cnt && unref)
+					p_bentry->ref_cnt--;
 			}
-
-			if(p_bentry->ref_cnt && unref)
-				p_bentry->ref_cnt--;
 		}
 	}
 
