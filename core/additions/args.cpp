@@ -188,7 +188,7 @@ public:
 		_u32 idx=0;
 
 		sopt[0] = opt;
-		if(m_argc > 1 && m_argv) {
+		if(m_argc && m_argv) {
 			for(_u32 i = 0; i < m_argc; i++) {
 				if((r = check(sopt, m_argv[i], 0, &idx)))
 					break;
@@ -201,7 +201,7 @@ public:
 		bool r = false;
 		_u32 idx = 0;
 
-		if(m_argc > 1 && m_argv) {
+		if(m_argc && m_argv) {
 			for(_u32 i = 0; i < m_argc; i++) {
 				if((r = check(opt, m_argv[i], OPT_LONG, &idx)))
 					break;
@@ -215,7 +215,7 @@ public:
 		_char_t sopt[2]="";
 
 		sopt[0] = opt;
-		if(m_argc > 1 && m_argv) {
+		if(m_argc && m_argv) {
 			_u32 idx = 0;
 
 			for(_u32 i = 0; i < m_argc; i++) {
@@ -236,7 +236,7 @@ public:
 	_str_t value(_cstr_t opt) {
 		_str_t r = 0;
 
-		if(m_argc > 1 && m_argv) {
+		if(m_argc && m_argv) {
 			_u32 idx = 0;
 
 			for(_u32 i = 0; i < m_argc; i++) {
