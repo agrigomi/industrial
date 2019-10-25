@@ -272,6 +272,7 @@ private:
 			if(mpi_json->type(htv_srv_array) == JVT_ARRAY) {
 				_u32 idx = 0;
 				HTVALUE htv_srv = NULL;
+				_u32 sz = 0;
 
 				while((htv_srv = mpi_json->by_index(htv_srv_array, idx))) {
 					std::string name = json_string(jcxt, "name", htv_srv);
@@ -286,26 +287,29 @@ private:
 					std::string cache_exclude = json_array_to_path(mpi_json->select(jcxt, "cache.exclude", htv_srv));
 					std::string root_exclude = json_array_to_path(mpi_json->select(jcxt, "exclude", htv_srv));
 
-					SSL_CTX *ssl_context = create_ssl_context(jcxt, htv_srv);
+					if(!mpi_map->get(name.c_str(), name.length(), &sz)) {
+						SSL_CTX *ssl_context = create_ssl_context(jcxt, htv_srv);
 
-					_server_t *pi_srv = create_server(name.c_str(),
-								atoi(port.c_str()),
-								root.c_str(),
-								cache_path.c_str(),
-								cache_exclude.c_str(),
-								root_exclude.c_str(),
-								atoi(buffer.c_str()) * 1024,
-								atoi(threads.c_str()),
-								atoi(connections.c_str()),
-								atoi(timeout.c_str()),
-								ssl_context);
+						_server_t *pi_srv = create_server(name.c_str(),
+									atoi(port.c_str()),
+									root.c_str(),
+									cache_path.c_str(),
+									cache_exclude.c_str(),
+									root_exclude.c_str(),
+									atoi(buffer.c_str()) * 1024,
+									atoi(threads.c_str()),
+									atoi(connections.c_str()),
+									atoi(timeout.c_str()),
+									ssl_context);
 
-					if(pi_srv) {
-						HTVALUE htv_class_array = mpi_json->select(jcxt, "attach", htv_srv);
+						if(pi_srv) {
+							HTVALUE htv_class_array = mpi_json->select(jcxt, "attach", htv_srv);
 
-						attach_class(jcxt, htv_class_array, pi_srv);
-						configure_hosts(jcxt, htv_srv, pi_srv);
-					}
+							attach_class(jcxt, htv_class_array, pi_srv);
+							configure_hosts(jcxt, htv_srv, pi_srv);
+						}
+					} else
+						mpi_log->fwrite(LMT_ERROR, "Gatn: server '%s' already exists", name.c_str());
 
 					idx++;
 				}
