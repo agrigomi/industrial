@@ -76,19 +76,22 @@ private:
 		if(e) {
 			psrv->on_event(ON_ERROR, [](_request_t *req, _response_t *res, void *udata) {
 				cHttpLog *pobj = (cHttpLog *)udata;
-				iLog *pi_log = pobj->mpi_log;
-				_cstr_t uri = req->var(VAR_REQ_URI);
-				_char_t ip[32];
 				_u16 rc = res->error();
-				_cstr_t rc_text = res->text(rc);
 
-				req->connection()->peer_ip(ip, sizeof(ip));
+				if(rc != HTTPRC_REQUEST_TIMEOUT) {
+					iLog *pi_log = pobj->mpi_log;
+					_cstr_t uri = req->var(VAR_REQ_URI);
+					_char_t ip[32];
+					_cstr_t rc_text = res->text(rc);
 
-				pi_log->fwrite(LMT_ERROR, "%s/%s: (%s) ERROR(%d) %s %s",
-							pobj->mpi_gatn_server->name(),
-							(strlen(pobj->m_host_name)) ? pobj->m_host_name: "defaulthost",
-							ip, rc, rc_text,
-							 (uri) ? uri : "");
+					req->connection()->peer_ip(ip, sizeof(ip));
+
+					pi_log->fwrite(LMT_ERROR, "%s/%s: (%s) ERROR(%d) %s %s",
+								pobj->mpi_gatn_server->name(),
+								(strlen(pobj->m_host_name)) ? pobj->m_host_name: "defaulthost",
+								ip, rc, rc_text,
+								 (uri) ? uri : "");
+				}
 
 				pobj->call_original_handler(ON_ERROR, req, res);
 			}, this, host);
