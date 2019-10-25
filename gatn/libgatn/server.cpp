@@ -360,11 +360,17 @@ bool server::add_virtual_host(_cstr_t host, _cstr_t root, _cstr_t cache_path, _c
 	}
 
 	if(mpi_vhost_map) {
-		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->add(host, strlen(host), &vhost, sizeof(_vhost_t));
+		_u32 sz = 0;
+		_vhost_t *pvhost = (_vhost_t *)mpi_vhost_map->get(host, strlen(host), &sz);
 
-		if(pvhost)
-			r = pvhost->init(this, host, root, cache_path, cache_key,
+		if(!pvhost) {
+			 pvhost = (_vhost_t *)mpi_vhost_map->add(host, strlen(host), &vhost, sizeof(_vhost_t));
+
+			if(pvhost)
+				r = pvhost->init(this, host, root, cache_path, cache_key,
 						cache_exclude, path_disable, mpi_heap);
+		} else
+			r = true;
 	}
 
 	return r;
