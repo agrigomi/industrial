@@ -24,7 +24,10 @@
 					"attach": [
 						{
 							"cname":	"cHttpLog",
-							"options":	"-o --lopt=something"
+							"options":	"-IET time-format=%Y%m%d%H%M%S"
+						},
+						{	"cname":	"cAms",
+							"options":	"--db-host=localhost --db-user=ams --db-pass=nopass --db-name=ams"
 						}
 					]
 				}
@@ -38,12 +41,16 @@
 			"attach":	[
 				{
 					"cname":	"cHttpLog",
-					"options":	""
+					"options":	"--time-format=%Y%m%d%H%M%S -IET"
+				},
+				{	"cname":	"cAms",
+					"options":	"--db-host=localhost --db-user=ams --db-pass=nopass --db-name=ams"
 				}
 			]
 		}
 	],
 	"extension": [
-		{ "module":	"extgatnmon.so", 	"alias":	"gatn-mon" }
+		{ "module":	"extgatnmon.so", 	"alias":	"gatn-mon" },
+		{ "module":	"extgatnams.so",	"alias":	"gatn-ams" }
 	]
 }
