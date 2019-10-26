@@ -166,9 +166,9 @@ public:
 
 		if(opt) {
 			if((r = mpi_args->init(opt, strlen(opt)))) {
-				e = mpi_args->check('e');
-				i = mpi_args->check('i');
-				t = mpi_args->check('t');
+				e = mpi_args->check('E');
+				i = mpi_args->check('I');
+				t = mpi_args->check('T');
 				m_time_fmt = mpi_args->value("time-format");
 			}
 		}
