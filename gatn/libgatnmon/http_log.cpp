@@ -1,4 +1,5 @@
 #include <string.h>
+#include <time.h>
 #include "iGatn.h"
 #include "iArgs.h"
 #include "iLog.h"
@@ -19,6 +20,18 @@ private:
 	_server_t	*mpi_gatn_server;
 	_char_t		m_host_name[256];
 	bool		e, i, t;
+	_cstr_t		m_time_fmt;
+
+	void timestamp(_str_t buffer, _u32 len) {
+		memset(buffer, 0, len);
+
+		if(m_time_fmt) {
+			time_t _time = time(NULL);
+			tm *_tm = localtime(&_time);
+
+			strftime(buffer, len, m_time_fmt, _tm);
+		}
+	}
 
 	void backup_handlers(_server_t *psrv, _cstr_t host) {
 		if(i)
@@ -38,10 +51,13 @@ private:
 				_cstr_t uri = req->var(VAR_REQ_URI);
 				_cstr_t protocol = req->var(VAR_REQ_PROTOCOL);
 				_char_t ip[32];
+				_char_t tm[64];
 
 				req->connection()->peer_ip(ip, sizeof(ip));
+				pobj->timestamp(tm, sizeof(tm));
 
-				pi_log->fwrite(LMT_INFO, "%s/%s: (%s) %s %s %s",
+				pi_log->fwrite(LMT_INFO, "%s %s/%s: (%s) %s %s %s",
+							tm,
 							pobj->mpi_gatn_server->name(),
 							(strlen(pobj->m_host_name)) ? pobj->m_host_name: "defaulthost",
 							ip,
@@ -82,11 +98,14 @@ private:
 					iLog *pi_log = pobj->mpi_log;
 					_cstr_t uri = req->var(VAR_REQ_URI);
 					_char_t ip[32];
+					_char_t tm[64];
 					_cstr_t rc_text = res->text(rc);
 
 					req->connection()->peer_ip(ip, sizeof(ip));
+					pobj->timestamp(tm, sizeof(tm));
 
-					pi_log->fwrite(LMT_ERROR, "%s/%s: (%s) ERROR(%d) %s %s",
+					pi_log->fwrite(LMT_ERROR, "%s %s/%s: (%s) ERROR(%d) %s %s",
+								tm,
 								pobj->mpi_gatn_server->name(),
 								(strlen(pobj->m_host_name)) ? pobj->m_host_name: "defaulthost",
 								ip, rc, rc_text,
@@ -150,6 +169,7 @@ public:
 				e = mpi_args->check('e');
 				i = mpi_args->check('i');
 				t = mpi_args->check('t');
+				m_time_fmt = mpi_args->value("time-format");
 			}
 		}
 
