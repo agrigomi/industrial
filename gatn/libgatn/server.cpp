@@ -25,6 +25,7 @@ bool server::init(_cstr_t name, _u32 port, _cstr_t root,
 						_connection_t tmp;
 
 						tmp.req.mpi_server = tmp.res.mpi_server = p_srv;
+						tmp.req.mpi_cookie_map = NULL;
 						tmp.res.mpi_heap = p_srv->mpi_heap;
 						tmp.res.mpi_bmap = p_srv->mpi_bmap;
 						tmp.res.mp_hbarray = NULL;

@@ -17,6 +17,7 @@ typedef struct {
 	virtual _cstr_t utl(void)=0;
 	virtual _cstr_t urn(void)=0;
 	virtual _cstr_t var(_cstr_t name)=0;
+	virtual _cstr_t cookie(_cstr_t name)=0;
 	virtual _u32 content_len(void)=0;
 	virtual void *data(_u32 *size)=0;
 	virtual bool parse_content(void)=0;

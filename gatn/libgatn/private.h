@@ -8,6 +8,7 @@
 struct request: public _request_t{
 	iHttpServerConnection *mpi_httpc;
 	_server_t *mpi_server;
+	iMap *mpi_cookie_map;
 
 	iHttpServerConnection *connection(void) {
 		return mpi_httpc;
@@ -22,6 +23,9 @@ struct request: public _request_t{
 	_cstr_t utl(void);
 	_cstr_t urn(void);
 	_cstr_t var(_cstr_t name);
+	bool parse_cookies(_cstr_t cookies);
+	bool parse_cookies(void);
+	_cstr_t cookie(_cstr_t name);
 	_u32 content_len(void);
 	void *data(_u32 *size);
 	void destroy(void);
