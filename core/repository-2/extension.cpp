@@ -78,7 +78,27 @@ _err_t load_extension(_cstr_t file, _cstr_t alias, _extension_t **pp_ext, _mutex
 	_extension_t ext;
 	_cstr_t _alias = (alias && strlen(alias)) ? alias : basename(file);
 
-	if(!find_extension(_alias, hlock)) {
+	typedef struct {
+		_cstr_t file;
+		_cstr_t alias;
+		_err_t err;
+	}_enum_t;
+
+	_enum_t e = {file, _alias, ERR_NONE};
+
+	enum_extensions([](_extension_t *p_ext, void *udata)->_s32 {
+		_s32 r = ENUM_CONTINUE;
+		_enum_t *pe = (_enum_t *)udata;
+
+		if(strcmp(pe->file, p_ext->file()) == 0 || strcmp(pe->alias, p_ext->alias()) == 0) {
+			r = ENUM_BREAK;
+			pe->err = ERR_DUPLICATED;
+		}
+
+		return r;
+	}, &e, hlock);
+
+	if((r = e.err) == ERR_NONE) {
 		if((r = ext.load(file, _alias)) == ERR_NONE) {
 			_alias = ext.alias();
 			_extension_t *p_ext = (_extension_t *)_g_ext_map_.add((void *)_alias, strlen(_alias), &ext, sizeof(ext), hlock);
@@ -86,8 +106,7 @@ _err_t load_extension(_cstr_t file, _cstr_t alias, _extension_t **pp_ext, _mutex
 			if(pp_ext)
 				*pp_ext = p_ext;
 		}
-	} else
-		r = ERR_DUPLICATED;
+	}
 
 	return r;
 }
