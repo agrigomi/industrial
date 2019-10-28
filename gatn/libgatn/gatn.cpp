@@ -16,54 +16,33 @@ private:
 	iJSON		*mpi_json;
 
 	void stop(bool autorestore=false) { // stop servers
-		_map_enum_t en = mpi_map->enum_open();
+		mpi_map->enumerate([](void *data, _u32 size, void *udata)->_s32 {
+			server *p_srv = (server *)data;
+			bool autorestore = *(bool *)udata;
 
-		if(en) {
-			_u32 sz = 0;
-			HMUTEX hm = mpi_map->lock();
-			_server_t *p_srv = (_server_t *)mpi_map->enum_first(en, &sz, hm);
+			p_srv->release_network();
+			p_srv->release_fs();
+			p_srv->m_autorestore = autorestore;
 
-			while(p_srv) {
-				server *p = dynamic_cast<server *>(p_srv);
-
-				if(p) {
-					p->release_network();
-					p->release_fs();
-					p->m_autorestore = autorestore;
-					p_srv = (_server_t *)mpi_map->enum_next(en, &sz, hm);
-				}
-			}
-
-			mpi_map->unlock(hm);
-			mpi_map->enum_close(en);
-		}
+			return ENUM_NEXT;
+		}, &autorestore);
 	}
 
 	void restore(void) {
-		_map_enum_t en = mpi_map->enum_open();
+		mpi_map->enumerate([](void *data, _u32 size, void *udata)->_s32 {
+			server *p_srv = (server *)data;
+			cGatn *p_gatn = (cGatn *)udata;
 
-		if(en) {
-			_u32 sz = 0;
-			HMUTEX hm = mpi_map->lock();
-			_server_t *p_srv = (_server_t *)mpi_map->enum_first(en, &sz, hm);
+			p_srv->attach_fs();
+			p_srv->attach_network();
 
-			while(p_srv) {
-				server *p = dynamic_cast<server *>(p_srv);
-
-				if(p) {
-					p->attach_fs();
-					p->attach_network();
-					if(p->m_autorestore) {
-						if(!p->start())
-							mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to restore server '%s'", p->name());
-					}
-					p_srv = (_server_t *)mpi_map->enum_next(en, &sz, hm);
-				}
+			if(p_srv->m_autorestore) {
+				if(!p_srv->start())
+					p_gatn->mpi_log->fwrite(LMT_ERROR, "Gatn: Unable to restore server '%s'", p_srv->name());
 			}
 
-			mpi_map->unlock(hm);
-			mpi_map->enum_close(en);
-		}
+			return ENUM_NEXT;
+		}, this);
 	}
 
 	void destroy(_server_t *p_srv) {
