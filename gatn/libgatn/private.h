@@ -165,6 +165,13 @@ struct response: public _response_t {
 	_u16 error(void);
 	bool render(_cstr_t fname,
 		_u8 flags=RNDR_DONE|RNDR_CACHE|RNDR_RESOLVE_MT|RNDR_SET_MTIME|RNDR_USE_DOCROOT);
+	void cookie(_cstr_t name,
+			_cstr_t value,
+			_u8 flags=0,
+			_cstr_t expires=NULL,
+			_cstr_t max_age=NULL,
+			_cstr_t path=NULL,
+			_cstr_t domain=NULL);
 };
 
 void init_mime_type_resolver(void);

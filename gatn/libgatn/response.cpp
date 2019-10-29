@@ -270,3 +270,34 @@ bool response::render(_cstr_t fname, _u8 flags) {
 
 	return r;
 }
+
+void response::cookie(_cstr_t name,
+		_cstr_t value,
+		_u8 flags,
+		_cstr_t expires,
+		_cstr_t max_age,
+		_cstr_t path,
+		_cstr_t domain) {
+	_char_t val[4096]="";
+	_u32 n = 0;
+
+	n += snprintf(val + n, sizeof(val) - n, "%s=%s", name, value);
+	if(flags & CF_SECURE)
+		n += snprintf(val + n, sizeof(val) - n, "; %s", "Secure");
+	if(flags & CF_HTTP_ONLY)
+		n += snprintf(val + n, sizeof(val) - n, "; %s", "HttpOnly");
+	if(flags & CF_SAMESITE_STRICT)
+		n += snprintf(val + n, sizeof(val) - n, "; %s", "SameSite=Strict");
+	if(flags & CF_SAMESITE_LAX)
+		n += snprintf(val + n, sizeof(val) - n, "; %s", "SameSite=Lax");
+	if(expires)
+		n += snprintf(val + n, sizeof(val) - n, "; Expires=%s", expires);
+	if(max_age)
+		n += snprintf(val + n, sizeof(val) - n, "; Max-Age=%s", max_age);
+	if(path)
+		n += snprintf(val + n, sizeof(val) - n, "; Path=%s", path);
+	if(domain)
+		n += snprintf(val + n, sizeof(val) - n, "; Domain=%s", domain);
+
+	var("Set-Cookie", val);
+}
