@@ -149,6 +149,10 @@ bool request::parse_cookies(void) {
 			if((mpi_cookie_map = dynamic_cast<iMap *>(_gpi_repo_->object_by_iname(I_MAP, RF_CLONE)))) {
 				if((r = mpi_cookie_map->init(15)))
 					r = parse_cookies(cookies);
+				else {
+					_gpi_repo_->object_release(mpi_cookie_map);
+					mpi_cookie_map = NULL;
+				}
 			}
 		}
 	} else
