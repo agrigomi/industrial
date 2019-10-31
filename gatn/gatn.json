@@ -24,7 +24,7 @@
 					"attach": [
 						{
 							"cname":	"cHttpLog",
-							"options":	"-IET time-format=%Y%m%d%H%M%S"
+							"options":	"--time-format='%Y-%m-%d %H:%M:%S' -IET"
 						},
 						{	"cname":	"cAms",
 							"options":	"--db-host=localhost --db-user=ams --db-pass=nopass --db-name=ams"
@@ -41,7 +41,7 @@
 			"attach":	[
 				{
 					"cname":	"cHttpLog",
-					"options":	"--time-format=%Y%m%d%H%M%S -IET"
+					"options":	"--time-format='%Y-%m-%d %H:%M:%S' -IET"
 				},
 				{	"cname":	"cAms",
 					"options":	"--db-host=localhost --db-user=ams --db-pass=nopass --db-name=ams"
