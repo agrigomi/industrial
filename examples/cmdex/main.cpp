@@ -13,20 +13,6 @@ IMPLEMENT_BASE_ARRAY("command_example", 100);
 
 static iStdIO *gpi_stdio = 0;
 
-void log_listener(_u8 lmt, _str_t msg) {
-	_char_t pref = '-';
-
-	if(gpi_stdio) {
-		switch(lmt) {
-			case LMT_TEXT: pref = 'T'; break;
-			case LMT_INFO: pref = 'I'; break;
-			case LMT_ERROR: pref = 'E'; break;
-			case LMT_WARNING: pref = 'W';break;
-		}
-		gpi_stdio->fwrite("[%c] %s\n", pref, msg);
-	}
-}
-
 static _cstr_t extensions[] = {
 	"extcmd.so",
 	0
@@ -72,7 +58,19 @@ _err_t main(int argc, char *argv[]) {
 		gpi_stdio = dynamic_cast<iStdIO*>(pi_repo->object_by_iname(I_STD_IO, RF_ORIGINAL));
 
 		if(pi_log)
-			pi_log->add_listener(log_listener);
+			pi_log->add_listener([](_u8 lmt, _str_t msg) {
+				_char_t pref = '-';
+
+				if(gpi_stdio) {
+					switch(lmt) {
+						case LMT_TEXT: pref = 'T'; break;
+						case LMT_INFO: pref = 'I'; break;
+						case LMT_ERROR: pref = 'E'; break;
+						case LMT_WARNING: pref = 'W';break;
+					}
+					gpi_stdio->fwrite("[%c] %s\n", pref, msg);
+				}
+			});
 		else {
 			printf("Unable to create application log !\n");
 			return 1;
