@@ -21,11 +21,9 @@ const SSL_METHOD *ssl_select_method(_cstr_t method) {
 	}_ssl_method_t;
 
 	_ssl_method_t mm[] = {
-		{"TLSv1",	TLSv1_server_method},
 		{"SSLv23",	SSLv23_server_method},
-		{"TLSv1_1",	TLSv1_1_server_method},
-		{"TLSv1_2",	TLSv1_2_server_method},
-		{"DTLSv1",	DTLSv1_server_method},
+		{"TLS",		TLS_server_method},
+		{"DTLS",	DTLS_server_method},
 		{NULL,		NULL}
 	};
 
