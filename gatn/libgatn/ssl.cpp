@@ -5,6 +5,19 @@
 #include "dtype.h"
 
 static _char_t _g_error_string_[2048] = "";
+typedef const SSL_METHOD *_ssl_methodcb_t(void);
+
+typedef struct {
+	_cstr_t	ind;
+	_ssl_methodcb_t *cb_method;
+}_ssl_method_t;
+
+static _ssl_method_t _g_ssl_method_map[] = {
+	{"SSLv23",	SSLv23_server_method},
+	{"TLS",		TLS_server_method},
+	{"DTLS",	DTLS_server_method},
+	{NULL,		NULL}
+};
 
 void ssl_init(void) {
 	SSL_library_init();
@@ -14,31 +27,19 @@ void ssl_init(void) {
 
 const SSL_METHOD *ssl_select_method(_cstr_t method) {
 	const SSL_METHOD *r = NULL;
-	typedef const SSL_METHOD *_ssl_methodcb_t(void);
-	typedef struct {
-		_cstr_t	ind;
-		_ssl_methodcb_t *cb_method;
-	}_ssl_method_t;
-
-	_ssl_method_t mm[] = {
-		{"SSLv23",	SSLv23_server_method},
-		{"TLS",		TLS_server_method},
-		{"DTLS",	DTLS_server_method},
-		{NULL,		NULL}
-	};
 
 	_u32 n = 0;
 
-	while(mm[n].ind) {
-		if(strcmp(mm[n].ind, method) == 0) {
-			r = mm[n].cb_method();
+	while(_g_ssl_method_map[n].ind) {
+		if(strcmp(_g_ssl_method_map[n].ind, method) == 0) {
+			r = _g_ssl_method_map[n].cb_method();
 			break;
 		}
 
 		n++;
 	}
 
-	if(!mm[n].ind)
+	if(!_g_ssl_method_map[n].ind)
 		snprintf(_g_error_string_, sizeof(_g_error_string_),
 			"Unsupported SSL method '%s'", method);
 
