@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <dlfcn.h>
 #include "iCmd.h"
 #include "iRepository.h"
 
@@ -97,8 +98,10 @@ static void cmd_ext_load(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 	while((arg = pi_cmd_host->argument(argc, argv, p_opt, i))) {
 		_err_t err = _gpi_repo_->extension_load(arg, alias);
 
-		if(err != ERR_NONE)
+		if(err != ERR_NONE) {
 			fout(pi_io, "Failed to load extension, error=%d\n", err);
+			fout(pi_io, "%s\n", dlerror());
+		}
 		i++;
 	}
 }
