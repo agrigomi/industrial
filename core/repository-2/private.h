@@ -171,6 +171,7 @@ _err_t unload_extension(_cstr_t alias, _mutex_handle_t hlock=0);
 void unload_extensions(_mutex_handle_t hlock=0);
 _extension_t *find_extension(_cstr_t alias, _mutex_handle_t hlock=0);
 _err_t init_extension(_cstr_t alias, iRepository *pi_repo, _mutex_handle_t hlock=0);
+_cstr_t error_text(void);
 _base_entry_t *extension_array(_cstr_t alias, _u32 *count, _u32 *limit, _mutex_handle_t hlock=0);
 void enum_extensions(_s32 (*enum_cb)(_extension_t *, void *), void *udata, _mutex_handle_t hlock=0);
 void destroy_extensions_storage(_mutex_handle_t hlock=0);
