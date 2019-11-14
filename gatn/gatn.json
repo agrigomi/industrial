@@ -2,7 +2,7 @@
 	"server": [
 		{
 			"name":		"server-0",
-			"port":		8080,
+			"port":		8443,
 			"buffer":	16,
 			"threads":	8,
 			"connections":	2000,
@@ -14,7 +14,7 @@
 			"root":		"../test/AdminLTE",
 			"vhost": [
 				{
-					"host":		"oland.ddns.net:8080",
+					"host":		"oland.ddns.net",
 					"root":		"../test/elaadmin-master",
 					"exclude":	"/folder1/:/folder2/",
 					"cache": {
@@ -33,10 +33,10 @@
 				}
 			],
 			"ssl": {
-				"enable":	false,
+				"enable":	true,
 				"method":	"SSLv23",
-				"certificate":	"certificate.pem",
-				"key":		"keyfile.pem"
+				"certificate":	"example.crt",
+				"key":		"example.key"
 			},
 			"attach":	[
 				{
