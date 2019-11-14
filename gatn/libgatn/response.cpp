@@ -189,12 +189,10 @@ void response::process_content(void) {
 	}
 
 	if(nbuffer) {
-		// release old buffers
-		for(_u32 i = 0; i < nbuffer; i++) {
-			if(mp_hbarray[i]) {
-				mpi_bmap->free(mp_hbarray[i]);
-				mp_hbarray[i] = NULL;
-			}
+		// release buffer
+		if(mp_hbarray[nbuffer]) {
+			mpi_bmap->free(mp_hbarray[nbuffer]);
+			mp_hbarray[nbuffer] = NULL;
 		}
 	}
 }
