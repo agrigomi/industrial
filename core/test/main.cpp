@@ -42,7 +42,7 @@ _err_t main(int argc, char *argv[]) {
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = dynamic_cast<iLog *>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
 
-		pi_log->add_listener([](_u8 lmt, _str_t msg) {
+		pi_log->add_listener([](_u8 lmt, _cstr_t msg) {
 			_char_t pref = '-';
 
 			switch(lmt) {
