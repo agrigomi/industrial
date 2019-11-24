@@ -13,7 +13,7 @@
 #define LMT_WARNING	2
 #define LMT_ERROR	3
 
-typedef void _log_listener_t(_u8 lmt, _str_t msg);
+typedef void _log_listener_t(_u8 lmt, _cstr_t msg);
 
 class iLog: public iBase {
 public:
