@@ -58,7 +58,7 @@ _err_t main(int argc, char *argv[]) {
 		gpi_stdio = dynamic_cast<iStdIO*>(pi_repo->object_by_iname(I_STD_IO, RF_ORIGINAL));
 
 		if(pi_log)
-			pi_log->add_listener([](_u8 lmt, _str_t msg) {
+			pi_log->add_listener([](_u8 lmt, _cstr_t msg) {
 				_char_t pref = '-';
 
 				if(gpi_stdio) {
