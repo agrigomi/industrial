@@ -239,8 +239,9 @@ HDOCUMENT root::open(_cstr_t url) {
 
 	if(m_enable && mpi_fs && mpi_fcache && mpi_handle_pool) {
 		_char_t doc[MAX_DOC_ROOT_PATH * 2]="";
+		_u32 url_len = strlen(url);
 
-		if((strlen(url) + strlen(m_root_path) < sizeof(doc)-1)) {
+		if((url_len + strlen(m_root_path) < sizeof(doc)-1)) {
 			_u32 path_len = get_url_path(url);
 
 			if(!disabled(url, path_len)) {
@@ -249,9 +250,12 @@ HDOCUMENT root::open(_cstr_t url) {
 				if(ph) {
 					bool use_cache = cacheable(url, path_len);
 
-					snprintf(doc, sizeof(doc), "%s%s",
-						m_root_path,
-						(strcmp(url, "/") == 0) ? "/index.html" : url);
+					if(*(url + url_len - 1) ==  '/')
+						snprintf(doc, sizeof(doc), "%s%s%s",
+							m_root_path, url, "index.html");
+					else
+						snprintf(doc, sizeof(doc), "%s%s",
+							m_root_path, url);
 
 					if(use_cache) {
 						if((ph->hfc = mpi_fcache->open(doc)))
