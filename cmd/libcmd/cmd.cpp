@@ -28,7 +28,7 @@ private:
 		_cmd_rec_t *r = 0;
 		_u32 sz = 0;
 
-		if(mpi_cmd_map)
+		if(mpi_cmd_map && cmd_name)
 			r = (_cmd_rec_t *)mpi_cmd_map->get(cmd_name, strlen(cmd_name), &sz);
 
 		return r;
