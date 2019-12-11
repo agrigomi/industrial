@@ -86,9 +86,6 @@ private:
 							pi_httpc->res_mtime(p_srv->p_http_host->mpi_fcache->mtime(fc));
 							p_srv->p_http_host->mpi_fcache->close(fc);
 						} else {
-							_char_t req_ip[32]="";
-
-							pi_httpc->peer_ip(req_ip, sizeof(req_ip));
 							pi_httpc->res_code(HTTPRC_NOT_FOUND);
 							pi_httpc->res_content_len(pi_httpc->res_write("Not Found"));
 							pi_log->fwrite(LMT_ERROR, "%s: '%s' Not found (%s)", p_srv->name, pi_httpc->req_uri(), req_ip);
@@ -99,9 +96,6 @@ private:
 						pi_log->fwrite(LMT_ERROR, "%s: Internal error", p_srv->name);
 					}
 				} else {
-					_char_t req_ip[32]="";
-
-					pi_httpc->peer_ip(req_ip, sizeof(req_ip));
 					pi_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
 					pi_httpc->res_content_len(pi_httpc->res_write("Method not allowed"));
 					pi_log->fwrite(LMT_ERROR, "%s: Method not allowed (%s)", p_srv->name, req_ip);
