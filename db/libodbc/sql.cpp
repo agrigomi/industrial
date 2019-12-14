@@ -1,6 +1,7 @@
 #include "startup.h"
 #include "iSQL.h"
 #include "iRepository.h"
+#include "private.h"
 
 IMPLEMENT_BASE_ARRAY("libodbc", 10);
 
