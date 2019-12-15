@@ -1,5 +1,4 @@
 #include "startup.h"
-#include "iSQL.h"
 #include "iRepository.h"
 #include "private.h"
 
@@ -21,7 +20,7 @@ public:
 					r = true;
 				break;
 			case OCTL_UNINIT:
-				//...
+				r = true;
 				break;
 		}
 
@@ -31,13 +30,15 @@ public:
 	iSQLPool *create_sql_pool(_cstr_t connection_string) {
 		iSQLPool *r = NULL;
 
-		//...
+		if(mhi_sql_pool)
+			r = (iSQLPool *)_gpi_repo_->object_by_handle(mhi_sql_pool, RF_CLONE);
 
 		return r;
 	}
 
 	void destroy_sql_pool(iSQLPool *sql_pool) {
-		//...
+		if(sql_pool)
+			_gpi_repo_->object_release(sql_pool);
 	}
 };
 
