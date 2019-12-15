@@ -29,4 +29,26 @@ public:
 
 		return r;
 	}
+
+	bool init(_cstr_t connection_string) {
+		bool r = false;
+
+		//...
+
+		return r;
+	}
+
+	_sql_t *alloc(void) {
+		_sql_t *r = 0;
+
+		//...
+
+		return r;
+	}
+
+	void free(_sql_t *) {
+		//...
+	}
 };
+
+static cSQLPool _g_sql_pool_;
