@@ -7,12 +7,18 @@
 
 struct sql: public _sql_t {
 private:
-	SQLHDBC	m_hdbc;
+	SQLHDBC		m_hdbc;
+	SQLHSTMT	m_hstmt;
 
 	bool _init(SQLHDBC hdbc);
+	void _free(void);
+	void _destroy(void);
 	//...
 
 public:
+	sql() {
+		m_hstmt = NULL;
+	}
 	//...
 };
 
