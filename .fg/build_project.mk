@@ -19,5 +19,5 @@ clean:
 	@for i in $(targets); do \
 		make $(MAKE_FLAGS) -f $(BUILD_TARGET) PROJECT=$(PROJECT) CONFIG=$(CONFIG) TARGET=$$i clean || exit; \
 	done
-	rm -rf $(OUTDIR)/$(PROJECT)
+	rm -rf $(OUTDIR)/$(PROJECT)/$(CONFIG)
 
