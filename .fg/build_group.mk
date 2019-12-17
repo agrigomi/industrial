@@ -33,12 +33,12 @@ $(group_target): $(group_out)
 
 $(group_out): $(group_dep)
 	@for i in $(group_src); do \
-		make $(MAKE_FLAGS) -f $(BUILD_FILE) PROJECT=$(PROJECT) TARGET=$(TARGET) CONFIG=$(CONFIG) GROUP=$(GROUP) SRC=$$i || exit; \
+		$(MAKE) $(MAKE_FLAGS) -f $(BUILD_FILE) PROJECT=$(PROJECT) TARGET=$(TARGET) CONFIG=$(CONFIG) GROUP=$(GROUP) SRC=$$i || exit; \
 	done
 
 $(group_dep): $(group_src)
 	@for i in $(group_src); do \
-		make $(MAKE_FLAGS) -f $(BUILD_DEPENDENCY) PROJECT=$(PROJECT) TARGET=$(TARGET) CONFIG=$(CONFIG) GROUP=$(GROUP) SRC=$$i || exit; \
+		$(MAKE) $(MAKE_FLAGS) -f $(BUILD_DEPENDENCY) PROJECT=$(PROJECT) TARGET=$(TARGET) CONFIG=$(CONFIG) GROUP=$(GROUP) SRC=$$i || exit; \
 	done
 
 clean:

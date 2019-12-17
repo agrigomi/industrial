@@ -27,14 +27,14 @@ src=$(shell cat $(group_file))
 
 $(groups_out): %$(OUTSUFFIX): $(target_dir)
 	@echo '  ' group [$(basename $(notdir $@))]
-	make $(MAKE_FLAGS) -f $(BUILD_GROUP) PROJECT=$(PROJECT) TARGET=$(TARGET) CONFIG=$(CONFIG) GROUP=$(basename $(notdir $@))
+	$(MAKE) $(MAKE_FLAGS) -f $(BUILD_GROUP) PROJECT=$(PROJECT) TARGET=$(TARGET) CONFIG=$(CONFIG) GROUP=$(basename $(notdir $@))
 
 $(target_dir):
 	mkdir -p $@
 
 clean:
 	@for i in $(groups); do \
-		make $(MAKE_FLAGS) -f $(BUILD_GROUP)  PROJECT=$(PROJECT) CONFIG=$(CONFIG) TARGET=$(TARGET) GROUP=$$i clean; \
+		$(MAKE) $(MAKE_FLAGS) -f $(BUILD_GROUP)  PROJECT=$(PROJECT) CONFIG=$(CONFIG) TARGET=$(TARGET) GROUP=$$i clean; \
 	done
 	@rm -f $(target_dir)/$(TARGET)
 	@rm -rf $(target_dir)
