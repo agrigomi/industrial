@@ -1,3 +1,4 @@
+#include <string.h>
 #include "private.h"
 #include "iMemory.h"
 #include "iRepository.h"
@@ -6,9 +7,13 @@
 #define CPARTIAL	2
 #define CFULL		3
 
+#define MAX_CONNECTION_STRING	256
+
 class cSQLPool: public iSQLPool {
 private:
+	_char_t m_connection_string[MAX_CONNECTION_STRING];
 	iLlist	*mpi_list;
+
 public:
 	BASE(cSQLPool, "cSQLPool", RF_CLONE, 1,0,0);
 
@@ -33,6 +38,7 @@ public:
 	bool init(_cstr_t connection_string) {
 		bool r = false;
 
+		strncpy(m_connection_string, connection_string, sizeof(m_connection_string)-1);
 		//...
 
 		return r;
