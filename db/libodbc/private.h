@@ -4,6 +4,8 @@
 #include <sqltypes.h>
 #include <sql.h>
 #include "iSQL.h"
+#include "iMemory.h"
+#include "iRepository.h"
 
 struct sql: public _sql_t {
 private:
@@ -22,5 +24,24 @@ public:
 	//...
 };
 
+typedef struct dbc _dbc_t;
+
+struct dbc {
+private:
+	SQLHENV		m_henv;
+	SQLHDBC		m_hdbc;
+	SQLUSMALLINT	m_stmt_limit;
+	iPool		*mpi_stmt_pool;
+public:
+	dbc() {
+		m_henv = NULL;
+		m_hdbc = NULL;
+		m_stmt_limit = 0;
+		mpi_stmt_pool = 0;
+	}
+
+	bool init(_cstr_t connect_string);
+	void destroy(void);
+};
 
 #endif

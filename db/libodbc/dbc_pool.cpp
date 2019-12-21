@@ -1,7 +1,5 @@
 #include <string.h>
 #include "private.h"
-#include "iMemory.h"
-#include "iRepository.h"
 
 #define CFREE		1
 #define CPARTIAL	2
