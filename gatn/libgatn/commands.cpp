@@ -239,7 +239,7 @@ static void gatn_start_handler(iCmd *pi_cmd, // interface to command object
 					if(p_srv)
 						pi_gatn->start_server(p_srv);
 					else
-						fout(pi_io, "Unamble to find server '%s'\n", server_name);
+						fout(pi_io, "Unable to find server '%s'\n", server_name);
 				} else
 					fout(pi_io, "Usage: gatn start server <server name> | --name=<server name>\n");
 			} else if(strcmp(arg2, ACT_HOST) == 0) {
@@ -288,7 +288,7 @@ static void gatn_stop_handler(iCmd *pi_cmd, // interface to command object
 					if(p_srv)
 						pi_gatn->stop_server(p_srv);
 					else
-						fout(pi_io, "Unamble to find server '%s'\n", server_name);
+						fout(pi_io, "Unable to find server '%s'\n", server_name);
 				} else
 					fout(pi_io, "Usage: gatn stop server <server name> | --name=<server name>\n");
 			} else if(strcmp(arg2, ACT_HOST) == 0) {
