@@ -27,8 +27,11 @@ bool dbc::init(_cstr_t connect_string) {
 							case POOL_OP_DELETE:
 								break;
 						}
-					}, this)))
+					}, this))) {
 						SQLGetInfo(m_hdbc, SQL_MAX_CONCURRENT_ACTIVITIES, &m_stmt_limit, 0, 0);
+						if(m_stmt_limit == 0)
+							m_stmt_limit = 0xffff;
+					}
 				}
 			}
 		}

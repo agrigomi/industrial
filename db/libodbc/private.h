@@ -22,6 +22,10 @@ public:
 	sql() {
 		m_hstmt = NULL;
 	}
+
+	void clean(void) {
+		_free();
+	}
 	//...
 };
 
