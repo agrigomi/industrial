@@ -13,7 +13,10 @@ bool dbc::init(_cstr_t connect_string) {
 			if(SQL_SUCCEEDED(SQLDriverConnect(m_hdbc, NULL, (SQLCHAR *)connect_string, SQL_NTS,
 			                 0, 0, 0, SQL_DRIVER_COMPLETE))) {
 				if((mpi_stmt_pool = (iPool *)_gpi_repo_->object_by_iname(I_POOL, RF_CLONE))) {
-					r = mpi_stmt_pool->init(sizeof(_sql_t), [](_u8 op, void *data, void *udata) {
+					if((r = mpi_stmt_pool->init(sizeof(sql), [](_u8 op, void *data, void *udata) {
+						sql *psql = (sql *)data;
+						dbc *pdbc = (dbc *)udata;
+
 						switch(op) {
 							case POOL_OP_NEW:
 								break;
@@ -24,7 +27,8 @@ bool dbc::init(_cstr_t connect_string) {
 							case POOL_OP_DELETE:
 								break;
 						}
-					}, this);
+					}, this)))
+						SQLGetInfo(m_hdbc, SQL_MAX_CONCURRENT_ACTIVITIES, &m_stmt_limit, 0, 0);
 				}
 			}
 		}
