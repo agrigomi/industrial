@@ -13,20 +13,14 @@ private:
 	SQLHDBC		m_hdbc;
 	SQLHSTMT	m_hstmt;
 
-	bool _init(SQLHDBC hdbc);
-	void _free(void);
-	void _destroy(void);
-	//...
-
 public:
 	sql() {
 		m_hstmt = NULL;
 	}
 
-	void clean(void) {
-		_free();
-	}
-	//...
+	bool _init(SQLHDBC hdbc);
+	void _free(void);
+	void _destroy(void);
 };
 
 typedef struct dbc _dbc_t;

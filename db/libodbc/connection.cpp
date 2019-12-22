@@ -19,12 +19,15 @@ bool dbc::init(_cstr_t connect_string) {
 
 						switch(op) {
 							case POOL_OP_NEW:
+								psql->_init(pdbc->m_hdbc);
 								break;
 							case POOL_OP_BUSY:
 								break;
 							case POOL_OP_FREE:
+								psql->_free();
 								break;
 							case POOL_OP_DELETE:
+								psql->_destroy();
 								break;
 						}
 					}, this))) {
