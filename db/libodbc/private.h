@@ -3,6 +3,7 @@
 
 #include <sqltypes.h>
 #include <sql.h>
+#include <sqlext.h>
 #include "iSQL.h"
 #include "iMemory.h"
 #include "iRepository.h"
@@ -31,6 +32,7 @@ private:
 	SQLHENV		m_henv;
 	SQLHDBC		m_hdbc;
 	SQLUSMALLINT	m_stmt_limit;
+	SQLUSMALLINT	m_stmt_count;
 	iPool		*mpi_stmt_pool;
 public:
 	dbc() {
