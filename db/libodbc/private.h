@@ -46,6 +46,8 @@ public:
 
 	bool init(_cstr_t connect_string);
 	void destroy(void);
+	sql *alloc(void);
+	void free(sql *);
 };
 
 #endif

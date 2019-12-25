@@ -1,3 +1,4 @@
+#include <string.h>
 #include "private.h"
 
 bool dbc::init(_cstr_t connect_string) {
@@ -20,9 +21,14 @@ bool dbc::init(_cstr_t connect_string) {
 						dbc *pdbc = (dbc *)udata;
 
 						switch(op) {
-							case POOL_OP_NEW:
-								psql->_init(pdbc->m_hdbc);
-								break;
+							case POOL_OP_NEW: {
+									/* Needed for the virtual table */
+									sql tmp;
+
+									memcpy(psql, &tmp, sizeof(sql));
+									/********************************/
+									psql->_init(pdbc->m_hdbc);
+								} break;
 							case POOL_OP_BUSY:
 								break;
 							case POOL_OP_FREE:
@@ -33,6 +39,7 @@ bool dbc::init(_cstr_t connect_string) {
 								break;
 						}
 					}, this))) {
+						/* Get driver info for STMT limit */
 						SQLGetInfo(m_hdbc, SQL_MAX_CONCURRENT_ACTIVITIES, &m_stmt_limit, 0, 0);
 						if(m_stmt_limit == 0)
 							m_stmt_limit = 0xffff;
@@ -52,6 +59,11 @@ bool dbc::init(_cstr_t connect_string) {
 }
 
 void dbc::destroy(void) {
+	if(mpi_stmt_pool) {
+		_gpi_repo_->object_release(mpi_stmt_pool);
+		mpi_stmt_pool = 0;
+	}
+
 	if(m_hdbc) {
 		/* Disconnect from driver */
 		SQLDisconnect(m_hdbc);
@@ -67,13 +79,22 @@ void dbc::destroy(void) {
 		m_henv = NULL;
 	}
 
-	if(mpi_stmt_pool) {
-		_gpi_repo_->object_release(mpi_stmt_pool);
-		mpi_stmt_pool = 0;
-	}
-
 	if(mpi_log) {
 		_gpi_repo_->object_release(mpi_log);
 		mpi_log = 0;
 	}
+}
+
+sql *dbc::alloc(void) {
+	sql *r = 0;
+
+	if(mpi_stmt_pool && m_hdbc)
+		r = (sql *)mpi_stmt_pool->alloc();
+
+	return r;
+}
+
+void dbc::free(sql *psql) {
+	if(mpi_stmt_pool)
+		mpi_stmt_pool->free(psql);
 }
