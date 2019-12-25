@@ -61,7 +61,7 @@ bool dbc::init(_cstr_t connect_string) {
 void dbc::destroy(void) {
 	if(mpi_stmt_pool) {
 		_gpi_repo_->object_release(mpi_stmt_pool);
-		mpi_stmt_pool = 0;
+		mpi_stmt_pool = NULL;
 	}
 
 	if(m_hdbc) {
@@ -81,12 +81,12 @@ void dbc::destroy(void) {
 
 	if(mpi_log) {
 		_gpi_repo_->object_release(mpi_log);
-		mpi_log = 0;
+		mpi_log = NULL;
 	}
 }
 
 sql *dbc::alloc(void) {
-	sql *r = 0;
+	sql *r = NULL;
 
 	if(mpi_stmt_pool && m_hdbc)
 		r = (sql *)mpi_stmt_pool->alloc();

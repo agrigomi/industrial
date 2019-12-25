@@ -40,8 +40,8 @@ public:
 		m_hdbc = NULL;
 		m_stmt_limit = 0;
 		m_stmt_count = 0;
-		mpi_stmt_pool = 0;
-		mpi_log = 0;
+		mpi_stmt_pool = NULL;
+		mpi_log = NULL;
 	}
 
 	bool init(_cstr_t connect_string);
