@@ -7,6 +7,7 @@
 #include "iSQL.h"
 #include "iMemory.h"
 #include "iRepository.h"
+#include "iLog.h"
 
 struct sql: public _sql_t {
 private:
@@ -32,6 +33,7 @@ private:
 	SQLUSMALLINT	m_stmt_limit;
 	SQLUSMALLINT	m_stmt_count;
 	iPool		*mpi_stmt_pool;
+	iLog		*mpi_log;
 public:
 	dbc() {
 		m_henv = NULL;
@@ -39,6 +41,7 @@ public:
 		m_stmt_limit = 0;
 		m_stmt_count = 0;
 		mpi_stmt_pool = 0;
+		mpi_log = 0;
 	}
 
 	bool init(_cstr_t connect_string);

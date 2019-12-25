@@ -3,6 +3,8 @@
 bool dbc::init(_cstr_t connect_string) {
 	bool r = false;
 
+	mpi_log = (iLog *)_gpi_repo_->object_by_iname(I_LOG, RF_ORIGINAL);
+
 	/* Allocate an environment handle */
 	if(SQL_SUCCEEDED(SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &m_henv))) {
 		/* We want ODBC 3 support */
@@ -36,9 +38,12 @@ bool dbc::init(_cstr_t connect_string) {
 							m_stmt_limit = 0xffff;
 					}
 				}
-			}
-		}
-	}
+			} else
+				mpi_log->fwrite(LMT_ERROR, "ODBC: Unable to connect '%s'", connect_string);
+		} else
+			mpi_log->write(LMT_ERROR, "ODBC: Unable to allocate connection handle");
+	} else
+		mpi_log->write(LMT_ERROR, "ODBC: Unable to allocate environment handle");
 
 	if(!r)
 		destroy();
@@ -65,5 +70,10 @@ void dbc::destroy(void) {
 	if(mpi_stmt_pool) {
 		_gpi_repo_->object_release(mpi_stmt_pool);
 		mpi_stmt_pool = 0;
+	}
+
+	if(mpi_log) {
+		_gpi_repo_->object_release(mpi_log);
+		mpi_log = 0;
 	}
 }
