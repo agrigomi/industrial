@@ -12,6 +12,52 @@ private:
 	_char_t m_connection_string[MAX_CONNECTION_STRING];
 	iLlist	*mpi_list;
 
+	_dbc_t *new_connection(void) {
+		_dbc_t *r = NULL;
+		_dbc_t tmp;
+
+		if(tmp.init(m_connection_string)) {
+			HMUTEX hm = mpi_list->lock();
+
+			mpi_list->col(CFREE, hm);
+			r = (_dbc_t *)mpi_list->add(&tmp, sizeof(_dbc_t), hm);
+
+			mpi_list->unlock(hm);
+		}
+
+		return r;
+	}
+
+	_dbc_t *get_connection(void) {
+		_dbc_t *r = NULL;
+		HMUTEX hm = mpi_list->lock();
+		_u32 sz = 0;
+
+		mpi_list->col(CPARTIAL, hm);
+		if(!(r = (_dbc_t *)mpi_list->first(&sz, hm))) {
+			mpi_list->col(CFREE, hm);
+			r = (_dbc_t *)mpi_list->first(&sz, hm);
+		}
+		mpi_list->unlock(hm);
+
+		return r;
+	}
+
+	void mov_connection(_dbc_t *pdbc) {
+		SQLSMALLINT count = pdbc->count();
+		SQLSMALLINT limit = pdbc->limit();
+		HMUTEX hm = mpi_list->lock();
+
+		if(count && count == limit)
+			mpi_list->mov(pdbc, CFULL, hm);
+		else if(count && count < limit)
+			mpi_list->mov(pdbc, CPARTIAL, hm);
+		else if(count == 0)
+			mpi_list->mov(pdbc, CFREE, hm);
+
+		mpi_list->unlock(hm);
+	}
+
 public:
 	BASE(cSQLPool, "cSQLPool", RF_CLONE, 1,0,0);
 
@@ -50,7 +96,7 @@ public:
 		return r;
 	}
 
-	void free(_sql_t *) {
+	void free(_sql_t *psql) {
 		//...
 	}
 };

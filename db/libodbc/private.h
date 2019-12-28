@@ -9,9 +9,11 @@
 #include "iRepository.h"
 #include "iLog.h"
 
+typedef struct dbc _dbc_t;
+
 struct sql: public _sql_t {
 private:
-	SQLHDBC		m_hdbc;
+	_dbc_t		*mp_dbc;
 	SQLHSTMT	m_hstmt;
 
 public:
@@ -19,12 +21,14 @@ public:
 		m_hstmt = NULL;
 	}
 
-	bool _init(SQLHDBC hdbc);
+	_dbc_t *get_dbc(void) {
+		return mp_dbc;
+	}
+
+	bool _init(_dbc_t *pdbc);
 	void _free(void);
 	void _destroy(void);
 };
-
-typedef struct dbc _dbc_t;
 
 struct dbc {
 private:
@@ -42,6 +46,18 @@ public:
 		m_stmt_count = 0;
 		mpi_stmt_pool = NULL;
 		mpi_log = NULL;
+	}
+
+	SQLSMALLINT limit(void) {
+		return m_stmt_limit;
+	}
+
+	SQLSMALLINT count(void) {
+		return m_stmt_count;
+	}
+
+	SQLHDBC handle(void) {
+		return m_hdbc;
 	}
 
 	bool init(_cstr_t connect_string);

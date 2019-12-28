@@ -27,7 +27,7 @@ bool dbc::init(_cstr_t connect_string) {
 
 									memcpy(psql, &tmp, sizeof(sql));
 									/********************************/
-									psql->_init(pdbc->m_hdbc);
+									psql->_init(pdbc);
 								} break;
 							case POOL_OP_BUSY:
 								break;
@@ -88,13 +88,17 @@ void dbc::destroy(void) {
 sql *dbc::alloc(void) {
 	sql *r = NULL;
 
-	if(mpi_stmt_pool && m_hdbc)
-		r = (sql *)mpi_stmt_pool->alloc();
+	if(mpi_stmt_pool && m_hdbc && m_stmt_count < m_stmt_limit) {
+		if((r = (sql *)mpi_stmt_pool->alloc()))
+			m_stmt_count++;
+	}
 
 	return r;
 }
 
 void dbc::free(sql *psql) {
-	if(mpi_stmt_pool)
+	if(mpi_stmt_pool) {
 		mpi_stmt_pool->free(psql);
+		m_stmt_count--;
+	}
 }

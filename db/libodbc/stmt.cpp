@@ -1,11 +1,11 @@
 #include "private.h"
 
-bool sql::_init(SQLHDBC hdbc) {
+bool sql::_init(_dbc_t *pdbc) {
 	bool r = false;
 
-	m_hdbc = hdbc;
+	mp_dbc = pdbc;
 
-	SQLRETURN ret = SQLAllocHandle(SQL_HANDLE_STMT, m_hdbc, &m_hstmt);
+	SQLRETURN ret = SQLAllocHandle(SQL_HANDLE_STMT, mp_dbc->handle(), &m_hstmt);
 	if(SQL_SUCCEEDED(ret))
 		r = true;
 
