@@ -80,24 +80,37 @@ public:
 	}
 
 	bool init(_cstr_t connection_string) {
-		bool r = false;
+		bool r = true;
 
 		strncpy(m_connection_string, connection_string, sizeof(m_connection_string)-1);
-		//...
 
 		return r;
 	}
 
 	_sql_t *alloc(void) {
 		_sql_t *r = 0;
+		_dbc_t *pdbc = get_connection();
 
-		//...
+		if(!pdbc)
+			pdbc = new_connection();
+
+		if(pdbc)
+			r = pdbc->alloc();
+
+		if(r)
+			mov_connection(pdbc);
 
 		return r;
 	}
 
 	void free(_sql_t *psql) {
-		//...
+		sql *p_sql = (sql *)psql;
+		_dbc_t *pdbc = p_sql->get_dbc();
+
+		if(pdbc) {
+			pdbc->free(p_sql);
+			mov_connection(pdbc);
+		}
 	}
 };
 
