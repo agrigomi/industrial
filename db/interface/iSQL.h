@@ -8,6 +8,8 @@
 
 typedef struct {
 	virtual void reset(void)=0;
+	virtual bool prepare(_cstr_t)=0;
+	virtual bool execute(_cstr_t query=NULL)=0;
 	//...
 }_sql_t;
 

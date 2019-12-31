@@ -5,8 +5,8 @@ bool sql::_init(_dbc_t *pdbc) {
 
 	mp_dbc = pdbc;
 
-	SQLRETURN ret = SQLAllocHandle(SQL_HANDLE_STMT, mp_dbc->handle(), &m_hstmt);
-	if(SQL_SUCCEEDED(ret))
+	m_ret = SQLAllocHandle(SQL_HANDLE_STMT, mp_dbc->handle(), &m_hstmt);
+	if(SQL_SUCCEEDED(m_ret))
 		r = true;
 
 	return r;
@@ -29,3 +29,16 @@ void sql::_destroy(void) {
 	}
 }
 
+bool sql::prepare(_cstr_t query) {
+	m_ret = SQLPrepare(m_hstmt, (SQLCHAR *)query, SQL_NTS);
+	return (SQL_SUCCEEDED(m_ret)) ? true : false;
+}
+
+bool sql::execute(_cstr_t query) {
+	if(query)
+		m_ret = SQLExecDirect(m_hstmt, (SQLCHAR *)query, SQL_NTS);
+	else
+		m_ret = SQLExecute(m_hstmt);
+
+	return (SQL_SUCCEEDED(m_ret)) ? true : false;
+}

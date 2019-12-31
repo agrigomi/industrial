@@ -15,6 +15,7 @@ struct sql: public _sql_t {
 private:
 	_dbc_t		*mp_dbc;
 	SQLHSTMT	m_hstmt;
+	SQLRETURN	m_ret;
 
 public:
 	sql() {
@@ -31,6 +32,8 @@ public:
 	void reset(void) {
 		_free();
 	}
+	bool prepare(_cstr_t);
+	bool execute(_cstr_t query=NULL);
 };
 
 struct dbc {
