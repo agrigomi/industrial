@@ -28,6 +28,9 @@ public:
 	bool _init(_dbc_t *pdbc);
 	void _free(void);
 	void _destroy(void);
+	void reset(void) {
+		_free();
+	}
 };
 
 struct dbc {

@@ -7,6 +7,7 @@
 #include "iBase.h"
 
 typedef struct {
+	virtual void reset(void)=0;
 	//...
 }_sql_t;
 

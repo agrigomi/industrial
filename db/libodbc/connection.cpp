@@ -25,7 +25,7 @@ bool dbc::init(_cstr_t connect_string) {
 									/* Needed for the virtual table */
 									sql tmp;
 
-									memcpy(psql, &tmp, sizeof(sql));
+									memcpy((void *)psql, &tmp, sizeof(sql));
 									/********************************/
 									psql->_init(pdbc);
 								} break;
