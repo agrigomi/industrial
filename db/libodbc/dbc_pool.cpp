@@ -1,9 +1,9 @@
 #include <string.h>
 #include "private.h"
 
-#define CFREE		1
-#define CPARTIAL	2
-#define CFULL		3
+#define CFREE		0
+#define CPARTIAL	1
+#define CFULL		2
 
 #define MAX_CONNECTION_STRING	256
 
