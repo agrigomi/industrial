@@ -86,7 +86,7 @@ void cHttpServer::http_server_thread(void) {
 	m_is_stopped = true;
 }
 
-#define TO_IDLE	300
+#define TO_IDLE	1000
 
 void *_http_worker_thread(_u8 sig, void *udata) {
 	void *r = 0;
