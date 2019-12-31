@@ -86,13 +86,15 @@ void cHttpServer::http_server_thread(void) {
 	m_is_stopped = true;
 }
 
+#define TO_IDLE	300
+
 void *_http_worker_thread(_u8 sig, void *udata) {
 	void *r = 0;
 	cHttpServer *p_https = static_cast<cHttpServer *>(udata);
 
 	if(sig == TM_SIG_START) {
 		volatile _u32 num = p_https->m_active_workers++;
-		_u32 to_idle = 100;
+		_u32 to_idle = TO_IDLE;
 
 		p_https->m_num_workers++;
 
@@ -100,7 +102,7 @@ void *_http_worker_thread(_u8 sig, void *udata) {
 			_http_connection_t *rec = p_https->get_connection();
 
 			if(rec) {
-				to_idle = 100;
+				to_idle = TO_IDLE;
 				if(rec->p_httpc) {
 					if(rec->p_httpc->alive()) {
 						_u8 evt = rec->p_httpc->process();
@@ -117,12 +119,16 @@ void *_http_worker_thread(_u8 sig, void *udata) {
 				if(to_idle) {
 					usleep(10000);
 					to_idle--;
-				} else
-					usleep(100000);
+				} else {
+					if(p_https->m_active_workers)
+						p_https->m_active_workers--;
+					to_idle = TO_IDLE;
+				}
 			}
 		}
 
-		p_https->m_num_workers--;
+		if(p_https->m_num_workers)
+			p_https->m_num_workers--;
 	}
 
 	return r;
@@ -218,7 +224,8 @@ bool cHttpServer::stop_worker(void) {
 	bool r = false;
 
 	if(m_num_workers) {
-		m_active_workers--;
+		if(m_active_workers)
+			m_active_workers--;
 		while(m_active_workers != m_num_workers)
 			usleep(10000);
 		r = true;
@@ -262,7 +269,9 @@ _http_connection_t *cHttpServer::add_connection(void) {
 				mpi_list->col(CBUSY, hm);
 				nbhttpc = mpi_list->cnt(hm);
 
-				if((m_num_workers - nbhttpc) < nphttpc && m_num_workers < m_max_workers)
+				if(!m_num_workers ||
+						((m_num_workers - nbhttpc) < nphttpc &&
+						m_num_workers < m_max_workers))
 					// create worker
 					start_worker();
 			} else
