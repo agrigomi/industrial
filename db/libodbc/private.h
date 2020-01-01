@@ -1,9 +1,6 @@
 #ifndef __ODBC_PRIVATE_H__
 #define __ODBC_PRIVATE_H__
 
-#include <sqltypes.h>
-#include <sql.h>
-#include <sqlext.h>
 #include "iSQL.h"
 #include "iMemory.h"
 #include "iRepository.h"

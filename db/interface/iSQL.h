@@ -1,10 +1,13 @@
 #ifndef __I_SQL_H__
 #define __I_SQL_H__
 
+#include <sqltypes.h>
+#include <sql.h>
+#include <sqlext.h>
+#include "iBase.h"
+
 #define I_SQL		"iSQL"
 #define I_SQL_POOL	"iSQLPool"
-
-#include "iBase.h"
 
 typedef struct {
 	virtual void reset(void)=0;
