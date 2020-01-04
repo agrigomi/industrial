@@ -10,6 +10,17 @@
 #define I_SQL_POOL	"iSQLPool"
 
 typedef struct {
+	SQLSMALLINT	type; // SQL_PARAM_INPUT | SQL_PARAM_INPUT_OUTPUT | SQL_PARAM_OUTPUT
+	SQLSMALLINT	ctype; // C data type
+	SQLSMALLINT	sql_type; // SQL data type
+	SQLULEN		precision;
+	SQLSMALLINT	scale; // for SQL_DECIMAL or SQL_NUMERIC or SQL_TYPE_TIMESTAMP
+	SQLPOINTER	value;
+	SQLLEN		max_size; // max. size of value in bytes
+	SQLLEN		*size; // pointer to actual size in bytes
+} _bind_param_t;
+
+typedef struct {
 	virtual void reset(void)=0;
 	virtual bool prepare(_cstr_t)=0;
 	virtual bool execute(_cstr_t query=NULL)=0;
