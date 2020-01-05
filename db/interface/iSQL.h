@@ -24,6 +24,7 @@ typedef struct {
 	virtual void reset(void)=0;
 	virtual bool prepare(_cstr_t)=0;
 	virtual bool execute(_cstr_t query=NULL)=0;
+	virtual bool bind_params(_bind_param_t [], _u32 count)=0;
 	//...
 }_sql_t;
 

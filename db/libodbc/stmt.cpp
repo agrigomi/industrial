@@ -42,3 +42,26 @@ bool sql::execute(_cstr_t query) {
 
 	return (SQL_SUCCEEDED(m_ret)) ? true : false;
 }
+
+bool sql::bind_params(_bind_param_t params[], _u32 count) {
+	bool r = true;
+	_u32 i = 0;
+
+	for(; i < count; i++) {
+		m_ret = SQLBindParameter(m_hstmt, i+1,
+				params[i].type,
+				params[i].ctype,
+				params[i].sql_type,
+				params[i].precision,
+				params[i].scale,
+				params[i].value,
+				params[i].max_size,
+				params[i].size);
+		if(!SQL_SUCCEEDED(m_ret)) {
+			r = false;
+			break;
+		}
+	}
+
+	return r;
+}

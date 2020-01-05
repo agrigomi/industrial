@@ -31,6 +31,7 @@ public:
 	}
 	bool prepare(_cstr_t);
 	bool execute(_cstr_t query=NULL);
+	bool bind_params(_bind_param_t [], _u32 count);
 };
 
 struct dbc {
