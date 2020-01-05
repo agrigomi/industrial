@@ -97,12 +97,8 @@ _u32 sql::columns(void) {
 }
 
 bool sql::fetch(void) {
-	bool r = false;
-
-	if(SQL_SUCCEEDED((m_ret = SQLFetch(m_hstmt))))
-		r = true;
-
-	return r;
+	m_ret = SQLFetch(m_hstmt);
+	return (SQL_SUCCEEDED(m_ret)) ? true : false;
 }
 
 bool sql::data(SQLUSMALLINT col, // column number, starts from 1
@@ -122,3 +118,14 @@ bool sql::data(SQLUSMALLINT col, // column number, starts from 1
 
 	return r;
 }
+
+bool sql::commit(void) {
+	m_ret = SQLEndTran(SQL_HANDLE_DBC, mp_dbc->handle(), SQL_COMMIT);
+	return (SQL_SUCCEEDED(m_ret)) ? true : false;
+}
+
+bool sql::rollback(void) {
+	m_ret = SQLEndTran(SQL_HANDLE_DBC, mp_dbc->handle(), SQL_ROLLBACK);
+	return (SQL_SUCCEEDED(m_ret)) ? true : false;
+}
+

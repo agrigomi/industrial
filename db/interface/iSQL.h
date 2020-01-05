@@ -41,6 +41,8 @@ typedef struct {
 				SQLLEN max_size, // max. size of value buffer in bytes
 				SQLLEN *size // actual size of value
 			)=0;
+	virtual bool commit(void)=0;
+	virtual bool rollback(void)=0;
 	//...
 }_sql_t;
 

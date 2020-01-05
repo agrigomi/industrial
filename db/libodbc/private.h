@@ -41,6 +41,8 @@ public:
 			SQLLEN max_size, // max. size of value buffer in bytes
 			SQLLEN *size // actual size of value
 		);
+	bool commit(void);
+	bool rollback(void);
 };
 
 struct dbc {
@@ -71,6 +73,10 @@ public:
 
 	SQLHDBC handle(void) {
 		return m_hdbc;
+	}
+
+	SQLHENV environment(void) {
+		return m_henv;
 	}
 
 	bool init(_cstr_t connect_string);
