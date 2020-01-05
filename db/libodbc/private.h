@@ -32,9 +32,15 @@ public:
 	bool prepare(_cstr_t);
 	bool execute(_cstr_t query=NULL);
 	bool bind_params(_bind_param_t [], _u32 count);
-	bool bind_col(_bind_col_t [], _u32 count);
+	bool bind_columns(_bind_col_t [], _u32 count);
 	_u32 columns(void);
 	bool fetch(void);
+	bool data(SQLUSMALLINT col, // column number, starts from 1
+			SQLSMALLINT ctype, // C data type
+			SQLPOINTER value, // pointer to value buffer
+			SQLLEN max_size, // max. size of value buffer in bytes
+			SQLLEN *size // actual size of value
+		);
 };
 
 struct dbc {

@@ -66,7 +66,7 @@ bool sql::bind_params(_bind_param_t params[], _u32 count) {
 	return r;
 }
 
-bool sql::bind_col(_bind_col_t col[], _u32 count) {
+bool sql::bind_columns(_bind_col_t col[], _u32 count) {
 	bool r = true;
 	_u32 i = 0;
 
@@ -100,6 +100,24 @@ bool sql::fetch(void) {
 	bool r = false;
 
 	if(SQL_SUCCEEDED((m_ret = SQLFetch(m_hstmt))))
+		r = true;
+
+	return r;
+}
+
+bool sql::data(SQLUSMALLINT col, // column number, starts from 1
+		SQLSMALLINT ctype, // C data type
+		SQLPOINTER value, // pointer to value buffer
+		SQLLEN max_size, // max. size of value buffer in bytes
+		SQLLEN *size // actual size of value
+	) {
+	bool r = false;
+
+	if(SQL_SUCCEEDED((m_ret = SQLGetData(m_hstmt, col,
+						ctype,
+						value,
+						max_size,
+						size))))
 		r = true;
 
 	return r;
