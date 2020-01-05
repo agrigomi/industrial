@@ -15,16 +15,24 @@ typedef struct {
 	SQLSMALLINT	sql_type; // SQL data type
 	SQLULEN		precision;
 	SQLSMALLINT	scale; // for SQL_DECIMAL or SQL_NUMERIC or SQL_TYPE_TIMESTAMP
-	SQLPOINTER	value;
+	SQLPOINTER	value; // pointerr to value buffer
 	SQLLEN		max_size; // max. size of value in bytes
 	SQLLEN		*size; // pointer to actual size in bytes
 } _bind_param_t;
+
+typedef struct {
+	SQLSMALLINT	ctype; // C data type
+	SQLPOINTER	value; // pointer to value buffer
+	SQLLEN		max_size; // max. size of value in bytes
+	SQLLEN		*size; // pointer to actual size in bytes
+} _bind_col_t;
 
 typedef struct {
 	virtual void reset(void)=0;
 	virtual bool prepare(_cstr_t)=0;
 	virtual bool execute(_cstr_t query=NULL)=0;
 	virtual bool bind_params(_bind_param_t [], _u32 count)=0;
+	virtual bool bind_col(_bind_col_t [], _u32 count)=0;
 	//...
 }_sql_t;
 

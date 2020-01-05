@@ -65,3 +65,22 @@ bool sql::bind_params(_bind_param_t params[], _u32 count) {
 
 	return r;
 }
+
+bool sql::bind_col(_bind_col_t col[], _u32 count) {
+	bool r = true;
+	_u32 i = 0;
+
+	for(; i < count; i++) {
+		m_ret = SQLBindCol(m_hstmt, i+1,
+				col[i].ctype,
+				col[i].value,
+				col[i].max_size,
+				col[i].size);
+		if(!SQL_SUCCEEDED(m_ret)) {
+			r = false;
+			break;
+		}
+	}
+
+	return r;
+}
