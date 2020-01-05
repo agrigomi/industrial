@@ -33,6 +33,8 @@ typedef struct {
 	virtual bool execute(_cstr_t query=NULL)=0;
 	virtual bool bind_params(_bind_param_t [], _u32 count)=0;
 	virtual bool bind_col(_bind_col_t [], _u32 count)=0;
+	virtual _u32 columns(void)=0;
+	virtual bool fetch(void)=0;
 	//...
 }_sql_t;
 

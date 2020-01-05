@@ -33,6 +33,8 @@ public:
 	bool execute(_cstr_t query=NULL);
 	bool bind_params(_bind_param_t [], _u32 count);
 	bool bind_col(_bind_col_t [], _u32 count);
+	_u32 columns(void);
+	bool fetch(void);
 };
 
 struct dbc {

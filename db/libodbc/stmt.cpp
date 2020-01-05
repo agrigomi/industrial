@@ -84,3 +84,23 @@ bool sql::bind_col(_bind_col_t col[], _u32 count) {
 
 	return r;
 }
+
+_u32 sql::columns(void) {
+	_u32 r = 0;
+	SQLSMALLINT nc = 0;
+
+	m_ret = SQLNumResultCols(m_hstmt, &nc);
+	if(SQL_SUCCEEDED(m_ret))
+		r = nc;
+
+	return r;
+}
+
+bool sql::fetch(void) {
+	bool r = false;
+
+	if(SQL_SUCCEEDED((m_ret = SQLFetch(m_hstmt))))
+		r = true;
+
+	return r;
+}
