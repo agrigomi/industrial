@@ -45,8 +45,14 @@ bool dbc::init(_cstr_t connect_string) {
 							m_stmt_limit = 0xffff;
 					}
 				}
-			} else
+			} else {
 				mpi_log->fwrite(LMT_ERROR, "ODBC: Unable to connect '%s'", connect_string);
+				diagnostics([](_cstr_t state, _u32 native, _cstr_t text, void *udata) {
+					dbc *pdbc = (dbc *)udata;
+
+					pdbc->mpi_log->fwrite(LMT_ERROR, "ODBC: %s, %u, %s", state, native, text);
+				}, this);
+			}
 		} else
 			mpi_log->write(LMT_ERROR, "ODBC: Unable to allocate connection handle");
 	} else
@@ -100,5 +106,22 @@ void dbc::free(sql *psql) {
 	if(mpi_stmt_pool) {
 		mpi_stmt_pool->free(psql);
 		m_stmt_count--;
+	}
+}
+
+void dbc::diagnostics(void (*pcb)(_cstr_t state, _u32 native, _cstr_t text, void *udata), void *udata) {
+	SQLCHAR _state[16] = "";
+	SQLCHAR _text[1024] = "";
+	SQLINTEGER _native = 0;
+	SQLSMALLINT _len = 0;
+	_u32 i = 1;
+
+	if(m_hdbc) {
+		while(SQLGetDiagRec(SQL_HANDLE_DBC, m_hdbc, i,
+				_state, &_native,
+				_text, sizeof(_text), &_len) == SQL_SUCCESS) {
+			pcb((_cstr_t)_state, _native, (_cstr_t)_text, udata);
+			i++;
+		}
 	}
 }

@@ -43,6 +43,7 @@ public:
 		);
 	bool commit(void);
 	bool rollback(void);
+	void diagnostics(void (*)(_cstr_t state, _u32 native, _cstr_t text, void *udata), void *udata);
 };
 
 struct dbc {
@@ -83,6 +84,7 @@ public:
 	void destroy(void);
 	sql *alloc(void);
 	void free(sql *);
+	void diagnostics(void (*)(_cstr_t state, _u32 native, _cstr_t text, void *udata), void *udata);
 };
 
 #endif

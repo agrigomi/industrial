@@ -43,7 +43,7 @@ typedef struct {
 			)=0;
 	virtual bool commit(void)=0;
 	virtual bool rollback(void)=0;
-	//...
+	virtual void diagnostics(void (*)(_cstr_t state, _u32 native, _cstr_t text, void *udata), void *udata)=0;
 }_sql_t;
 
 class iSQLPool: public iBase {
