@@ -65,8 +65,12 @@ typedef struct {
 #define ON_ERROR	HTTP_ON_ERROR
 #define ON_DISCONNECT	HTTP_ON_CLOSE
 
+// event handler return values
+#define	EHR_CONTINUE	0
+#define EHR_BREAK	1
+
 typedef void _gatn_route_event_t(_u8, _request_t *, _response_t *, void *);
-typedef void _gatn_http_event_t(_request_t *, _response_t *, void *);
+typedef _s32 _gatn_http_event_t(_request_t *, _response_t *, void *);
 
 struct gatn_server {
 	virtual bool is_running(void)=0;

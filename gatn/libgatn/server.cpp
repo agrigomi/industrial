@@ -174,15 +174,15 @@ void server::set_handlers(void) {
 		pc->res.mpi_root = pc->p_vhost->get_root();
 		pc->res.mpi_fcache = pc->p_vhost->get_root()->get_file_cache();
 
-		p_srv->call_handler(HTTP_ON_REQUEST, p_httpc);
-		p_srv->call_route_handler(HTTP_ON_REQUEST, p_httpc);
+		if(p_srv->call_handler(HTTP_ON_REQUEST, p_httpc) == EHR_CONTINUE)
+			p_srv->call_route_handler(HTTP_ON_REQUEST, p_httpc);
 	}, this);
 
 	mpi_server->on_event(HTTP_ON_REQUEST_DATA, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
-		p_srv->call_handler(HTTP_ON_REQUEST_DATA, p_httpc);
-		p_srv->call_route_handler(HTTP_ON_REQUEST_DATA, p_httpc);
+		if(p_srv->call_handler(HTTP_ON_REQUEST_DATA, p_httpc) == EHR_CONTINUE)
+			p_srv->call_route_handler(HTTP_ON_REQUEST_DATA, p_httpc);
 	}, this);
 
 	mpi_server->on_event(HTTP_ON_RESPONSE_DATA, [](iHttpServerConnection *p_httpc, void *udata) {
@@ -194,15 +194,15 @@ void server::set_handlers(void) {
 	mpi_server->on_event(HTTP_ON_ERROR, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
-		p_srv->call_handler(HTTP_ON_ERROR, p_httpc);
-		p_srv->call_route_handler(HTTP_ON_ERROR, p_httpc);
+		if(p_srv->call_handler(HTTP_ON_ERROR, p_httpc) == EHR_CONTINUE)
+			p_srv->call_route_handler(HTTP_ON_ERROR, p_httpc);
 	}, this);
 
 	mpi_server->on_event(HTTP_ON_CLOSE, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 
-		p_srv->call_handler(HTTP_ON_CLOSE, p_httpc);
-		p_srv->destroy_connection(p_httpc);
+		if(p_srv->call_handler(HTTP_ON_CLOSE, p_httpc) == EHR_CONTINUE)
+			p_srv->destroy_connection(p_httpc);
 	}, this);
 }
 
@@ -276,14 +276,17 @@ void server::stop(void) {
 	stop(&host); // stop default host
 }
 
-void server::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
+_s32 server::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
+	_s32 r = EHR_CONTINUE;
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
 	if(pc) {
 		_vhost_t *pvhost = (pc->p_vhost) ? pc->p_vhost : &host;
 
-		pvhost->call_handler(evt, p_httpc);
+		r = pvhost->call_handler(evt, p_httpc);
 	}
+
+	return r;
 }
 
 void server::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {

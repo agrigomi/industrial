@@ -232,7 +232,7 @@ public:
 	_gatn_http_event_t *get_event_handler(_u8 evt, void **pp_udata);
 	bool attach_class(_cstr_t cname, _cstr_t options);
 	bool detach_class(_cstr_t cname);
-	void call_handler(_u8 evt, iHttpServerConnection *p_httpc);
+	_s32 call_handler(_u8 evt, iHttpServerConnection *p_httpc);
 	void call_route_handler(_u8 evt, iHttpServerConnection *p_httpc);
 };
 
@@ -311,7 +311,7 @@ struct server: public _server_t {
 	bool create_connection(iHttpServerConnection *p_httpc);
 	void destroy_connection(iHttpServerConnection *p_httpc);
 	void set_handlers(void);
-	void call_handler(_u8 evt, iHttpServerConnection *p_httpc);
+	_s32 call_handler(_u8 evt, iHttpServerConnection *p_httpc);
 	void call_route_handler(_u8 evt, iHttpServerConnection *p_httpc);
 	void update_response(iHttpServerConnection *p_httpc);
 	void on_route(_u8 method, _cstr_t path, _gatn_route_event_t *pcb, void *udata=NULL, _cstr_t host=NULL);

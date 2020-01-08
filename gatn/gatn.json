@@ -3,7 +3,7 @@
 		{
 			"name":		"server-0",
 			"port":		8443,
-			"buffer":	16,
+			"buffer":	64,
 			"threads":	8,
 			"connections":	2000,
 			"timeout":	10,

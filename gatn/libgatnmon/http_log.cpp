@@ -44,7 +44,8 @@ private:
 
 	void set_handlers(_server_t *psrv, _cstr_t host) {
 		if(i) {
-			psrv->on_event(ON_REQUEST, [](_request_t *req, _response_t *res, void *udata) {
+			psrv->on_event(ON_REQUEST, [](_request_t *req, _response_t *res, void *udata)->_s32 {
+				_s32 r = EHR_CONTINUE;
 				cHttpLog *pobj = (cHttpLog *)udata;
 				iLog *pi_log = pobj->mpi_log;
 				_cstr_t method = req->var(VAR_REQ_METHOD);
@@ -71,12 +72,15 @@ private:
 					req->parse_content();
 				}
 
-				pobj->call_original_handler(ON_REQUEST, req, res);
+				r = pobj->call_original_handler(ON_REQUEST, req, res);
+
+				return r;
 			}, this, host);
 		}
 
 		if(t) {
-			psrv->on_event(ON_DATA, [](_request_t *req, _response_t *res, void *udata) {
+			psrv->on_event(ON_DATA, [](_request_t *req, _response_t *res, void *udata)->_s32 {
+				_s32 r = EHR_CONTINUE;
 				cHttpLog *pobj = (cHttpLog *)udata;
 				iLog *pi_log = pobj->mpi_log;
 				_u32 size = 0;
@@ -85,12 +89,14 @@ private:
 				if(data)
 					pi_log->write(LMT_TEXT, data);
 
-				pobj->call_original_handler(ON_DATA, req, res);
+				r = pobj->call_original_handler(ON_DATA, req, res);
+				return r;
 			}, this, host);
 		}
 
 		if(e) {
-			psrv->on_event(ON_ERROR, [](_request_t *req, _response_t *res, void *udata) {
+			psrv->on_event(ON_ERROR, [](_request_t *req, _response_t *res, void *udata)->_s32 {
+				_s32 r = EHR_CONTINUE;
 				cHttpLog *pobj = (cHttpLog *)udata;
 				_u16 rc = res->error();
 
@@ -112,7 +118,8 @@ private:
 								 (uri) ? uri : "");
 				}
 
-				pobj->call_original_handler(ON_ERROR, req, res);
+				r = pobj->call_original_handler(ON_ERROR, req, res);
+				return r;
 			}, this, host);
 		}
 	}
@@ -126,11 +133,15 @@ private:
 			psrv->on_event(ON_ERROR, m_original_evt[ON_ERROR].p_cb, m_original_evt[ON_ERROR].udata, host);
 	}
 
-	void call_original_handler(_u8 evt, _request_t *req, _response_t *res) {
+	_s32 call_original_handler(_u8 evt, _request_t *req, _response_t *res) {
+		_s32 r = EHR_CONTINUE;
+
 		if(evt < MAX_EVENTS) {
 			if(m_original_evt[evt].p_cb)
-				m_original_evt[evt].p_cb(req, res, m_original_evt[evt].udata);
+				r = m_original_evt[evt].p_cb(req, res, m_original_evt[evt].udata);
 		}
+
+		return r;
 	}
 public:
 	BASE(cHttpLog, "cHttpLog", RF_CLONE, 1,0,0);

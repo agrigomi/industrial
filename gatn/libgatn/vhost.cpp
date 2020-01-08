@@ -359,7 +359,8 @@ bool vhost::detach_class(_cstr_t cname) {
 	return r;
 }
 
-void vhost::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
+_s32 vhost::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
+	_s32 r = EHR_CONTINUE;
 	_connection_t *pc = (_connection_t *)p_httpc->get_udata(IDX_CONNECTION);
 
 	if(pc && pc->p_vhost == this) {
@@ -367,11 +368,13 @@ void vhost::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 
 		if(evt < HTTP_MAX_EVENTS) {
 			if(event[evt].pcb)
-				event[evt].pcb(&(pc->req), &(pc->res), event[evt].udata);
+				r = event[evt].pcb(&(pc->req), &(pc->res), event[evt].udata);
 		}
 
 		_unlock();
 	}
+
+	return r;
 }
 
 void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
