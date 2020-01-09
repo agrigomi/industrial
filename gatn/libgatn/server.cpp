@@ -458,10 +458,10 @@ bool server::attach_class(_cstr_t cname, _cstr_t options, _cstr_t _host) {
 	return pvhost->attach_class(cname, options);
 }
 
-bool server::detach_class(_cstr_t cname, _cstr_t _host) {
+bool server::detach_class(_cstr_t cname, _cstr_t _host, bool remove) {
 	_vhost_t *pvhost = get_host(_host);
 
-	return pvhost->detach_class(cname);
+	return pvhost->detach_class(cname, remove);
 }
 
 void server::release_class(_cstr_t cname) {

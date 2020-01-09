@@ -6,6 +6,8 @@
 
 typedef struct {
 	iGatnExtension	*pi_ext;
+	_str_t		options;
+	_u32		sz_options;
 	bool		active;
 }_class_t;
 
@@ -171,14 +173,16 @@ void vhost::remove_extensions(void) {
 	typedef struct {
 		_cstr_t host;
 		_server_t *pi_srv;
+		vhost  *pvhost;
 	}_attach_info_t;
 
 	if(pi_map) {
-		_attach_info_t tmp = {host, pi_server};
+		_attach_info_t tmp = {host, pi_server, this};
 
 		pi_class_map->enumerate([](void *p, _u32 sz, void *udata)->_s32 {
 			_attach_info_t *pa = (_attach_info_t *)udata;
 			_class_t *pclass = (_class_t *)p;
+			vhost *pvhost = pa->pvhost;
 
 			if(pclass->active && pclass->pi_ext) {
 				pclass->pi_ext->detach(pa->pi_srv, pa->host);
@@ -187,6 +191,11 @@ void vhost::remove_extensions(void) {
 
 			_gpi_repo_->object_release(pclass->pi_ext, false);
 			pclass->pi_ext = NULL;
+			if(pclass->options) {
+				pvhost->pi_heap->free(pclass->options, pclass->sz_options);
+				pclass->options = NULL;
+				pclass->sz_options = 0;
+			}
 
 			return ENUM_NEXT;
 		}, &tmp);
@@ -284,7 +293,7 @@ bool vhost::attach_class(_cstr_t cname, _cstr_t options) {
 			if(pi_base) {
 				pi_base->object_info(&oi);
 				if(strcmp(I_GATN_EXTENSION, oi.iname) == 0) {
-					_class_t tmp;
+					_class_t tmp = {NULL, NULL, 0, false};
 
 					tmp.pi_ext = dynamic_cast<iGatnExtension *>(pi_base);
 
@@ -292,8 +301,12 @@ bool vhost::attach_class(_cstr_t cname, _cstr_t options) {
 						if((pclass = (_class_t *)pi_map->add(cname, strlen(cname), &tmp, sizeof(tmp)))) {
 							pi_log->fwrite(LMT_INFO, "Gatn: Attach class '%s' to '%s/%s'",
 									cname, pi_server->name(), host);
-							if(options)
+							if(options) { // backup options
+								pclass->sz_options = strlen(options) + 1;
+								if((pclass->options = (_str_t)pi_heap->alloc(pclass->sz_options)))
+									strcpy(pclass->options, options);
 								pclass->pi_ext->options(options);
+							}
 
 							pclass->active = r = pclass->pi_ext->attach(pi_server, host);
 						} else
@@ -315,7 +328,7 @@ bool vhost::attach_class(_cstr_t cname, _cstr_t options) {
 	return r;
 }
 
-bool vhost::detach_class(_cstr_t cname) {
+bool vhost::detach_class(_cstr_t cname, bool remove) {
 	bool r = false;
 	iMap *pi_map = get_class_map();
 
@@ -343,7 +356,12 @@ bool vhost::detach_class(_cstr_t cname) {
 				}
 
 				_gpi_repo_->object_release(pclass->pi_ext, false);
-				pi_map->del(cname, strlen(cname));
+				pclass->pi_ext = NULL;
+				if(remove) {
+					if(pclass->options)
+						pi_heap->free(pclass->options, pclass->sz_options);
+					pi_map->del(cname, strlen(cname));
+				}
 
 				if(reset) {
 					stop_extensions(hm);

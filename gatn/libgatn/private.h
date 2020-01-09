@@ -231,7 +231,7 @@ public:
 	void set_event_handler(_u8 evt, _gatn_http_event_t *pcb, void *udata);
 	_gatn_http_event_t *get_event_handler(_u8 evt, void **pp_udata);
 	bool attach_class(_cstr_t cname, _cstr_t options);
-	bool detach_class(_cstr_t cname);
+	bool detach_class(_cstr_t cname, bool remove=true);
 	_s32 call_handler(_u8 evt, iHttpServerConnection *p_httpc);
 	void call_route_handler(_u8 evt, iHttpServerConnection *p_httpc);
 };
@@ -329,7 +329,7 @@ struct server: public _server_t {
 	bool stop_virtual_host(_cstr_t host);
 	void enum_virtual_hosts(void (*)(_vhost_t *, void *udata), void *udata=NULL);
 	bool attach_class(_cstr_t cname, _cstr_t options=NULL, _cstr_t host=NULL);
-	bool detach_class(_cstr_t cname, _cstr_t host=NULL);
+	bool detach_class(_cstr_t cname, _cstr_t host=NULL, bool remove=true);
 	void release_class(_cstr_t cname);
 };
 
