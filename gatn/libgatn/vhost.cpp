@@ -361,7 +361,7 @@ bool vhost::detach_class(_cstr_t cname, bool remove) {
 				_event_data_t 	_event[HTTP_MAX_EVENTS];	// backup of HTTP event handlers
 				bool reset = false;
 
-				if(pclass->active) {
+				if(pclass->pi_ext) {
 					// backup event handlers
 					memcpy(_event, event, sizeof(_event));
 
@@ -372,10 +372,11 @@ bool vhost::detach_class(_cstr_t cname, bool remove) {
 
 					if(memcmp(_event, event, sizeof(event)) != 0)
 						reset = true;
+
+					_gpi_repo_->object_release(pclass->pi_ext, false);
+					pclass->pi_ext = NULL;
 				}
 
-				_gpi_repo_->object_release(pclass->pi_ext, false);
-				pclass->pi_ext = NULL;
 				if(remove) {
 					if(pclass->options)
 						pi_heap->free(pclass->options, pclass->sz_options);
