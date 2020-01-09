@@ -390,7 +390,6 @@ private:
 
 				ms_pending.erase(pi_base);
 				set_context_state(pi_base, get_context_state(pi_base) & ~(ST_PENDING | ST_INITIALIZED));
-				users_remove_object(find_object_entry(pi_base));
 			}
 		} else
 			r = true;
