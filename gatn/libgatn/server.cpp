@@ -464,7 +464,25 @@ bool server::detach_class(_cstr_t cname, _cstr_t _host, bool remove) {
 	return pvhost->detach_class(cname, remove);
 }
 
-void server::release_class(_cstr_t cname) {
+void server::release_class(_cstr_t cname, bool remove) {
+	struct _xhost {
+		_cstr_t _cname;
+		server	*psrv;
+		bool	remove;
+	};
+
+	_xhost tmp = { cname, this, remove};
+
+	enum_virtual_hosts([](_vhost_t *pvhost, void *udata) {
+		_xhost *p = (_xhost *)udata;
+
+		p->psrv->detach_class(p->_cname, pvhost->name(), p->remove);
+	}, &tmp);
+
+	detach_class(cname, NULL, remove);
+}
+
+void server::restore_class(_cstr_t cname) {
 	struct _xhost {
 		_cstr_t _cname;
 		server	*psrv;
@@ -475,8 +493,8 @@ void server::release_class(_cstr_t cname) {
 	enum_virtual_hosts([](_vhost_t *pvhost, void *udata) {
 		_xhost *p = (_xhost *)udata;
 
-		p->psrv->detach_class(p->_cname, pvhost->name());
+		pvhost->restore_class(p->_cname);
 	}, &tmp);
 
-	detach_class(cname);
+	host.restore_class(cname);
 }

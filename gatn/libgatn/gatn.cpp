@@ -332,15 +332,21 @@ BEGIN_LINK_MAP
 	INFO(I_GATN_EXTENSION, NULL, [](_u32 n, _object_info_t *poi, void *udata) {
 		cGatn *p = (cGatn *)udata;
 
-		if(n == RCTL_LOAD)
+		if(n == RCTL_LOAD) {
 			p->mpi_log->fwrite(LMT_INFO, "Gatn: register class '%s'", poi->cname);
-		else if(n == RCTL_UNLOAD) {
+			p->enum_servers([](_server_t *psrv, void *udata) {
+				_object_info_t *poi = (_object_info_t *)udata;
+				server *ps = (server *)psrv;
+
+				ps->restore_class(poi->cname);
+			}, poi);
+		} else if(n == RCTL_UNLOAD) {
 			p->mpi_log->fwrite(LMT_INFO, "Gatn: unregister class '%s'", poi->cname);
 			p->enum_servers([](_server_t *psrv, void *udata) {
 				_object_info_t *poi = (_object_info_t *)udata;
 				server *ps = (server *)psrv;
 
-				ps->release_class(poi->cname);
+				ps->release_class(poi->cname, false);
 			}, poi);
 		}
 	}, this),

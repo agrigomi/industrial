@@ -318,9 +318,28 @@ bool vhost::attach_class(_cstr_t cname, _cstr_t options) {
 				}
 			} else
 				pi_log->fwrite(LMT_ERROR, "Gatn: Unable to clone class '%s'", cname);
-		} else
-			pi_log->fwrite(LMT_ERROR, "Gatn: class '%s' already attached to '%s/%s'",
-					cname, pi_server->name(), host);
+		} else {
+			// try to reattach class
+			if(!pclass->pi_ext) {
+				if(options) {
+					_u32 sz_opt = strlen(options) + 1;
+
+					if(pclass->options)
+						pi_heap->free(pclass->options, pclass->sz_options);
+
+					pclass->options = (_str_t)pi_heap->alloc(sz_opt);
+					strcpy(pclass->options, options);
+					pclass->sz_options = sz_opt;
+				}
+
+				if((pclass->pi_ext = dynamic_cast<iGatnExtension *>(_gpi_repo_->object_by_cname(cname, RF_CLONE)))) {
+					pclass->pi_ext->options(pclass->options);
+					pclass->active = pclass->pi_ext->attach(pi_server, host);
+				}
+			} else
+				pi_log->fwrite(LMT_ERROR, "Gatn: class '%s' already attached to '%s/%s'",
+						cname, pi_server->name(), host);
+		}
 
 		unlock(hm);
 	}
@@ -375,6 +394,29 @@ bool vhost::detach_class(_cstr_t cname, bool remove) {
 	}
 
 	return r;
+}
+
+void vhost::restore_class(_cstr_t cname) {
+	iMap *pi_map = get_class_map();
+
+	if(pi_map) {
+		_u32 sz = 0;
+		HMUTEX hm = lock();
+		_class_t *pclass = (_class_t *)pi_map->get(cname, strlen(cname), &sz);
+
+		if(pclass) {
+			if(!pclass->pi_ext) {
+				if((pclass->pi_ext = dynamic_cast<iGatnExtension *>(_gpi_repo_->object_by_cname(cname, RF_CLONE)))) {
+					pi_log->fwrite(LMT_INFO, "Gatn: Attach class '%s' to '%s/%s'",
+							cname, pi_server->name(), host);
+					pclass->pi_ext->options(pclass->options);
+					pclass->active = pclass->pi_ext->attach(pi_server, host);
+				}
+			}
+		}
+
+		unlock(hm);
+	}
 }
 
 _s32 vhost::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
