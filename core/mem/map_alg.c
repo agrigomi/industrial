@@ -103,18 +103,20 @@ static _map_rec_hdr_t *get_record(_map_context_t *p_mcxt,
 				_map_rec_hdr_t **pp_prev) {
 	_map_rec_hdr_t *r = NULL;
 
-	if(p_mcxt->pf_hash)
-		p_mcxt->pf_hash((_u8 *)key, sz_key, hash_key, p_mcxt->udata);
-	else
-		memcpy(hash_key, key, (sz_key < HASH_SIZE) ? sz_key : HASH_SIZE);
+	if(p_mcxt->pp_list) {
+		if(p_mcxt->pf_hash)
+			p_mcxt->pf_hash((_u8 *)key, sz_key, hash_key, p_mcxt->udata);
+		else
+			memcpy(hash_key, key, (sz_key < HASH_SIZE) ? sz_key : HASH_SIZE);
 
-	*idx = hash(hash_key, HASH_SIZE) % p_mcxt->capacity;
-	if((r = p_mcxt->pp_list[*idx])) {
-		do {
-			if(memcmp(r->key, hash_key, HASH_SIZE) == 0)
-				break;
-			*pp_prev = r;
-		} while((r = r->next));
+		*idx = hash(hash_key, HASH_SIZE) % p_mcxt->capacity;
+		if((r = p_mcxt->pp_list[*idx])) {
+			do {
+				if(memcmp(r->key, hash_key, HASH_SIZE) == 0)
+					break;
+				*pp_prev = r;
+			} while((r = r->next));
+		}
 	}
 
 	return r;
