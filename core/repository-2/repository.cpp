@@ -473,8 +473,10 @@ public:
 			if(p_bentry) {
 				if(p_bentry->pi_base != pi_base) {
 					// cloning
-					if((unref = uninit_object(pi_base)))
+					if((unref = uninit_object(pi_base))) {
+						pi_base->~iBase();
 						dcs_remove_context(pi_base);
+					}
 				}
 
 				if(p_bentry->ref_cnt && unref)
