@@ -126,7 +126,7 @@ static void gatn_create_handler(iCmd *pi_cmd, // interface to command object
 									(timeout) ? atoi(timeout) : HTTP_CONNECTION_TIMEOUT,
 									ssl_cxt);
 					} else {
-						fout(pi_io, "Mandatory parameter is missing\n");
+						fout(pi_io, "Mandatory parameter missing\n");
 						fout(pi_io, "Usage: gatn create server <server name> | --name=<server name> --port=... --root=...\
  [--cache_path=... --threads=... --connections=... --timeout=... --cache-exclude=...]\n");
 					}
@@ -497,10 +497,10 @@ static _cmd_opt_t _g_opt_[] = {
 static _cmd_t _g_cmd_[] = {
 	{ "gatn",	_g_opt_,	gatn_handler,	"Gatn management",
 		"Manage Gatn servers and hosts:\n"
-		ACT_CREATE "\t:Create server or host (gatn create server|host <options> [--server=<server name>])\n"
-		ACT_REMOVE "\t:Remove server or host (gatn remove server|host <name> [--server=<server name>])\n"
-		ACT_START  "\t:Start server or host (gatn start server|host <name> [--server=<server name>])\n"
-		ACT_STOP   "\t:Stop server or host (gatn stop server|host <name> [--server=<server name>])\n"
+		ACT_CREATE "\t:Create server or host (gatn create server | host <options> [--server=<server name>])\n"
+		ACT_REMOVE "\t:Remove server or host (gatn remove server | host <name> [--server=<server name>])\n"
+		ACT_START  "\t:Start server or host (gatn start server | host <name> [--server=<server name>])\n"
+		ACT_STOP   "\t:Stop server or host (gatn stop server | host <name> [--server=<server name>])\n"
 		ACT_LIST   "\t:List servers\n"
 		ACT_LOAD   "\t:Configure Gatn by JSON file (gatn load <JSON file name>)\n"
 		ACT_RELOAD "\t:Reload configuration for server or host (gatn reload [server|host])\n"
