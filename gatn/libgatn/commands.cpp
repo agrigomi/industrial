@@ -489,7 +489,7 @@ static _cmd_opt_t _g_opt_[] = {
 	{ OPT_DISABLE,		OF_LONG|OF_VALUE,		0,		"Disable folders inside documents root (--root-exclude=/folder1/:/folder2/)"},
 	{ OPT_OPTIONS,		OF_LONG|OF_VALUE,		0,		"Class arguments (--options='...')"},
 	{ OPT_SSL_METHOD,	OF_LONG|OF_VALUE,		0,		"SSL method (--ssl-method=TLSv1 | SSLv23 | TLSv1_1 | TLSv1_2 | DTLSv1)"},
-	{ OPT_SSL_CERT,		OF_LONG|OF_VALUE,		0,		"SSL sertificate file (--ssl-cert=<file name>.pem"},
+	{ OPT_SSL_CERT,		OF_LONG|OF_VALUE,		0,		"SSL certificate file (--ssl-cert=<file name>.pem"},
 	{ OPT_SSL_KEY,		OF_LONG|OF_VALUE,		0,		"SSL primary key file (--ssl-key=<file name>.pem"},
 	{ 0,			0,				0,		0 } // terminate options list
 };
