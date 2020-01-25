@@ -146,9 +146,10 @@ public:
 
 	bool init(_cstr_t args, _u32 sz_args=0) {
 		bool r = false;
-		_u32 sz = (sz_args) ? sz_args : strlen(args)+1;
+		_u32 sz = (sz_args) ? sz_args : strlen(args);
 
 		if(sz) {
+			sz++;
 			if(m_arg_line && m_sz_arg_line)
 				mpi_heap->free(m_arg_line, m_sz_arg_line);
 
