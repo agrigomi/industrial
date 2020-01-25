@@ -66,7 +66,7 @@ public:
 
 		switch(cmd) {
 			case OCTL_INIT:
-				if((mpi_list = (iLlist *)_gpi_repo_->object_by_iname(I_SQL_POOL, RF_CLONE)))
+				if((mpi_list = (iLlist *)_gpi_repo_->object_by_iname(I_LLIST, RF_CLONE)))
 					r = mpi_list->init(LL_VECTOR, 3);
 				break;
 			case OCTL_UNINIT:
