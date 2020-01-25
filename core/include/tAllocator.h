@@ -10,12 +10,10 @@ private:
 	iHeap	*mpi_heap;
 
 	iHeap *get_heap(void) {
-		iHeap *r = mpi_heap;
+		if(!mpi_heap)
+			mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
 
-		if(!r)
-			r = mpi_heap = dynamic_cast<iHeap *>(_gpi_repo_->object_by_iname(I_HEAP, RF_ORIGINAL));
-
-		return r;
+		return mpi_heap;
 	}
 public:
 	typedef size_t size_type;
