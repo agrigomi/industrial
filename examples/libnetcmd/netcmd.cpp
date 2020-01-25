@@ -225,8 +225,6 @@ BEGIN_LINK_MAP
 							NC_LOG_PREFIX, p->m_port);
 			}
 		} else if(n == RCTL_UNREF)  {
-				HMUTEX hm = p->mpi_mutex->lock();
-
 				p->close_connections();
 
 				// Close server
@@ -235,7 +233,6 @@ BEGIN_LINK_MAP
 
 				p->mpi_log->fwrite(LMT_INFO, "%s"
 						"Detach networking", NC_LOG_PREFIX);
-				p->mpi_mutex->unlock(hm);
 		}
 	}, this)
 END_LINK_MAP
