@@ -3,7 +3,7 @@
 		{
 			"name":		"server-0",
 			"port":		8443,
-			"buffer":	64,
+			"buffer":	16,
 			"threads":	8,
 			"connections":	2000,
 			"timeout":	10,
@@ -34,6 +34,53 @@
 			],
 			"ssl": {
 				"enable":	true,
+				"method":	"SSLv23",
+				"certificate":	"example.crt",
+				"key":		"example.key"
+			},
+			"attach":	[
+				{
+					"cname":	"cHttpLog",
+					"options":	"--time-format='%Y-%m-%d %H:%M:%S' -IET"
+				},
+				{	"cname":	"cAms",
+					"options":	"--db-host=localhost --db-user=ams --db-pass=nopass --db-name=ams"
+				}
+			]
+		}, {
+			"name":	"server-1",
+			"port":		8080,
+			"buffer":	16,
+			"threads":	8,
+			"connections":	2000,
+			"timeout":	10,
+			"cache": {
+				"path":		"/tmp/",
+				"key":		"server-1"
+			},
+			"root":		"../test/AdminLTE",
+			"vhost": [
+				{
+					"host":		"oland.ddns.net:8080",
+					"root":		"../test/elaadmin-master",
+					"exclude":	"/folder1/:/folder2/",
+					"cache": {
+						"path":		"/tmp/",
+						"key":		"oland"
+					},
+					"attach": [
+						{
+							"cname":	"cHttpLog",
+							"options":	"--time-format='%Y-%m-%d %H:%M:%S' -IET"
+						},
+						{	"cname":	"cAms",
+							"options":	"--db-host=localhost --db-user=ams --db-pass=nopass --db-name=ams"
+						}
+					]
+				}
+			],
+			"ssl": {
+				"enable":	false,
 				"method":	"SSLv23",
 				"certificate":	"example.crt",
 				"key":		"example.key"
