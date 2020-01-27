@@ -96,7 +96,7 @@ private:
 
 		_enum_t e = {pcb, udata};
 
-		extension_enum([](_cstr_t alias, _base_entry_t *p_base_array, _u32 count, _u32 limit, void *udata) {
+		extension_enum([](_cstr_t file, _cstr_t alias, _base_entry_t *p_base_array, _u32 count, _u32 limit, void *udata) {
 			_enum_t *pe = (_enum_t *)udata;
 
 			for(_u32 i = 0; i < count; i++)
@@ -580,6 +580,10 @@ public:
 		m_ext_dir = dir;
 	}
 
+	_cstr_t extension_dir(void) {
+		return m_ext_dir;
+	}
+
 	_err_t extension_load(_cstr_t file, _cstr_t alias=0) {
 		_err_t r = ERR_UNKNOWN;
 		_char_t path[1024]="";
@@ -636,14 +640,14 @@ public:
 		_u32 count = 0, limit = 0;
 		_base_entry_t *p_base_array = get_base_array(&count, &limit);
 
-		pcb("core", p_base_array, count, limit, udata);
+		pcb("", "core", p_base_array, count, limit, udata);
 
 		enum_extensions([](_extension_t *p_ext, void *udata)->_s32 {
 			_enum_t *pe = (_enum_t *)udata;
 			_u32 count = 0, limit = 0;
 			_base_entry_t *p_base_array = p_ext->array(&count, &limit);
 
-			pe->pcb(p_ext->alias(), p_base_array, count, limit, pe->udata);
+			pe->pcb(p_ext->file(), p_ext->alias(), p_base_array, count, limit, pe->udata);
 			return ENUM_CONTINUE;
 		}, &e);
 	}
