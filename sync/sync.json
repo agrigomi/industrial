@@ -1,0 +1,8 @@
+{
+	"load": [
+		{ "module": "extnet.so", "alias": "networking" },
+		{ "module": "extgatn.so", "alias": "hosting" }
+	],
+	"source": "/home/agrigomi/projects/industrial/bin/deploy/unix-x86_64-debug",
+	"exclude": ["extfs.so", "extht.so", "extsync.so"]
+}
