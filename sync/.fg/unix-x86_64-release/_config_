@@ -1,7 +1,7 @@
 OUTDIR=bin
 SRCSUFFIX=.cpp
 COMPILER_FLAGS=-c -O2 -DNDEBUG -Wall -D"BUILD_CONFIG=\"$(CONFIG)\""
-INCLUDES=-Icore/include -Icore/interface -Iio/interface -Isync/interface
+INCLUDES=-Icore/include -Icore/interface -Iio/interface -Ihypertext/interface -Isync/interface
 COMPILER_FLAGS+=$(INCLUDES)
 LIBRARY += -lstdc++
 DEPENDENCY_FLAGS+=$(INCLUDES)

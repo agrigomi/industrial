@@ -1,16 +1,19 @@
 #include "unistd.h"
 #include "startup.h"
 #include "iFS.h"
+#include "iHT.h"
 #include "iLog.h"
 #include "iExtSync.h"
 
 #define SYNC_RESOLUTION	500000 // ms
+#define SYNC_CONFIG	"sync.json"
 
 IMPLEMENT_BASE_ARRAY("ext_sync", 10);
 
 class cExtSync: public iExtSync {
 private:
 	iFS	*mpi_fs;
+	iJSON	*mpi_json;
 	iLog	*mpi_log;
 	iMutex	*mpi_mutex;
 	volatile bool m_running, m_stopped, m_enable;
@@ -22,7 +25,7 @@ private:
 		while(m_running) {
 			HMUTEX hm = mpi_mutex->lock();
 
-			if(mpi_fs && m_enable) {
+			if(mpi_fs && mpi_json && m_enable) {
 				//...
 			}
 
@@ -76,6 +79,25 @@ BEGIN_LINK_MAP
 			p->mpi_mutex->unlock(hm);
 		} else if(n == RCTL_UNREF) {
 			p->mpi_log->write(LMT_INFO, "ExtSync: Detach FS support");
+			HMUTEX hm = p->mpi_mutex->lock();
+
+			p->m_enable = false;
+			//...
+			p->mpi_mutex->unlock(hm);
+		}
+	}, this),
+	LINK(mpi_json, I_JSON, NULL, RF_ORIGINAL | RF_PLUGIN, [](_u32 n, void *udata) {
+		cExtSync *p = (cExtSync *)udata;
+
+		if(n == RCTL_REF) {
+			p->mpi_log->write(LMT_INFO, "ExtSync: Attach  JSON parser");
+			HMUTEX hm = p->mpi_mutex->lock();
+
+			//...
+			p->m_enable = true;
+			p->mpi_mutex->unlock(hm);
+		} else if(n == RCTL_UNREF) {
+			p->mpi_log->write(LMT_INFO, "ExtSync: Detach JSON parser");
 			HMUTEX hm = p->mpi_mutex->lock();
 
 			p->m_enable = false;
