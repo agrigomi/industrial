@@ -65,7 +65,7 @@ static void cmd_repo_list(iCmd *pi_cmd, iCmdHost *pi_cmd_host,
 	bool ext_only = pi_cmd_host->option_check(OPT_EXT_ONLY, p_opt);
 	_enum_t e = {pi_io, ext_only};
 
-	_gpi_repo_->extension_enum([](_cstr_t alias, _base_entry_t *p_barray, _u32 count, _u32 limit, void *udata) {
+	_gpi_repo_->extension_enum([](_cstr_t file, _cstr_t alias, _base_entry_t *p_barray, _u32 count, _u32 limit, void *udata) {
 		_enum_t *pe = (_enum_t *)udata;
 
 		fout(pe->pi_io, "%s\tobjects:%d; limit:%d\n", alias, count, limit);
