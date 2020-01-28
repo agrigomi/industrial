@@ -66,6 +66,9 @@ public:
 	void destroy(pointer p) {
 		p->~T();
 	}
+	bool operator==(tAllocator const &) { return true; }
+	bool operator!=(tAllocator const &a) { return !operator==(a); }
+
 };
 
 #endif
