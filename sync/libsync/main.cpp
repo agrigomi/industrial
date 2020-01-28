@@ -1,9 +1,6 @@
 #include "unistd.h"
 #include "startup.h"
-#include "iFS.h"
-#include "iHT.h"
-#include "iLog.h"
-#include "iExtSync.h"
+#include "private.h"
 
 #define SYNC_RESOLUTION	500000 // ms
 #define SYNC_CONFIG	"sync.json"
