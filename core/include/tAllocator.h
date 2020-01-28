@@ -66,9 +66,15 @@ public:
 	void destroy(pointer p) {
 		p->~T();
 	}
-	bool operator==(tAllocator const &) { return true; }
-	bool operator!=(tAllocator const &a) { return !operator==(a); }
+	template <typename T2>
+	inline bool operator==(const tAllocator<T2>&) const noexcept {
+		    return typeid(T) == typeid(T2);
+	}
 
+	template <typename T2>
+	inline bool operator!=(const tAllocator<T2>&) const noexcept {
+		     return typeid(T) != typeid(T2);
+	}
 };
 
 #endif
