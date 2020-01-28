@@ -23,6 +23,7 @@ private:
 			HMUTEX hm = mpi_mutex->lock();
 
 			if(mpi_fs && mpi_json && m_enable) {
+				config_init(mpi_fs, mpi_json, mpi_log, SYNC_CONFIG);
 				//...
 			}
 
