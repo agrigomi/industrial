@@ -30,10 +30,29 @@ bool config_touch(void) {
 	return r;
 }
 
+static tString to_string(HTVALUE jv) {
+	tString r = "";
+	_u8 jvt = gpi_json->type(jv);
+
+	if(jvt == JVT_STRING || jvt == JVT_NUMBER) {
+		_u32 sz = 0;
+
+		r.assign(gpi_json->data(jv, &sz));
+	}
+
+	return r;
+}
+
 static bool config_load_json(_u8 *p_content, _ulong sz_content) {
 	bool r = false;
+	HTCONTEXT jcxt = gpi_json->create_context();
 
-	//...
+	if(jcxt) {
+		if((r = gpi_json->parse(jcxt, (_cstr_t)p_content, sz_content))) {
+			//...
+		}
+		gpi_json->destroy_context(jcxt);
+	}
 
 	return r;
 }
