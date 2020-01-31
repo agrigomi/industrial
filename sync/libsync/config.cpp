@@ -37,7 +37,7 @@ static tString to_string(HTVALUE jv) {
 	if(jvt == JVT_STRING || jvt == JVT_NUMBER) {
 		_u32 sz = 0;
 
-		r.assign(gpi_json->data(jv, &sz));
+		r.assign((_cstr_t)gpi_json->data(jv, &sz), sz);
 	}
 
 	return r;
