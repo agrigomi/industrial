@@ -5,6 +5,7 @@
 #include "iHT.h"
 #include "iLog.h"
 #include "iExtSync.h"
+#include "iRepository.h"
 
 // config
 void config_init(iFS *pi_fs, iJSON *pi_json,

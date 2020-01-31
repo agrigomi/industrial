@@ -58,7 +58,7 @@ static void load_module(HTCONTEXT jcxt, HTVALUE jv_module) {
 		tString module = to_string(jcxt, "module", jv_module);
 		tString alias = to_string(jcxt, "alias", jv_module);
 
-		//...
+		_gpi_repo_->extension_load(module.c_str(), alias.c_str());
 	}
 }
 
