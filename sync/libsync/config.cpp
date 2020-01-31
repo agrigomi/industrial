@@ -74,6 +74,18 @@ static void load_modules(HTCONTEXT jcxt) {
 	}
 }
 
+static void load_excludes(HTCONTEXT jcxt) {
+	HTVALUE jv_excludes = gpi_json->select(jcxt, "exclude", NULL);
+
+	if(jv_excludes && gpi_json->type(jv_excludes) == JVT_ARRAY) {
+		HTVALUE jv_item = NULL;
+		_u32 idx = 0;
+
+		while((jv_item = gpi_json->by_index(jv_excludes, idx)))
+			gv_exclude.push_back(to_string(jv_item));
+	}
+}
+
 static bool config_load_json(_u8 *p_content, _ulong sz_content) {
 	bool r = false;
 	HTCONTEXT jcxt = gpi_json->create_context();
@@ -81,7 +93,8 @@ static bool config_load_json(_u8 *p_content, _ulong sz_content) {
 	if(jcxt) {
 		if((r = gpi_json->parse(jcxt, (_cstr_t)p_content, sz_content))) {
 			load_modules(jcxt);
-			//...
+			g_source = to_string(jcxt, "source", NULL);
+			load_excludes(jcxt);
 		}
 		gpi_json->destroy_context(jcxt);
 	}
