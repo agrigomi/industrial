@@ -43,12 +43,44 @@ static tString to_string(HTVALUE jv) {
 	return r;
 }
 
+static tString to_string(HTCONTEXT jcxt, _cstr_t jpath, HTVALUE jobj) {
+	tString r = "";
+	HTVALUE jv = gpi_json->select(jcxt, jpath, jobj);
+
+	if(jv)
+		r = to_string(jv);
+
+	return r;
+}
+
+static void load_module(HTCONTEXT jcxt, HTVALUE jv_module) {
+	if(gpi_json->type(jv_module) == JVT_OBJECT) {
+		tString module = to_string(jcxt, "module", jv_module);
+		tString alias = to_string(jcxt, "alias", jv_module);
+
+		//...
+	}
+}
+
+static void load_modules(HTCONTEXT jcxt) {
+	HTVALUE jv_modules = gpi_json->select(jcxt, "load", NULL);
+
+	if(jv_modules && gpi_json->type(jv_modules) == JVT_ARRAY) {
+		_u32 idx = 0;
+		HTVALUE jv_module = NULL;
+
+		while((jv_module = gpi_json->by_index(jv_modules, idx)))
+			load_module(jcxt, jv_module);
+	}
+}
+
 static bool config_load_json(_u8 *p_content, _ulong sz_content) {
 	bool r = false;
 	HTCONTEXT jcxt = gpi_json->create_context();
 
 	if(jcxt) {
 		if((r = gpi_json->parse(jcxt, (_cstr_t)p_content, sz_content))) {
+			load_modules(jcxt);
 			//...
 		}
 		gpi_json->destroy_context(jcxt);
