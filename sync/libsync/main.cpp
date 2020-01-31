@@ -24,6 +24,9 @@ private:
 
 			if(mpi_fs && mpi_json && m_enable) {
 				config_init(mpi_fs, mpi_json, mpi_log, SYNC_CONFIG);
+				if(config_touch())
+					config_load();
+
 				//...
 			}
 

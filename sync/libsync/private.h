@@ -12,5 +12,6 @@ void config_init(iFS *pi_fs, iJSON *pi_json,
 		iLog *pi_log, _cstr_t config_fname);
 bool config_touch(void);
 bool config_load(void);
+bool config_exclude(_cstr_t ext_fname);
 
 #endif

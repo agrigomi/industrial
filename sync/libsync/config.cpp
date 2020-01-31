@@ -111,11 +111,28 @@ bool config_load(void) {
 		_u8 *p_content = (_u8 *)pi_fio->map(MPF_READ);
 
 		if(p_content && sz_content) {
+			gv_exclude.clear();
 			r = config_load_json(p_content, sz_content);
 			pi_fio->unmap();
 		}
 
 		gpi_fs->close(pi_fio);
+	}
+
+	return r;
+}
+
+bool config_exclude(_cstr_t ext_fname) {
+	bool r = false;
+	tSTLVector<tString>::iterator vit = gv_exclude.begin();
+
+	while(vit != gv_exclude.end()) {
+		if(*vit == ext_fname) {
+			r = true;
+			break;
+		}
+
+		vit++;
 	}
 
 	return r;
