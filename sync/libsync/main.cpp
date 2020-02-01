@@ -2,7 +2,7 @@
 #include "startup.h"
 #include "private.h"
 
-#define SYNC_RESOLUTION	500000 // ms
+#define SYNC_RESOLUTION	5000000 // ms
 #define SYNC_CONFIG	"sync.json"
 
 IMPLEMENT_BASE_ARRAY("ext_sync", 10);

@@ -38,8 +38,9 @@ static tString to_string(HTVALUE jv) {
 
 	if(jvt == JVT_STRING || jvt == JVT_NUMBER) {
 		_u32 sz = 0;
+		_cstr_t str = (_cstr_t)gpi_json->data(jv, &sz);
 
-		r.assign((_cstr_t)gpi_json->data(jv, &sz), sz);
+		r.assign(str, sz);
 	}
 
 	return r;
@@ -60,6 +61,7 @@ static void load_module(HTCONTEXT jcxt, HTVALUE jv_module) {
 		tString module = to_string(jcxt, "module", jv_module);
 		tString alias = to_string(jcxt, "alias", jv_module);
 
+		gpi_log->fwrite(LMT_INFO, "ExtSync: Load '%s' as '%s'", module.c_str(), alias.c_str());
 		_gpi_repo_->extension_load(module.c_str(), alias.c_str());
 	}
 }
@@ -71,8 +73,10 @@ static void load_modules(HTCONTEXT jcxt) {
 		_u32 idx = 0;
 		HTVALUE jv_module = NULL;
 
-		while((jv_module = gpi_json->by_index(jv_modules, idx)))
+		while((jv_module = gpi_json->by_index(jv_modules, idx))) {
 			load_module(jcxt, jv_module);
+			idx++;
+		}
 	}
 }
 
@@ -83,8 +87,10 @@ static void load_excludes(HTCONTEXT jcxt) {
 		HTVALUE jv_item = NULL;
 		_u32 idx = 0;
 
-		while((jv_item = gpi_json->by_index(jv_excludes, idx)))
+		while((jv_item = gpi_json->by_index(jv_excludes, idx))) {
 			gv_exclude.push_back(to_string(jv_item));
+			idx++;
+		}
 	}
 }
 
