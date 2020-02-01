@@ -1,2 +1,3 @@
 sync/libsync/main.cpp
 sync/libsync/config.cpp
+sync/libsync/sync.cpp

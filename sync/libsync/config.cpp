@@ -15,7 +15,9 @@ void config_init(iFS *pi_fs, iJSON *pi_json,
 	gpi_fs = pi_fs;
 	gpi_json = pi_json;
 	gpi_log = pi_log;
-	g_config_fname = config_fname;
+
+	if(g_config_fname != config_fname)
+		g_config_fname = config_fname;
 }
 
 bool config_touch(void) {
@@ -120,6 +122,10 @@ bool config_load(void) {
 	}
 
 	return r;
+}
+
+_cstr_t config_source(void) {
+	return g_source.c_str();
 }
 
 bool config_exclude(_cstr_t ext_fname) {

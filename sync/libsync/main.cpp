@@ -22,12 +22,17 @@ private:
 		while(m_running) {
 			HMUTEX hm = mpi_mutex->lock();
 
-			if(mpi_fs && mpi_json && m_enable) {
-				config_init(mpi_fs, mpi_json, mpi_log, SYNC_CONFIG);
-				if(config_touch())
-					config_load();
+			if(mpi_fs && m_enable) {
+				sync_init(mpi_fs, mpi_log);
 
-				//...
+				if(mpi_json && m_enable) {
+					config_init(mpi_fs, mpi_json, mpi_log, SYNC_CONFIG);
+
+					if(config_touch())
+						config_load();
+				}
+
+				do_sync();
 			}
 
 			mpi_mutex->unlock(hm);
