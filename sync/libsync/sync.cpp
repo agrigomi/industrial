@@ -62,14 +62,16 @@ void do_sync(void) {
 
 	for(_u32 i = 0; i < n; i++) {
 		gpi_log->fwrite(LMT_INFO, "ExtSync: Unload '%s'", gv_sync[i].dst_fname.c_str());
-		_gpi_repo_->extension_unload(gv_sync[i].alias.c_str());
-	}
-
-	for(_u32 i = 0; i < n; i++) {
-		gpi_log->fwrite(LMT_INFO, "ExtSync: Load '%s'", gv_sync[i].dst_fname.c_str());
-		gpi_fs->copy(gv_sync[i].src_fname.c_str(), gv_sync[i].dst_fname.c_str());
-		_gpi_repo_->extension_load(base_name(gv_sync[i].dst_fname.c_str()),
-							gv_sync[i].alias.c_str());
+		if(_gpi_repo_->extension_unload(gv_sync[i].alias.c_str()) == ERR_NONE) {
+			gpi_log->fwrite(LMT_INFO, "ExtSync: Update '%s'", gv_sync[i].alias.c_str());
+			gpi_fs->remove(gv_sync[i].dst_fname.c_str());
+			gpi_log->fwrite(LMT_INFO, "ExtSync: Load '%s' as '%s'", gv_sync[i].dst_fname.c_str(),
+					gv_sync[i].alias.c_str());
+			gpi_fs->copy(gv_sync[i].src_fname.c_str(), gv_sync[i].dst_fname.c_str());
+			_gpi_repo_->extension_load(base_name(gv_sync[i].dst_fname.c_str()),
+						gv_sync[i].alias.c_str());
+		} else
+			gpi_log->fwrite(LMT_ERROR, "ExtSync: Failed to update '%s'", gv_sync[i].dst_fname.c_str());
 	}
 
 	gv_sync.clear();
