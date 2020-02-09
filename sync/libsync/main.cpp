@@ -44,6 +44,7 @@ private:
 
 	void stop(void) {
 		m_running = false;
+		mpi_log->write(LMT_INFO, "ExtSync: Stop");
 
 		while(!m_stopped)
 			usleep(10000);
