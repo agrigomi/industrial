@@ -16,6 +16,15 @@ typedef struct { // file cache entry
 	_ulong		size; // file size
 	time_t		mtime; // last modification time of original file
 	bool		remove;
+
+	void clear(void) {
+		pi_fio = NULL;
+		ptr = NULL;
+		refc = acct = 0;
+		size = 0;
+		mtime = 0;
+		remove = false;
+	}
 }_fce_t;
 
 #define MAX_FCACHE_PATH	512
@@ -40,7 +49,7 @@ private:
 			j += sprintf((char *)(sha_out+j), "%02X", hb[i]);
 	}
 
-	bool update_cache(_cstr_t path, _fce_t *pfce) {
+	bool update_cache(_cstr_t path, _fce_t *pfce, time_t mtime=0) {
 		bool r = false;
 
 		if(pfce->pi_fio) {
@@ -51,11 +60,11 @@ private:
 
 		_char_t cache_path[MAX_FCACHE_PATH*2]="";
 		bool _r = false;
-		time_t mtime = mpi_fs->modify_time(path);
+		time_t _mtime = (mtime) ? mtime : mpi_fs->modify_time(path);
 
 		snprintf(cache_path, sizeof(cache_path), "%s/%s", m_cache_path, pfce->sha_fname);
 
-		if(mpi_fs->modify_time(cache_path) < mtime)
+		if(pfce->mtime < _mtime)
 			_r = mpi_fs->copy(path, (_cstr_t)cache_path);
 		else
 			_r = true;
@@ -66,7 +75,7 @@ private:
 				pfce->acct = 0;
 				pfce->ptr = NULL;
 				pfce->size = pfce->pi_fio->size();
-				pfce->mtime = mtime;
+				pfce->mtime = _mtime;
 				pfce->remove = false;
 				r = true;
 			}
@@ -75,20 +84,21 @@ private:
 		return r;
 	}
 
-	_fce_t *add_to_map(_cstr_t path) {
+	_fce_t *add_to_map(_cstr_t path, time_t mtime=0) {
 		_fce_t *r = 0;
-		_fce_t fce;
-		_u32 sz;
 
 		if(mpi_map) {
-			HMUTEX hm = mpi_map->lock();
+			_fce_t fce;
+			_u32 sz;
 
-			fce.pi_fio = NULL;
+			fce.clear();
 			hash(path, fce.sha_fname); // make cache file name
+
+			HMUTEX hm = mpi_map->lock();
 
 			if(!(r = (_fce_t *)mpi_map->get(fce.sha_fname, strlen(fce.sha_fname), &sz, hm))) {
 				// create new entry
-				if(update_cache(path, &fce))
+				if(update_cache(path, &fce, mtime))
 					r = (_fce_t *)mpi_map->add(fce.sha_fname, strlen(fce.sha_fname), &fce, sizeof(_fce_t), hm);
 			}
 
@@ -234,14 +244,14 @@ public:
 	HFCACHE open(_cstr_t path) {
 		HFCACHE r = 0;
 		time_t mtime = mpi_fs->modify_time(path);
-		_fce_t *pfce = add_to_map(path);
+		_fce_t *pfce = add_to_map(path, mtime);
 		bool success = true;
 
 		if(pfce) {
 			pfce->mutex.lock();
 			if(mtime > pfce->mtime) {
 				if(pfce->refc == 0)
-					success = update_cache(path, pfce);
+					success = update_cache(path, pfce, mtime);
 			}
 
 			if(success) {
