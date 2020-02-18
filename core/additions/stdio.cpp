@@ -37,12 +37,32 @@ public:
 		return r;
 	}
 
+	_u32 error(const void *data, _u32 size) {
+		_u32 r = 0;
+
+		if(::fwrite(data, size, 1, stderr) == 1)
+			r = size;
+
+		return r;
+	}
+
 	_u32 fwrite(_cstr_t fmt, ...) {
 		_u32 r = 0;
 		va_list va;
 
 		va_start(va, fmt);
 		r = vfprintf(stdout, fmt, va);
+		va_end(va);
+
+		return r;
+	}
+
+	_u32 ferror(_cstr_t fmt, ...) {
+		_u32 r = 0;
+		va_list va;
+
+		va_start(va, fmt);
+		r = vfprintf(stderr, fmt, va);
 		va_end(va);
 
 		return r;
