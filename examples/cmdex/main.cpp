@@ -71,7 +71,7 @@ _err_t main(int argc, char *argv[]) {
 						case LMT_ERROR: pref = 'E'; break;
 						case LMT_WARNING: pref = 'W';break;
 					}
-					gpi_stdio->fwrite("[%c] %s\n", pref, msg);
+					gpi_stdio->ferror("[%c] %s\n", pref, msg);
 				}
 			});
 		else {
