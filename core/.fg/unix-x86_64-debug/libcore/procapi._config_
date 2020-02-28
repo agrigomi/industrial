@@ -1,0 +1,4 @@
+SRCSUFFIX=.c
+COMPILER=gcc
+COMPILER_FLAGS += -Wno-address-of-packed-member
+
