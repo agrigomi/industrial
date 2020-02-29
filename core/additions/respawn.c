@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <sys/select.h>
 #include "respawn.h"
 
 
@@ -101,6 +102,24 @@ int proc_exec_v(_proc_t *pcxt, /* process context */
 /* read from stdout of a child process */
 int proc_read(_proc_t *pcxt, void *buf, int sz) {
 	return read(pcxt->PREAD_FD, buf, sz);
+}
+
+/* read from stdout of a child process with timeout in seconds */
+int proc_read_ts(_proc_t *pcxt, void *buf, int sz, int ts) {
+	int r = -1;
+	fd_set set;
+	struct timeval timeout;
+
+	FD_ZERO(&set); /* clear the set */
+	FD_SET(pcxt->PREAD_FD, &set); /* add our file descriptor to the set */
+
+	timeout.tv_sec = ts;
+	timeout.tv_usec = 0;
+
+	if((r = select(pcxt->PREAD_FD + 1, &set, NULL, NULL, &timeout)) > 0)
+		r = read(pcxt->PREAD_FD, buf, sz);
+
+	return r;
 }
 
 /* write to stdin of a child process */

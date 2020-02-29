@@ -36,10 +36,13 @@ int proc_exec_v(_proc_t *, /* process context */
 		);
 /* Read from stdout of a child process.
    return -1 for error, or number of received bytes */
-int proc_read(_proc_t *, void *, int);
+int proc_read(_proc_t *, void *buf, int sz);
+/* Read from stdout of a child process with timeout in seconds.
+   return -1 for error, or number of received bytes */
+int proc_read_ts(_proc_t *, void *buf, int sz, int ts);
 /* Write to stdin of a child process.
    return -1 for error, or number of number of written bytes */
-int proc_write(_proc_t *, void *, int);
+int proc_write(_proc_t *, void *buf, int sz);
 /* Return status of child process, if available.
    Othrewise -1 will be returned. */
 int proc_status(_proc_t *);
