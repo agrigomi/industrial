@@ -46,7 +46,7 @@ int proc_read(_proc_t *, void *buf, int sz);
 int proc_read_ts(_proc_t *, void *buf, int sz, int ts);
 
 /* Write to stdin of a child process.
-   return -1 for error, or number of number of written bytes */
+   return -1 for error, or number of written bytes */
 int proc_write(_proc_t *, void *buf, int sz);
 
 /* Return status of child process, if available.
@@ -66,6 +66,10 @@ int proc_kill(_proc_t *);
 /* Send SIGINT to child process.
    return 0 for sucess, -1 for error */
 int proc_break(_proc_t *);
+
+/* Send signall to child process
+   return 0 for success, -1 for error */
+int proc_signal(_proc_t *, int signal);
 
 #ifdef __cplusplus
 }

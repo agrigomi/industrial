@@ -153,3 +153,7 @@ int proc_kill(_proc_t *pcxt) {
 int proc_break(_proc_t *pcxt) {
 	return kill(pcxt->cpid, SIGINT);
 }
+
+int proc_signal(_proc_t *pcxt, int signal) {
+	return kill(pcxt->cpid, signal);
+}
