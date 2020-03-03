@@ -3,4 +3,4 @@ core/additions/args.cpp
 core/additions/TaskMaker.cpp
 core/additions/str.cpp
 core/additions/stdio.cpp
-
+core/additions/process.cpp
