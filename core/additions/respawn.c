@@ -39,19 +39,31 @@ void proc_close_pipe(_proc_t *pcxt) {
 	}
 }
 
-static void proc_redirect_pipe(_proc_t *pcxt) {
-	if(pcxt->cpid == 0) {
-		/* for child process */
-		dup2(pcxt->CREAD_FD, STDIN_FILENO);
-		dup2(pcxt->CWRITE_FD, STDOUT_FILENO);
-		proc_close_pipe(pcxt);
-	} else if(pcxt->cpid > 0) {
-		/* for parent process */
-		close(pcxt->CREAD_FD);
-		pcxt->CREAD_FD = -1;
-		close(pcxt->CWRITE_FD);
-		pcxt->CWRITE_FD = -1;
+static int do_fork(_proc_t *pcxt) {
+	int r = -1;
+
+	pcxt->status = -1;
+	if((r = proc_open_pipe(pcxt)) == 0) {
+		if((pcxt->cpid = fork()) != -1) {
+			if(pcxt->cpid == 0) {
+				/* for child process */
+				dup2(pcxt->CREAD_FD, STDIN_FILENO);
+				dup2(pcxt->CWRITE_FD, STDOUT_FILENO);
+				proc_close_pipe(pcxt);
+			} else if(pcxt->cpid > 0) {
+				/* for parent process */
+				close(pcxt->CREAD_FD);
+				pcxt->CREAD_FD = -1;
+				close(pcxt->CWRITE_FD);
+				pcxt->CWRITE_FD = -1;
+			}
+		} else {
+			proc_close_pipe(pcxt);
+			r = -1;
+		}
 	}
+
+	return r;
 }
 
 int proc_exec_ve(_proc_t *pcxt, /* process context */
@@ -61,17 +73,10 @@ int proc_exec_ve(_proc_t *pcxt, /* process context */
 		) {
 	int r = -1;
 
-	pcxt->status = -1;
-	if((r = proc_open_pipe(pcxt)) == 0) {
-		if((pcxt->cpid = fork()) != -1) {
-			proc_redirect_pipe(pcxt);
-			if(pcxt->cpid == 0)
-				/* child process */
-				exit(execve(path, (char **)argv, (char **)envp));
-		} else {
-			proc_close_pipe(pcxt);
-			r = -1;
-		}
+	if((r = do_fork(pcxt)) == 0) {
+		if(pcxt->cpid == 0)
+			/* child process */
+			exit(execve(path, (char **)argv, (char **)envp));
 	}
 
 	return r;
@@ -83,17 +88,10 @@ int proc_exec_v(_proc_t *pcxt, /* process context */
 		) {
 	int r = -1;
 
-	pcxt->status = -1;
-	if((r = proc_open_pipe(pcxt)) == 0) {
-		if((pcxt->cpid = fork()) != -1) {
-			proc_redirect_pipe(pcxt);
-			if(pcxt->cpid == 0)
-				/* child process */
-				exit(execv(path, (char **)argv));
-		} else {
-			proc_close_pipe(pcxt);
-			r = -1;
-		}
+	if((r = do_fork(pcxt)) == 0) {
+		if(pcxt->cpid == 0)
+			/* child process */
+			exit(execv(path, (char **)argv));
 	}
 
 	return r;
@@ -105,17 +103,10 @@ int proc_exec_cb(_proc_t *pcxt, /* process context */
 		) {
 	int r = -1;
 
-	pcxt->status = -1;
-	if((r = proc_open_pipe(pcxt)) == 0) {
-		if((pcxt->cpid = fork()) != -1) {
-			proc_redirect_pipe(pcxt);
-			if(pcxt->cpid == 0)
-				/* child process */
-				exit(pcb(udata));
-		} else {
-			proc_close_pipe(pcxt);
-			r = -1;
-		}
+	if((r = do_fork(pcxt)) == 0) {
+		if(pcxt->cpid == 0)
+			/* child process */
+			exit(pcb(udata));
 	}
 
 	return r;
