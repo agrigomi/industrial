@@ -99,6 +99,28 @@ int proc_exec_v(_proc_t *pcxt, /* process context */
 	return r;
 }
 
+int proc_exec_cb(_proc_t *pcxt, /* process context */
+		int (*pcb)(void *), /* pointer to callback */
+		void *udata /* user data */
+		) {
+	int r = -1;
+
+	pcxt->status = -1;
+	if((r = proc_open_pipe(pcxt)) == 0) {
+		if((pcxt->cpid = fork()) != -1) {
+			proc_redirect_pipe(pcxt);
+			if(pcxt->cpid == 0)
+				/* child process */
+				exit(pcb(udata));
+		} else {
+			proc_close_pipe(pcxt);
+			r = -1;
+		}
+	}
+
+	return r;
+}
+
 /* read from stdout of a child process */
 int proc_read(_proc_t *pcxt, void *buf, int sz) {
 	return read(pcxt->PREAD_FD, buf, sz);

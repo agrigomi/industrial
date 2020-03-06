@@ -37,6 +37,14 @@ int proc_exec_v(_proc_t *, /* process context */
 		const char *const argv[] /* array of arguments */
 		);
 
+/* Redirect pipes to stdin/stdout of a chile process and
+   invoke callback.
+   Return 0 for auccess, -1 for error */
+int proc_exec_cb(_proc_t *, /* process context */
+		int (*)(void *), /* pointer to callback */
+		void * /* user data */
+		);
+
 /* Read from stdout of a child process.
    return -1 for error, or number of received bytes */
 int proc_read(_proc_t *, void *buf, int sz);
