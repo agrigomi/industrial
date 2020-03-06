@@ -15,6 +15,9 @@ public:
 	// Execute child process and return handle, or NULL for error.
 	virtual HPROCESS exec(_cstr_t path, _cstr_t argv[], _cstr_t env[]=NULL)=0;
 
+	// invoke a callback in child process context
+	virtual HPROCESS exec(int (*)(void *), void *)=0;
+
 	// close child process by handle, and return exit status.
 	virtual _s32 close(HPROCESS, _s32 signal=SIGINT)=0;
 

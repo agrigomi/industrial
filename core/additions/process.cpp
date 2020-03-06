@@ -55,6 +55,16 @@ public:
 		return r;
 	}
 
+	HPROCESS exec(int (*pcb)(void *), void *udata) {
+		HPROCESS r = NULL;
+		_proc_t pcxt;
+
+		if(proc_exec_cb(&pcxt, pcb, udata) != -1)
+			r = mpi_list->add(&pcxt, sizeof(_proc_t));
+
+		return r;
+	}
+
 	_s32 close(HPROCESS h, _s32 signal=SIGINT) {
 		_s32 r = -1;
 		_proc_t *pcxt = validate_handle(h);
