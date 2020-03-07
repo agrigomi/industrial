@@ -65,15 +65,17 @@ void cHttpServer::_close(void) {
 	}
 }
 
+#define TO_IDLE	1000
+
 void cHttpServer::http_server_thread(void) {
 	m_is_running = true;
 	m_is_stopped = false;
-	_u32 to_idle = 100;
+	_u32 to_idle = TO_IDLE;
 
 	while(m_is_running) {
 		if(m_is_init && m_num_connections < m_max_connections) {
-			add_connection();
-			to_idle = 100;
+			if(add_connection())
+				to_idle = TO_IDLE;
 		}
 
 		if(to_idle) {
@@ -85,8 +87,6 @@ void cHttpServer::http_server_thread(void) {
 
 	m_is_stopped = true;
 }
-
-#define TO_IDLE	1000
 
 void *_http_worker_thread(_u8 sig, void *udata) {
 	void *r = 0;
