@@ -76,12 +76,13 @@ public:
 	 * This function can return NULL, if object not found or flags does not matched.
 	 * @param[in] request - Pointer to _object_request_t structure, that contains request information.
 	 * @param[in] flags - Repository flags (RF_ORIGINAL, RF_CLONE or both).
-	 * @return iBase pointer or null.
+	 * @return iBase* or null.
 	 */
 	virtual iBase *object_request(_object_request_t *, _rf_t)=0;
 	/**
 	 * Release iBase pointer.
 	 * @param[in] ptr - Pointer to iBase
+	 * @return iBase* or NULL.
 	 */
 	virtual void   object_release(iBase *)=0;
 	/**
@@ -90,6 +91,7 @@ public:
 	 * This function can return NULL, if component not found or flags does not matched.
 	 * @param[in] cname - const pointer to class name (const char *)
 	 * @param[in] flags - Repository flags (RF_ORIGINAL, RF_CLONE or both).
+	 * @return iBase* or NULL.
 	 */
 	virtual iBase *object_by_cname(_cstr_t cname, _rf_t)=0;
 	/**
@@ -98,6 +100,7 @@ public:
 	 * This function can return NULL, if component not found or flags does not matched.
 	 * @param[in] iname - const pointer to interface name (const char *)
 	 * @param[in] flags - Repository flags (RF_ORIGINAL, RF_CLONE or both).
+	 * @return iBase* or NULL.
 	 */
 	virtual iBase *object_by_iname(_cstr_t iname, _rf_t)=0;
 	/**
@@ -106,6 +109,7 @@ public:
 	 * This function can return NULL, if flags does not matched.
 	 * @param[in] handle - HOBJECT retrieved by handle_by_cname or handle_by_iname
 	 * @param[in] flags - Repository flags (RF_ORIGINAL, RF_CLONE or both).
+	 * @return iBase* or NULL.
 	 */
 	virtual iBase *object_by_handle(HOBJECT, _rf_t)=0;
 	/**
@@ -113,7 +117,7 @@ public:
 	 *
 	 * This function can return NULL, if component not found.
 	 * @param[in] iname Const pointer to interface name (const char *)
-	 * @return HOBJECT
+	 * @return HOBJECT or NULL
 	 */
 	virtual HOBJECT handle_by_iname(_cstr_t iname)=0;
 	/**
@@ -121,7 +125,7 @@ public:
 	 *
 	 * This function can return NULL, if component not found.
 	 * @param[in] cname Const pointer to class name (const char *)
-	 * @return HOBJECT
+	 * @return HOBJECT or NULL
 	 */
 	virtual HOBJECT handle_by_cname(_cstr_t cname)=0;
 	virtual bool object_info(HOBJECT h, _object_info_t *poi)=0;
