@@ -5,12 +5,34 @@
 
 #define I_BASE	"iBase"
 
+/**
+ * Interface macro.
+ *
+ * Implements constructor, destructor and interface_name function.
+ *
+ * @param _class_ Class name.
+ * @param iname Interface name.
+ */
 #define INTERFACE(_class_, iname) \
 	_class_() {} \
 	virtual ~_class_() {} \
+	/**
+	 * Interface name virtual method.
+	 *
+	 * Only used for return the interface name.
+	 */
 	virtual _cstr_t interface_name(void) 	{ return iname; }
 
+/**
+ * Version structure
+ *
+ * Contains all components of version number
+ * major, minor and revision
+ */
 typedef union {
+	/** Packed version number
+	 * Contains revision, minor and majot parts of version.
+	 */
 	_u32	version;
 	struct {
 		_u32	revision:16;
@@ -19,6 +41,9 @@ typedef union {
 	};
 }_version_t;
 
+/**
+ * Predefined type (one byte for repository flags.
+ */
 typedef _u8 	_rf_t;
 
 // flags
@@ -32,19 +57,37 @@ typedef _u8 	_rf_t;
 
 #define RF_PLUGIN	RF_NOCRITICAL | RF_KEEP_PENDING | RF_POST_INIT
 
+/**
+ * Object properties.
+ *
+ * It represents the object parameters.
+ */
 typedef struct {
-	_cstr_t		iname;   // interface name
-	_cstr_t		cname;   // class name
-	_u32		size;    // object size
-	_version_t	version; // object version
-	_rf_t		flags;   // repository flags
+	_cstr_t		iname;   //!< interface name
+	_cstr_t		cname;   //!< class name
+	_u32		size;    //!< object size
+	_version_t	version; //!< object version
+	_rf_t		flags;   //!< repository flags
 }_object_info_t;
 
 typedef struct link_info _link_info_t;
 
+/**
+ * Base interface for all components.
+ *
+ * Every component must inherit by this interface.
+ * This is a virtual base class that contains a several simple methods.
+ */
 class iBase {
 public:
 	INTERFACE(iBase, I_BASE);
+	/**
+	 * Returns pointer to link structure.
+	 *
+	 * @param cnt [out]  In this parameter, function returns
+	 *                   the number of _link_info_t structures.
+	 * @return Ponter to link map (array of _link_info_t structures)
+	 */
 	virtual const _link_info_t *object_link(_u32 *cnt) {
 		*cnt = 0;
 		return 0;

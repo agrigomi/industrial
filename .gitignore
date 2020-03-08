@@ -36,4 +36,10 @@
 
 #..
 bin/*
-ams/*
+ams/
+.fg/projects-unix-x86_64-*
+
+# Doxygen output
+html/*
+latex/*
+
