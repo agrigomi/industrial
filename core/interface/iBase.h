@@ -16,12 +16,12 @@
 #define INTERFACE(_class_, iname) \
 	_class_() {} \
 	virtual ~_class_() {} \
-	/**
-	 * Interface name virtual method.
-	 *
-	 * Only used for return the interface name.
-	 * @return const pointer to interface name (const char *)
-	 */
+	/** \
+	 * Interface name virtual method.\
+	 *\
+	 * Only used for return the interface name.\
+	 * @return const pointer to interface name (const char *)\
+	 */\
 	virtual _cstr_t interface_name(void) 	{ return iname; }
 
 /**
