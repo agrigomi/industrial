@@ -31,7 +31,8 @@
  * major, minor and revision
  */
 typedef union {
-	/** Packed version number
+	/**
+	 * @brief Packed version number
 	 * Contains revision, minor and majot parts of version. */
 	_u32	version;
 	struct {
@@ -143,7 +144,7 @@ typedef void _info_ctl_t(_u32, _object_info_t *, void *);
  * 
  */
 struct link_info {
-	iBase		**ppi_base; //!< Placd for pointer to iBase object
+	iBase		**ppi_base; //!< Place for pointer to iBase object
 	_cstr_t 	iname; //!< Pointer to interface name (const char *)
 	_cstr_t		cname; //!< Pointer to class name (const char *)
 	_rf_t		flags; //!< Repository flags
