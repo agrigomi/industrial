@@ -128,8 +128,26 @@ public:
 	 * @return HOBJECT or NULL
 	 */
 	virtual HOBJECT handle_by_cname(_cstr_t cname)=0;
+	/**
+	 * Retrieve object information by object handle.
+	 * @param[in] h - handle
+	 * @param[out] poi - Pointer to _object_info_t structure.
+	 * @return true/false
+	 */
 	virtual bool object_info(HOBJECT h, _object_info_t *poi)=0;
 
+	/**
+	 * Initialize array of _base_entry_t structures.
+	 *
+	 * This function usually used by the repository,
+	 * to initialize a newly loaded extensions.
+	 * The reason to present in public section is because
+	 * the startup code, uses this function for initialization of
+	 * core components array.
+	 *
+	 * @param[in] array - Array of _base_entry_t structures.
+	 * @param[in] count - Number of elements in array
+	 */
 	virtual void init_array(_base_entry_t *array, _u32 count)=0;
 
 	// extensions
