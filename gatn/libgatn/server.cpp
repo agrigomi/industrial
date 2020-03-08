@@ -118,11 +118,11 @@ void server::destroy(void) {
 
 	destroy(&host); // destroy default host
 
-	_gpi_repo_->object_release(mpi_vhost_map, false);
+	_gpi_repo_->object_release(mpi_vhost_map);
 	_gpi_repo_->object_release(mpi_heap);
 	_gpi_repo_->object_release(mpi_log);
-	_gpi_repo_->object_release(mpi_bmap, false);
-	_gpi_repo_->object_release(mpi_pool, false);
+	_gpi_repo_->object_release(mpi_bmap);
+	_gpi_repo_->object_release(mpi_pool);
 }
 
 void server::destroy(_vhost_t *pvhost) {
@@ -264,7 +264,7 @@ bool server::start(_vhost_t *pvhost) {
 void server::stop(void) {
 	if(mpi_server) {
 		mpi_log->fwrite(LMT_INFO, "Gatn: Stop server '%s'", m_name);
-		_gpi_repo_->object_release(mpi_server, false);
+		_gpi_repo_->object_release(mpi_server);
 		mpi_server = NULL;
 	}
 

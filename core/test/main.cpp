@@ -15,6 +15,7 @@
 #include "iGatn.h"
 #include "tVector.h"
 #include "tMap.h"
+#include "tString.h"
 
 IMPLEMENT_BASE_ARRAY("core_test", 1024);
 
@@ -53,6 +54,12 @@ _err_t main(int argc, char *argv[]) {
 			}
 			printf("[%c] %s\n", pref, msg);
 		});
+
+		tString str = "alabala";
+
+		str += "append to string";
+
+		tString s = str;
 
 		//pi_repo->extension_dir("./bin/deploy/unix-x86_64-debug");
 		pi_repo->extension_dir(getenv("LD_LIBRARY_PATH"));
@@ -298,21 +305,12 @@ public:
 				iRepository *pi_repo = (iRepository*)arg;
 				if((mpi_log = (iLog*)pi_repo->object_by_iname(I_LOG, RF_ORIGINAL)))
 					mpi_log->write(LMT_INFO, "init cTest");
-				pi_repo->monitoring_add(0, "iObj1", 0, this);
-				pi_repo->monitoring_add(0, I_FS, 0, this);
 				break;
 			}
 
 			case OCTL_UNINIT:
 				break;
 
-			case OCTL_NOTIFY: {
-				_notification_t *pn = (_notification_t *)arg;
-				mpi_log->fwrite(LMT_INFO, "catch notification flags=0x%02x; object=0x%x", pn->flags, pn->object);
-				if(pn->flags & NF_REMOVE)
-					_gpi_repo_->object_release(pn->object);
-				break;
-			}
 		}
 		return true;
 	}

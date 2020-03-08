@@ -31,7 +31,7 @@ private:
 
 		mpi_list->unlock(hm);
 
-		_gpi_repo_->object_release(mpi_list, false);
+		_gpi_repo_->object_release(mpi_list);
 	}
 
 	void _clear(HMUTEX hlock=0) {

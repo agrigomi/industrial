@@ -14,10 +14,10 @@ IMPLEMENT_BASE_ARRAY("command_example", 100);
 static iStdIO *gpi_stdio = 0;
 
 static _cstr_t extensions[] = {
-	"extcmd.so",
 	"extsync.so",
 	"extfs.so",
 	"extht.so",
+	"extcmd.so",
 	0
 };
 

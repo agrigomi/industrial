@@ -66,7 +66,7 @@ bool root::init(_cstr_t doc_root, _cstr_t cache_path,
 
 void root::object_release(iBase **ppi) {
 	if(*ppi) {
-		_gpi_repo_->object_release(*ppi, false);
+		_gpi_repo_->object_release(*ppi);
 		*ppi = NULL;
 	}
 }

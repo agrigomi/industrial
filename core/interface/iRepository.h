@@ -50,8 +50,6 @@ typedef struct {
  * Object handle (pointer to _base_entry_t structure) */
 typedef _base_entry_t* HOBJECT;
 
-typedef void* HNOTIFY; // deprecated
-
 /**
  * @brief Prototype of enumeration callback.
  * @param[in] file - File name of a extension (shared library)
@@ -63,10 +61,6 @@ typedef void* HNOTIFY; // deprecated
  */
 typedef void _cb_enum_ext_t(_cstr_t file, _cstr_t alias, _base_entry_t *p_bentry, _u32 count, _u32 limit, void *udata);
 
-// deprecated
-#define SCAN_ORIGINAL	1
-#define SCAN_CLONE	2
-
 // notification flags
 #define NF_LOAD		(1<<0)
 #define NF_INIT		(1<<1)
@@ -75,13 +69,6 @@ typedef void _cb_enum_ext_t(_cstr_t file, _cstr_t alias, _base_entry_t *p_bentry
 #define NF_UNINIT	(1<<4)
 #define NF_REMOVE	(1<<5)
 #define NF_UNLOAD	(1<<6)
-
-// deprecated
-typedef struct {
-	_u32	flags;
-	HOBJECT	hobj;
-	iBase	*object;
-}_notification_t;
 
 /**
  * Interface of a 'repository' component.
@@ -92,8 +79,21 @@ typedef struct {
 class iRepository: public iBase {
 public:
 	INTERFACE(iRepository, I_REPOSITORY);
+	/**
+	 * Retrieve iBase pointer by _object_request_t structure.
+	 *
+	 * This function can return NULL, if object not found or flags does not matched.
+	 * @param[in] request - Pointer to _object_request_t structure, that contains request information.
+	 * @param[in] flags - Repository flags (RF_ORIGINAL, RF_CLONE or both).
+	 * @return iBase pointer or null.
+	 */
 	virtual iBase *object_request(_object_request_t *, _rf_t)=0;
-	virtual void   object_release(iBase *, bool notify=true)=0;
+	/**
+	 * Release iBase pointer.
+	 * @param[in] ptr - Pointer to iBase
+	 * @param[in] notify - Deprecated
+	 */
+	virtual void   object_release(iBase *)=0;
 	virtual iBase *object_by_cname(_cstr_t cname, _rf_t)=0;
 	virtual iBase *object_by_iname(_cstr_t iname, _rf_t)=0;
 	virtual iBase *object_by_handle(HOBJECT, _rf_t)=0;
@@ -102,15 +102,6 @@ public:
 	virtual bool object_info(HOBJECT h, _object_info_t *poi)=0;
 
 	virtual void init_array(_base_entry_t *array, _u32 count)=0;
-
-	// notifications !! deprecated
-	virtual HNOTIFY monitoring_add(iBase *mon_obj, // monitored object
-					_cstr_t mon_iname, // monitored interface
-					_cstr_t mon_cname, // monitored object name
-					iBase *handler_obj,// notifications receiver
-					_u8 scan_flags=0 // scan for already registered objects
-					)=0;
-	virtual void monitoring_remove(HNOTIFY)=0;
 
 	// extensions
 	virtual void extension_dir(_cstr_t dir)=0;

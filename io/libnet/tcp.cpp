@@ -69,7 +69,7 @@ bool cTCPServer::object_ctl(_u32 cmd, void *arg, ...) {
 		case OCTL_UNINIT: {
 			_close();
 			iRepository *pi_repo = (iRepository *)arg;
-			pi_repo->object_release(mpi_heap, false);
+			pi_repo->object_release(mpi_heap);
 			r = true;
 		} break;
 	}
@@ -96,7 +96,7 @@ iSocketIO *cTCPServer::listen(void) {
 					r = psio;
 				else
 					/* we assume that socket I/O object should close socket handle */
-					_gpi_repo_->object_release(psio, false);
+					_gpi_repo_->object_release(psio);
 			} else
 				::close(connect_socket);
 		}
@@ -120,7 +120,7 @@ void cTCPServer::close(iSocketIO *p_io) {
 
 	if(pcsio) {
 		pcsio->_close();
-		_gpi_repo_->object_release(p_io, false);
+		_gpi_repo_->object_release(p_io);
 	}
 }
 

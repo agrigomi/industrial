@@ -26,7 +26,6 @@ private:
 	iMutex *mpi_mutex;
 	iLlist *mpi_list;
 	iLog *mpi_log;
-	HNOTIFY mhn_net, mhn_cmd_host;
 	volatile bool m_running, m_stopped;
 	_u32 m_port;
 	iTCPServer *mpi_server;
@@ -177,7 +176,7 @@ public:
 					}
 
 					mpi_mutex->unlock(hm);
-					usleep(10000);
+					usleep(100000);
 				}
 
 				r = m_stopped = true;

@@ -175,11 +175,11 @@ bool cHttpServer::object_ctl(_u32 cmd, void *arg, ...) {
 
 			remove_all_connections();
 			_close();
-			pi_repo->object_release(p_tcps, false);
+			pi_repo->object_release(p_tcps);
 			pi_repo->object_release(mpi_log);
-			pi_repo->object_release(mpi_bmap, false);
+			pi_repo->object_release(mpi_bmap);
 			pi_repo->object_release(mpi_tmaker);
-			pi_repo->object_release(mpi_list, false);
+			pi_repo->object_release(mpi_list);
 			p_tcps = 0;
 			r = true;
 		} break;
@@ -335,7 +335,7 @@ void cHttpServer::clear_column(_u8 col, HMUTEX hlock) {
 		if(rec->p_httpc) {
 			if(col == CBUSY || col == CPENDING)
 				call_event_handler(HTTP_ON_CLOSE, rec->p_httpc);
-			_gpi_repo_->object_release(rec->p_httpc, false);
+			_gpi_repo_->object_release(rec->p_httpc);
 		}
 		mpi_list->del(hlock);
 	}

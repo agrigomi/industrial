@@ -36,16 +36,16 @@ void vhost::destroy(void) {
 	root.destroy();
 
 	if(pi_mutex) {
-		_gpi_repo_->object_release(pi_mutex, false);
+		_gpi_repo_->object_release(pi_mutex);
 		pi_mutex = NULL;
 	}
 	if(pi_route_map) {
-		_gpi_repo_->object_release(pi_route_map, false);
+		_gpi_repo_->object_release(pi_route_map);
 		pi_route_map = NULL;
 	}
 
 	if(pi_class_map) {
-		_gpi_repo_->object_release(pi_class_map, false);
+		_gpi_repo_->object_release(pi_class_map);
 		pi_class_map = NULL;
 	}
 
@@ -192,7 +192,7 @@ void vhost::remove_extensions(void) {
 				pclass->active = false;
 			}
 
-			_gpi_repo_->object_release(pclass->pi_ext, false);
+			_gpi_repo_->object_release(pclass->pi_ext);
 			pclass->pi_ext = NULL;
 			if(pclass->options) {
 				pvhost->pi_heap->free(pclass->options, pclass->sz_options);
@@ -313,11 +313,11 @@ bool vhost::attach_class(_cstr_t cname, _cstr_t options) {
 
 							pclass->active = r = pclass->pi_ext->attach(pi_server, host);
 						} else
-							_gpi_repo_->object_release(tmp.pi_ext, false);
+							_gpi_repo_->object_release(tmp.pi_ext);
 					}
 				} else {
 					pi_log->fwrite(LMT_ERROR, "Gatn: Unable to attach class '%s'", cname);
-					_gpi_repo_->object_release(pi_base, false);
+					_gpi_repo_->object_release(pi_base);
 				}
 			} else
 				pi_log->fwrite(LMT_ERROR, "Gatn: Unable to clone class '%s'", cname);
@@ -376,7 +376,7 @@ bool vhost::detach_class(_cstr_t cname, bool remove) {
 					if(memcmp(_event, event, sizeof(event)) != 0)
 						reset = true;
 
-					_gpi_repo_->object_release(pclass->pi_ext, false);
+					_gpi_repo_->object_release(pclass->pi_ext);
 					pclass->pi_ext = NULL;
 				}
 

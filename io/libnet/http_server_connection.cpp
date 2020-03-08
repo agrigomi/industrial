@@ -114,7 +114,7 @@ bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 
 			close();
 			pi_repo->object_release(gpi_str);
-			pi_repo->object_release(mpi_map, false);
+			pi_repo->object_release(mpi_map);
 			r = true;
 		} break;
 	}

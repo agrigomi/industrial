@@ -39,7 +39,7 @@ public:
 
 	void destroy(void) {
 		if(m_is_init) {
-			_gpi_repo_->object_release(mpi_map, false);
+			_gpi_repo_->object_release(mpi_map);
 			mpi_map = NULL;
 			m_is_init = false;
 		}

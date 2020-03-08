@@ -347,7 +347,7 @@ private:
 			lm_pre_uninit(pi_base, [](iBase *pi_base, void *udata) { // release object
 				cRepository *p_repo = (cRepository *)udata;
 
-				p_repo->object_release(pi_base, false);
+				p_repo->object_release(pi_base);
 			},[](const _link_info_t *p_link_info, iBase *pi_user, void *udata) { // remove user
 				typedef struct {
 					const _link_info_t *p_link_info;
@@ -385,7 +385,7 @@ private:
 				lm_uninit(pi_base, [](iBase *pi_base, void *udata) {
 					cRepository *p_repo = (cRepository *)udata;
 
-					p_repo->object_release(pi_base, false);
+					p_repo->object_release(pi_base);
 				}, this);
 
 				ms_pending.erase(pi_base);
@@ -412,7 +412,7 @@ private:
 				_u32 lmr = lm_remove(pi_base, pe->p_bentry, [](iBase *pi_base, void *udata) {
 					cRepository *p_repo = (cRepository *)udata;
 
-					p_repo->object_release(pi_base, false);
+					p_repo->object_release(pi_base);
 				}, pe->p_repo);
 
 				if(lmr & PLMR_UNINIT)
@@ -465,7 +465,7 @@ public:
 		return r;
 	}
 
-	void object_release(iBase *pi_base, bool notify=true) {
+	void object_release(iBase *pi_base) {
 		if(pi_base) {
 			_base_entry_t *p_bentry = find_object_entry(pi_base);
 			bool unref = true;
@@ -555,24 +555,6 @@ public:
 	void init_array(_base_entry_t *array, _u32 count) {
 		add_base_array(array, count);
 		init_base_array(array, count);
-	}
-
-	// notifications
-	HNOTIFY monitoring_add(iBase *mon_obj, // monitored object
-				_cstr_t mon_iname, // monitored interface
-				_cstr_t mon_cname, // monitored object name
-				iBase *handler_obj,// notifications receiver
-				_u8 scan_flags=0 // scan for already registered objects
-				) {
-		HNOTIFY r = NULL;
-
-		//...
-
-		return r;
-	}
-
-	void monitoring_remove(HNOTIFY) {
-		//...
 	}
 
 	// extensions
