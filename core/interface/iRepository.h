@@ -61,15 +61,6 @@ typedef _base_entry_t* HOBJECT;
  */
 typedef void _cb_enum_ext_t(_cstr_t file, _cstr_t alias, _base_entry_t *p_bentry, _u32 count, _u32 limit, void *udata);
 
-// notification flags
-#define NF_LOAD		(1<<0)
-#define NF_INIT		(1<<1)
-#define NF_START	(1<<2)
-#define NF_STOP		(1<<3)
-#define NF_UNINIT	(1<<4)
-#define NF_REMOVE	(1<<5)
-#define NF_UNLOAD	(1<<6)
-
 /**
  * Interface of a 'repository' component.
  *
@@ -91,13 +82,47 @@ public:
 	/**
 	 * Release iBase pointer.
 	 * @param[in] ptr - Pointer to iBase
-	 * @param[in] notify - Deprecated
 	 */
 	virtual void   object_release(iBase *)=0;
+	/**
+	 * Retrieve iBase pointer by class name.
+	 *
+	 * This function can return NULL, if component not found or flags does not matched.
+	 * @param[in] cname - const pointer to class name (const char *)
+	 * @param[in] flags - Repository flags (RF_ORIGINAL, RF_CLONE or both).
+	 */
 	virtual iBase *object_by_cname(_cstr_t cname, _rf_t)=0;
+	/**
+	 * Retrieve iBase pointer by interface name.
+	 *
+	 * This function can return NULL, if component not found or flags does not matched.
+	 * @param[in] iname - const pointer to interface name (const char *)
+	 * @param[in] flags - Repository flags (RF_ORIGINAL, RF_CLONE or both).
+	 */
 	virtual iBase *object_by_iname(_cstr_t iname, _rf_t)=0;
+	/**
+	 * Retrieve iBase pointer by handle (HOBJECT).
+	 *
+	 * This function can return NULL, if flags does not matched.
+	 * @param[in] handle - HOBJECT retrieved by handle_by_cname or handle_by_iname
+	 * @param[in] flags - Repository flags (RF_ORIGINAL, RF_CLONE or both).
+	 */
 	virtual iBase *object_by_handle(HOBJECT, _rf_t)=0;
+	/**
+	 * Return HOBJECT by interface name.
+	 *
+	 * This function can return NULL, if component not found.
+	 * @param[in] iname Const pointer to interface name (const char *)
+	 * @return HOBJECT
+	 */
 	virtual HOBJECT handle_by_iname(_cstr_t iname)=0;
+	/**
+	 * Return HOBJECT by class name.
+	 *
+	 * This function can return NULL, if component not found.
+	 * @param[in] cname Const pointer to class name (const char *)
+	 * @return HOBJECT
+	 */
 	virtual HOBJECT handle_by_cname(_cstr_t cname)=0;
 	virtual bool object_info(HOBJECT h, _object_info_t *poi)=0;
 
