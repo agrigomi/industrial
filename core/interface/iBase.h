@@ -140,8 +140,6 @@ typedef void _info_ctl_t(_u32, _object_info_t *, void *);
 
 /**
  * This structure describes all needed information for postlink processing.
- *
- * 
  */
 struct link_info {
 	iBase		**ppi_base; //!< Place for pointer to iBase object
