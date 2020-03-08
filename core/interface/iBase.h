@@ -92,7 +92,21 @@ public:
 		*cnt = 0;
 		return 0;
 	}
+	/**
+	 * Access to object information.
+	 * @param pi [out] Pointer to _object_info_t structure.
+	 */
 	virtual void object_info(_object_info_t *pi)=0;
+	/**
+	 * Object controll.
+	 *
+	 * The repository uses this function to initialize object with cmd = OCTL_INIT,
+	 *  destroy with cmd = OCTL_UNINIT,
+	 *  start task with cmd = OCTL_START and stop task with cmd = OCTL_STOP.
+	 * @param cmd Command number.
+	 * @param arg Pointer to first argument.
+	 * @return true/false
+	 */
 	virtual bool object_ctl(_u32 cmd, void *arg, ...)=0;
 };
 
