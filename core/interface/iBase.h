@@ -61,8 +61,7 @@ typedef _u8 	_rf_t;
 /**
  * Object properties.
  *
- * This structure is used to represents the object parameters.
- */
+ * This structure is used to represents the object parameters.  */
 typedef struct {
 	_cstr_t		iname;   //!< interface name
 	_cstr_t		cname;   //!< class name
@@ -77,37 +76,33 @@ typedef struct link_info _link_info_t;
  * Base interface for all components.
  *
  * Every component must inherit by this interface.
- * This is a virtual base class that contains a several simple methods.
- */
+ * This is a virtual base class that contains a several simple methods.  */
 class iBase {
 public:
 	INTERFACE(iBase, I_BASE);
-	/**
-	 * Returns pointer to link map.
-	 *
-	 * @param[out] cnt  In this parameter, function returns
-	 *                   the number of _link_info_t structures.
-	 * @return Ponter to link map (array of _link_info_t structures)
-	 */
+/**
+ * Returns pointer to link map.
+ *
+ * @param[out] cnt  In this parameter, function returns
+ *                   the number of _link_info_t structures.
+ * @return Ponter to link map (array of _link_info_t structures)  */
 	virtual const _link_info_t *object_link(_u32 *cnt) {
 		*cnt = 0;
 		return 0;
 	}
-	/**
-	 * Access to object information.
-	 * @param[out] pi Pointer to _object_info_t structure.
-	 */
+/**
+ * Access to object information.
+ * @param[out] pi Pointer to _object_info_t structure.  */
 	virtual void object_info(_object_info_t *pi)=0;
-	/**
-	 * Object controll.
-	 *
-	 * The repository uses this function to initialize object with cmd = OCTL_INIT,
-	 *  destroy with cmd = OCTL_UNINIT,
-	 *  start task with cmd = OCTL_START and stop task with cmd = OCTL_STOP.
-	 * @param[in] cmd Command number.
-	 * @param[in] arg Pointer to first argument.
-	 * @return true/false
-	 */
+/**
+ * Object controll.
+ *
+ * The repository uses this function to initialize object with cmd = OCTL_INIT,
+ *  destroy with cmd = OCTL_UNINIT,
+ *  start task with cmd = OCTL_START and stop task with cmd = OCTL_STOP.
+ * @param[in] cmd Command number.
+ * @param[in] arg Pointer to first argument.
+ * @return true/false  */
 	virtual bool object_ctl(_u32 cmd, void *arg, ...)=0;
 };
 
@@ -127,20 +122,17 @@ public:
 /**
  * @brief Prototype of reference controll procedure.
  * @param[in] cmd Command number (RCTL_REF or RCTL_UNRED)
- * @param[in] udata Pointer to user data.
- */
+ * @param[in] udata Pointer to user data.  */
 typedef void _ref_ctl_t(_u32, void *);
 /**
  * @brief Prototype of information controll procedure.
  * @param[in] cmd Command number (RCTL_LOAD or RCTL_UNLOAD)
  * @param[in] _object_info_t*  Pointer to object information structure.
- * @param[in] udata Pointer to user data.
- */
+ * @param[in] udata Pointer to user data.  */
 typedef void _info_ctl_t(_u32, _object_info_t *, void *);
 
 /**
- * This structure describes all needed information for postlink processing.
- */
+ * This structure describes all needed information for postlink processing.  */
 struct link_info {
 	iBase		**ppi_base; //!< Place for pointer to iBase object
 	_cstr_t 	iname; //!< Pointer to interface name (const char *)
