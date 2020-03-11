@@ -51,7 +51,7 @@ typedef _u8 	_rf_t;
 #define RF_CLONE     	(1<<0)
 #define RF_ORIGINAL  	(1<<1)
 #define RF_TASK      	(1<<2)
-#define RF_NONOTIFY  	(1<<3)
+#define RF_NONOTIFY  	(1<<3) // deprecated
 #define RF_NOCRITICAL	(1<<4)
 #define RF_KEEP_PENDING	(1<<5)
 #define RF_POST_INIT	(1<<6)
@@ -132,15 +132,36 @@ typedef void _ref_ctl_t(_u32, void *);
 typedef void _info_ctl_t(_u32, _object_info_t *, void *);
 
 /**
- * This structure describes all needed information for postlink processing.  */
+ * This structure describes all necessary information for postlink processing.  */
 struct link_info {
-	iBase		**ppi_base; //!< Place for pointer to iBase object
-	_cstr_t 	iname; //!< Pointer to interface name (const char *)
-	_cstr_t		cname; //!< Pointer to class name (const char *)
-	_rf_t		flags; //!< Repository flags
-	_ref_ctl_t	*p_ref_ctl; //!< Pointer to the reference control procedure.
-	_info_ctl_t	*p_info_ctl; //!< Pointer to the information control procedure.
-	void		*udata; //!< Pointer to user data that will be passed to the control procedures.
+/**
+ * Place for pointer to iBase object */
+       iBase		**ppi_base;
+/**
+ * Pointer to interface name or NULL (const char *) */
+       _cstr_t 		iname;
+/**
+ * Pointer to class name  or NULL (const char *) */
+       _cstr_t		cname;
+/**
+ * Repository flags. Can be a combination of following:\n
+ * RF_ORIGINAL -  *ppi_base is a pointer to original object.\n
+ * RF_CLONE -  *ppi_base is a cloning.\n
+ * RF_NOCRITICAL - *ppi_base is non critical for a functionality of a container object.\n
+ * RF_KEEP_PENDING - Keep this structure in pending queue, and wait for another objects.\n
+ * RF_POST_INIT - If this flag is set, p_ref_ctl will be invoked after initialization of\n
+ *	       the container.\n
+ * RF_PLUGIN - This flag is a combination: RF_NOCRITICAL | RF_KEEP_PENDING | RF_POST_INIT */
+       _rf_t		flags;
+/**
+ * Pointer to the reference control procedure. */
+       _ref_ctl_t	*p_ref_ctl;
+/**
+ * Pointer to the information control procedure. */
+       _info_ctl_t	*p_info_ctl;
+/**
+ * Pointer to user data that will be passed to the control procedures. */
+	void		*udata;
 };
 
 #define CONSTRUCTOR(_class_) \
