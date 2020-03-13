@@ -149,15 +149,19 @@ struct link_info {
  * RF_CLONE -  *ppi_base is a cloning.\n
  * RF_NOCRITICAL - *ppi_base is non critical for a functionality of a container object.\n
  * RF_KEEP_PENDING - Keep this structure in pending queue, and wait for another objects.\n
- * RF_POST_INIT - If this flag is set, p_ref_ctl will be invoked after initialization of\n
- *	       the container.\n
+ * RF_POST_INIT - If this flag is set, p_ref_ctl or p_info_ctl will be invoked after\n
+ *		  initialization of the container.\n
  * RF_PLUGIN - This flag is a combination: RF_NOCRITICAL | RF_KEEP_PENDING | RF_POST_INIT */
        _rf_t		flags;
 /**
- * Pointer to the reference control procedure. */
+ * Pointer to the reference control procedure.\n
+ * void _ref_ctl_t(_u32, void *)\n
+ * */
        _ref_ctl_t	*p_ref_ctl;
 /**
- * Pointer to the information control procedure. */
+ * Pointer to the information control procedure.\n
+ * void _info_ctl_t(_u32, _object_info_t *, void *)\n
+ *  */
        _info_ctl_t	*p_info_ctl;
 /**
  * Pointer to user data that will be passed to the control procedures. */
