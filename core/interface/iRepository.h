@@ -34,11 +34,11 @@ typedef struct {
  * Used to search for objects in arrays of _base_entry_t structures.
  */
 typedef struct {
-	_u8 		flags;     /*!< @brief Flags for searching.
-				    *	This field can be combination of:
-				    *	RQ_NAME - search for classname (cname),
-				    *	RQ_INTERFACE - search for interface name (iname),
-				    *	RQ_VERSION - search for spec. version,
+	_u8 		flags;     /*!< @brief Flags for searching.\n
+				    *	This field can be combination of:\n
+				    *	RQ_NAME - search for classname (cname)\n
+				    *	RQ_INTERFACE - search for interface name (iname)\n
+				    *	RQ_VERSION - search for spec. version
 				    */
 	_cstr_t		cname;     //!< Const pointer to class name (const char *)
 	_cstr_t		iname;     //!< Const pointer to  interface name (const char *)
@@ -151,6 +151,15 @@ public:
  *
  * @return Full or relative path as const pointer to null terminated string.  */
 	virtual _cstr_t extension_dir(void)=0;
+/**
+ * Load extension.
+ *
+ * @param[in] file - Extension file name.
+ * @param[in] alias - Alias name for the extension.
+ *			If this parameter is not set (null),
+ *			alias will be equal to file name
+ * @return ERR_NONE for sucess, otherwise, ERR_MISSING for missing file or
+ * ERR_DUPLICATED for already loaded extension or ERR_LOADEXT for other mistakes. */
 	virtual _err_t extension_load(_cstr_t file, _cstr_t alias=0)=0;
 	virtual _err_t extension_unload(_cstr_t alias)=0;
 	virtual void extension_enum(_cb_enum_ext_t *pcb, void *udata)=0;
