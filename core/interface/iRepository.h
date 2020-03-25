@@ -22,11 +22,11 @@ typedef struct {
 }_base_entry_t;
 
 // object request flags
-#define RQ_NAME		(1<<0)
-#define RQ_INTERFACE	(1<<1)
-#define RQ_VERSION	(1<<2)
+#define RQ_NAME		(1<<0) /*!< Class name */
+#define RQ_INTERFACE	(1<<1) /*!< Interface name */
+#define RQ_VERSION	(1<<2) /*!< Class version */
 // deprecated
-#define RQ_CMP_OR	(1<<7) // comparsion type OR (AND is by default)
+#define RQ_CMP_OR	(1<<7) /*!< comparsion type OR (AND is by default) */
 
 /**
  * Helper structure.
@@ -161,7 +161,18 @@ public:
  * @return ERR_NONE for sucess, otherwise, ERR_MISSING for missing file or
  * ERR_DUPLICATED for already loaded extension or ERR_LOADEXT for other mistakes. */
 	virtual _err_t extension_load(_cstr_t file, _cstr_t alias=0)=0;
+/**
+ * Unload extension
+ *
+ * @param[in] alias - Aloas name of loaded extension
+ * @return ERR_NONE for success or ERR_MISSING when extension can not be found */
 	virtual _err_t extension_unload(_cstr_t alias)=0;
+/**
+ * Enumeration of loaded extensions.
+ *
+ * @param[in] pcb - Pointer to enumeration callback.\n
+ * void _cb_enum_ext_t(_cstr_t file, _cstr_t alias, _base_entry_t *p_bentry, _u32 count, _u32 limit, void *udata)
+ * @param[in] udata - User data that will be passed to callback. */
 	virtual void extension_enum(_cb_enum_ext_t *pcb, void *udata)=0;
 	virtual void destroy(void)=0;
 };
