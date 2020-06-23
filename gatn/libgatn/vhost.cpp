@@ -441,6 +441,14 @@ _s32 vhost::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	return r;
 }
 
+void vhost::send_content(iHttpServerConnection *p_httpc, _u8 *p_doc, _ulong sz_doc) {
+	// response header
+	p_httpc->res_content_len(sz_doc);
+	p_httpc->res_code(HTTPRC_OK);
+	// response content
+	p_httpc->res_write(p_doc, sz_doc);
+}
+
 void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_lock();
 
@@ -487,11 +495,7 @@ void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 
 							_u8 *ptr = (_u8 *)root.ptr(hdoc, &doc_sz);
 							if(ptr) {
-								// response header
-								p_httpc->res_content_len(doc_sz);
-								p_httpc->res_code(HTTPRC_OK);
-								// response content
-								p_httpc->res_write(ptr, doc_sz);
+								send_content(p_httpc, ptr, doc_sz);
 								pc->hdoc = hdoc;
 							} else {
 								p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
