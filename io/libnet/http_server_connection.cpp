@@ -98,14 +98,17 @@ bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_ibuffer = m_oheader = m_obuffer = 0;
 			if(!gpi_str)
 				gpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
-			if(g_hmap)
-				mpi_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
-			else {
-				if((g_hmap = pi_repo->handle_by_iname(I_MAP)))
-					mpi_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
+			if(g_hmap) {
+				mpi_req_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
+				mpi_res_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
+			} else {
+				if((g_hmap = pi_repo->handle_by_iname(I_MAP))) {
+					mpi_req_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
+					mpi_res_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
+				}
 			}
-			if(gpi_str && mpi_map) {
-				r = mpi_map->init(31);
+			if(gpi_str && mpi_req_map) {
+				r = mpi_req_map->init(31);
 				clean_members();
 			}
 		} break;
@@ -114,7 +117,8 @@ bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 
 			close();
 			pi_repo->object_release(gpi_str);
-			pi_repo->object_release(mpi_map);
+			pi_repo->object_release(mpi_req_map);
+			pi_repo->object_release(mpi_res_map);
 			r = true;
 		} break;
 	}
@@ -138,7 +142,8 @@ void cHttpServerConnection::clean_members(void) {
 	m_req_data = false;
 	m_stime = time(NULL);
 	strncpy(m_res_protocol, "HTTP/1.1", sizeof(m_res_protocol)-1);
-	mpi_map->clr();
+	mpi_req_map->clr();
+	mpi_res_map->clr();
 }
 
 bool cHttpServerConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap, _u32 timeout) {
@@ -271,7 +276,7 @@ bool cHttpServerConnection::complete_req_header(void) {
 bool cHttpServerConnection::add_req_variable(_cstr_t name, _cstr_t value, _u32 sz_value) {
 	bool r = false;
 
-	if(mpi_map->add(name, gpi_str->str_len(name),
+	if(mpi_req_map->add(name, gpi_str->str_len(name),
 			value,
 			(sz_value) ? sz_value : gpi_str->str_len(value)))
 		r = true;
@@ -316,7 +321,7 @@ _u32 cHttpServerConnection::parse_url(_str_t url, _u32 sz_max) {
 						break;
 					case '&': // end of variable
 						if(name && sz_name && value && sz_value)
-							mpi_map->add(name, sz_name, value, sz_value);
+							mpi_req_map->add(name, sz_name, value, sz_value);
 						name = value = NULL;
 						sz_name = sz_value = 0;
 						break;
@@ -334,7 +339,7 @@ _u32 cHttpServerConnection::parse_url(_str_t url, _u32 sz_max) {
 			}
 
 			if(name && sz_name && value && sz_value)
-				mpi_map->add(name, sz_name, value, sz_value);
+				mpi_req_map->add(name, sz_name, value, sz_value);
 		}
 
 		mpi_bmap->free(hburl);
@@ -438,7 +443,7 @@ _u32 cHttpServerConnection::parse_var_line(_str_t var, _u32 sz_max) {
 
 	if(fld[0] && fld_sz[0] && fld[1] && fld_sz[1] &&
 			fld_sz[0] < sz_max && fld_sz[1] < sz_max)
-		mpi_map->add(fld[0], fld_sz[0], fld[1], fld_sz[1]);
+		mpi_req_map->add(fld[0], fld_sz[0], fld[1], fld_sz[1]);
 
 	return r;
 }
@@ -505,7 +510,7 @@ bool cHttpServerConnection::req_parse_content(void) {
 						break;
 					case '&':
 						if(name && sz_name && value && sz_value)
-							mpi_map->add(name, sz_name, value, sz_value);
+							mpi_req_map->add(name, sz_name, value, sz_value);
 						name = value = NULL;
 						sz_name = sz_value = 0;
 						break;
@@ -523,7 +528,7 @@ bool cHttpServerConnection::req_parse_content(void) {
 			}
 
 			if(name && sz_name && value && sz_value)
-				mpi_map->add(name, sz_name, value, sz_value);
+				mpi_req_map->add(name, sz_name, value, sz_value);
 
 			mpi_bmap->free(hbcontent);
 			r = true;
@@ -794,7 +799,7 @@ _cstr_t cHttpServerConnection::req_urn(void) {
 _cstr_t cHttpServerConnection::req_var(_cstr_t name) {
 	_u32 sz = 0;
 	_str_t vn = (_str_t)name;
-	return (_str_t)mpi_map->get(vn, strlen(vn), &sz);
+	return (_str_t)mpi_req_map->get(vn, strlen(vn), &sz);
 }
 
 _u8 *cHttpServerConnection::req_data(_u32 *size) {
