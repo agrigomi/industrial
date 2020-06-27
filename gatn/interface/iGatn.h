@@ -44,11 +44,6 @@ typedef struct {
 #define RNDR_SET_MTIME		(1<<3) // auto set modify time if RNDR_DONE is set
 #define RNDR_USE_DOCROOT	(1<<4) // use documents root
 	virtual bool render(_cstr_t fname, _u8 flags=RNDR_DONE|RNDR_CACHE|RNDR_RESOLVE_MT|RNDR_SET_MTIME|RNDR_USE_DOCROOT)=0;
-
-#define CF_SECURE		(1<<0)
-#define CF_HTTP_ONLY		(1<<1)
-#define CF_SAMESITE_STRICT	(1<<2)
-#define CF_SAMESITE_LAX		(1<<3)
 	virtual void cookie(_cstr_t name,
 			_cstr_t value,
 			_u8 flags=0,

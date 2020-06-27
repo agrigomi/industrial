@@ -487,7 +487,7 @@ void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 					HDOCUMENT hdoc = root.open(url);
 
 					if(hdoc) {
-						p_httpc->res_var("Content-Type", root.mime(hdoc));
+						p_httpc->res_content_type(root.mime(hdoc));
 						p_httpc->res_mtime(root.mtime(hdoc));
 
 						if(method == HTTP_METHOD_GET || method == HTTP_METHOD_POST) {
