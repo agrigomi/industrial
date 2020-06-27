@@ -134,8 +134,25 @@ public:
 	virtual void res_protocol(_cstr_t protocol)=0;
 	// set Content-Length variable
 	virtual bool res_content_len(_u32 content_len)=0;
+	// Set content type
+	virtual void res_content_type(_cstr_t ctype)=0;
+	// Set document content
+	virtual void res_content(void *p_doc, _ulong sz_doc)=0;
 	// return content len of response
 	virtual _u32 res_content_len(void)=0;
+	// Set response cookie
+
+#define CF_SECURE		(1<<0)
+#define CF_HTTP_ONLY		(1<<1)
+#define CF_SAMESITE_STRICT	(1<<2)
+#define CF_SAMESITE_LAX		(1<<3)
+	virtual void res_cookie(_cstr_t name,
+			_cstr_t value,
+			_u8 flags=0,
+			_cstr_t expires=NULL,
+			_cstr_t max_age=NULL,
+			_cstr_t path=NULL,
+			_cstr_t domain=NULL)=0;
 	// return nimber of sent bytes for response content
 	virtual _u32 res_content_sent(void)=0;
 	// set last modify time in response header

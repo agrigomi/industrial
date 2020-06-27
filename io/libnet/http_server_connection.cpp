@@ -84,6 +84,7 @@ static _http_method_map _g_method_map[] = {
 
 static iStr *gpi_str = 0;
 static HOBJECT g_hmap = 0;
+static HOBJECT g_hlist = 0;
 
 bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 	bool r = false;
@@ -98,17 +99,21 @@ bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_ibuffer = m_oheader = m_obuffer = 0;
 			if(!gpi_str)
 				gpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
-			if(g_hmap) {
+			if(g_hmap)
 				mpi_req_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
-				mpi_res_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
-			} else {
+			else {
 				if((g_hmap = pi_repo->handle_by_iname(I_MAP))) {
 					mpi_req_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
-					mpi_res_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
 				}
 			}
-			if(gpi_str && mpi_req_map) {
+			if(!g_hlist)
+				g_hlist = pi_repo->handle_by_iname(I_LLIST);
+			if(g_hlist)
+				mpi_cookie_list = (iLlist *)pi_repo->object_by_handle(g_hlist, RF_CLONE | RF_NONOTIFY);
+
+			if(gpi_str && mpi_req_map && mpi_cookie_list) {
 				r = mpi_req_map->init(31);
+				r &= mpi_cookie_list->init(LL_VECTOR, 1);
 				clean_members();
 			}
 		} break;
@@ -118,7 +123,7 @@ bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			close();
 			pi_repo->object_release(gpi_str);
 			pi_repo->object_release(mpi_req_map);
-			pi_repo->object_release(mpi_res_map);
+			pi_repo->object_release(mpi_cookie_list);
 			r = true;
 		} break;
 	}
@@ -139,11 +144,13 @@ void cHttpServerConnection::clean_members(void) {
 	m_obuffer_sent = 0;
 	m_content_sent = 0;
 	m_header_len = 0;
+	m_content_type = 0;
+	mp_doc = 0;
 	m_req_data = false;
 	m_stime = time(NULL);
 	strncpy(m_res_protocol, "HTTP/1.1", sizeof(m_res_protocol)-1);
 	mpi_req_map->clr();
-	mpi_res_map->clr();
+	mpi_cookie_list->clr();
 }
 
 bool cHttpServerConnection::_init(cSocketIO *p_sio, iBufferMap *pi_bmap, _u32 timeout) {
@@ -565,6 +572,31 @@ _u32 cHttpServerConnection::send_header(void) {
 	_char_t rs[128]="";
 
 	if(m_response_code) {
+		// Add content type to response header
+		if(m_content_type)
+			res_var("Content-Type", m_content_type);
+
+		// Add content length to response header
+		if(m_res_content_len) {
+			_char_t cl[32]="";
+
+			sprintf(cl, "%u", m_res_content_len);
+			res_var("Content-Length", cl);
+		}
+
+		// Add cookies to response header
+		if(mpi_cookie_list->cnt()) {
+			_u32 sz = 0;
+			_cstr_t cookie = (_cstr_t)mpi_cookie_list->first(&sz);
+
+			while(cookie) {
+				res_var("Set-Cookie", cookie);
+				cookie = (_cstr_t)mpi_cookie_list->next(&sz);
+			}
+
+			mpi_cookie_list->clr();
+		}
+
 		mp_sio->blocking(true);
 		if(!m_oheader_sent) {
 			// send first line
@@ -845,11 +877,39 @@ bool cHttpServerConnection::res_var(_cstr_t name, _cstr_t value) {
  }
 
 bool cHttpServerConnection::res_content_len(_u32 content_len) {
-	_char_t cl[32]="";
-
-	sprintf(cl, "%u", content_len);
 	m_res_content_len = content_len;
-	return res_var("Content-Length", cl);
+	return true;
+}
+
+void cHttpServerConnection::res_cookie(_cstr_t name,
+		_cstr_t value,
+		_u8 flags,
+		_cstr_t expires,
+		_cstr_t max_age,
+		_cstr_t path,
+		_cstr_t domain) {
+	_char_t val[4096]="";
+	_u32 n = 0;
+
+	n += snprintf(val + n, sizeof(val) - n, "%s=%s", name, value);
+	if(flags & CF_SECURE)
+		n += snprintf(val + n, sizeof(val) - n, "; %s", "Secure");
+	if(flags & CF_HTTP_ONLY)
+		n += snprintf(val + n, sizeof(val) - n, "; %s", "HttpOnly");
+	if(flags & CF_SAMESITE_STRICT)
+		n += snprintf(val + n, sizeof(val) - n, "; %s", "SameSite=Strict");
+	if(flags & CF_SAMESITE_LAX)
+		n += snprintf(val + n, sizeof(val) - n, "; %s", "SameSite=Lax");
+	if(expires)
+		n += snprintf(val + n, sizeof(val) - n, "; Expires=%s", expires);
+	if(max_age)
+		n += snprintf(val + n, sizeof(val) - n, "; Max-Age=%s", max_age);
+	if(path)
+		n += snprintf(val + n, sizeof(val) - n, "; Path=%s", path);
+	if(domain)
+		n += snprintf(val + n, sizeof(val) - n, "; Domain=%s", domain);
+
+	mpi_cookie_list->add(val, n + 1);
 }
 
 void cHttpServerConnection::res_mtime(time_t mtime) {

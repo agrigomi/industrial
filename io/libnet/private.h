@@ -82,7 +82,7 @@ private:
 	cSocketIO	*mp_sio;
 	iBufferMap	*mpi_bmap;
 	iMap		*mpi_req_map;  // request variables container
-	iMap		*mpi_res_map;  // response variables container
+	iLlist		*mpi_cookie_list;
 	HBUFFER		m_ibuffer; // input buffer
 	HBUFFER		m_oheader; // output header
 	HBUFFER		m_obuffer; // output buffer
@@ -104,6 +104,8 @@ private:
 	_ulong		m_udata[HTTPC_MAX_UDATA_INDEX];
 	_char_t		m_res_protocol[16];
 	bool 		m_req_data;
+	_cstr_t		m_content_type;
+	void		*mp_doc;
 
 	_cstr_t get_rc_text(_u16 rc);
 	bool complete_req_header(void);
@@ -172,7 +174,7 @@ public:
 		return get_rc_text(rc);
 	}
 	// set response protocol as string like 'HTTP/1.1'
-	 void res_protocol(_cstr_t protocol);
+	void res_protocol(_cstr_t protocol);
 	// set response code
 	void res_code(_u16 httprc) {
 		m_error_code = m_response_code = httprc;
@@ -187,12 +189,31 @@ public:
 	_u32 res_content_sent(void) {
 		return m_content_sent;
 	}
+
+	void res_content_type(_cstr_t ctype) {
+		m_content_type = ctype;
+	}
+
+	// Set document content
+	void res_content(void *p_doc, _ulong sz_doc) {
+		mp_doc = p_doc;
+		m_res_content_len = sz_doc;
+	}
+
 	// set last modify time in response header
 	void res_mtime(time_t mtime);
 	// returns the content length of  request
 	_u32 req_content_len(void) {
 		return m_req_content_len;
 	}
+	// Set response cookie
+	void res_cookie(_cstr_t name,
+			_cstr_t value,
+			_u8 flags=0,
+			_cstr_t expires=NULL,
+			_cstr_t max_age=NULL,
+			_cstr_t path=NULL,
+			_cstr_t domain=NULL);
 	// return remainder pard of response data in bytes (ContentLength - Sent)
 	_u32 res_remainder(void);
 	// write response
