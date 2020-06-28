@@ -54,11 +54,12 @@ typedef struct {
 }_response_t;
 
 // events
-#define ON_CONNECT	HTTP_ON_OPEN
-#define ON_REQUEST	HTTP_ON_REQUEST
-#define ON_DATA		HTTP_ON_REQUEST_DATA
-#define ON_ERROR	HTTP_ON_ERROR
-#define ON_DISCONNECT	HTTP_ON_CLOSE
+#define ON_CONNECT		HTTP_ON_OPEN
+#define ON_REQUEST		HTTP_ON_REQUEST
+#define ON_DATA			HTTP_ON_REQUEST_DATA
+#define ON_ERROR		HTTP_ON_ERROR
+#define ON_CLOSE_DOCUMENT	HTTP_ON_CLOSE_DOCUMENT
+#define ON_DISCONNECT		HTTP_ON_CLOSE
 
 // event handler return values
 #define	EHR_CONTINUE	0

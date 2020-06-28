@@ -198,6 +198,13 @@ void server::set_handlers(void) {
 			p_srv->call_route_handler(HTTP_ON_ERROR, p_httpc);
 	}, this);
 
+	mpi_server->on_event(HTTP_ON_CLOSE_DOCUMENT, [](iHttpServerConnection *p_httpc, void *udata) {
+		server *p_srv = (server *)udata;
+
+		if(p_srv->call_handler(HTTP_ON_CLOSE_DOCUMENT, p_httpc) == EHR_CONTINUE)
+			p_srv->call_route_handler(HTTP_ON_CLOSE_DOCUMENT, p_httpc);
+	}, this);
+
 	mpi_server->on_event(HTTP_ON_CLOSE, [](iHttpServerConnection *p_httpc, void *udata) {
 		server *p_srv = (server *)udata;
 

@@ -443,10 +443,9 @@ _s32 vhost::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 
 void vhost::send_content(iHttpServerConnection *p_httpc, _u8 *p_doc, _ulong sz_doc) {
 	// response header
-	p_httpc->res_content_len(sz_doc);
 	p_httpc->res_code(HTTPRC_OK);
 	// response content
-	p_httpc->res_write(p_doc, sz_doc);
+	p_httpc->res_content(p_doc, sz_doc);
 }
 
 void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
@@ -513,6 +512,11 @@ void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 				} else {
 					p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
 					call_handler(ON_ERROR, p_httpc);
+				}
+			} else if(root.is_enabled() && evt == HTTP_ON_CLOSE_DOCUMENT) {
+				if(pc->hdoc) {
+					root.close(pc->hdoc);
+					pc->hdoc = NULL;
 				}
 			}
 		}
