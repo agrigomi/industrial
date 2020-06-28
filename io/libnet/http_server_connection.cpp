@@ -641,14 +641,26 @@ _u32 cHttpServerConnection::receive_content(void) {
 _u32 cHttpServerConnection::send_content(void) {
 	_u32 r = 0;
 
-	if(m_res_content_len && m_content_sent < m_res_content_len) {
-		_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_obuffer);
-		if(ptr && m_obuffer_offset) {
+	if(mp_doc) {
+		if(m_res_content_len && m_content_sent < m_res_content_len) {
+			_u8 *ptr = (_u8 *)mp_doc + m_content_sent;
+			_u32 len = m_res_content_len - m_content_sent;
+
 			mp_sio->blocking(true);
-			r = mp_sio->write(ptr + m_obuffer_sent, m_obuffer_offset - m_obuffer_sent);
-			m_obuffer_sent += r;
+			r = mp_sio->write(ptr, len);
 			m_content_sent += r;
 			mp_sio->blocking(false);
+		}
+	} else {
+		if(m_res_content_len && m_content_sent < m_res_content_len) {
+			_u8 *ptr = (_u8 *)mpi_bmap->ptr(m_obuffer);
+			if(ptr && m_obuffer_offset) {
+				mp_sio->blocking(true);
+				r = mp_sio->write(ptr + m_obuffer_sent, m_obuffer_offset - m_obuffer_sent);
+				m_obuffer_sent += r;
+				m_content_sent += r;
+				mp_sio->blocking(false);
+			}
 		}
 	}
 
@@ -739,9 +751,11 @@ _u8 cHttpServerConnection::process(void) {
 				if(alive()) {
 					send_content();
 					if(m_content_sent < m_res_content_len) {
-						if(m_obuffer_sent >= m_obuffer_offset) {
-							r = HTTP_ON_RESPONSE_DATA;
-							m_obuffer_sent = m_obuffer_offset = 0;
+						if(!mp_doc) {
+							if(m_obuffer_sent >= m_obuffer_offset) {
+								r = HTTP_ON_RESPONSE_DATA;
+								m_obuffer_sent = m_obuffer_offset = 0;
+							}
 						}
 					} else {
 						_cstr_t ctype = req_var("Connection");
@@ -749,6 +763,7 @@ _u8 cHttpServerConnection::process(void) {
 						if(ctype && strcasecmp(ctype, "keep-alive") == 0) { // reuse connection
 							clean_members();
 							m_state = HTTPC_RECEIVE_HEADER;
+							r = HTTP_ON_CLOSE_DOCUMENT;
 						} else
 							m_state = HTTPC_CLOSE;
 					}

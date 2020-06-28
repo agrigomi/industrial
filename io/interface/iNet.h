@@ -175,9 +175,10 @@ typedef void _on_http_event_t(iHttpServerConnection *, void *);
 #define HTTP_ON_REQUEST_DATA	3
 #define HTTP_ON_RESPONSE_DATA	4
 #define HTTP_ON_ERROR		5
-#define HTTP_ON_CLOSE		6
-#define HTTP_ON_RESERVED1	7
-#define HTTP_ON_RESERVED2	8
+#define HTTP_ON_CLOSE_DOCUMENT	6
+#define HTTP_ON_CLOSE		7
+#define HTTP_ON_RESERVED1	8
+#define HTTP_ON_RESERVED2	9
 
 class iHttpServer: public iBase {
 public:
