@@ -92,10 +92,10 @@ private:
 	_u32		m_oheader_sent;
 	_u32		m_obuffer_sent;
 	_u32		m_header_len;
-	_u32		m_res_content_len;
+	_ulong		m_res_content_len;
 	_u32		m_req_content_len;
 	_u32		m_req_content_rcv;
-	_u32		m_content_sent;
+	_ulong		m_content_sent;
 	_u16		m_error_code;
 	_u16		m_response_code;
 	_u16		m_state;
@@ -180,13 +180,13 @@ public:
 		m_error_code = m_response_code = httprc;
 	}
 	// set Content-Length variable
-	bool res_content_len(_u32 content_len);
+	bool res_content_len(_ulong content_len);
 	// return content len of response
-	_u32 res_content_len(void) {
+	_ulong res_content_len(void) {
 		return m_res_content_len;
 	}
 	// return nimber of sent bytes for response content
-	_u32 res_content_sent(void) {
+	_ulong res_content_sent(void) {
 		return m_content_sent;
 	}
 
@@ -215,7 +215,7 @@ public:
 			_cstr_t path=NULL,
 			_cstr_t domain=NULL);
 	// return remainder pard of response data in bytes (ContentLength - Sent)
-	_u32 res_remainder(void);
+	_ulong res_remainder(void);
 	// write response
 	_u32 res_write(_u8 *data, _u32 size);
 	_u32 res_write(_cstr_t str);

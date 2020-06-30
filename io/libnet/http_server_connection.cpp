@@ -545,7 +545,7 @@ bool cHttpServerConnection::req_parse_content(void) {
 	return r;
 }
 
-_u32 cHttpServerConnection::res_remainder(void) {
+_ulong cHttpServerConnection::res_remainder(void) {
 	_u32 r = 0;
 
 	if(m_content_sent < m_res_content_len)
@@ -580,7 +580,7 @@ _u32 cHttpServerConnection::send_header(void) {
 		if(m_res_content_len) {
 			_char_t cl[32]="";
 
-			sprintf(cl, "%u", m_res_content_len);
+			sprintf(cl, "%lu", m_res_content_len);
 			res_var("Content-Length", cl);
 		}
 
@@ -889,7 +889,7 @@ bool cHttpServerConnection::res_var(_cstr_t name, _cstr_t value) {
 	strncpy(m_res_protocol, protocol, sizeof(m_res_protocol)-1);
  }
 
-bool cHttpServerConnection::res_content_len(_u32 content_len) {
+bool cHttpServerConnection::res_content_len(_ulong content_len) {
 	m_res_content_len = content_len;
 	return true;
 }

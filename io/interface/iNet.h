@@ -133,13 +133,13 @@ public:
 	// set response protocol as string like 'HTTP/1.1'
 	virtual void res_protocol(_cstr_t protocol)=0;
 	// set Content-Length variable
-	virtual bool res_content_len(_u32 content_len)=0;
+	virtual bool res_content_len(_ulong content_len)=0;
 	// Set content type
 	virtual void res_content_type(_cstr_t ctype)=0;
 	// Set document content
 	virtual void res_content(void *p_doc, _ulong sz_doc)=0;
 	// return content len of response
-	virtual _u32 res_content_len(void)=0;
+	virtual _ulong res_content_len(void)=0;
 	// Set response cookie
 
 #define CF_SECURE		(1<<0)
@@ -154,13 +154,13 @@ public:
 			_cstr_t path=NULL,
 			_cstr_t domain=NULL)=0;
 	// return nimber of sent bytes for response content
-	virtual _u32 res_content_sent(void)=0;
+	virtual _ulong res_content_sent(void)=0;
 	// set last modify time in response header
 	virtual void res_mtime(time_t mtime)=0;
 	// returns the content length of  request
 	virtual _u32 req_content_len(void)=0;
 	// return remainder pard of response data in bytes (ContentLength - Sent)
-	virtual _u32 res_remainder(void)=0;
+	virtual _ulong res_remainder(void)=0;
 	// write response
 	virtual _u32 res_write(_u8 *data, _u32 size)=0;
 	virtual _u32 res_write(_cstr_t str)=0;
