@@ -497,7 +497,15 @@ void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 								pc->hdoc = hdoc;
 							} else {
 								p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
+
 								call_handler(ON_ERROR, p_httpc);
+								if(!p_httpc->res_content_len()) {
+									static _cstr_t res = "Internal server error !\n";
+
+									p_httpc->res_content_len(strlen(res));
+									p_httpc->res_write(res);
+								}
+
 								root.close(hdoc);
 							}
 						} else if(method == HTTP_METHOD_HEAD) {
@@ -506,11 +514,25 @@ void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 						}
 					} else {
 						p_httpc->res_code(HTTPRC_NOT_FOUND);
+
 						call_handler(ON_ERROR, p_httpc);
+						if(!p_httpc->res_content_len()) {
+							static _cstr_t res = "Not found !\n";
+
+							p_httpc->res_content_len(strlen(res));
+							p_httpc->res_write(res);
+						}
 					}
 				} else {
 					p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
+
 					call_handler(ON_ERROR, p_httpc);
+					if(!p_httpc->res_content_len()) {
+						static _cstr_t res = "Method not allowed !\n";
+
+						p_httpc->res_content_len(strlen(res));
+						p_httpc->res_write(res);
+					}
 				}
 			} else if(root.is_enabled() && evt == HTTP_ON_CLOSE_DOCUMENT) {
 				if(pc->hdoc) {
