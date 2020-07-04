@@ -147,6 +147,7 @@ void cHttpServerConnection::clean_members(void) {
 	m_content_type = 0;
 	mp_doc = 0;
 	m_req_data = false;
+	m_res_hdr_prepared = false;
 	m_stime = time(NULL);
 	strncpy(m_res_protocol, "HTTP/1.1", sizeof(m_res_protocol)-1);
 	mpi_req_map->clr();
@@ -567,35 +568,43 @@ void cHttpServerConnection::clear_ibuffer(void) {
 	}
 }
 
+void cHttpServerConnection::prepare_res_header(void) {
+	// Add content type to response header
+	if(m_content_type) {
+		res_var("Content-Type", m_content_type);
+	}
+
+	// Add content length to response header
+	if(m_res_content_len) {
+		_char_t cl[32]="";
+
+		sprintf(cl, "%lu", m_res_content_len);
+		res_var("Content-Length", cl);
+	}
+
+	// Add cookies to response header
+	if(mpi_cookie_list->cnt()) {
+		_u32 sz = 0;
+		_cstr_t cookie = (_cstr_t)mpi_cookie_list->first(&sz);
+
+		while(cookie) {
+			res_var("Set-Cookie", cookie);
+			cookie = (_cstr_t)mpi_cookie_list->next(&sz);
+		}
+
+		mpi_cookie_list->clr();
+	}
+
+	m_res_hdr_prepared = true;
+}
+
 _u32 cHttpServerConnection::send_header(void) {
 	_u32 r = 0;
 	_char_t rs[128]="";
 
 	if(m_response_code) {
-		// Add content type to response header
-		if(m_content_type)
-			res_var("Content-Type", m_content_type);
-
-		// Add content length to response header
-		if(m_res_content_len) {
-			_char_t cl[32]="";
-
-			sprintf(cl, "%lu", m_res_content_len);
-			res_var("Content-Length", cl);
-		}
-
-		// Add cookies to response header
-		if(mpi_cookie_list->cnt()) {
-			_u32 sz = 0;
-			_cstr_t cookie = (_cstr_t)mpi_cookie_list->first(&sz);
-
-			while(cookie) {
-				res_var("Set-Cookie", cookie);
-				cookie = (_cstr_t)mpi_cookie_list->next(&sz);
-			}
-
-			mpi_cookie_list->clr();
-		}
+		if(!m_res_hdr_prepared)
+			prepare_res_header();
 
 		mp_sio->blocking(true);
 		if(!m_oheader_sent) {
@@ -623,6 +632,7 @@ _u32 cHttpServerConnection::send_header(void) {
 			// send header end
 			mp_sio->write("\r\n", 2);
 			m_oheader_sent = r;
+			m_res_hdr_prepared = false;
 		}
 		mp_sio->blocking(false);
 	}

@@ -106,6 +106,7 @@ private:
 	bool 		m_req_data;
 	_cstr_t		m_content_type;
 	void		*mp_doc;
+	bool		m_res_hdr_prepared;
 
 	_cstr_t get_rc_text(_u16 rc);
 	bool complete_req_header(void);
@@ -121,6 +122,7 @@ private:
 	_u32 receive_content(void);
 	void clean_members(void);
 	void release_buffers(void);
+	void prepare_res_header(void);
 
 public:
 	BASE(cHttpServerConnection, CLASS_NAME_HTTP_SERVER_CONNECTION, RF_CLONE, 1,0,0);
