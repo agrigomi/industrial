@@ -462,11 +462,6 @@ void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 			_u8 method = p_httpc->req_method();
 			_route_key_t key;
 			_u32 sz = 0;
-			_char_t server_name[MAX_GATN_SERVER_NAME]="";
-
-			snprintf(server_name, sizeof(server_name), "%s [%s]", GATN_SERVER_PREFIX, pi_server->name());
-			p_httpc->res_var("Server", server_name);
-
 			memset(&key, 0, sizeof(_route_key_t));
 			key.method = method;
 			strncpy(key.path, url, sizeof(key.path)-1);
@@ -479,6 +474,10 @@ void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 			else if(root.is_enabled() && evt == HTTP_ON_REQUEST) {
 				// route not found
 				// try to resolve file name
+				_char_t server_name[MAX_GATN_SERVER_NAME]="";
+
+				snprintf(server_name, sizeof(server_name), "%s [%s]", GATN_SERVER_PREFIX, pi_server->name());
+				p_httpc->res_var("Server", server_name);
 
 				p_httpc->res_protocol("HTTP/1.1");
 
