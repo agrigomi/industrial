@@ -448,6 +448,16 @@ void vhost::send_content(iHttpServerConnection *p_httpc, _u8 *p_doc, _ulong sz_d
 	p_httpc->res_content(p_doc, sz_doc);
 }
 
+void vhost::send_error(iHttpServerConnection *p_httpc, _u16 err_rc, _cstr_t err_text) {
+	p_httpc->res_code(err_rc);
+	call_handler(ON_ERROR, p_httpc);
+
+	if(!p_httpc->res_content_len()) {
+		p_httpc->res_content_len(strlen(err_text));
+		p_httpc->res_write(err_text);
+	}
+}
+
 void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	_lock();
 
@@ -496,44 +506,18 @@ void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 								send_content(p_httpc, ptr, doc_sz);
 								pc->hdoc = hdoc;
 							} else {
-								p_httpc->res_code(HTTPRC_INTERNAL_SERVER_ERROR);
-
-								call_handler(ON_ERROR, p_httpc);
-								if(!p_httpc->res_content_len()) {
-									static _cstr_t res = "Internal server error !\n";
-
-									p_httpc->res_content_len(strlen(res));
-									p_httpc->res_write(res);
-								}
-
+								send_error(p_httpc, HTTPRC_INTERNAL_SERVER_ERROR,
+									"Internal server error !\n");
 								root.close(hdoc);
 							}
 						} else if(method == HTTP_METHOD_HEAD) {
 							p_httpc->res_code(HTTPRC_OK);
 							root.close(hdoc);
 						}
-					} else {
-						p_httpc->res_code(HTTPRC_NOT_FOUND);
-
-						call_handler(ON_ERROR, p_httpc);
-						if(!p_httpc->res_content_len()) {
-							static _cstr_t res = "Not found !\n";
-
-							p_httpc->res_content_len(strlen(res));
-							p_httpc->res_write(res);
-						}
-					}
-				} else {
-					p_httpc->res_code(HTTPRC_METHOD_NOT_ALLOWED);
-
-					call_handler(ON_ERROR, p_httpc);
-					if(!p_httpc->res_content_len()) {
-						static _cstr_t res = "Method not allowed !\n";
-
-						p_httpc->res_content_len(strlen(res));
-						p_httpc->res_write(res);
-					}
-				}
+					} else
+						send_error(p_httpc, HTTPRC_NOT_FOUND, "Not found !\n");
+				} else
+					send_error(p_httpc, HTTPRC_METHOD_NOT_ALLOWED, "Method not allowed\n");
 			} else if(root.is_enabled() && evt == HTTP_ON_CLOSE_DOCUMENT) {
 				if(pc->hdoc) {
 					root.close(pc->hdoc);

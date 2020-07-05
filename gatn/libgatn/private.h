@@ -209,7 +209,7 @@ private:
 	void stop_extensions(HMUTEX hlock=0);
 	void remove_extensions(void);
 	void send_content(iHttpServerConnection *p_httpc, _u8 *p_doc, _ulong sz_doc);
-
+	void send_error(iHttpServerConnection *p_httpc, _u16 err_rc, _cstr_t err_text);
 public:
 
 	vhost();
