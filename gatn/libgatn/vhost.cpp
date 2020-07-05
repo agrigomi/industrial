@@ -450,6 +450,7 @@ void vhost::send_content(iHttpServerConnection *p_httpc, _u8 *p_doc, _ulong sz_d
 
 void vhost::send_error(iHttpServerConnection *p_httpc, _u16 err_rc, _cstr_t err_text) {
 	p_httpc->res_code(err_rc);
+	p_httpc->res_var("Connection", "close");
 	call_handler(ON_ERROR, p_httpc);
 
 	if(!p_httpc->res_content_len()) {
