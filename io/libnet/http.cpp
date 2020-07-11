@@ -271,9 +271,16 @@ _http_connection_t *cHttpServer::add_connection(void) {
 
 				if(!m_num_workers ||
 						((m_num_workers - nbhttpc) < nphttpc &&
-						m_num_workers < m_max_workers))
+						m_num_workers < m_max_workers)) {
 					// create worker
+					_u32 workers = m_num_workers;
+
 					start_worker();
+
+					// waiting to start worker
+					while(workers == m_num_workers)
+						usleep(10000);
+				}
 			} else
 				release_connection(r);
 		} else
