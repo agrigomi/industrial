@@ -11,7 +11,9 @@ static void ll_unlock(_ll_context_t *p_cxt, _u64 hlock) {
 }
 
 static void _set(_u8 *ptr, _u8 x, _u32 sz) {
-	for(_u32 i = 0; i < sz; i++)
+	_u32 i = 0;
+
+	for(; i < sz; i++)
 		*(ptr + i) = x;
 }
 
