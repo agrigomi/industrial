@@ -5,6 +5,7 @@
 #include "iLog.h"
 #include "iHT.h"
 #include "private.h"
+#include "tString.h"
 
 IMPLEMENT_BASE_ARRAY("libgatn", 10);
 
@@ -76,8 +77,8 @@ private:
 		}
 	}
 
-	std::string json_string(HTVALUE htv) {
-		std::string r;
+	tString json_string(HTVALUE htv) {
+		tString r;
 		_u8 jvt = mpi_json->type(htv);
 
 		if(jvt == JVT_STRING || jvt == JVT_NUMBER) {
@@ -90,8 +91,8 @@ private:
 		return r;
 	}
 
-	std::string json_string(HTCONTEXT jcxt, _cstr_t var, HTVALUE parent=NULL) {
-		std::string r;
+	tString json_string(HTCONTEXT jcxt, _cstr_t var, HTVALUE parent=NULL) {
+		tString r;
 		HTVALUE htv = mpi_json->select(jcxt, var, parent);
 
 		if(htv)
@@ -100,8 +101,8 @@ private:
 		return r;
 	}
 
-	std::string json_string(HTVALUE parent, _u32 idx) {
-		std::string r;
+	tString json_string(HTVALUE parent, _u32 idx) {
+		tString r;
 		HTVALUE htv = mpi_json->by_index(parent, idx);
 
 		if(htv)
@@ -110,8 +111,8 @@ private:
 		return r;
 	}
 
-	std::string json_array_to_path(HTVALUE jarray) {
-		std::string r;
+	tString json_array_to_path(HTVALUE jarray) {
+		tString r;
 
 		if(jarray) {
 			if(mpi_json->type(jarray) == JVT_ARRAY) {
@@ -119,7 +120,7 @@ private:
 				_u32 idx = 0;
 
 				while((item = mpi_json->by_index(jarray, idx))) {
-					std::string tmp;
+					tString tmp;
 
 					if(mpi_json->type(item) == JVT_STRING) {
 						tmp = json_string(item);
@@ -137,8 +138,8 @@ private:
 	}
 
 	void load_ssl_cert(HTCONTEXT jcxt, SSL_CTX *ssl_cxt, HTVALUE htv_ssl) {
-		std::string cert = json_string(jcxt, "certificate", htv_ssl);
-		std::string key = json_string(jcxt, "key", htv_ssl);
+		tString cert = json_string(jcxt, "certificate", htv_ssl);
+		tString key = json_string(jcxt, "key", htv_ssl);
 
 		if(SSL_CTX_use_certificate_file(ssl_cxt, cert.c_str(), SSL_FILETYPE_PEM) > 0) {
 			if(SSL_CTX_use_PrivateKey_file(ssl_cxt, key.c_str(), SSL_FILETYPE_PEM) > 0) {
@@ -158,7 +159,7 @@ private:
 			HTVALUE htv_ssl_enable = mpi_json->select(jcxt, "enable", htv_ssl);
 
 			if(htv_ssl_enable && mpi_json->type(htv_ssl_enable) == JVT_TRUE) {
-				std::string method = json_string(jcxt, "method", htv_ssl);
+				tString method = json_string(jcxt, "method", htv_ssl);
 				const SSL_METHOD *ssl_method = ssl_select_method(method.c_str());
 
 				if(ssl_method) {
@@ -180,8 +181,8 @@ private:
 
 		if(htv_class_array) {
 			while((htv_class = mpi_json->by_index(htv_class_array, idx))) {
-				std::string options = json_string(jcxt, "options", htv_class);
-				std::string cname = json_string(jcxt, "cname", htv_class);
+				tString options = json_string(jcxt, "options", htv_class);
+				tString cname = json_string(jcxt, "cname", htv_class);
 
 				pi_srv->attach_class(cname.c_str(), options.c_str(), host);
 
@@ -199,8 +200,8 @@ private:
 				HTVALUE htv_ext = NULL;
 
 				while((htv_ext = mpi_json->by_index(htv_ext_array, idx))) {
-					std::string module = json_string(jcxt, "module", htv_ext);
-					std::string alias = json_string(jcxt, "alias", htv_ext);
+					tString module = json_string(jcxt, "module", htv_ext);
+					tString alias = json_string(jcxt, "alias", htv_ext);
 
 					_gpi_repo_->extension_load(module.c_str(), alias.c_str());
 
@@ -220,12 +221,12 @@ private:
 				_u32 idx = 0;
 
 				while((htv_vhost = mpi_json->by_index(htv_vhost_array, idx))) {
-					std::string host = json_string(jcxt, "host", htv_vhost);
-					std::string root = json_string(jcxt, "root", htv_vhost);
-					std::string root_exclude = json_array_to_path(mpi_json->select(jcxt, "exclude", htv_vhost));
-					std::string cache_path = json_string(jcxt, "cache.path", htv_vhost);
-					std::string cache_key = json_string(jcxt, "cache.key", htv_vhost);
-					std::string cache_exclude = json_array_to_path(mpi_json->select(jcxt, "cache.exclude", htv_vhost));
+					tString host = json_string(jcxt, "host", htv_vhost);
+					tString root = json_string(jcxt, "root", htv_vhost);
+					tString root_exclude = json_array_to_path(mpi_json->select(jcxt, "exclude", htv_vhost));
+					tString cache_path = json_string(jcxt, "cache.path", htv_vhost);
+					tString cache_key = json_string(jcxt, "cache.key", htv_vhost);
+					tString cache_exclude = json_array_to_path(mpi_json->select(jcxt, "cache.exclude", htv_vhost));
 
 					if(pi_srv->add_virtual_host(host.c_str(), root.c_str(),
 								cache_path.c_str(), cache_key.c_str(),
@@ -254,17 +255,17 @@ private:
 				_u32 sz = 0;
 
 				while((htv_srv = mpi_json->by_index(htv_srv_array, idx))) {
-					std::string name = json_string(jcxt, "name", htv_srv);
-					std::string root = json_string(jcxt, "root", htv_srv);
-					std::string port = json_string(jcxt, "port", htv_srv);
-					std::string buffer = json_string(jcxt, "buffer", htv_srv);
-					std::string threads = json_string(jcxt, "threads", htv_srv);
-					std::string connections = json_string(jcxt, "connections", htv_srv);
-					std::string timeout = json_string(jcxt, "timeout", htv_srv);
-					std::string cache_path = json_string(jcxt, "cache.path", htv_srv);
-					std::string cache_key = json_string(jcxt, "cache.key", htv_srv);
-					std::string cache_exclude = json_array_to_path(mpi_json->select(jcxt, "cache.exclude", htv_srv));
-					std::string root_exclude = json_array_to_path(mpi_json->select(jcxt, "exclude", htv_srv));
+					tString name = json_string(jcxt, "name", htv_srv);
+					tString root = json_string(jcxt, "root", htv_srv);
+					tString port = json_string(jcxt, "port", htv_srv);
+					tString buffer = json_string(jcxt, "buffer", htv_srv);
+					tString threads = json_string(jcxt, "threads", htv_srv);
+					tString connections = json_string(jcxt, "connections", htv_srv);
+					tString timeout = json_string(jcxt, "timeout", htv_srv);
+					tString cache_path = json_string(jcxt, "cache.path", htv_srv);
+					tString cache_key = json_string(jcxt, "cache.key", htv_srv);
+					tString cache_exclude = json_array_to_path(mpi_json->select(jcxt, "cache.exclude", htv_srv));
+					tString root_exclude = json_array_to_path(mpi_json->select(jcxt, "exclude", htv_srv));
 
 					if(!mpi_map->get(name.c_str(), name.length(), &sz)) {
 						SSL_CTX *ssl_context = create_ssl_context(jcxt, htv_srv);
