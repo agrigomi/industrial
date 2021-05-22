@@ -255,9 +255,14 @@ public:
 			}
 
 			if(success) {
-				r = pfce;
-				pfce->refc++;
-				pfce->acct++;
+				if(!pfce->pi_fio)
+					update_cache(path, pfce, mtime);
+
+				if(pfce->pi_fio) {
+					r = pfce;
+					pfce->refc++;
+					pfce->acct++;
+				}
 			}
 			pfce->mutex.unlock();
 		}
@@ -309,6 +314,11 @@ public:
 		pfce->mutex.lock();
 		if(pfce->refc)
 			pfce->refc--;
+		if(!pfce->refc) {
+			mpi_fs->close(pfce->pi_fio);
+			pfce->pi_fio = NULL;
+			pfce->ptr = NULL;
+		}
 		pfce->mutex.unlock();
 		remove_cache(pfce);
 	}
