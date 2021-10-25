@@ -101,7 +101,7 @@ public:
 	INTERFACE(iGatn, I_GATN);
 
 	virtual bool configure(_cstr_t json_fname)=0;
-	virtual void configure(void *json_context)=0;
+	virtual bool configure(void *json_context)=0;
 	virtual bool reload(_cstr_t server_name=NULL)=0;
 	virtual _server_t *create_server(_cstr_t name, _u32 port,
 					_cstr_t doc_root, // path to documents root

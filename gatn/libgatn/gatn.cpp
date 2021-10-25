@@ -212,7 +212,8 @@ private:
 		}
 	}
 
-	void configure_hosts(HTCONTEXT jcxt, HTVALUE htv_server, _server_t *pi_srv) {
+	bool configure_hosts(HTCONTEXT jcxt, HTVALUE htv_server, _server_t *pi_srv) {
+		bool r = false;
 		HTVALUE htv_vhost_array = mpi_json->select(jcxt, "vhost", htv_server);
 
 		if(htv_vhost_array) {
@@ -240,12 +241,18 @@ private:
 
 					idx++;
 				}
+
+				r = true;
 			} else
 				mpi_log->write(LMT_ERROR, "Gatn: Requires array 'server.vhost: []'");
-		}
+		} else
+			r = true;
+
+		return r;
 	}
 
-	void configure_servers(HTCONTEXT jcxt) {
+	bool configure_servers(HTCONTEXT jcxt) {
+		bool r = false;
 		HTVALUE htv_srv_array = mpi_json->select(jcxt, "server", NULL);
 
 		if(htv_srv_array) {
@@ -286,8 +293,9 @@ private:
 							HTVALUE htv_class_array = mpi_json->select(jcxt, "attach", htv_srv);
 
 							attach_class(jcxt, htv_class_array, pi_srv);
-							configure_hosts(jcxt, htv_srv, pi_srv);
-						}
+							r = configure_hosts(jcxt, htv_srv, pi_srv);
+						} else
+							mpi_log->fwrite(LMT_ERROR, "Gatn: Failed to create server '%s'", name.c_str());
 					} else
 						mpi_log->fwrite(LMT_ERROR, "Gatn: server '%s' already exists", name.c_str());
 
@@ -297,6 +305,8 @@ private:
 				mpi_log->write(LMT_ERROR, "Gatn: Requires array 'server: []'");
 		} else
 			mpi_log->write(LMT_ERROR, "Gatn: Failed to configure servers");
+
+		return r;
 	}
 
 
@@ -375,9 +385,9 @@ BEGIN_LINK_MAP
 	}, this),
 END_LINK_MAP
 
-	void configure(HTCONTEXT jcxt) {
+	bool configure(HTCONTEXT jcxt) {
 		load_extensions(jcxt);
-		configure_servers(jcxt);
+		return configure_servers(jcxt);
 	}
 
 	bool configure(_cstr_t json_fname) {
@@ -399,7 +409,7 @@ END_LINK_MAP
 
 						if(ptr) {
 							if(mpi_json->parse(jcxt, ptr, pi_fio->size()))
-								configure(jcxt);
+								r = configure(jcxt);
 							else
 								mpi_log->fwrite(LMT_ERROR, "Gatn: Failed to parse configuration file '%s'", json_fname);
 						} else
