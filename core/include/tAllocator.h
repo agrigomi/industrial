@@ -1,6 +1,8 @@
 #ifndef __TALLOCATOR_H__
 #define __TALLOCATOR_H__
 
+#include <typeinfo>
+#include <cstddef>
 #include "iMemory.h"
 #include "iRepository.h"
 
