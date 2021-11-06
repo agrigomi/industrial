@@ -55,12 +55,6 @@ _err_t main(int argc, char *argv[]) {
 			printf("[%c] %s\n", pref, msg);
 		});
 
-		tString str = "alabala";
-
-		str += "append to string";
-
-		tString s = str;
-
 		//pi_repo->extension_dir("./bin/deploy/unix-x86_64-debug");
 		pi_repo->extension_dir(getenv("LD_LIBRARY_PATH"));
 

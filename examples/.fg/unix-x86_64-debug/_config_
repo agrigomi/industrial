@@ -1,6 +1,7 @@
 OUTDIR=bin
 SRCSUFFIX=.cpp
 INCLUDES=-Icore/include -Icore/interface -Icmd/interface -Iio/interface
-COMPILER_FLAGS+=$(INCLUDES)
+COMPILER_FLAGS+=-g $(INCLUDES)
+LINKER_FLAGS+=-g
 LIBRARY+=-lstdc++
 DEPENDENCY_FLAGS+=$(INCLUDES)
