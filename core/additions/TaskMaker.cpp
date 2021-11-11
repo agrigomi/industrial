@@ -14,6 +14,7 @@ typedef struct {
 	iBase 		*pi_base;
 	_task_proc_t	*proc;
 	pthread_t 	thread;
+	pthread_attr_t	attr;
 	void		*arg;
 	_u8		state;
 	_char_t		name[20];
@@ -62,7 +63,9 @@ private:
 	HTASK start_task(_task_t *task) {
 		HTASK r = 0;
 
-		if(pthread_create(&task->thread, 0, (_thread_t *)starter, task) == ERR_NONE) {
+		pthread_attr_init(&task->attr);
+		pthread_attr_setstacksize(&task->attr, 64*1024);
+		if(pthread_create(&task->thread, &task->attr, (_thread_t *)starter, task) == ERR_NONE) {
 			r = task;
 			usleep(1);
 		}
@@ -134,6 +137,7 @@ private:
 					p_task->state &= ~TS_RUNNING;
 					while(!(p_task->state & TS_STOPPED))
 						usleep(10000);
+					pthread_attr_destroy(&p_task->attr);
 					break;
 			};
 		}, this);
