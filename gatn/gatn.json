@@ -19,7 +19,8 @@
 					"exclude":	"/folder1/:/folder2/",
 					"cache": {
 						"path":		"/tmp/",
-						"key":		"oland"
+						"key":		"oland",
+						"exclude":	"/folder3/"
 					},
 					"attach": [
 						{
