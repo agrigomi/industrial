@@ -82,6 +82,7 @@ private:
 	cSocketIO	*mp_sio;
 	iBufferMap	*mpi_bmap;
 	iMap		*mpi_req_map;  // request variables container
+	iMap		*mpi_res_map; // response header
 	iLlist		*mpi_cookie_list;
 	HBUFFER		m_ibuffer; // input buffer
 	HBUFFER		m_oheader; // output header

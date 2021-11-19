@@ -68,6 +68,11 @@ typedef struct {
 	_cstr_t	sm;
 }_http_method_map;
 
+typedef struct { // response variables
+	_char_t	var[128];
+	_char_t val[256+128];
+}_http_res_var_t;
+
 static _http_method_map _g_method_map[] = {
 	{HTTP_METHOD_GET,	"GET"},
 	{HTTP_METHOD_HEAD,	"HEAD"},
@@ -99,11 +104,13 @@ bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			m_ibuffer = m_oheader = m_obuffer = 0;
 			if(!gpi_str)
 				gpi_str = (iStr *)pi_repo->object_by_iname(I_STR, RF_ORIGINAL);
-			if(g_hmap)
+			if(g_hmap) {
 				mpi_req_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
-			else {
+				mpi_res_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
+			} else {
 				if((g_hmap = pi_repo->handle_by_iname(I_MAP))) {
 					mpi_req_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
+					mpi_res_map = (iMap *)pi_repo->object_by_handle(g_hmap, RF_CLONE | RF_NONOTIFY);
 				}
 			}
 			if(!g_hlist)
@@ -111,8 +118,9 @@ bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			if(g_hlist)
 				mpi_cookie_list = (iLlist *)pi_repo->object_by_handle(g_hlist, RF_CLONE | RF_NONOTIFY);
 
-			if(gpi_str && mpi_req_map && mpi_cookie_list) {
+			if(gpi_str && mpi_req_map && mpi_res_map && mpi_cookie_list) {
 				r = mpi_req_map->init(31);
+				r &= mpi_res_map->init(31);
 				r &= mpi_cookie_list->init(LL_VECTOR, 1);
 				clean_members();
 			}
@@ -123,6 +131,7 @@ bool cHttpServerConnection::object_ctl(_u32 cmd, void *arg, ...) {
 			close();
 			pi_repo->object_release(gpi_str);
 			pi_repo->object_release(mpi_req_map);
+			pi_repo->object_release(mpi_res_map);
 			pi_repo->object_release(mpi_cookie_list);
 			r = true;
 		} break;
@@ -151,6 +160,7 @@ void cHttpServerConnection::clean_members(void) {
 	m_stime = time(NULL);
 	strncpy(m_res_protocol, "HTTP/1.1", sizeof(m_res_protocol)-1);
 	mpi_req_map->clr();
+	mpi_res_map->clr();
 	mpi_cookie_list->clr();
 }
 
@@ -595,7 +605,33 @@ void cHttpServerConnection::prepare_res_header(void) {
 		mpi_cookie_list->clr();
 	}
 
-	m_res_hdr_prepared = true;
+	///// prepare output buffer /////////
+	if(!m_oheader)
+		// allocate new buffer
+		m_oheader = (_char_t *)mpi_bmap->alloc();
+
+	if(m_oheader) {
+		// buffer ready
+		mpi_res_map->enumerate([](void *data, _u32 size, void *udata)->_s32 {
+			cHttpServerConnection *pobj = (cHttpServerConnection *)udata;
+			_char_t *ptr = (_char_t *)pobj->mpi_bmap->ptr(pobj->m_oheader);
+
+			if(ptr) {
+				_http_res_var_t *prv = (_http_res_var_t *)data;
+				_u32 sz = pobj->mpi_bmap->size();
+				_u32 sz_data = strlen(prv->val) + strlen(prv->var) + 4;
+				_u32 rem = (sz > pobj->m_oheader_offset) ? (sz - pobj->m_oheader_offset) : 0;
+
+				if(rem > sz_data)
+					pobj->m_oheader_offset += snprintf(ptr + pobj->m_oheader_offset, rem, "%s: %s\r\n", prv->var, prv->val);
+			}
+
+			return ENUM_NEXT;
+		}, this);
+
+		m_res_hdr_prepared = true;
+	}
+	///////////////////////////////////
 }
 
 _u32 cHttpServerConnection::send_header(void) {
@@ -874,22 +910,14 @@ _cstr_t cHttpServerConnection::req_protocol(void) {
 
 bool cHttpServerConnection::res_var(_cstr_t name, _cstr_t value) {
 	bool r = false;
+	_http_res_var_t rv;
 
-	if(!m_oheader)
-		m_oheader = mpi_bmap->alloc();
-	if(m_oheader) {
-		_char_t *ptr = (_char_t *)mpi_bmap->ptr(m_oheader);
+	strncpy(rv.var, name, sizeof(rv.var)-1);
+	strncpy(rv.val, value, sizeof(rv.val)-1);
 
-		if(ptr) {
-			_u32 sz = mpi_bmap->size();
-			_u32 sz_data = strlen(name) + strlen(value) + 4;
-			_u32 rem = (sz > m_oheader_offset) ? (sz - m_oheader_offset) : 0;
-
-			if(rem > sz_data) {
-				m_oheader_offset += snprintf(ptr + m_oheader_offset, rem, "%s: %s\r\n", name, value);
-				r = true;
-			}
-		}
+	if(mpi_res_map) {
+		if(mpi_res_map->set(name, strlen(name), &rv, sizeof(_http_res_var_t)))
+			r = true;
 	}
 
 	return r;
