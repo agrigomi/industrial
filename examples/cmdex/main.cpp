@@ -55,6 +55,11 @@ _err_t main(int argc, char *argv[]) {
 			g_signal = signum;
 			printf("SIGPIPE\n");
 		});
+		handle(SIGABRT, [](int signum, siginfo_t *info, void *arg) {
+			g_signal = signum;
+			printf("SIGABRT\n");
+			dump_stack();
+		});
 
 		iRepository *pi_repo = get_repository();
 		iLog *pi_log = dynamic_cast<iLog*>(pi_repo->object_by_iname(I_LOG, RF_ORIGINAL));
