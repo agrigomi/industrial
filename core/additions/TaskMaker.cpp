@@ -64,7 +64,7 @@ private:
 		HTASK r = 0;
 
 		pthread_attr_init(&task->attr);
-		pthread_attr_setstacksize(&task->attr, 64*1024);
+		pthread_attr_setstacksize(&task->attr, 256*1024);
 		if(pthread_create(&task->thread, &task->attr, (_thread_t *)starter, task) == ERR_NONE) {
 			r = task;
 			usleep(1);
