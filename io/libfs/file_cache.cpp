@@ -1,14 +1,29 @@
 #include <stdio.h>
 #include <string.h>
 #include <openssl/sha.h>
-#include <mutex>
 #include "iFS.h"
 #include "iStr.h"
 #include "iRepository.h"
 
+#define USE_MUTEX
+//#define USE_SPINLOCK
+
+#ifdef USE_MUTEX
+#include <mutex>
+#endif
+
+#ifdef USE_SPINLOCK
+#include "spinlock.h"
+#endif
+
 typedef struct { // file cache entry
 	iFileIO		*pi_fio; // file IO
-	std::mutex 	mutex;	// native mutex
+#ifdef USE_MUTEX
+	std::mutex 	sync;	// native mutex
+#endif
+#ifdef USE_SPINLOCK
+	_spinlock_t	sync;
+#endif
 	_u32		refc; // reference counter
 	_u32		acct; // access counter
 	_char_t		sha_fname[SHA_DIGEST_LENGTH*2+1]; // sha1 of file path
@@ -119,7 +134,7 @@ private:
 		if(pfce->remove && pfce->refc == 0) {
 			HMUTEX hm = mpi_map->lock();
 
-			pfce->mutex.lock();
+			pfce->sync.lock();
 			if(pfce->pi_fio) {
 				if(pfce->ptr) {
 					pfce->pi_fio->unmap();
@@ -128,7 +143,7 @@ private:
 				mpi_fs->close(pfce->pi_fio);
 				pfce->pi_fio = NULL;
 			}
-			pfce->mutex.unlock();
+			pfce->sync.unlock();
 			mpi_map->del(pfce->sha_fname, strlen(pfce->sha_fname), hm);
 			remove_cache_file(pfce);
 
@@ -248,7 +263,7 @@ public:
 		bool success = true;
 
 		if(pfce) {
-			pfce->mutex.lock();
+			pfce->sync.lock();
 			if(mtime > pfce->mtime) {
 				if(pfce->refc == 0)
 					success = update_cache(path, pfce, mtime);
@@ -264,7 +279,7 @@ public:
 					pfce->acct++;
 				}
 			}
-			pfce->mutex.unlock();
+			pfce->sync.unlock();
 		}
 
 		return r;
@@ -296,14 +311,14 @@ public:
 		void *r = 0;
 		_fce_t *pfce = (_fce_t *)hfc;
 
-		pfce->mutex.lock();
+		pfce->sync.lock();
 		if(pfce->pi_fio) {
 			if(!pfce->ptr)
 				pfce->ptr = pfce->pi_fio->map(MPF_READ);
 			*size = pfce->size;
 			r = pfce->ptr;
 		}
-		pfce->mutex.unlock();
+		pfce->sync.unlock();
 
 		return r;
 	}
@@ -311,7 +326,7 @@ public:
 	void close(HFCACHE hfc) {
 		_fce_t *pfce = (_fce_t *)hfc;
 
-		pfce->mutex.lock();
+		pfce->sync.lock();
 		if(pfce->refc)
 			pfce->refc--;
 		if(!pfce->refc) {
@@ -319,7 +334,7 @@ public:
 			pfce->pi_fio = NULL;
 			pfce->ptr = NULL;
 		}
-		pfce->mutex.unlock();
+		pfce->sync.unlock();
 		remove_cache(pfce);
 	}
 
