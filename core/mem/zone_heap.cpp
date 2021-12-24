@@ -1,14 +1,28 @@
 #include <malloc.h>
 #include <assert.h>
-#include <mutex>
 #include "iMemory.h"
 #include "zone.h"
+
+#define USE_MUTEX
+//#define USE_SPINLOCK
+
+#ifdef USE_MUTEX
+#include <mutex>
+#endif
+
+#ifdef USE_SPINLOCK
+#include "spinlock.h"
+#endif
 
 class cZoneHeap: public iHeap {
 private:
 	_zone_context_t m_zone;
-	std::mutex	m_mutex;
-
+#ifdef USE_MUTEX
+	std::mutex	m_sync;
+#endif
+#ifdef USE_SPINLOCK
+	_spinlock_t	m_sync;
+#endif
 	void init_zone_context(void) {
 		m_zone.user_data = this;
 		m_zone.limit = ZONE_DEFAULT_LIMIT;
@@ -25,14 +39,14 @@ private:
 		m_zone.pf_mutex_lock = [](_u64 mutex_handle, void *udata)->_u64 {
 			cZoneHeap *p = (cZoneHeap *)udata;
 
-			p->m_mutex.lock();
+			p->m_sync.lock();
 			return 0;
 		};
 
 		m_zone.pf_mutex_unlock = [](_u64 mutex_handle, void *udata) {
 			cZoneHeap *p = (cZoneHeap *)udata;
 
-			p->m_mutex.unlock();
+			p->m_sync.unlock();
 		};
 	}
 public:
