@@ -441,11 +441,18 @@ _s32 vhost::call_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 	return r;
 }
 
+//#define BUFFERED_CONTENT
+
 void vhost::send_content(iHttpServerConnection *p_httpc, _u8 *p_doc, _ulong sz_doc) {
 	// response header
 	p_httpc->res_code(HTTPRC_OK);
 	// response content
+#ifdef BUFFERED_CONTENT
+	p_httpc->res_content_len(sz_doc);
+	p_httpc->res_write(p_doc, sz_doc);
+#else
 	p_httpc->res_content(p_doc, sz_doc);
+#endif
 }
 
 void vhost::send_error(iHttpServerConnection *p_httpc, _u16 err_rc, _cstr_t err_text) {
@@ -498,7 +505,6 @@ void vhost::call_route_handler(_u8 evt, iHttpServerConnection *p_httpc) {
 					if(hdoc) {
 						p_httpc->res_content_type(root.mime(hdoc));
 						p_httpc->res_mtime(root.mtime(hdoc));
-
 						if(method == HTTP_METHOD_GET || method == HTTP_METHOD_POST) {
 							_ulong doc_sz = 0;
 
