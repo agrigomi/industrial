@@ -103,7 +103,7 @@ static _map_rec_hdr_t *get_record(_map_context_t *p_mcxt,
 				_map_rec_hdr_t **pp_prev) {
 	_map_rec_hdr_t *r = NULL;
 
-	if(p_mcxt->pp_list) {
+	if(p_mcxt->pp_list && key && sz_key) {
 		if(p_mcxt->pf_hash)
 			p_mcxt->pf_hash((_u8 *)key, sz_key, hash_key, p_mcxt->udata);
 		else
