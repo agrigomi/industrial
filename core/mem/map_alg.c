@@ -232,7 +232,7 @@ void map_del(_map_context_t *p_mcxt, void *key, _u32 sz_key) {
 void map_clr(_map_context_t *p_mcxt) {
 	_u32 i = 0;
 
-	if(p_mcxt->pf_mem_free && p_mcxt->pp_list) {
+	if(p_mcxt->pf_mem_free && p_mcxt->pp_list && p_mcxt->records) {
 		while(i < p_mcxt->capacity) {
 			_map_rec_hdr_t *p_rec = p_mcxt->pp_list[i];
 
