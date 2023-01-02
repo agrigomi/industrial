@@ -32,6 +32,7 @@ public:
 				break;
 			case OCTL_UNINIT:
 				_gpi_repo_->object_release(mpi_list);
+				r = true;
 				break;
 		}
 
@@ -79,6 +80,7 @@ public:
 			// close stdin/stdout pipes
 			proc_close_pipe(pcxt);
 
+			// removes the process context from the list
 			HMUTEX hm = mpi_list->lock();
 
 			if(mpi_list->sel(pcxt, hm))
