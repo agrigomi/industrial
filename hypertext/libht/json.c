@@ -690,7 +690,7 @@ _json_value_t *json_select(_json_context_t *p_jcxt,
 		} else if(c == '[') {
 			if(str) {
 				if((tmp = object_pair_by_name(p_jcxt->p_htc, p_start, str, sz))) {
-					if(tmp->jvt != JSON_ARRAY)
+					if(tmp->jvt != JSON_ARRAY && tmp->jvt != JSON_OBJECT)
 						break;
 				} else
 					break;
@@ -700,15 +700,29 @@ _json_value_t *json_select(_json_context_t *p_jcxt,
 			str = NULL;
 			sz = 0;
 		} else if(c == ']') {
-			if(str && tmp->jvt == JSON_ARRAY) {
+			if(str) {
 				unsigned int aidx = atoi(str);
 
-				if((tmp = array_element_by_index(&tmp->array, aidx))) {
-					if(tmp->jvt == JSON_OBJECT)
-						p_start = &tmp->object;
-					else {
-						r = tmp;
-						break;
+				if(tmp->jvt == JSON_ARRAY) {
+					if((tmp = array_element_by_index(&tmp->array, aidx))) {
+						if(tmp->jvt == JSON_OBJECT)
+							p_start = &tmp->object;
+						else {
+							r = tmp;
+							break;
+						}
+					}
+				} else if(tmp->jvt == JSON_OBJECT) {
+					_json_pair_t *pair = json_object_pair(&tmp->object, aidx);
+
+					if(pair) {
+						tmp = &pair->value;
+						if(tmp->jvt == JSON_OBJECT)
+							p_start = &tmp->object;
+						else {
+							r = tmp;
+							break;
+						}
 					}
 				}
 			}
